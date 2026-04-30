@@ -1,0 +1,19 @@
+# Codex MCP configuration
+# Place at ~/.codex/config.toml or reference from your project
+
+[mcp_servers.filesystem]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem", "~/Projects"]
+
+[mcp_servers.github]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-github"]
+[mcp_servers.github.env]
+GITHUB_PERSONAL_ACCESS_TOKEN = "ghp_YOUR_TOKEN_HERE"
+
+[mcp_servers.qdrant]
+command = "uvx"
+args = ["mcp-server-qdrant"]
+[mcp_servers.qdrant.env]
+QDRANT_URL = "http://localhost:6333"
+COLLECTION_NAME = "home_ai_memory"

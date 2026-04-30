@@ -1,0 +1,10 @@
+.env
+data/
+backups/
+logs/
+install-manifest.txt
+*.copy
+.DS_Store
+__pycache__/
+*.pyc
+node_modules/

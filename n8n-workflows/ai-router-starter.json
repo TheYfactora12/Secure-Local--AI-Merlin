@@ -1,0 +1,107 @@
+{
+  "name": "AI Router Starter",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "node-1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {"name": "task", "value": "Replace with your task"},
+            {"name": "task_type", "value": "local"}
+          ]
+        }
+      },
+      "id": "node-2",
+      "name": "Set Task",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {"value1": "={{ $json.task_type }}", "operation": "equal", "value2": "research"},
+            {"value1": "={{ $json.task_type }}", "operation": "equal", "value2": "coding"},
+            {"value1": "={{ $json.task_type }}", "operation": "equal", "value2": "local"}
+          ]
+        }
+      },
+      "id": "node-3",
+      "name": "Route",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.perplexity.ai/chat/completions",
+        "authentication": "genericCredentialType",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"model\": \"sonar-pro\", \"messages\": [{\"role\": \"user\", \"content\": \"={{ $json.task }}\"}]}"
+      },
+      "id": "node-4",
+      "name": "Perplexity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 160]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/responses",
+        "authentication": "genericCredentialType",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"model\": \"gpt-4.1\", \"input\": \"={{ $json.task }}\"}"
+      },
+      "id": "node-5",
+      "name": "OpenAI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:11434/api/generate",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"model\": \"qwen3:32b\", \"prompt\": \"={{ $json.task }}\", \"stream\": false}"
+      },
+      "id": "node-6",
+      "name": "Ollama Local",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 440]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {"main": [[{"node": "Set Task", "type": "main", "index": 0}]]},
+    "Set Task": {"main": [[{"node": "Route", "type": "main", "index": 0}]]},
+    "Route": {
+      "main": [
+        [{"node": "Perplexity", "type": "main", "index": 0}],
+        [{"node": "OpenAI", "type": "main", "index": 0}],
+        [{"node": "Ollama Local", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {}
+}
