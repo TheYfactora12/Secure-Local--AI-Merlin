@@ -1,4 +1,4 @@
-# home-ai-elite — Full Stack Docker Compose v0.7
+# home-ai-elite — Full Stack Docker Compose v0.4
 # Services: Ollama, Open WebUI, Perplexica, SearXNG, OpenHands, Qdrant, n8n, LiteLLM
 #           + Nginx (TLS reverse proxy), Watchtower (auto-updates), Fail2ban (brute-force)
 # Start:  docker compose up -d
@@ -45,11 +45,15 @@ services:
       - n8n
       - qdrant
       - litellm
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   # ─────────────────────────────────────────
   # SECURITY — Fail2ban
   # Bans IPs after repeated failed logins
   # Monitors Open WebUI auth logs
+  # NOTE: network_mode: host is intentional —
+  #       required for iptables/nftables access
   # ─────────────────────────────────────────
   fail2ban:
     image: crazymax/fail2ban:latest
@@ -70,8 +74,10 @@ services:
 
   # ─────────────────────────────────────────
   # SECURITY — Watchtower
-  # Auto-updates Docker images silently
+  # Auto-updates only labeled containers
   # Runs daily at 3am, notifies on update
+  # Only services with watchtower.enable=true
+  # label will be updated automatically
   # ─────────────────────────────────────────
   watchtower:
     image: containrrr/watchtower:latest
@@ -86,6 +92,7 @@ services:
       - WATCHTOWER_ROLLING_RESTART=true
       - WATCHTOWER_TIMEOUT=30s
       - WATCHTOWER_LOG_LEVEL=info
+      - WATCHTOWER_LABEL_ENABLE=true
       - TZ=${TZ:-America/New_York}
     networks:
       - ai-net
@@ -104,12 +111,18 @@ services:
       - ollama:/root/.ollama
     networks:
       - ai-net
+    deploy:
+      resources:
+        limits:
+          memory: 20g
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 20s
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   # ─────────────────────────────────────────
   # LAYER 2 — Model Router (LiteLLM)
@@ -133,10 +146,15 @@ services:
     depends_on:
       ollama:
         condition: service_healthy
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   # ─────────────────────────────────────────
   # LAYER 2 — Chat UI (Open WebUI)
   # Your Perplexity / ChatGPT front end
+  # SECURITY: ENABLE_SIGNUP=true on first boot
+  # so you can create your admin account.
+  # Disable it in Settings → Admin after setup.
   # ─────────────────────────────────────────
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
@@ -155,12 +173,18 @@ services:
       - ENABLE_SIGNUP=true
       - ENABLE_COMMUNITY_SHARING=false
       - SEARXNG_QUERY_URL=http://searxng:8080/search?q=<query>&format=json
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     networks:
       - ai-net
     depends_on:
       - ollama
       - litellm
       - searxng
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   # ─────────────────────────────────────────
   # LAYER 2 — Private Web Search (SearXNG)
@@ -176,6 +200,7 @@ services:
       - ./configs/searxng:/etc/searxng:rw
     environment:
       - SEARXNG_BASE_URL=http://localhost:8080
+      - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY:-change-me-in-env}
     cap_drop:
       - ALL
     cap_add:
@@ -184,6 +209,8 @@ services:
       - SETUID
     networks:
       - ai-net
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   # ─────────────────────────────────────────
   # LAYER 2 — Search AI (Perplexica)
@@ -203,6 +230,8 @@ services:
     depends_on:
       - ollama
       - searxng
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   perplexica-frontend:
     image: itzcrazykns/perplexica-frontend:main
@@ -211,16 +240,21 @@ services:
     ports:
       - "3002:3000"
     environment:
+      # NEXT_PUBLIC_* vars are browser-side — localhost is intentionally the user's Mac, not a container
       - NEXT_PUBLIC_API_URL=http://localhost:3001
       - NEXT_PUBLIC_WS_URL=ws://localhost:3001
     networks:
       - ai-net
     depends_on:
       - perplexica-backend
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   # ─────────────────────────────────────────
   # LAYER 3 — Codex Agent (OpenHands)
   # Autonomous coding agent — your Codex
+  # NOTE: docker.sock mount is required for
+  #       OpenHands sandbox container execution
   # ─────────────────────────────────────────
   openhands:
     image: ghcr.io/all-hands-ai/openhands:main
@@ -237,10 +271,16 @@ services:
       - LLM_BASE_URL=http://litellm:4000
       - LLM_API_KEY=${LITELLM_MASTER_KEY:-sk-home-ai-elite}
       - LLM_MODEL=${OPENHANDS_MODEL:-ollama/qwen2.5-coder:14b}
+    deploy:
+      resources:
+        limits:
+          memory: 2g
     networks:
       - ai-net
     depends_on:
       - litellm
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   # ─────────────────────────────────────────
   # LAYER 4 — Vector Memory (Qdrant)
@@ -257,13 +297,23 @@ services:
       - qdrant-storage:/qdrant/storage
     networks:
       - ai-net
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:6333/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   # ─────────────────────────────────────────
   # LAYER 5 — Automation (n8n)
   # AI routing, webhooks, workflow automation
+  # Pinned to stable minor version — do not
+  # change to :latest (breaks silently)
   # ─────────────────────────────────────────
   n8n:
-    image: n8nio/n8n:latest
+    image: n8nio/n8n:1.87
     container_name: n8n
     restart: unless-stopped
     ports:
@@ -278,5 +328,9 @@ services:
       - N8N_HOST=localhost
       - N8N_PORT=5678
       - WEBHOOK_URL=http://localhost:5678
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     networks:
       - ai-net
