@@ -41,17 +41,18 @@
 - [x] `.gitleaks.toml` — secret scanning config
 - [x] CI: `tests/` + `pkg/scripts/` syntax check added
 - [x] CI: secret scan job (gitleaks + pattern check)
-> ⚠️  Security hardening items (Nginx, Fail2ban, Watchtower, backup timer) moved to v0.7.
 
-## 🔲 v0.7 — Security Hardening (NEXT)
-- [ ] Nginx reverse proxy + self-signed TLS for all local services
-- [ ] Fail2ban protecting Open WebUI (brute-force login protection)
-- [ ] Watchtower for automatic Docker image security updates
-- [ ] `launchd/com.homeai.backup.plist` — daily backup timer (7-day retention)
-- [ ] Healthcheck webhook to uptime monitor (Uptime Kuma or similar)
-- [ ] `scripts/healthcheck.sh` — sends ping on stack health pass
+## ✅ v0.7 — Security Hardening
+- [x] `configs/nginx/nginx.conf` — Nginx TLS reverse proxy, HTTP→HTTPS redirect, rate limiting
+- [x] `configs/fail2ban/jail.local` — Fail2ban: 5 failures = 1hr ban on Open WebUI + n8n
+- [x] `configs/fail2ban/filter.d/open-webui.conf` — login failure pattern
+- [x] `configs/fail2ban/filter.d/n8n.conf` — auth failure pattern
+- [x] `docker-compose.yml` — Nginx, Fail2ban, Watchtower added to stack
+- [x] `launchd/com.homeai.backup.plist` — daily 2am backup timer (launchd)
+- [x] `scripts/generate-certs.sh` — self-signed TLS cert generator
+- [x] `scripts/healthcheck.sh` — full stack health check + optional webhook ping
 
-## 🔲 v0.8 — Model Management UI
+## 🔲 v0.8 — Model Management UI (NEXT)
 - [ ] Local web UI for model browsing, pulling, deletion
 - [ ] One-click model tier switching (8GB / 16GB / 32GB / 64GB profiles)
 - [ ] Bandwidth-aware pull scheduler (avoid large pulls during work hours)
