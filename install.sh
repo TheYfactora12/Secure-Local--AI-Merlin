@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════╗
-# ║        HOME AI ELITE — One-Shot Installer v0.4              ║
+# ║        HOME AI ELITE — One-Shot Installer v0.4.1            ║
 # ║  Perplexity + Codex + Memory + Automation on your hardware  ║
 # ║  https://github.com/TheYfactora12/home-ai-elite             ║
 # ╚══════════════════════════════════════════════════════════════╝
@@ -27,7 +27,7 @@ header() {
   echo '  ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝'
   echo -e "${NC}"
   echo -e "  ${BOLD}Home AI Elite — Your Own Perplexity + Codex${NC}"
-  echo -e "  Version 0.4  |  github.com/TheYfactora12/home-ai-elite\n"
+  echo -e "  Version 0.4.1  |  github.com/TheYfactora12/home-ai-elite\n"
 }
 
 header
@@ -120,7 +120,7 @@ else
   systemctl start ollama 2>/dev/null || true
 fi
 
-# Wait for Ollama to be ready (replaces fragile sleep 3)
+# Wait for Ollama to be ready
 log "Waiting for Ollama to be ready..."
 OLLAMA_WAIT=0
 until curl -sf http://localhost:11434 &>/dev/null; do
@@ -131,13 +131,13 @@ until curl -sf http://localhost:11434 &>/dev/null; do
 done
 log "Ollama service ready"
 
-# ── STEP 3: Environment Setup & Secret Rotation ───────────────────────
-step "Environment Setup & Secret Rotation"
+# ── STEP 3: Environment Setup & Secret Hardening ──────────────────────
+step "Environment Setup & Secret Hardening"
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
-# ── 3a: Create .env from template if it doesn't exist ─────────────────
+# 3a: Create .env from template if it doesn't exist
 if [[ ! -f .env ]]; then
   cp .env.example .env
   log ".env created from .env.example"
@@ -145,91 +145,135 @@ else
   log ".env already exists — skipping template copy"
 fi
 
-# ── 3b: Auto-rotate all default secrets via openssl ───────────────────
-if command -v openssl &>/dev/null; then
+# Restrict .env permissions immediately — no world/group read
+chmod 600 .env
+log ".env permissions set to 600 (owner read/write only)"
 
-  rotate_secret() {
-    local key=$1
-    local current_val
-    current_val=$(grep "^${key}=" .env | cut -d= -f2- || true)
-    # Only rotate if still set to a known-insecure default
-    if [[ "$current_val" == "change-me-in-env" || \
-          "$current_val" == "sk-home-ai-elite"  || \
-          "$current_val" == "changeme"           || \
-          -z "$current_val" ]]; then
-      local new_val
-      new_val=$(openssl rand -hex 32)
-      if grep -q "^${key}=" .env; then
-        sed -i.bak "s|^${key}=.*|${key}=${new_val}|" .env && rm -f .env.bak
-      else
-        echo "${key}=${new_val}" >> .env
-      fi
-      log "${key} auto-generated (${new_val:0:8}...)"
-    else
-      log "${key} already set — skipping rotation"
-    fi
-  }
-
-  rotate_secret "WEBUI_SECRET_KEY"
-  rotate_secret "LITELLM_MASTER_KEY"
-  rotate_secret "N8N_PASSWORD"
-  rotate_secret "SEARXNG_SECRET_KEY"
-
-else
-  warn "openssl not found — secrets NOT auto-rotated. Edit .env manually before starting services."
-  warn "Keys to change: WEBUI_SECRET_KEY, LITELLM_MASTER_KEY, N8N_PASSWORD, SEARXNG_SECRET_KEY"
-fi
-
-# ── 3c: Interactive cloud API key setup ───────────────────────────────
-echo ""
-echo -e "  ${CYAN}${BOLD}━━━ Optional: Cloud API Keys ━━━${NC}"
-echo -e "  ${BOLD}The stack runs 100% locally without any of these.${NC}"
-echo -e "  Add keys only if you want cloud model fallback for hard tasks.\n"
-
-prompt_key() {
+# ── 3b: Auto-rotate all insecure default secrets ──────────────────────
+#
+# rotate_secret KEY
+#   Writes a new openssl-generated value ONLY if the current value is
+#   still one of the known-insecure placeholder strings.
+#   Safe to re-run — will not overwrite a key you already customized.
+# ──────────────────────────────────────────────────────────────────────
+rotate_secret() {
   local key=$1
-  local label=$2
-  local hint=$3
   local current_val
   current_val=$(grep "^${key}=" .env | cut -d= -f2- || true)
+  local insecure_defaults=(
+    "change-me-in-env"
+    "change-me-run-openssl-rand-hex-32"
+    "sk-home-ai-elite"
+    "changeme"
+    ""
+  )
+  local is_insecure=false
+  for default in "${insecure_defaults[@]}"; do
+    if [[ "$current_val" == "$default" ]]; then
+      is_insecure=true
+      break
+    fi
+  done
+
+  if [[ "$is_insecure" == true ]]; then
+    if ! command -v openssl &>/dev/null; then
+      warn "openssl not found — ${key} NOT rotated. Run: openssl rand -hex 32 and set it manually in .env"
+      return
+    fi
+    local new_val
+    new_val=$(openssl rand -hex 32)
+    if grep -q "^${key}=" .env; then
+      sed -i.bak "s|^${key}=.*|${key}=${new_val}|" .env && rm -f .env.bak
+    else
+      echo "${key}=${new_val}" >> .env
+    fi
+    log "${key} → auto-generated (${new_val:0:8}...  [hidden])"
+  else
+    log "${key} already set — skipping rotation"
+  fi
+}
+
+rotate_secret "WEBUI_SECRET_KEY"
+rotate_secret "LITELLM_MASTER_KEY"
+rotate_secret "N8N_PASSWORD"
+rotate_secret "SEARXNG_SECRET_KEY"
+
+# ── 3c: Secure interactive prompt for cloud API keys ──────────────────
+#
+# prompt_api_key KEY LABEL HINT URL
+#   - Uses `read -s` so the key NEVER appears on screen or in shell history
+#   - Validates basic format before writing (non-empty, no spaces)
+#   - Skips gracefully if key already set in .env
+#   - Enter with nothing = skip (local-only mode)
+# ──────────────────────────────────────────────────────────────────────
+prompt_api_key() {
+  local key=$1
+  local label=$2
+  local url=$3
+
+  local current_val
+  current_val=$(grep "^${key}=" .env | cut -d= -f2- 2>/dev/null || true)
   if [[ -n "$current_val" ]]; then
-    info "${key} already set — skipping"
+    log "${key} already set — skipping"
     return
   fi
-  echo -e "  ${YELLOW}${label}${NC}"
-  echo -e "  ${hint}"
-  echo -n "  Paste key (or press Enter to skip): "
-  read -r user_input
-  if [[ -n "$user_input" ]]; then
+
+  echo ""
+  echo -e "  ${YELLOW}${BOLD}${label}${NC}"
+  echo -e "  ${CYAN}Get it at: ${url}${NC}"
+  echo -e "  ${BOLD}(input hidden — key will NOT appear on screen)${NC}"
+  local user_input
+  while true; do
+    printf "  Paste key (Enter to skip): "
+    read -rs user_input
+    echo ""  # newline after silent input
+    if [[ -z "$user_input" ]]; then
+      info "${key} skipped — local-only mode for this service"
+      break
+    fi
+    # Basic validation: no spaces, minimum length 8
+    if [[ "$user_input" =~ [[:space:]] ]]; then
+      warn "Key contains spaces — check for accidental paste. Try again."
+      continue
+    fi
+    if (( ${#user_input} < 8 )); then
+      warn "Key looks too short (${#user_input} chars). Try again or press Enter to skip."
+      continue
+    fi
+    # Write securely to .env
     if grep -q "^${key}=" .env; then
       sed -i.bak "s|^${key}=.*|${key}=${user_input}|" .env && rm -f .env.bak
     else
       echo "${key}=${user_input}" >> .env
     fi
-    log "${key} saved"
-  else
-    info "${key} skipped — local-only mode"
-  fi
-  echo ""
+    log "${key} saved ✓ (${#user_input} chars, value hidden)"
+    break
+  done
 }
 
-prompt_key "OPENAI_API_KEY" \
-  "OpenAI API Key (GPT-4o fallback)" \
-  "  Get it at: https://platform.openai.com/api-keys"
+echo ""
+echo -e "  ${CYAN}${BOLD}━━━ Optional: Cloud API Keys ━━━${NC}"
+echo -e "  The stack runs ${BOLD}100% locally${NC} without any of these."
+echo -e "  Add keys only if you want cloud model fallback for complex tasks."
+echo -e "  ${YELLOW}Keys are entered in hidden mode — they will NOT be echoed to screen.${NC}\n"
 
-prompt_key "ANTHROPIC_API_KEY" \
-  "Anthropic API Key (Claude fallback)" \
-  "  Get it at: https://console.anthropic.com/settings/keys"
+prompt_api_key "OPENAI_API_KEY" \
+  "OpenAI API Key  (GPT-4o fallback)" \
+  "https://platform.openai.com/api-keys"
 
-prompt_key "PERPLEXITY_API_KEY" \
-  "Perplexity API Key (Sonar search fallback)" \
-  "  Get it at: https://www.perplexity.ai/settings/api"
+prompt_api_key "ANTHROPIC_API_KEY" \
+  "Anthropic API Key  (Claude fallback)" \
+  "https://console.anthropic.com/settings/keys"
 
-prompt_key "GITHUB_TOKEN" \
-  "GitHub Personal Access Token (OpenHands repo access + MCP)" \
-  "  Get it at: https://github.com/settings/tokens  (scopes: repo, read:org)"
+prompt_api_key "PERPLEXITY_API_KEY" \
+  "Perplexity API Key  (Sonar search fallback)" \
+  "https://www.perplexity.ai/settings/api"
 
-# ── 3d: Verify config.toml exists ─────────────────────────────────────
+prompt_api_key "GITHUB_TOKEN" \
+  "GitHub Personal Access Token  (OpenHands + MCP)" \
+  "https://github.com/settings/tokens  [scopes: repo, read:org]"
+
+# 3d: Verify config.toml exists
 if [[ ! -f "configs/perplexica/config.toml" ]]; then
   warn "configs/perplexica/config.toml not found — Perplexica model config will use defaults"
 fi
@@ -248,14 +292,12 @@ pull_model "nomic-embed-text"
 
 case "$MODEL_TIER" in
   low)
-    # 8–15 GB: lightweight fast models
     pull_model "mistral:7b"
     pull_model "qwen2.5:7b"
     OPENHANDS_MODEL="ollama/qwen2.5:7b"
     PERPLEXICA_CHAT_MODEL="qwen2.5:7b"
     ;;
   base)
-    # 16–23 GB: solid daily-use tier
     pull_model "qwen2.5:7b"
     pull_model "qwen2.5-coder:7b"
     pull_model "deepseek-r1:7b"
@@ -263,7 +305,6 @@ case "$MODEL_TIER" in
     PERPLEXICA_CHAT_MODEL="qwen2.5:7b"
     ;;
   mid)
-    # 24–47 GB: recommended — Mac Mini M4 Pro 24GB sweet spot
     pull_model "qwen2.5:32b"
     pull_model "qwen2.5-coder:14b"
     pull_model "deepseek-r1:14b"
@@ -271,7 +312,6 @@ case "$MODEL_TIER" in
     PERPLEXICA_CHAT_MODEL="qwen2.5:32b"
     ;;
   high)
-    # 48+ GB: full power
     pull_model "llama3.3:70b-instruct-q4_K_M"
     pull_model "qwen2.5:32b"
     pull_model "qwen2.5-coder:14b"
@@ -367,7 +407,9 @@ echo -e "  ${BOLD}Hardware Tier:${NC} ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
 echo -e "  ${BOLD}Coding Model:${NC}  ${OPENHANDS_MODEL}"
 echo -e "  ${BOLD}Chat Model:${NC}    ${PERPLEXICA_CHAT_MODEL}"
 echo ""
-echo -e "  ${GREEN}✓  All secrets auto-generated — no manual .env editing required${NC}"
+echo -e "  ${GREEN}✓  All internal secrets auto-generated${NC}"
+echo -e "  ${GREEN}✓  .env locked to 600 (owner only)${NC}"
+echo -e "  ${GREEN}✓  Cloud API keys entered in hidden mode${NC}"
 echo ""
 echo -e "  ${BOLD}Next steps:${NC}"
 echo -e "  1. http://localhost:3000  → create your admin account"
