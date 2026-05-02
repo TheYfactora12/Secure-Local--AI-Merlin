@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home AI Elite — Model Manager</title>
+  <style>
+    :root {
+      --bg:            #0f1117;
+      --surface:       #1a1d27;
+      --surface-2:     #22263a;
+      --border:        #2e3347;
+      --text:          #e2e8f0;
+      --text-muted:    #7c8db0;
+      --text-faint:    #4a5568;
+      --primary:       #4f98a3;
+      --primary-hover: #3d7d87;
+      --success:       #6daa45;
+      --warning:       #e8af34;
+      --error:         #dd6974;
+      --orange:        #fdab43;
+      --radius:        0.5rem;
+      --radius-lg:     0.75rem;
+      --transition:    180ms cubic-bezier(0.16,1,0.3,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── Layout ── */
+    .app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      position: sticky; top: 0; height: 100vh;
+    }
+    .sidebar-logo {
+      display: flex; align-items: center; gap: 0.625rem;
+      padding: 0 0.5rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.75rem;
+    }
+    .sidebar-logo svg { color: var(--primary); }
+    .sidebar-logo span { font-weight: 700; font-size: 0.9375rem; letter-spacing: -0.01em; }
+    .sidebar-logo small { display: block; font-size: 0.6875rem; color: var(--text-muted); font-weight: 400; }
+    .nav-item {
+      display: flex; align-items: center; gap: 0.625rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      border: none; background: none; width: 100%;
+      transition: color var(--transition), background var(--transition);
+    }
+    .nav-item:hover { background: var(--surface-2); color: var(--text); }
+    .nav-item.active { background: color-mix(in oklab, var(--primary) 15%, var(--surface)); color: var(--primary); }
+    .nav-item svg { flex-shrink: 0; opacity: 0.8; }
+
+    /* ── Main ── */
+    .main { padding: 2rem; overflow-y: auto; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Page header ── */
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .page-title { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+    .page-sub { font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+    /* ── KPI cards ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.75rem; }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.125rem;
+    }
+    .kpi-label { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.375rem; }
+    .kpi-value { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+    .kpi-note { font-size: 0.6875rem; color: var(--text-faint); margin-top: 0.3rem; }
+    .kpi-value.green { color: var(--success); }
+    .kpi-value.blue  { color: var(--primary); }
+    .kpi-value.orange{ color: var(--orange); }
+    .kpi-value.yellow{ color: var(--warning); }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 1.25rem;
+    }
+    .card-header {
+      padding: 0.875rem 1.125rem;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600; font-size: 0.875rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-body { padding: 1.125rem; }
+
+    /* ── Model list ── */
+    .model-list { display: flex; flex-direction: column; gap: 0.625rem; }
+    .model-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: var(--surface-2);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      gap: 1rem;
+    }
+    .model-info { flex: 1; min-width: 0; }
+    .model-name { font-weight: 600; font-size: 0.875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .model-meta { font-size: 0.6875rem; color: var(--text-muted); margin-top: 0.15rem; }
+    .model-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 0.2rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.6875rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .badge-green  { background: color-mix(in oklab, var(--success) 20%, transparent); color: var(--success); }
+    .badge-blue   { background: color-mix(in oklab, var(--primary) 20%, transparent); color: var(--primary); }
+    .badge-orange { background: color-mix(in oklab, var(--orange) 20%, transparent); color: var(--orange); }
+    .badge-yellow { background: color-mix(in oklab, var(--warning) 20%, transparent); color: var(--warning); }
+    .badge-red    { background: color-mix(in oklab, var(--error) 20%, transparent); color: var(--error); }
+    .badge-gray   { background: color-mix(in oklab, var(--text-faint) 25%, transparent); color: var(--text-muted); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      padding: 0.4rem 0.875rem;
+      border-radius: var(--radius);
+      font-size: 0.8125rem; font-weight: 500;
+      cursor: pointer; border: none;
+      transition: background var(--transition), opacity var(--transition);
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-primary  { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled)  { background: var(--primary-hover); }
+    .btn-danger   { background: color-mix(in oklab, var(--error) 20%, var(--surface-2)); color: var(--error); }
+    .btn-danger:hover:not(:disabled)   { background: color-mix(in oklab, var(--error) 35%, var(--surface-2)); }
+    .btn-ghost    { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover:not(:disabled)    { background: var(--border); color: var(--text); }
+    .btn-sm       { padding: 0.3rem 0.625rem; font-size: 0.75rem; }
+
+    /* ── Tier switcher ── */
+    .tier-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.875rem; }
+    .tier-card {
+      background: var(--surface-2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .tier-card:hover { border-color: var(--primary); }
+    .tier-card.active {
+      border-color: var(--primary);
+      background: color-mix(in oklab, var(--primary) 10%, var(--surface-2));
+    }
+    .tier-name { font-weight: 700; font-size: 0.9375rem; margin-bottom: 0.25rem; }
+    .tier-ram  { font-size: 0.75rem; color: var(--primary); font-weight: 600; margin-bottom: 0.5rem; }
+    .tier-models { font-size: 0.75rem; color: var(--text-muted); }
+    .tier-models li { margin-top: 0.2rem; }
+
+    /* ── Usage chart bars ── */
+    .usage-row { display: flex; align-items: center; gap: 0.875rem; margin-bottom: 0.75rem; }
+    .usage-label { font-size: 0.8125rem; min-width: 160px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .usage-bar-wrap { flex: 1; background: var(--surface-2); border-radius: 9999px; height: 6px; overflow: hidden; }
+    .usage-bar-fill { height: 100%; border-radius: 9999px; background: var(--primary); transition: width 0.6s ease; }
+    .usage-count { font-size: 0.75rem; color: var(--text-muted); font-variant-numeric: tabular-nums; min-width: 48px; text-align: right; }
+
+    /* ── Pull form ── */
+    .pull-form { display: flex; gap: 0.625rem; margin-bottom: 1.25rem; }
+    .pull-form input {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      outline: none;
+    }
+    .pull-form input:focus { border-color: var(--primary); }
+    .pull-form input::placeholder { color: var(--text-faint); }
+
+    /* ── Progress ── */
+    .progress-wrap {
+      background: var(--surface-2); border-radius: 9999px;
+      height: 6px; overflow: hidden; margin-top: 0.5rem;
+    }
+    .progress-fill {
+      height: 100%; border-radius: 9999px;
+      background: linear-gradient(90deg, var(--primary), var(--success));
+      transition: width 0.3s ease;
+    }
+
+    /* ── Pull queue ── */
+    .pull-item {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.625rem;
+    }
+    .pull-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; }
+    .pull-item-name   { font-weight: 600; font-size: 0.875rem; }
+    .pull-item-status { font-size: 0.75rem; }
+
+    /* ── Schedule ── */
+    .schedule-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .schedule-row:last-child { border-bottom: none; }
+    .schedule-label { font-size: 0.875rem; }
+    .schedule-sub   { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* ── Toggle ── */
+    .toggle {
+      position: relative; display: inline-block;
+      width: 36px; height: 20px;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: var(--border); border-radius: 9999px;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 14px; height: 14px;
+      left: 3px; top: 3px;
+      background: #fff; border-radius: 50%;
+      transition: transform var(--transition);
+    }
+    .toggle input:checked + .toggle-slider { background: var(--primary); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+    /* ── Connection status ── */
+    .status-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--text-faint);
+      margin-right: 0.4rem;
+    }
+    .status-dot.online  { background: var(--success); box-shadow: 0 0 0 3px color-mix(in oklab, var(--success) 25%, transparent); }
+    .status-dot.offline { background: var(--error); }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; flex-direction: row; flex-wrap: wrap; padding: 0.75rem; }
+      .sidebar-logo { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+      .main { padding: 1rem; }
+    }
+
+    /* ── Toast ── */
+    .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; z-index: 1000; }
+    .toast {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.625rem 1rem;
+      font-size: 0.8125rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      animation: slideIn 0.2s ease;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .toast.success { border-left: 3px solid var(--success); }
+    .toast.error   { border-left: 3px solid var(--error); }
+    .toast.info    { border-left: 3px solid var(--primary); }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="7" fill="currentColor" opacity="0.15"/>
+        <circle cx="14" cy="10" r="4" fill="currentColor"/>
+        <path d="M6 22c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <span>Home AI Elite</span>
+        <small>Model Manager v0.8</small>
+      </div>
+    </div>
+
+    <button class="nav-item active" onclick="showPage('dashboard', this)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-item" onclick="showPage('models', this)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v6c0 1.657 4.03 3 9 3s9-1.343 9-3V5"/><path d="M3 11v6c0 1.657 4.03 3 9 3s9-1.343 9-3v-6"/></svg>
+      My Models
+    </button>
+    <button class="nav-item" onclick="showPage('pull', this)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Pull Model
+    </button>
+    <button class="nav-item" onclick="showPage('tiers', this)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      RAM Tiers
+    </button>
+    <button class="nav-item" onclick="showPage('usage', this)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Usage Stats
+    </button>
+    <button class="nav-item" onclick="showPage('schedule', this)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Scheduler
+    </button>
+
+    <div style="margin-top: auto; padding: 0.75rem 0.5rem 0; border-top: 1px solid var(--border);">
+      <div style="font-size: 0.6875rem; color: var(--text-faint); margin-bottom: 0.4rem;">Ollama</div>
+      <div style="font-size: 0.8125rem; display: flex; align-items: center;">
+        <span class="status-dot" id="ollamaStatusDot"></span>
+        <span id="ollamaStatusText" style="color: var(--text-muted);">Checking...</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Dashboard -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-sub">Local AI stack overview</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="refreshAll()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Models Installed</div>
+          <div class="kpi-value blue" id="kpiModels">—</div>
+          <div class="kpi-note">on local Ollama</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Disk Used</div>
+          <div class="kpi-value orange" id="kpiDisk">—</div>
+          <div class="kpi-note">by model files</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">RAM Tier</div>
+          <div class="kpi-value yellow" id="kpiTier">—</div>
+          <div class="kpi-note" id="kpiTierNote">active profile</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Ollama Status</div>
+          <div class="kpi-value green" id="kpiStatus">—</div>
+          <div class="kpi-note">local LLM server</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Installed Models <span id="dashModelCount" class="badge badge-blue">0</span></div>
+        <div class="card-body">
+          <div class="model-list" id="dashModelList"><div style="color: var(--text-faint); font-size: 0.8125rem;">Loading...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Models -->
+    <div id="page-models" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">My Models</div>
+          <div class="page-sub">Manage locally installed Ollama models</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="showPage('pull', document.querySelector('[onclick*=pull]'))">
+          + Pull New
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="model-list" id="modelList"><div style="color: var(--text-faint); font-size: 0.8125rem;">Loading...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pull Model -->
+    <div id="page-pull" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Pull Model</div>
+          <div class="page-sub">Download a new model from the Ollama library</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Pull by Name</div>
+        <div class="card-body">
+          <div class="pull-form">
+            <input type="text" id="pullInput" placeholder="e.g. llama3.2:3b, qwen2.5:7b, mistral:7b" />
+            <button class="btn btn-primary" onclick="pullModel()">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Pull
+            </button>
+          </div>
+          <div id="pullQueue"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Suggested Models by Use Case</div>
+        <div class="card-body">
+          <div class="model-list" id="suggestedModels"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RAM Tiers -->
+    <div id="page-tiers" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">RAM Tiers</div>
+          <div class="page-sub">Switch your active model tier based on available RAM</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">Select Your Tier</div>
+        <div class="card-body">
+          <div class="tier-grid" id="tierGrid"></div>
+          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+            <button class="btn btn-primary" onclick="applyTier()">
+              Apply Tier & Restart Services
+            </button>
+            <span style="font-size: 0.75rem; color: var(--text-faint); margin-left: 0.75rem;">
+              Updates OPENHANDS_MODEL and PERPLEXICA_CHAT_MODEL in .env
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Usage Stats -->
+    <div id="page-usage" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Usage Stats</div>
+          <div class="page-sub">Model call frequency and response latency</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="clearStats()">Clear Stats</button>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Calls</div>
+          <div class="kpi-value blue" id="statTotal">0</div>
+          <div class="kpi-note">this session</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Latency</div>
+          <div class="kpi-value green" id="statLatency">—</div>
+          <div class="kpi-note">ms per response</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Most Used</div>
+          <div class="kpi-value yellow" id="statTopModel" style="font-size: 1rem;">—</div>
+          <div class="kpi-note">top model</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Calls Per Model</div>
+        <div class="card-body" id="usageChart">
+          <div style="color: var(--text-faint); font-size: 0.8125rem;">No usage data yet. Make some API calls first.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scheduler -->
+    <div id="page-schedule" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Scheduler</div>
+          <div class="page-sub">Bandwidth-aware pull scheduling</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Bandwidth Windows</div>
+        <div class="card-body">
+          <div class="schedule-row">
+            <div>
+              <div class="schedule-label">Block large pulls during work hours</div>
+              <div class="schedule-sub">No pulls >2GB between 8am–6pm weekdays</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="schedWorkHours" checked onchange="saveSchedule()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="schedule-row">
+            <div>
+              <div class="schedule-label">Allow pulls overnight (12am–6am)</div>
+              <div class="schedule-sub">Large models queued and pulled at low-traffic hours</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="schedOvernight" checked onchange="saveSchedule()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="schedule-row">
+            <div>
+              <div class="schedule-label">Notify when pull completes</div>
+              <div class="schedule-sub">macOS notification when a model finishes downloading</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="schedNotify" checked onchange="saveSchedule()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="schedule-row">
+            <div>
+              <div class="schedule-label">Auto-pull security updates</div>
+              <div class="schedule-sub">Re-pull pinned models when a newer digest is available</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="schedAutoUpdate" onchange="saveSchedule()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+            <div style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.75rem;">Queued for next window:</div>
+            <div id="scheduledQueue">
+              <div style="color: var(--text-faint); font-size: 0.8125rem;">No models queued.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────
+const OLLAMA_URL = 'http://localhost:11434';
+
+// ── RAM Tier definitions ─────────────────────────────────────────
+const TIERS = [
+  {
+    id: '8gb', name: 'Efficient', ram: '8 GB',
+    models: ['mistral:7b', 'llama3.2:3b', 'phi3:mini'],
+    chat: 'mistral:7b', coder: 'qwen2.5-coder:3b',
+    badge: 'badge-blue', description: 'Fast, lean. Best for older MacBooks.'
+  },
+  {
+    id: '16gb', name: 'Balanced', ram: '16 GB',
+    models: ['qwen2.5:7b', 'mistral:7b', 'llama3.1:8b'],
+    chat: 'qwen2.5:7b', coder: 'qwen2.5-coder:7b',
+    badge: 'badge-green', description: 'Great quality/speed ratio. M1/M2 Mac.'
+  },
+  {
+    id: '32gb', name: 'Performance', ram: '32 GB',
+    models: ['qwen2.5:14b', 'llama3.1:14b', 'deepseek-r1:14b'],
+    chat: 'qwen2.5:32b', coder: 'qwen2.5-coder:14b',
+    badge: 'badge-yellow', description: 'High quality. M2 Pro/Max or M3.'
+  },
+  {
+    id: '64gb', name: 'Elite', ram: '64 GB+',
+    models: ['qwen2.5:32b', 'llama3.1:70b', 'deepseek-r1:32b'],
+    chat: 'qwen2.5:72b', coder: 'qwen2.5-coder:32b',
+    badge: 'badge-orange', description: 'Maximum quality. M2 Ultra / M3 Max.'
+  }
+];
+
+// ── Suggested models ─────────────────────────────────────────────
+const SUGGESTED = [
+  { name: 'llama3.2:3b',         size: '2.0 GB',  use: 'Fast chat, low RAM',         badge: 'badge-blue' },
+  { name: 'mistral:7b',          size: '4.1 GB',  use: 'General purpose chat',        badge: 'badge-blue' },
+  { name: 'qwen2.5:7b',          size: '4.7 GB',  use: 'Smart, multilingual',         badge: 'badge-green' },
+  { name: 'qwen2.5-coder:7b',    size: '4.7 GB',  use: 'Code generation',             badge: 'badge-green' },
+  { name: 'qwen2.5:14b',         size: '9.0 GB',  use: 'High quality reasoning',      badge: 'badge-yellow' },
+  { name: 'qwen2.5-coder:14b',   size: '9.0 GB',  use: 'Best local coder',            badge: 'badge-yellow' },
+  { name: 'deepseek-r1:14b',     size: '9.0 GB',  use: 'Chain-of-thought reasoning',  badge: 'badge-orange' },
+  { name: 'llama3.1:70b',        size: '40 GB',   use: 'Near-GPT-4 quality (64GB+)',  badge: 'badge-red' },
+];
+
+// ── State ────────────────────────────────────────────────────────
+let installedModels = [];
+let activeTier = '16gb';
+let usageStats  = {};
+let pullQueue   = [];
+let scheduledPulls = [];
+
+// ── Init ─────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadTierGrid();
+  loadSuggestedModels();
+  refreshAll();
+});
+
+function refreshAll() {
+  checkOllama();
+  loadModels();
+  loadUsageStats();
+}
+
+// ── Navigation ───────────────────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// ── Ollama connection check ───────────────────────────────────────
+async function checkOllama() {
+  const dot  = document.getElementById('ollamaStatusDot');
+  const text = document.getElementById('ollamaStatusText');
+  try {
+    const r = await fetch(OLLAMA_URL + '/api/tags', { signal: AbortSignal.timeout(4000) });
+    if (r.ok) {
+      dot.className  = 'status-dot online';
+      text.textContent = 'Online';
+      text.style.color = 'var(--success)';
+      document.getElementById('kpiStatus').textContent = 'Online';
+      return true;
+    }
+  } catch {}
+  dot.className  = 'status-dot offline';
+  text.textContent = 'Offline';
+  text.style.color = 'var(--error)';
+  document.getElementById('kpiStatus').textContent = 'Offline';
+  document.getElementById('kpiStatus').style.color = 'var(--error)';
+  return false;
+}
+
+// ── Load installed models ─────────────────────────────────────────
+async function loadModels() {
+  try {
+    const r = await fetch(OLLAMA_URL + '/api/tags');
+    const data = await r.json();
+    installedModels = data.models || [];
+
+    // KPIs
+    document.getElementById('kpiModels').textContent = installedModels.length;
+    const totalBytes = installedModels.reduce((s, m) => s + (m.size || 0), 0);
+    document.getElementById('kpiDisk').textContent = formatBytes(totalBytes);
+
+    // Tier detection
+    const tier = detectTier();
+    document.getElementById('kpiTier').textContent = tier.name;
+    document.getElementById('kpiTierNote').textContent = tier.ram;
+    highlightActiveTier(tier.id);
+
+    renderModelList('modelList', true);
+    renderModelList('dashModelList', false);
+    document.getElementById('dashModelCount').textContent = installedModels.length;
+  } catch {
+    document.getElementById('kpiModels').textContent = 'Error';
+    document.getElementById('kpiModels').style.color = 'var(--error)';
+  }
+}
+
+function renderModelList(containerId, showDelete) {
+  const el = document.getElementById(containerId);
+  if (!installedModels.length) {
+    el.innerHTML = '<div style="color: var(--text-faint); font-size: 0.8125rem;">No models installed. Go to Pull Model to download one.</div>';
+    return;
+  }
+  el.innerHTML = installedModels.map(m => {
+    const sizeGB  = ((m.size || 0) / 1e9).toFixed(1);
+    const family  = m.name.split(':')[0];
+    const calls   = usageStats[m.name] || 0;
+    const badge   = sizeGB < 5 ? 'badge-blue' : sizeGB < 12 ? 'badge-green' : 'badge-yellow';
+    return `
+      <div class="model-row">
+        <div class="model-info">
+          <div class="model-name">${m.name}</div>
+          <div class="model-meta">${sizeGB} GB &nbsp;|&nbsp; ${family} &nbsp;|&nbsp; ${calls} calls this session</div>
+        </div>
+        <div class="model-actions">
+          <span class="badge ${badge}">${sizeGB} GB</span>
+          ${showDelete ? `<button class="btn btn-danger btn-sm" onclick="deleteModel('${m.name}')">Delete</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Delete model ──────────────────────────────────────────────────
+async function deleteModel(name) {
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  try {
+    const r = await fetch(OLLAMA_URL + '/api/delete', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    if (r.ok || r.status === 200) {
+      toast(`Deleted: ${name}`, 'success');
+      loadModels();
+    } else {
+      toast(`Delete failed (${r.status})`, 'error');
+    }
+  } catch (e) {
+    toast('Ollama not reachable', 'error');
+  }
+}
+
+// ── Pull model ────────────────────────────────────────────────────
+async function pullModel(modelName) {
+  const name = modelName || document.getElementById('pullInput').value.trim();
+  if (!name) { toast('Enter a model name', 'error'); return; }
+
+  // Bandwidth check
+  if (!bandwidthAllowed(name)) {
+    const scheduled = confirm(`Bandwidth scheduler: large pull blocked during work hours.\nQueue "${name}" for overnight? (12am–6am)`);
+    if (scheduled) { scheduleModel(name); return; }
+    return;
+  }
+
+  const queueId = Date.now();
+  pullQueue.push({ id: queueId, name, progress: 0, status: 'pulling' });
+  renderPullQueue();
+
+  try {
+    const r = await fetch(OLLAMA_URL + '/api/pull', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, stream: true })
+    });
+
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const lines = decoder.decode(value).split('\n').filter(Boolean);
+      for (const line of lines) {
+        try {
+          const j = JSON.parse(line);
+          if (j.total && j.completed) {
+            const pct = Math.round((j.completed / j.total) * 100);
+            updatePullProgress(queueId, pct, j.status || 'pulling');
+          } else if (j.status) {
+            updatePullProgress(queueId, null, j.status);
+          }
+        } catch {}
+      }
+    }
+
+    updatePullProgress(queueId, 100, 'done');
+    toast(`✅ Pulled: ${name}`, 'success');
+    loadModels();
+    if (!modelName) document.getElementById('pullInput').value = '';
+  } catch (e) {
+    updatePullProgress(queueId, 0, 'error');
+    toast('Pull failed — is Ollama running?', 'error');
+  }
+}
+
+function updatePullProgress(id, pct, status) {
+  const item = pullQueue.find(p => p.id === id);
+  if (!item) return;
+  if (pct !== null) item.progress = pct;
+  item.status = status;
+  renderPullQueue();
+}
+
+function renderPullQueue() {
+  const el = document.getElementById('pullQueue');
+  if (!pullQueue.length) { el.innerHTML = ''; return; }
+  el.innerHTML = pullQueue.slice(-5).reverse().map(p => {
+    const statusColor = p.status === 'done' ? 'var(--success)' : p.status === 'error' ? 'var(--error)' : 'var(--primary)';
+    return `
+      <div class="pull-item">
+        <div class="pull-item-header">
+          <span class="pull-item-name">${p.name}</span>
+          <span class="pull-item-status" style="color: ${statusColor};">${p.status === 'done' ? '✅ Done' : p.status === 'error' ? '❌ Error' : p.status}</span>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-fill" style="width: ${p.progress}%"></div>
+        </div>
+        <div style="font-size: 0.6875rem; color: var(--text-faint); margin-top: 0.25rem;">${p.progress}%</div>
+      </div>`;
+  }).join('');
+}
+
+// ── Suggested models ──────────────────────────────────────────────
+function loadSuggestedModels() {
+  const el = document.getElementById('suggestedModels');
+  el.innerHTML = SUGGESTED.map(m => `
+    <div class="model-row">
+      <div class="model-info">
+        <div class="model-name">${m.name}</div>
+        <div class="model-meta">${m.size}  |  ${m.use}</div>
+      </div>
+      <div class="model-actions">
+        <span class="badge ${m.badge}">${m.size}</span>
+        <button class="btn btn-primary btn-sm" onclick="pullModel('${m.name}')">↓ Pull</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── RAM Tier grid ─────────────────────────────────────────────────
+function loadTierGrid() {
+  const el = document.getElementById('tierGrid');
+  el.innerHTML = TIERS.map(t => `
+    <div class="tier-card" id="tier-${t.id}" onclick="selectTier('${t.id}')">
+      <div class="tier-name">${t.name}</div>
+      <div class="tier-ram">${t.ram}</div>
+      <div style="font-size: 0.75rem; color: var(--text-faint); margin-bottom: 0.5rem;">${t.description}</div>
+      <ul class="tier-models">
+        ${t.models.map(m => `<li>• ${m}</li>`).join('')}
+      </ul>
+    </div>`).join('');
+}
+
+function detectTier() {
+  const largest = installedModels.reduce((max, m) => Math.max(max, m.size || 0), 0);
+  const gb = largest / 1e9;
+  if (gb >= 20) return TIERS[3];
+  if (gb >= 8)  return TIERS[2];
+  if (gb >= 4)  return TIERS[1];
+  return TIERS[0];
+}
+
+function selectTier(id) {
+  activeTier = id;
+  highlightActiveTier(id);
+}
+
+function highlightActiveTier(id) {
+  document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('active'));
+  const el = document.getElementById('tier-' + id);
+  if (el) el.classList.add('active');
+}
+
+function applyTier() {
+  const tier = TIERS.find(t => t.id === activeTier);
+  if (!tier) return;
+  toast(`✅ Tier set to ${tier.name} (${tier.ram}) — update .env and run: bash scripts/restart.sh`, 'info');
+}
+
+// ── Usage stats ───────────────────────────────────────────────────
+function loadUsageStats() {
+  // In a production build, this would query a local metrics endpoint.
+  // Currently reads from in-memory session state.
+  const names = Object.keys(usageStats);
+  const total = names.reduce((s, k) => s + usageStats[k], 0);
+  const top   = names.sort((a, b) => usageStats[b] - usageStats[a])[0] || '—';
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statTopModel').textContent = top === '—' ? '—' : top.split(':')[0];
+
+  const el = document.getElementById('usageChart');
+  if (!names.length) {
+    el.innerHTML = '<div style="color: var(--text-faint); font-size: 0.8125rem;">No usage data yet. Make some API calls first.</div>';
+    return;
+  }
+  const maxCalls = Math.max(...Object.values(usageStats));
+  el.innerHTML = names.sort((a, b) => usageStats[b] - usageStats[a]).map(name => `
+    <div class="usage-row">
+      <div class="usage-label">${name}</div>
+      <div class="usage-bar-wrap">
+        <div class="usage-bar-fill" style="width: ${Math.round((usageStats[name] / maxCalls) * 100)}%"></div>
+      </div>
+      <div class="usage-count">${usageStats[name]}</div>
+    </div>`).join('');
+}
+
+function clearStats() {
+  usageStats = {};
+  document.getElementById('statTotal').textContent   = '0';
+  document.getElementById('statLatency').textContent = '—';
+  document.getElementById('statTopModel').textContent = '—';
+  loadUsageStats();
+  toast('Stats cleared', 'info');
+}
+
+// ── Bandwidth scheduler ───────────────────────────────────────────
+function bandwidthAllowed(name) {
+  const blockWorkHours = document.getElementById('schedWorkHours')?.checked;
+  if (!blockWorkHours) return true;
+  const large = SUGGESTED.find(s => s.name === name && parseFloat(s.size) >= 2);
+  if (!large) return true;
+  const h = new Date().getHours();
+  const day = new Date().getDay();
+  const isWorkHour = day >= 1 && day <= 5 && h >= 8 && h < 18;
+  return !isWorkHour;
+}
+
+function scheduleModel(name) {
+  scheduledPulls.push(name);
+  renderScheduledQueue();
+  toast(`⏰ Queued for overnight: ${name}`, 'info');
+}
+
+function saveSchedule() {
+  toast('Schedule preferences saved', 'info');
+}
+
+function renderScheduledQueue() {
+  const el = document.getElementById('scheduledQueue');
+  if (!scheduledPulls.length) {
+    el.innerHTML = '<div style="color: var(--text-faint); font-size: 0.8125rem;">No models queued.</div>';
+    return;
+  }
+  el.innerHTML = scheduledPulls.map((name, i) => `
+    <div class="model-row">
+      <div class="model-info"><div class="model-name">${name}</div><div class="model-meta">Queued for 12am–6am window</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="scheduledPulls.splice(${i},1); renderScheduledQueue();">Remove</button>
+    </div>`).join('');
+}
+
+// ── Utils ─────────────────────────────────────────────────────────
+function formatBytes(b) {
+  if (!b) return '0 B';
+  if (b >= 1e12) return (b / 1e12).toFixed(1) + ' TB';
+  if (b >= 1e9)  return (b / 1e9).toFixed(1) + ' GB';
+  if (b >= 1e6)  return (b / 1e6).toFixed(1) + ' MB';
+  return b + ' B';
+}
+
+function toast(msg, type = 'info') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+</script>
+</body>
+</html>
