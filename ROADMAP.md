@@ -3,6 +3,9 @@
 > **Failure Map:** See [`docs/failure-map.md`](docs/failure-map.md) for the 20 documented patterns
 > from real self-hosted AI projects that failed. Every v1.3 item below closes a specific failure.
 
+> **Research Log:** Session 2026-05-02 — benchmarks, observability, memory architecture, Ollama MLX,
+> and self-hosted failure mapping added as v1.5, v1.6, v1.7 milestones.
+
 ---
 
 ## ✅ v0.1 — Foundation
@@ -134,10 +137,10 @@
 > Prevents production workflows from failing silently mid-stream.
 - [ ] Add response timeout + retry logic to all n8n workflows using Ollama nodes
 - [ ] `wizard test-workflows` CLI command: validates all 5 n8n workflows against local model
-- [ ] Document \"context canceled\" workaround in `tests/README.md`
+- [ ] Document "context canceled" workaround in `tests/README.md`
 
 ### Priority 3: Structured Qdrant Memory Schema — Closes Failures 6, 7, 8 (Amnesia + Drift)
-> Makes Wizard feel smart across sessions. Fixes the #1 \"AI feels dumb\" complaint.
+> Makes Wizard feel smart across sessions. Fixes the #1 "AI feels dumb" complaint.
 - [ ] Define memory schema: payload fields (type, source, timestamp, ttl, quality_score)
 - [ ] `wizard memory clean` CLI: prune stale/low-score memories from all 4 collections
 - [ ] `n8n-workflows/06-session-memory-bridge.json` — auto-inject top-5 relevant memories
@@ -155,7 +158,7 @@
 > Brings search answer quality closer to Perplexity Pro.
 - [ ] Add cross-encoder reranking step to Perplexica config (via Ollama reranker model)
 - [ ] Add source freshness filter: prefer results < 30 days for research queries
-- [ ] `wizard search \"<query>\"` CLI command: test search pipeline quality directly
+- [ ] `wizard search "<query>"` CLI command: test search pipeline quality directly
 - [ ] `docs/search-quality-guide.md` — how Wizard search compares to Perplexity, what to expect
 
 ### Priority 6: `scripts/upgrade.sh` Extension — Closes Failure 17 (Stale Stack)
@@ -167,13 +170,140 @@
 
 ---
 
-## 🔲 v1.4 — Full Hardware Research Package (\"Own Perplexity Computer\")
+## 🔲 v1.4 — Full Hardware Research Package ("Own Perplexity Computer")
 - [ ] `docs/hardware-buying-guide.md` — exact hardware recommendations with current prices
 - [ ] `docs/equipment-checklist.md` — complete shopping list from Mac to NVMe to networking
 - [ ] `install.sh` — single-command installs full stack + all components from scratch
 - [ ] Target: blank Mac → fully working Wizard stack in under 30 minutes
 
 ---
+
+## 🔲 v1.5 — Memory Benchmark Harness
+> **Source:** 2026-05-02 research — MemoryArena, EpBench, AMA-Bench integration guide.
+> Goal: Wizard memory is not just functional — it is **measurable and improvable**.
+> Every memory feature must pass benchmark gates before merge.
+
+### Benchmark Suites (add in this order)
+| Suite | What it tests | Primary metrics |
+|---|---|---|
+| EpBench | Episodic recall, event ordering, temporal grounding | Recall@k, F1, Kendall's τ, answer grounding |
+| MemoryArena | Multi-session interdependent task completion | Task success, cross-session dependency success, memory usefulness |
+| AMA-Bench | Long-horizon agent memory under realistic trajectories | Horizon-scaled accuracy, causal retrieval quality |
+
+### Deliverables
+- [ ] `tests/benchmarks/` directory scaffold — one subdir per suite
+- [ ] `tests/benchmarks/schema.py` — canonical case object: `{id, suite, sessions, writes, queries, expected, metadata}`
+- [ ] `tests/benchmarks/epbench/adapter.py` — EpBench adapter: episodic write → recall → ordering
+- [ ] `tests/benchmarks/memoryarena/adapter.py` — MemoryArena adapter: session loop, action-memory tracking
+- [ ] `tests/benchmarks/amabench/adapter.py` — AMA-Bench adapter: long trajectory + causal retrieval hooks
+- [ ] `tests/benchmarks/metrics.py` — shared metrics engine: latency p50/p95, hit@k, contradiction drift rate, latest-truth accuracy
+- [ ] `tests/benchmarks/layer_aware.py` — layer-aware scoring: did router query right layer? did working memory contaminate long-horizon retrieval?
+- [ ] `scripts/run-benchmarks.sh` — unified runner with profile flags:
+  ```bash
+  ./scripts/run-benchmarks.sh --suite epbench --profile fast
+  ./scripts/run-benchmarks.sh --suite memoryarena --profile wizard
+  ./scripts/run-benchmarks.sh --suite amabench --profile deep
+  ```
+- [ ] `config/benchmarks/wizard.yaml` — tunable knobs: `top_k`, horizon_length, noise_ratio, contradiction_rate, consolidation_lag
+- [ ] `wizard benchmark run` CLI command — wraps run-benchmarks.sh
+- [ ] CI gate: EpBench recall@5 ≥ 0.75 required to merge memory-layer changes
+- [ ] JSONL result output → Langfuse (when v1.6 is live) for trend tracking
+
+### Memory Layer Architecture (required before benchmarks are meaningful)
+- [ ] Split Qdrant collections explicitly by layer:
+  - `wizard_working` — short-term, session-scoped, TTL 4 hours
+  - `wizard_episodic` — events with timestamps, entities, state changes, TTL 30 days
+  - `wizard_semantic` — facts, preferences, long-term knowledge, no expiry
+  - `wizard_action` — agent action history with outcomes, TTL 90 days
+- [ ] `scripts/init-qdrant.sh` updated to create all 4 collections with correct schemas
+- [ ] Memory router: classify each write and route to correct layer before storing
+- [ ] Retrieval router: query correct layer(s) based on query type — do not default all queries to semantic
+
+---
+
+## 🔲 v1.6 — Observability Layer (Langfuse)
+> **Source:** 2026-05-02 research — Langfuse + Ollama tracing integration.
+> Goal: Wizard is not a black box. Every prompt, route decision, memory lookup, and failure is traceable.
+> Without this, debugging takes hours. With it, debugging takes minutes.
+
+- [ ] Add Langfuse to `docker-compose.yml` as a local self-hosted service (port 3000)
+- [ ] `configs/langfuse/` — env config for self-hosted Langfuse instance
+- [ ] Ollama → Langfuse tracing via OpenAI-compatible SDK wrapper:
+  - Captures: model name, prompt tokens, completion tokens, latency, route taken
+- [ ] n8n workflows emit trace IDs to Langfuse on every Ollama call
+- [ ] Memory layer emits read/write events to Langfuse (collection, layer, score, latency)
+- [ ] Benchmark results (v1.5) export JSONL to Langfuse for trend dashboards
+- [ ] `wizard trace <session_id>` CLI: inspect full trace for a session
+- [ ] `wizard score` CLI: show last 7-day quality trend from Langfuse
+- [ ] `docs/observability-guide.md` — how to read Langfuse traces, what to look for, how to improve
+
+---
+
+## 🔲 v1.7 — Wizard Brain v2 (Self-Improving Agent OS)
+> **Source:** 2026-05-02 research — MoE routing, layer-aware memory, specialist routing.
+> Goal: Wizard stops being "a model that answers" and becomes "an agent OS that learns."
+> This is what makes the project unique and self-improving over time.
+
+### Model Router v2 — Specialist Routing
+- [ ] Replace single-model routing with specialist model dispatch:
+  - CODING → `deepseek-coder` or `qwen2.5-coder`
+  - RESEARCH → `qwen2.5:32b` + SearXNG grounding
+  - SENSITIVE → local-only `mistral-nemo` (no cloud escape)
+  - REASONING → `deepseek-r1:14b`
+  - FAST/CHAT → `phi4-mini` or `gemma3:4b`
+  - VISION → `llava` or `moondream`
+- [ ] Router confidence scoring: if confidence < 0.7, escalate to next model tier
+- [ ] `wizard route "<query>"` CLI: shows routing decision + confidence for any input
+- [ ] Router decisions logged to Langfuse for accuracy tracking (requires v1.6)
+
+### MoE Gating Layer (Experimental)
+> Based on PyTorch MoE gating network research from 2026-05-02.
+> Implement as optional `--profile wizard-moe` — do not replace stable router.
+- [ ] `src/router/moe_gate.py` — lightweight MoE gating network in PyTorch
+  - Input: query embedding (384-dim from MiniLM)
+  - Output: expert weights across 6 specialist models
+  - Architecture: 2-layer FFN, softmax output, top-2 expert selection
+- [ ] A/B test: MoE gate vs. rule-based router on MemoryArena benchmark
+- [ ] Gate training data: export router decisions from Langfuse → fine-tune gate weekly
+- [ ] `wizard train-gate` CLI: triggers weekly gate re-training from Langfuse data
+
+### Critic + Self-Improvement Loop
+- [ ] `n8n-workflows/07-wizard-critic.json` — Wizard scores its own responses 1–10
+  - Score ≥ 8: save to `wizard_semantic` as confirmed knowledge
+  - Score 5–7: save to `wizard_episodic` with low confidence flag
+  - Score < 5: discard + log failure type to Langfuse
+- [ ] Weekly self-improvement report: what did Wizard get wrong? what improved?
+- [ ] `wizard improve` CLI: triggers manual critic review cycle on last 100 sessions
+- [ ] Contradiction detection: before writing to memory, check for conflicts with existing facts
+
+### Ollama MLX Optimization (Apple Silicon)
+> Ollama now powered by MLX on Apple Silicon (released 2026-03-29).
+> This changes the performance baseline — document and verify.
+- [ ] Verify MLX preview is enabled in Ollama install (`OLLAMA_USE_MLX=1`)
+- [ ] `docs/apple-silicon-optimization.md` — MLX vs. Metal performance comparison by model size
+- [ ] Benchmark: tokens/sec before and after MLX for each Wizard specialist model
+- [ ] `install.sh` — auto-enable MLX on Apple Silicon during install
+- [ ] Add MLX status to `wizard status` output and `scripts/healthcheck.sh`
+
+---
+
+## Milestone Summary
+
+| Milestone | Focus | Status | Gate |
+|---|---|---|---|
+| v0.1–v0.9 | Foundation → Agent routing | ✅ Complete | — |
+| v1.0 | Signed release | 🔲 Next | Clean Mac smoke test |
+| v1.1 | Voice + fine-tuning | 🔲 Planned | v1.0 complete |
+| v1.2 | Hardware guide + full stack | 🔲 Planned | v1.0 complete |
+| v1.3 | Competitive gap closers | 🔲 Planned | v1.0 complete |
+| v1.4 | Hardware research package | 🔲 Planned | v1.2 complete |
+| v1.5 | Memory benchmark harness | 🔲 Planned | Memory layer split done |
+| v1.6 | Observability (Langfuse) | 🔲 Planned | v1.5 JSONL output done |
+| v1.7 | Wizard Brain v2 — self-improving | 🔲 Planned | v1.5 + v1.6 complete |
+
+---
+
 > **Rule:** Any new feature, bug found, or variation discovered gets added here before code is written.
 > **Failure Map:** [`docs/failure-map.md`](docs/failure-map.md) — 20 patterns, update when new ones found.
+> **Research Log:** See session notes in `docs/research/` for source reasoning behind each milestone.
 > Maintained by: TheYfactora12 | Oxford, MA
