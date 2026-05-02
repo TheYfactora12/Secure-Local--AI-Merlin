@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════╗
-# ║        HOME AI ELITE — One-Shot Installer v0.3              ║
+# ║        HOME AI ELITE — One-Shot Installer v0.4              ║
 # ║  Perplexity + Codex + Memory + Automation on your hardware  ║
 # ║  https://github.com/TheYfactora12/home-ai-elite             ║
 # ╚══════════════════════════════════════════════════════════════╝
@@ -27,7 +27,7 @@ header() {
   echo '  ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝'
   echo -e "${NC}"
   echo -e "  ${BOLD}Home AI Elite — Your Own Perplexity + Codex${NC}"
-  echo -e "  Version 0.3  |  github.com/TheYfactora12/home-ai-elite\n"
+  echo -e "  Version 0.4  |  github.com/TheYfactora12/home-ai-elite\n"
 }
 
 header
@@ -131,26 +131,105 @@ until curl -sf http://localhost:11434 &>/dev/null; do
 done
 log "Ollama service ready"
 
-# ── STEP 3: Environment Setup ─────────────────────────────────────────
-step "Environment Setup"
+# ── STEP 3: Environment Setup & Secret Rotation ───────────────────────
+step "Environment Setup & Secret Rotation"
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
+# ── 3a: Create .env from template if it doesn't exist ─────────────────
 if [[ ! -f .env ]]; then
   cp .env.example .env
-  # Auto-generate a random secret key
-  if command -v openssl &>/dev/null; then
-    SECRET=$(openssl rand -hex 32)
-    sed -i.bak "s/change-me-in-env/${SECRET}/g" .env && rm -f .env.bak
-    log "WEBUI_SECRET_KEY auto-generated"
-  fi
-  warn ".env created — edit to add optional cloud API keys for escalation"
+  log ".env created from .env.example"
 else
-  log ".env already exists — skipping"
+  log ".env already exists — skipping template copy"
 fi
 
-# Verify config.toml exists before attempting to patch it
+# ── 3b: Auto-rotate all default secrets via openssl ───────────────────
+if command -v openssl &>/dev/null; then
+
+  rotate_secret() {
+    local key=$1
+    local current_val
+    current_val=$(grep "^${key}=" .env | cut -d= -f2- || true)
+    # Only rotate if still set to a known-insecure default
+    if [[ "$current_val" == "change-me-in-env" || \
+          "$current_val" == "sk-home-ai-elite"  || \
+          "$current_val" == "changeme"           || \
+          -z "$current_val" ]]; then
+      local new_val
+      new_val=$(openssl rand -hex 32)
+      if grep -q "^${key}=" .env; then
+        sed -i.bak "s|^${key}=.*|${key}=${new_val}|" .env && rm -f .env.bak
+      else
+        echo "${key}=${new_val}" >> .env
+      fi
+      log "${key} auto-generated (${new_val:0:8}...)"
+    else
+      log "${key} already set — skipping rotation"
+    fi
+  }
+
+  rotate_secret "WEBUI_SECRET_KEY"
+  rotate_secret "LITELLM_MASTER_KEY"
+  rotate_secret "N8N_PASSWORD"
+  rotate_secret "SEARXNG_SECRET_KEY"
+
+else
+  warn "openssl not found — secrets NOT auto-rotated. Edit .env manually before starting services."
+  warn "Keys to change: WEBUI_SECRET_KEY, LITELLM_MASTER_KEY, N8N_PASSWORD, SEARXNG_SECRET_KEY"
+fi
+
+# ── 3c: Interactive cloud API key setup ───────────────────────────────
+echo ""
+echo -e "  ${CYAN}${BOLD}━━━ Optional: Cloud API Keys ━━━${NC}"
+echo -e "  ${BOLD}The stack runs 100% locally without any of these.${NC}"
+echo -e "  Add keys only if you want cloud model fallback for hard tasks.\n"
+
+prompt_key() {
+  local key=$1
+  local label=$2
+  local hint=$3
+  local current_val
+  current_val=$(grep "^${key}=" .env | cut -d= -f2- || true)
+  if [[ -n "$current_val" ]]; then
+    info "${key} already set — skipping"
+    return
+  fi
+  echo -e "  ${YELLOW}${label}${NC}"
+  echo -e "  ${hint}"
+  echo -n "  Paste key (or press Enter to skip): "
+  read -r user_input
+  if [[ -n "$user_input" ]]; then
+    if grep -q "^${key}=" .env; then
+      sed -i.bak "s|^${key}=.*|${key}=${user_input}|" .env && rm -f .env.bak
+    else
+      echo "${key}=${user_input}" >> .env
+    fi
+    log "${key} saved"
+  else
+    info "${key} skipped — local-only mode"
+  fi
+  echo ""
+}
+
+prompt_key "OPENAI_API_KEY" \
+  "OpenAI API Key (GPT-4o fallback)" \
+  "  Get it at: https://platform.openai.com/api-keys"
+
+prompt_key "ANTHROPIC_API_KEY" \
+  "Anthropic API Key (Claude fallback)" \
+  "  Get it at: https://console.anthropic.com/settings/keys"
+
+prompt_key "PERPLEXITY_API_KEY" \
+  "Perplexity API Key (Sonar search fallback)" \
+  "  Get it at: https://www.perplexity.ai/settings/api"
+
+prompt_key "GITHUB_TOKEN" \
+  "GitHub Personal Access Token (OpenHands repo access + MCP)" \
+  "  Get it at: https://github.com/settings/tokens  (scopes: repo, read:org)"
+
+# ── 3d: Verify config.toml exists ─────────────────────────────────────
 if [[ ! -f "configs/perplexica/config.toml" ]]; then
   warn "configs/perplexica/config.toml not found — Perplexica model config will use defaults"
 fi
@@ -276,11 +355,11 @@ echo -e "${GREEN}${BOLD}║          HOME AI ELITE IS READY  ✓                
 echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  ${BOLD}Your Services:${NC}"
-echo -e "  ${CYAN}🧠 Chat (Perplexity UI):${NC}   http://localhost:3000"
+echo -e "  ${CYAN}🧠 Chat (Open WebUI):${NC}       http://localhost:3000"
 echo -e "  ${CYAN}🔍 Search AI (Perplexica):${NC}  http://localhost:3002"
 echo -e "  ${CYAN}💻 Codex Agent (OpenHands):${NC} http://localhost:3003"
-echo -e "  ${CYAN}🔎 Private Web Search:${NC}      http://localhost:8080"
-echo -e "  ${CYAN}⚙️  Automation (n8n):${NC}        http://localhost:5678"
+echo -e "  ${CYAN}🔎 Private Search (SearXNG):${NC} http://localhost:8080"
+echo -e "  ${CYAN}⚙️  Automation (n8n):${NC}         http://localhost:5678"
 echo -e "  ${CYAN}📦 Vector Memory (Qdrant):${NC}  http://localhost:6333"
 echo -e "  ${CYAN}🔀 Model Router (LiteLLM):${NC}  http://localhost:4000"
 echo ""
@@ -288,13 +367,11 @@ echo -e "  ${BOLD}Hardware Tier:${NC} ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
 echo -e "  ${BOLD}Coding Model:${NC}  ${OPENHANDS_MODEL}"
 echo -e "  ${BOLD}Chat Model:${NC}    ${PERPLEXICA_CHAT_MODEL}"
 echo ""
-echo -e "  ${YELLOW}⚠  SECURITY: Change these defaults in .env before first use:${NC}"
-echo -e "     WEBUI_SECRET_KEY  (auto-generated if openssl available)"
-echo -e "     N8N_PASSWORD      (default: changeme)"
-echo -e "     LITELLM_MASTER_KEY (default: sk-home-ai-elite)"
+echo -e "  ${GREEN}✓  All secrets auto-generated — no manual .env editing required${NC}"
 echo ""
 echo -e "  ${BOLD}Next steps:${NC}"
-echo -e "  1. http://localhost:3000  → create admin account, start chatting"
+echo -e "  1. http://localhost:3000  → create your admin account"
+echo -e "     ${YELLOW}⚠ Then go to Settings → Admin → disable Sign Up${NC}"
 echo -e "  2. http://localhost:3002  → try a Perplexica web search"
 echo -e "  3. http://localhost:3003  → give OpenHands a coding task"
 echo -e "  4. http://localhost:5678  → import n8n-workflows/ai-router.json"
