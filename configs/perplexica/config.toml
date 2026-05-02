@@ -1,0 +1,24 @@
+# Perplexica Config — home-ai-elite
+# Open-source Perplexity AI clone
+# Docs: https://github.com/ItzCrazyKns/Perplexica
+
+[GENERAL]
+PORT = 3001
+SIMILARITY_MEASURE = "cosine"
+
+[API_KEYS]
+# Cloud API keys — optional, leave blank to use local models only
+OPENAI = ""
+GROQ = ""
+
+[API_ENDPOINTS]
+OLLAMA = "http://ollama:11434"
+SEARXNG = "http://searxng:8080"
+
+[MODELS]
+# Default models for chat and embeddings
+# Change CHAT_MODEL to match whatever you pulled in install.sh
+CHAT_MODEL_PROVIDER = "ollama"
+CHAT_MODEL = "llama3.3:latest"
+EMBEDDING_MODEL_PROVIDER = "ollama"
+EMBEDDING_MODEL = "nomic-embed-text"

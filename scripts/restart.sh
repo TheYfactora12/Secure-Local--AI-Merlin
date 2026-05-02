@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
-cd "$(dirname "$0")/.."
-docker compose down
-docker compose up -d
-brew services restart ollama || true
-echo "Stack restarted."
+# Home AI Elite — Restart all services
+echo "Restarting Home AI Elite services..."
+docker compose restart
+echo "Done. Run: bash scripts/status.sh"

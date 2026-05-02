@@ -1,0 +1,79 @@
+# SearXNG Settings — home-ai-elite
+# Privacy-first metasearch engine for local AI web search
+# Docs: https://docs.searxng.org/admin/settings/
+
+use_default_settings: true
+
+general:
+  debug: false
+  instance_name: "Home AI Search"
+  privacypolicy_url: false
+  contact_url: false
+  enable_metrics: false
+
+server:
+  port: 8080
+  bind_address: "0.0.0.0"
+  base_url: http://localhost:8080
+  secret_key: "change-this-to-a-random-string"
+  limiter: false
+  image_proxy: true
+  http_protocol_version: "1.1"
+
+ui:
+  static_use_hash: true
+  default_theme: simple
+  default_locale: en
+  center_alignment: false
+  infinite_scroll: false
+
+search:
+  safe_search: 0
+  autocomplete: ""
+  default_lang: en
+  ban_time_on_fail: 5
+  max_ban_time_on_fail: 120
+  formats:
+    - html
+    - json
+
+engines:
+  - name: google
+    engine: google
+    shortcut: g
+    use_mobile_ui: false
+
+  - name: bing
+    engine: bing
+    shortcut: bi
+
+  - name: duckduckgo
+    engine: duckduckgo
+    shortcut: ddg
+
+  - name: brave
+    engine: brave
+    shortcut: br
+    time_range_support: true
+    paging: false
+
+  - name: wikipedia
+    engine: wikipedia
+    shortcut: wp
+    base_url: 'https://{language}.wikipedia.org/'
+
+  - name: github
+    engine: github
+    shortcut: gh
+
+  - name: stackoverflow
+    engine: stackoverflow
+    shortcut: so
+
+outgoing:
+  request_timeout: 15.0
+  max_request_timeout: 30.0
+  useragent_suffix: ""
+  pool_connections: 100
+  pool_maxsize: 20
+  enable_http2: true

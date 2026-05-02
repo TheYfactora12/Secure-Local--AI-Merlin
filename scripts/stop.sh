@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
-cd "$(dirname "$0")/.."
+# Home AI Elite — Stop all services
+echo "Stopping all Home AI Elite services..."
 docker compose down
-echo "All containers stopped."
+echo "Done."

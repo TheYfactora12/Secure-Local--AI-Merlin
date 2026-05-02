@@ -1,0 +1,77 @@
+# LiteLLM Gateway Config — home-ai-elite
+# Local-first model router with optional cloud fallback
+# Docs: https://docs.litellm.ai/docs/proxy/configs
+
+model_list:
+
+  # ── Local Models (Ollama) ─────────────────────────────────────────
+  - model_name: llama3
+    litellm_params:
+      model: ollama/llama3.3:latest
+      api_base: http://ollama:11434
+
+  - model_name: qwen-coder
+    litellm_params:
+      model: ollama/qwen2.5-coder:14b
+      api_base: http://ollama:11434
+
+  - model_name: qwen32b
+    litellm_params:
+      model: ollama/qwen2.5:32b
+      api_base: http://ollama:11434
+
+  - model_name: qwen7b
+    litellm_params:
+      model: ollama/qwen2.5:7b
+      api_base: http://ollama:11434
+
+  - model_name: deepseek
+    litellm_params:
+      model: ollama/deepseek-r1:14b
+      api_base: http://ollama:11434
+
+  - model_name: mistral
+    litellm_params:
+      model: ollama/mistral:7b
+      api_base: http://ollama:11434
+
+  - model_name: embeddings
+    litellm_params:
+      model: ollama/nomic-embed-text
+      api_base: http://ollama:11434
+
+  # ── Cloud Fallback (optional — add API keys to .env to enable) ────
+  # Uncomment to enable cloud escalation for hard tasks:
+
+  # - model_name: gpt-4o
+  #   litellm_params:
+  #     model: gpt-4o
+  #     api_key: os.environ/OPENAI_API_KEY
+
+  # - model_name: claude
+  #   litellm_params:
+  #     model: anthropic/claude-opus-4-5
+  #     api_key: os.environ/ANTHROPIC_API_KEY
+
+  # - model_name: perplexity-sonar
+  #   litellm_params:
+  #     model: perplexity/llama-3.1-sonar-large-128k-online
+  #     api_key: os.environ/PERPLEXITY_API_KEY
+
+# ── Router Settings ───────────────────────────────────────────────────
+router_settings:
+  routing_strategy: simple-shuffle
+  num_retries: 2
+  timeout: 120
+  retry_after: 5
+
+# ── General Settings ──────────────────────────────────────────────────
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  drop_params: true
+  max_parallel_requests: 10
+
+litellm_settings:
+  drop_params: true
+  set_verbose: false
+  request_timeout: 120

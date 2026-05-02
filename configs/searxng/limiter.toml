@@ -1,0 +1,3 @@
+# SearXNG Rate Limiter — disabled for local/home use
+[botdetection.ip_limit]
+link_token = false

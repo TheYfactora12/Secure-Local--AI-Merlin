@@ -1,18 +1,15 @@
-# Home AI Elite
+# 🧠 Home AI Elite
 
-A one-shot interactive installer for a local-first home AI stack on macOS Apple Silicon.
+> **Your own Perplexity + Codex running on hardware you own. Zero subscriptions.**
 
-## What it installs
+A one-shot installer that sets up a complete local AI stack — private web search, conversational AI, autonomous coding agent, vector memory, and workflow automation — in a single command.
 
-| Service | What it does | Port |
-|---|---|---|
-| Ollama | Runs local AI models | 11434 |
-| Open WebUI | Chat interface — your front door | 3001 |
-| n8n | Orchestration and routing switchboard | 5678 |
-| Qdrant | Vector memory store | 6333 |
-| OpenHands (optional) | Autonomous coding agent | 3000 |
+[![Version](https://img.shields.io/badge/version-0.2-blue)]
+[![License](https://img.shields.io/badge/license-MIT-green)]
 
-## Quick start
+---
+
+## ⚡ Install
 
 ```bash
 git clone https://github.com/TheYfactora12/home-ai-elite.git
@@ -20,59 +17,121 @@ cd home-ai-elite
 bash install.sh
 ```
 
-The installer will:
-1. Run preflight checks (RAM, disk, ports).
-2. Prompt for install location, models, secrets, and optional API keys.
-3. Install Homebrew dependencies if missing.
-4. Walk you through Docker Desktop setup.
-5. Pull your chosen Ollama models.
-6. Start all services.
-7. Print a manual checklist for the remaining in-app account setup.
+**Requirements:**
+- Docker Desktop (running)
+- macOS 13+ or Ubuntu 22.04+
+- 8 GB RAM minimum (24 GB recommended)
+- 50 GB free disk
 
-## After install
+---
 
-| Task | URL |
-|---|---|
-| Open WebUI admin setup | http://localhost:3001 |
-| n8n owner account | http://localhost:5678 |
-| Qdrant dashboard | http://localhost:6333/dashboard |
-
-## Scripts
-
-```bash
-./scripts/status.sh   # health check
-./scripts/stop.sh     # stop all containers
-./scripts/restart.sh  # restart stack
-./scripts/backup.sh   # snapshot config and data
-./scripts/update.sh   # pull latest images
-./scripts/uninstall.sh
-```
-
-## Optional: MCP servers
-
-```bash
-bash mcp/install-mcp-servers.sh
-```
-
-Then register connectors in Perplexity Settings > Connectors.
-
-## Architecture
+## 🗺️ Architecture
 
 ```
 You
- └── Open WebUI (http://localhost:3001)
-      └── n8n Router (http://localhost:5678)
-           ├── LOCAL: Ollama Qwen3 32B (http://localhost:11434) — free
-           ├── RESEARCH: Perplexity sonar-pro API — ~$0.001/search
-           ├── CODING: OpenAI API — ~$0.015/1K tokens
-           └── OVERNIGHT: OpenHands agent (http://localhost:3000)
-                └── Qdrant memory (http://localhost:6333)
+ │
+ ├──► Open WebUI   :3000   ← Chat UI (your ChatGPT / Perplexity)
+ ├──► Perplexica   :3002   ← Search AI with citations (your Perplexity)
+ ├──► OpenHands    :3003   ← Autonomous coding agent (your Codex)
+ ├──► n8n          :5678   ← Workflow automation & AI routing
+ │
+ │    (all route through)
+ │
+ ├──► LiteLLM      :4000   ← Model router (local-first, cloud fallback)
+ │         │
+ │         ├──► Ollama  :11434  ← Local AI brain
+ │         └──► Cloud APIs      ← Optional escalation
+ │
+ ├──► SearXNG      :8080   ← Private web search (no tracking)
+ └──► Qdrant       :6333   ← Vector memory (RAG)
 ```
 
-## Roadmap
+---
 
-See [ROADMAP.md](ROADMAP.md).
+## 📋 Services
 
-## License
+| Service | Port | What It Does | Replaces |
+|---------|------|--------------|----------|
+| **Open WebUI** | 3000 | Chat, RAG, voice, web search UI | ChatGPT, Perplexity UI |
+| **Perplexica** | 3002 | AI-powered web search with citations | Perplexity AI |
+| **OpenHands** | 3003 | Autonomous multi-file coding agent | GitHub Copilot Workspace / Codex |
+| **SearXNG** | 8080 | Private metasearch engine | Google (for the AI) |
+| **LiteLLM** | 4000 | Unified model router — local + cloud | OpenAI API layer |
+| **n8n** | 5678 | Workflow automation + AI routing | Zapier + custom logic |
+| **Qdrant** | 6333 | Vector database for AI memory | Pinecone |
+| **Ollama** | 11434 | Local LLM server | OpenAI API |
 
-MIT
+---
+
+## 💻 Hardware Tiers
+
+The installer detects your RAM and pulls the right models automatically.
+
+| RAM | Tier | Models Installed | Recommended Hardware |
+|-----|------|-----------------|----------------------|
+| 8–15 GB | Low | mistral:7b, qwen2.5:7b | Any Mac/PC |
+| 16–23 GB | Base | qwen2.5:7b, qwen2.5-coder:7b, deepseek-r1:7b | Mac Mini M2/M3 16GB |
+| 24–47 GB | Mid ⭐ | qwen2.5:32b, qwen2.5-coder:14b, deepseek-r1:14b | Mac Mini M4 Pro 24GB |
+| 48+ GB | High | llama3.3:70b, qwen2.5:32b, deepseek-r1:32b | Mac Studio / Mac Pro |
+
+**Best value:** Mac Mini M4 Pro 24 GB (~$1,399) — silent, 10W idle, runs 32B models at full speed.
+
+---
+
+## 🛠️ Management Commands
+
+```bash
+bash scripts/status.sh              # Live health dashboard
+bash scripts/stop.sh                # Stop all services
+bash scripts/restart.sh             # Restart all services
+bash scripts/update.sh              # Pull latest images + restart
+bash scripts/backup.sh              # Backup all data volumes
+bash scripts/add-model.sh qwen2.5:32b  # Pull a new model
+```
+
+---
+
+## 🔧 Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `.env` | API keys, passwords, model selection |
+| `configs/litellm/config.yaml` | Model routing rules (add cloud fallback here) |
+| `configs/searxng/settings.yml` | Search engines, privacy settings |
+| `configs/perplexica/config.toml` | Perplexica model + endpoint config |
+
+---
+
+## 🔑 Optional: Cloud Escalation
+
+The stack runs 100% locally out of the box. To add cloud fallback for hard tasks:
+
+1. Edit `.env` — add `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.
+2. Edit `configs/litellm/config.yaml` — uncomment cloud model entries
+3. `docker compose restart litellm`
+
+---
+
+## 📦 After Install
+
+1. **http://localhost:3000** → Open WebUI → create admin account → start chatting
+2. **http://localhost:3002** → Perplexica → try a web search with citations
+3. **http://localhost:3003** → OpenHands → give it a coding task (point at a GitHub repo)
+4. **http://localhost:5678** → n8n → import `n8n-workflows/ai-router.json`
+5. **`bash scripts/add-model.sh`** → pull more models anytime
+
+---
+
+## 📍 Roadmap
+
+- [x] v0.1 — Core scaffold: Ollama, Open WebUI, n8n, Qdrant
+- [x] v0.2 — Full stack: Perplexica, SearXNG, LiteLLM, OpenHands, RAM-aware installer
+- [ ] v0.3 — Qdrant collection init, n8n workflow auto-import, launchd auto-start agents
+- [ ] v0.4 — macOS `.pkg` signed installer, preflight backup/restore
+- [ ] v1.0 — Stable release, automated tests, upgrade path
+
+---
+
+## 📄 License
+
+MIT — see [LICENSE](LICENSE)

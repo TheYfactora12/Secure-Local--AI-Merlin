@@ -1,185 +1,283 @@
 #!/usr/bin/env bash
-# Home AI Elite — interactive one-shot installer
-# Usage: bash install.sh
-# Repo: https://github.com/TheYfactora12/home-ai-elite
+# ╔══════════════════════════════════════════════════════════════╗
+# ║        HOME AI ELITE — One-Shot Installer v0.2              ║
+# ║  Perplexity + Codex + Memory + Automation on your hardware  ║
+# ║  https://github.com/TheYfactora12/home-ai-elite             ║
+# ╚══════════════════════════════════════════════════════════════╝
 set -euo pipefail
 
-RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
-log(){ echo -e "${GREEN}[INFO]${NC} $1"; }
-warn(){ echo -e "${YELLOW}[WARN]${NC} $1"; }
-err(){ echo -e "${RED}[ERR]${NC} $1"; }
-step(){ echo -e "${BLUE}\n==> $1${NC}"; }
-ask(){ local p="$1" d="${2:-}" v; if [[ -n "$d" ]]; then read -r -p "$p [$d]: " v; echo "${v:-$d}"; else read -r -p "$p: " v; echo "$v"; fi; }
-ask_secret(){ local p="$1" v; read -r -s -p "$p: " v; echo; echo "$v"; }
-confirm(){ local p="$1" a; read -r -p "$p [y/N]: " a; [[ "$a" =~ ^[Yy]$ ]]; }
-random_secret(){ python3 -c "import secrets; print(secrets.token_urlsafe(32))"; }
-check_port(){ lsof -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1; }
-require_macos(){ [[ "$(uname)" == "Darwin" ]] || { err "macOS only."; exit 1; }; }
-check_arch(){ [[ "$(uname -m)" == "arm64" ]] || warn "Apple Silicon recommended; continuing on $(uname -m)."; }
-check_ram(){ sysctl -n hw.memsize 2>/dev/null | awk '{print int($1/1024/1024/1024)}'; }
-check_disk(){ df -g "$HOME" | awk 'NR==2{print $4}'; }
+# ── Colors ────────────────────────────────────────────────────────────
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 
-ensure_brew(){
-  if ! command -v brew >/dev/null 2>&1; then
-    step "Homebrew not found"
-    confirm "Install Homebrew now?" || { err "Homebrew required."; exit 1; }
+log()    { echo -e "${GREEN}[✓]${NC} $1"; }
+warn()   { echo -e "${YELLOW}[!]${NC} $1"; }
+err()    { echo -e "${RED}[✗]${NC} $1"; exit 1; }
+step()   { echo -e "\n${BLUE}${BOLD}━━━ $1 ━━━${NC}"; }
+
+header() {
+  clear
+  echo -e "${CYAN}"
+  echo '  ██╗  ██╗ ██████╗ ███╗   ███╗███████╗     █████╗ ██╗'
+  echo '  ██║  ██║██╔═══██╗████╗ ████║██╔════╝    ██╔══██╗██║'
+  echo '  ███████║██║   ██║██╔████╔██║█████╗      ███████║██║'
+  echo '  ██╔══██║██║   ██║██║╚██╔╝██║██╔══╝      ██╔══██║██║'
+  echo '  ██║  ██║╚██████╔╝██║ ╚═╝ ██║███████╗    ██║  ██║██║'
+  echo '  ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝'
+  echo -e "${NC}"
+  echo -e "  ${BOLD}Home AI Elite — Your Own Perplexity + Codex${NC}"
+  echo -e "  Version 0.2  |  github.com/TheYfactora12/home-ai-elite\n"
+}
+
+header
+
+# ── STEP 1: Preflight Checks ──────────────────────────────────────────
+step "Preflight Checks"
+
+OS=$(uname -s)
+if [[ "$OS" == "Darwin" ]]; then
+  log "macOS detected"
+elif [[ "$OS" == "Linux" ]]; then
+  log "Linux detected"
+else
+  err "Unsupported OS: $OS. Requires macOS or Linux."
+fi
+
+# RAM detection
+if [[ "$OS" == "Darwin" ]]; then
+  TOTAL_RAM_GB=$(( $(sysctl -n hw.memsize) / 1024 / 1024 / 1024 ))
+else
+  TOTAL_RAM_GB=$(( $(grep MemTotal /proc/meminfo | awk '{print $2}') / 1024 / 1024 ))
+fi
+log "RAM detected: ${TOTAL_RAM_GB} GB"
+
+# Model tier selection based on RAM
+if   (( TOTAL_RAM_GB >= 48 )); then MODEL_TIER="high";
+elif (( TOTAL_RAM_GB >= 24 )); then MODEL_TIER="mid";
+elif (( TOTAL_RAM_GB >= 16 )); then MODEL_TIER="base";
+elif (( TOTAL_RAM_GB >=  8 )); then MODEL_TIER="low";
+else err "Minimum 8 GB RAM required. Detected: ${TOTAL_RAM_GB} GB."
+fi
+log "Model tier selected: ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
+
+# Disk check
+AVAIL_DISK_GB=$(df -BG . | awk 'NR==2 {print $4}' | tr -d 'G')
+if (( AVAIL_DISK_GB < 30 )); then
+  warn "Low disk: ${AVAIL_DISK_GB} GB available. Recommend 50+ GB. Continuing..."
+else
+  log "Disk space OK: ${AVAIL_DISK_GB} GB available"
+fi
+
+# Docker check
+if ! command -v docker &>/dev/null; then
+  err "Docker not found. Install Docker Desktop: https://docker.com/products/docker-desktop then re-run."
+fi
+if ! docker info &>/dev/null; then
+  err "Docker is not running. Start Docker Desktop and re-run."
+fi
+DOCKER_COMPOSE_VERSION=$(docker compose version --short 2>/dev/null || echo "0")
+log "Docker running | Compose ${DOCKER_COMPOSE_VERSION}"
+
+# ── STEP 2: Install Dependencies ──────────────────────────────────────
+step "Installing Dependencies"
+
+if [[ "$OS" == "Darwin" ]]; then
+  if ! command -v brew &>/dev/null; then
+    warn "Homebrew not found. Installing..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    [[ -x /opt/homebrew/bin/brew ]] && eval "$(/opt/homebrew/bin/brew shellenv)"
   fi
-}
-
-ensure_docker(){
-  if ! command -v docker >/dev/null 2>&1; then
-    step "Docker Desktop required — manual step"
-    echo ""
-    echo "  1. Download Docker Desktop: https://www.docker.com/products/docker-desktop/"
-    echo "  2. Open Docker Desktop and wait until the whale icon shows green."
-    echo ""
-    confirm "Press y once Docker Desktop is running" || { err "Docker required."; exit 1; }
-  fi
-}
-
-wait_for_docker(){
-  local tries=0
-  until docker info >/dev/null 2>&1; do
-    tries=$((tries+1))
-    (( tries > 40 )) && { err "Docker not responding. Start Docker Desktop and rerun."; exit 1; }
-    warn "Waiting for Docker engine... ($tries/40)"
-    sleep 3
+  log "Homebrew ready"
+  for pkg in ollama git curl jq; do
+    if command -v "$pkg" &>/dev/null; then
+      log "$pkg already installed"
+    else
+      log "Installing $pkg..."
+      brew install "$pkg"
+    fi
   done
-  log "Docker engine ready."
-}
-
-ensure_ollama(){
-  command -v ollama >/dev/null 2>&1 || brew install ollama
-  brew services start ollama || true
-  sleep 3
-  log "Ollama service started."
-}
-
-write_env(){
-  cat > "$STACK_DIR/.env" <<ENVEOF
-OPENAI_API_KEY=$OPENAI_API_KEY
-PERPLEXITY_API_KEY=$PERPLEXITY_API_KEY
-ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
-N8N_ENCRYPTION_KEY=$N8N_ENCRYPTION_KEY
-N8N_USER_MANAGEMENT_JWT_SECRET=$N8N_USER_MANAGEMENT_JWT_SECRET
-QDRANT_COLLECTION=$QDRANT_COLLECTION
-DEFAULT_LOCAL_MODEL=$DEFAULT_LOCAL_MODEL
-DEFAULT_CODER_MODEL=$DEFAULT_CODER_MODEL
-DEFAULT_EMBED_MODEL=$DEFAULT_EMBED_MODEL
-INSTALL_PROFILE=$INSTALL_PROFILE
-ENABLE_OPENHANDS=$ENABLE_OPENHANDS
-ENVEOF
-  log ".env written."
-}
-
-write_compose(){
-  cp "$(dirname "$0")/docker-compose.base.yml" "$STACK_DIR/docker-compose.yml"
-  if [[ "$ENABLE_OPENHANDS" == "yes" ]]; then
-    cat "$(dirname "$0")/docker-compose.openhands.yml" >> "$STACK_DIR/docker-compose.yml"
-    log "OpenHands added to compose."
+else
+  sudo apt-get update -qq
+  for pkg in git curl jq; do
+    if ! command -v "$pkg" &>/dev/null; then
+      sudo apt-get install -y -qq "$pkg"
+    fi
+    log "$pkg ready"
+  done
+  if ! command -v ollama &>/dev/null; then
+    log "Installing Ollama..."
+    curl -fsSL https://ollama.ai/install.sh | sh
+  else
+    log "Ollama already installed"
   fi
+fi
+
+# Start Ollama
+if [[ "$OS" == "Darwin" ]]; then
+  brew services start ollama 2>/dev/null || true
+else
+  systemctl enable ollama 2>/dev/null || true
+  systemctl start ollama 2>/dev/null || true
+fi
+sleep 3
+log "Ollama service started"
+
+# ── STEP 3: Environment Setup ─────────────────────────────────────────
+step "Environment Setup"
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$SCRIPT_DIR"
+
+if [[ ! -f .env ]]; then
+  cp .env.example .env
+  # Auto-generate a random secret key
+  if command -v openssl &>/dev/null; then
+    SECRET=$(openssl rand -hex 32)
+    sed -i.bak "s/change-me-in-env/${SECRET}/g" .env && rm -f .env.bak
+    log "WEBUI_SECRET_KEY auto-generated"
+  fi
+  warn ".env created — edit to add optional cloud API keys for escalation"
+else
+  log ".env already exists — skipping"
+fi
+
+# ── STEP 4: Pull Ollama Models (RAM-Aware) ────────────────────────────
+step "Pulling AI Models (Tier: ${MODEL_TIER} / ${TOTAL_RAM_GB} GB)"
+
+pull_model() {
+  local model=$1
+  log "Pulling ${model}..."
+  ollama pull "$model" || warn "Failed to pull ${model} — skipping"
 }
 
-write_scripts(){
-  mkdir -p "$STACK_DIR/scripts" "$STACK_DIR/data"/{qdrant,n8n,open-webui,openhands} "$STACK_DIR/backups" "$STACK_DIR/logs"
-  cp -r "$(dirname "$0")/scripts/" "$STACK_DIR/scripts/"
-  chmod +x "$STACK_DIR"/scripts/*.sh
-  log "Scripts installed."
-}
+# Always pull embedding model (small, needed by all services)
+pull_model "nomic-embed-text"
 
-write_templates(){
-  mkdir -p "$STACK_DIR/templates" "$STACK_DIR/n8n-workflows"
-  cp -r "$(dirname "$0")/templates/" "$STACK_DIR/templates/"
-  cp -r "$(dirname "$0")/n8n-workflows/" "$STACK_DIR/n8n-workflows/"
-  log "Templates and starter workflows installed."
-}
+case "$MODEL_TIER" in
+  low)
+    # 8–15 GB: lightweight fast models
+    pull_model "mistral:7b"
+    pull_model "qwen2.5:7b"
+    OPENHANDS_MODEL="ollama/qwen2.5:7b"
+    PERPLEXICA_CHAT_MODEL="qwen2.5:7b"
+    ;;
+  base)
+    # 16–23 GB: solid daily-use tier
+    pull_model "qwen2.5:7b"
+    pull_model "qwen2.5-coder:7b"
+    pull_model "deepseek-r1:7b"
+    OPENHANDS_MODEL="ollama/qwen2.5-coder:7b"
+    PERPLEXICA_CHAT_MODEL="qwen2.5:7b"
+    ;;
+  mid)
+    # 24–47 GB: recommended — Mac Mini M4 Pro 24GB sweet spot
+    pull_model "qwen2.5:32b"
+    pull_model "qwen2.5-coder:14b"
+    pull_model "deepseek-r1:14b"
+    OPENHANDS_MODEL="ollama/qwen2.5-coder:14b"
+    PERPLEXICA_CHAT_MODEL="qwen2.5:32b"
+    ;;
+  high)
+    # 48+ GB: full power
+    pull_model "llama3.3:70b-instruct-q4_K_M"
+    pull_model "qwen2.5:32b"
+    pull_model "qwen2.5-coder:14b"
+    pull_model "deepseek-r1:32b"
+    OPENHANDS_MODEL="ollama/qwen2.5-coder:14b"
+    PERPLEXICA_CHAT_MODEL="llama3.3:70b-instruct-q4_K_M"
+    ;;
+esac
 
-write_manifest(){
-  cat > "$STACK_DIR/install-manifest.txt" <<MANIFEST
-Installed On: $(date)
-Install Profile: $INSTALL_PROFILE
-Stack Directory: $STACK_DIR
-Local Model: $DEFAULT_LOCAL_MODEL
-Coder Model: $DEFAULT_CODER_MODEL
-Embedding Model: $DEFAULT_EMBED_MODEL
-Qdrant Collection: $QDRANT_COLLECTION
-Enable OpenHands: $ENABLE_OPENHANDS
-RAM GB Detected: $RAM_GB
-Disk Free GB Detected: $DISK_GB
-OpenAI key set: $([[ -n "$OPENAI_API_KEY" ]] && echo yes || echo no)
-Perplexity key set: $([[ -n "$PERPLEXITY_API_KEY" ]] && echo yes || echo no)
-Anthropic key set: $([[ -n "$ANTHROPIC_API_KEY" ]] && echo yes || echo no)
-MANIFEST
-  log "Manifest written."
-}
-
-# ─── MAIN ────────────────────────────────────────────────────────────────────
-require_macos
-check_arch
-
-step "Home AI Elite Builder"
-echo "This interactive installer sets up a local-first home AI stack on macOS."
-echo "Answer the prompts. Manual checkpoints will pause and wait for you."
-echo ""
-
-RAM_GB=$(check_ram)
-DISK_GB=$(check_disk)
-step "Preflight"
-log "RAM: ${RAM_GB} GB  |  Free disk: ${DISK_GB} GB"
-(( RAM_GB < 16 )) && warn "16 GB+ recommended for local models."
-(( RAM_GB < 32 )) && warn "32 GB+ preferred for 32B parameter models."
-(( DISK_GB < 30 )) && warn "30 GB+ free disk recommended."
-for p in 3000 3001 5678 6333 11434; do
-  check_port "$p" && warn "Port $p is already in use — check before continuing." || true
+# Write selected models to .env
+for key_val in "OPENHANDS_MODEL=${OPENHANDS_MODEL}" "PERPLEXICA_CHAT_MODEL=${PERPLEXICA_CHAT_MODEL}"; do
+  key=$(echo "$key_val" | cut -d= -f1)
+  val=$(echo "$key_val" | cut -d= -f2-)
+  if grep -q "^${key}" .env; then
+    sed -i.bak "s|^${key}=.*|${key}=${val}|" .env && rm -f .env.bak
+  else
+    echo "${key}=${val}" >> .env
+  fi
 done
+log "OpenHands model: ${OPENHANDS_MODEL}"
+log "Perplexica chat model: ${PERPLEXICA_CHAT_MODEL}"
 
-step "Configuration"
-INSTALL_PROFILE=$(ask "Install profile" "standard")
-STACK_DIR=$(ask "Install location" "$HOME/home-ai-elite")
-DEFAULT_LOCAL_MODEL=$(ask "Default local reasoning model" "qwen3:32b")
-DEFAULT_CODER_MODEL=$(ask "Default coding model" "qwen3-coder")
-DEFAULT_EMBED_MODEL=$(ask "Default embedding model" "nomic-embed-text")
-QDRANT_COLLECTION=$(ask "Qdrant memory collection name" "home_ai_memory")
-ENABLE_OPENHANDS=$(ask "Install OpenHands autonomous coding agent? (yes/no)" "no")
-N8N_ENCRYPTION_KEY=$(ask "n8n encryption key" "$(random_secret)")
-N8N_USER_MANAGEMENT_JWT_SECRET=$(ask "n8n JWT secret" "$(random_secret)")
+# Update Perplexica config with correct model
+sed -i.bak "s|^CHAT_MODEL = .*|CHAT_MODEL = \"${PERPLEXICA_CHAT_MODEL}\"|" \
+  configs/perplexica/config.toml && rm -f configs/perplexica/config.toml.bak
 
-step "Cloud API keys (optional — press Enter to skip each)"
-OPENAI_API_KEY=$(ask_secret "OpenAI API key")
-PERPLEXITY_API_KEY=$(ask_secret "Perplexity API key")
-ANTHROPIC_API_KEY=$(ask_secret "Anthropic API key")
+# ── STEP 5: Docker Compose Up ─────────────────────────────────────────
+step "Pulling Docker Images & Starting All Services"
 
-step "Installing dependencies"
-ensure_brew
-brew update -q
-brew install git jq python@3.11 node uv ollama 2>/dev/null || true
+docker compose pull --quiet
+log "Images pulled"
 
-step "Docker Desktop"
-ensure_docker
-wait_for_docker
+docker compose up -d
+log "All services started"
 
-step "Ollama service"
-ensure_ollama
+# ── STEP 6: Health Checks ─────────────────────────────────────────────
+step "Waiting for Services to be Ready"
 
-step "Writing stack to $STACK_DIR"
-mkdir -p "$STACK_DIR"
-write_env
-write_compose
-write_scripts
-write_templates
-write_manifest
+wait_for_service() {
+  local name=$1; local url=$2; local max_wait=${3:-90}
+  local elapsed=0
+  printf "  Waiting for %-25s " "${name}..."
+  until curl -sf "$url" &>/dev/null; do
+    printf "."
+    sleep 3; elapsed=$((elapsed+3))
+    if (( elapsed >= max_wait )); then
+      echo " TIMEOUT"
+      warn "${name} not responding — check: docker compose logs"
+      return 1
+    fi
+  done
+  echo " ✓"
+  return 0
+}
 
-step "Launching services"
-"$STACK_DIR/scripts/bootstrap.sh"
+wait_for_service "Ollama"        "http://localhost:11434"       60
+wait_for_service "LiteLLM"       "http://localhost:4000/health" 120
+wait_for_service "Open WebUI"    "http://localhost:3000"        90
+wait_for_service "SearXNG"       "http://localhost:8080"        60
+wait_for_service "Qdrant"        "http://localhost:6333/healthz" 60
+wait_for_service "n8n"           "http://localhost:5678"        60
 
-step "Manual app setup"
-"$STACK_DIR/scripts/next-steps.sh"
+# ── STEP 7: Optional MCP Servers ──────────────────────────────────────
+step "MCP Server Setup (Optional)"
+if [[ -f "mcp/install-mcp-servers.sh" ]]; then
+  echo -e "  ${YELLOW}Install MCP servers? (GitHub + filesystem + Qdrant MCP) [y/N]${NC}"
+  read -r INSTALL_MCP
+  if [[ "$INSTALL_MCP" =~ ^[Yy]$ ]]; then
+    bash mcp/install-mcp-servers.sh
+  else
+    warn "Skipped — run manually: bash mcp/install-mcp-servers.sh"
+  fi
+fi
 
+# ── STEP 8: Done — Print Dashboard ────────────────────────────────────
 echo ""
-log "Install complete."
-echo "  Status:  $STACK_DIR/scripts/status.sh"
-echo "  Backup:  $STACK_DIR/scripts/backup.sh"
-echo "  Manifest: $STACK_DIR/install-manifest.txt"
-echo "  Repo:    https://github.com/TheYfactora12/home-ai-elite"
+echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}${BOLD}║          HOME AI ELITE IS READY  ✓                      ║${NC}"
+echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════════════════════╝${NC}"
+echo ""
+echo -e "  ${BOLD}Your Services:${NC}"
+echo -e "  ${CYAN}🧠 Chat (Perplexity UI):${NC}   http://localhost:3000"
+echo -e "  ${CYAN}🔍 Search AI (Perplexica):${NC}  http://localhost:3002"
+echo -e "  ${CYAN}💻 Codex Agent (OpenHands):${NC} http://localhost:3003"
+echo -e "  ${CYAN}🔎 Private Web Search:${NC}      http://localhost:8080"
+echo -e "  ${CYAN}⚙️  Automation (n8n):${NC}        http://localhost:5678"
+echo -e "  ${CYAN}📦 Vector Memory (Qdrant):${NC}  http://localhost:6333"
+echo -e "  ${CYAN}🔀 Model Router (LiteLLM):${NC}  http://localhost:4000"
+echo ""
+echo -e "  ${BOLD}Hardware Tier:${NC} ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
+echo -e "  ${BOLD}Coding Model:${NC}  ${OPENHANDS_MODEL}"
+echo -e "  ${BOLD}Chat Model:${NC}    ${PERPLEXICA_CHAT_MODEL}"
+echo ""
+echo -e "  ${YELLOW}Next steps:${NC}"
+echo -e "  1. http://localhost:3000  → create admin account, start chatting"
+echo -e "  2. http://localhost:3002  → try a Perplexica web search"
+echo -e "  3. http://localhost:3003  → give OpenHands a coding task"
+echo -e "  4. http://localhost:5678  → import n8n-workflows/ai-router.json"
+echo -e "  5. bash scripts/status.sh → health dashboard anytime"
+echo -e "  6. bash scripts/add-model.sh <model> → pull more models"
+echo ""
+echo -e "  ${BOLD}Repo:${NC} https://github.com/TheYfactora12/home-ai-elite"
+echo ""

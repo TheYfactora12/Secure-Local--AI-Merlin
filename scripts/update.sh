@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
+# Home AI Elite — Pull latest Docker images and restart
 set -euo pipefail
-cd "$(dirname "$0")/.."
-echo "Pulling latest Docker images..."
+echo "Pulling latest images..."
 docker compose pull
-echo "Restarting stack..."
+echo "Restarting with new images..."
 docker compose up -d
-echo "Updating Ollama..."
-brew upgrade ollama || true
-echo "Update complete."
+echo "Update complete. Run: bash scripts/status.sh"
