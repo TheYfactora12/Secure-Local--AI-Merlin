@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install ShellCheck
         run: sudo apt-get install -y shellcheck
-      - name: Run ShellCheck
+      - name: Run ShellCheck on all scripts
         run: |
           find . -name '*.sh' \
             -not -path './.git/*' \
@@ -47,9 +47,9 @@ jobs:
         run: |
           bash -n install.sh
           echo "✅ install.sh syntax OK"
-      - name: Check all scripts syntax
+      - name: Check all scripts syntax (scripts/ + launchd/ + pkg/scripts/ + tests/)
         run: |
-          for f in scripts/*.sh launchd/*.sh; do
+          for f in scripts/*.sh launchd/*.sh pkg/scripts/*.sh tests/*.sh; do
             [ -f "$f" ] || continue
             bash -n "$f" && echo "  ✅ $f" || (echo "  ❌ $f FAILED" && exit 1)
           done
@@ -78,7 +78,7 @@ jobs:
           [ $FAIL -eq 0 ] || exit 1
 
   validate-configs:
-    name: Configs — Validate YAML & XML
+    name: Configs — Validate YAML & PLIST
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -98,9 +98,46 @@ jobs:
             xmllint --noout "$f" 2>/dev/null && echo "  ✅ $f" || (echo "  ❌ $f" && exit 1)
           done
 
+  secret-scan:
+    name: Security — Secret pattern scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check for hardcoded secret patterns
+        run: |
+          echo "Scanning for hardcoded API key patterns..."
+          FAIL=0
+          # OpenAI keys
+          if grep -rn --include='*.sh' --include='*.yml' --include='*.yaml' --include='*.json' \
+            -E 'sk-[a-zA-Z0-9]{32,}' \
+            --exclude-dir='.git' --exclude='*.example' . 2>/dev/null; then
+            echo "❌ Potential OpenAI API key found"
+            FAIL=1
+          fi
+          # Google API keys
+          if grep -rn --include='*.sh' --include='*.yml' --include='*.yaml' \
+            -E 'AIza[a-zA-Z0-9_-]{35}' \
+            --exclude-dir='.git' --exclude='*.example' . 2>/dev/null; then
+            echo "❌ Potential Google API key found"
+            FAIL=1
+          fi
+          # GitHub PATs
+          if grep -rn --include='*.sh' --include='*.yml' --include='*.yaml' \
+            -E 'ghp_[a-zA-Z0-9]{36}' \
+            --exclude-dir='.git' --exclude='*.example' . 2>/dev/null; then
+            echo "❌ Potential GitHub PAT found"
+            FAIL=1
+          fi
+          if [ $FAIL -eq 0 ]; then
+            echo "✅ No hardcoded API key patterns found"
+          fi
+          [ $FAIL -eq 0 ] || exit 1
+
   ci-success:
     name: CI Passed
-    needs: [shellcheck, compose-validate, install-dryrun, validate-workflows, validate-configs]
+    needs: [shellcheck, compose-validate, install-dryrun, validate-workflows, validate-configs, secret-scan]
     runs-on: ubuntu-latest
     steps:
       - run: echo "✅ All CI checks passed — home-ai-elite installer is valid"
