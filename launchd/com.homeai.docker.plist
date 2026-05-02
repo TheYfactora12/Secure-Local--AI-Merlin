@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.homeai.docker.plist
+  Starts Docker Desktop on macOS login.
+
+  Install:
+    cp ~/home-ai-elite/launchd/com.homeai.docker.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.homeai.docker.plist
+
+  Docs: https://stackoverflow.com/questions/42637339/how-to-start-docker-for-mac-daemon-on-boot
+-->
+<plist version="1.0">
+<dict>
+  <!-- Unique label for this agent -->
+  <key>Label</key>
+  <string>com.homeai.docker</string>
+
+  <!-- Path to Docker Desktop binary -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/open</string>
+    <string>-a</string>
+    <string>Docker</string>
+  </array>
+
+  <!-- Start on login -->
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- Short delay to let the desktop session settle -->
+  <key>StartInterval</key>
+  <integer>0</integer>
+
+  <!-- Wait 5 seconds before launching -->
+  <key>ThrottleInterval</key>
+  <integer>5</integer>
+
+  <!-- Log stdout/stderr -->
+  <key>StandardOutPath</key>
+  <string>/tmp/homeai-docker.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/homeai-docker.log</string>
+
+  <!-- Do NOT restart continuously -- Docker manages itself once open -->
+  <key>KeepAlive</key>
+  <false/>
+</dict>
+</plist>

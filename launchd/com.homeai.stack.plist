@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.homeai.stack.plist
+  Starts all AI services (docker compose up) 30 seconds after login.
+  The 30s delay gives Docker Desktop time to fully initialize.
+
+  Install:
+    cp ~/home-ai-elite/launchd/com.homeai.stack.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.homeai.stack.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.homeai.stack</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-c</string>
+    <!-- Wait 30s for Docker to be ready, then start all services -->
+    <string>sleep 30 &amp;&amp; cd "$HOME/home-ai-elite" &amp;&amp; /usr/local/bin/docker compose up -d --remove-orphans &gt;&gt; /tmp/homeai-stack.log 2&gt;&amp;1</string>
+  </array>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- Restart the watcher if it crashes, but not the compose command itself -->
+  <key>KeepAlive</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/homeai-stack.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/homeai-stack.log</string>
+
+  <!-- Working directory -->
+  <key>WorkingDirectory</key>
+  <string>/Users/Shared</string>
+
+  <!-- Environment — ensure PATH includes Homebrew and Docker CLI -->
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+</dict>
+</plist>
