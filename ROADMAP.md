@@ -88,6 +88,85 @@
 - [ ] Multi-machine Wizard sync (Qdrant replication across 2+ local machines)
 - [ ] Wizard mobile companion (iOS shortcut → n8n webhook → Wizard brain)
 
+## 🔲 v1.2 — Hardware Layer + Full "Own Perplexity Computer" Stack
+> Research session 2026-05-02: goal is a local AI as capable as paid cloud tools on right hardware.
+
+### Hardware Decision Tree (document + automate preflight)
+- [ ] `docs/hardware-guide.md` — tiered hardware specs:
+  - Tier 1 (Minimum): Apple M2/M3 Mac mini, 16GB unified RAM, 512GB NVMe — runs 7B models
+  - Tier 2 (Recommended): Apple M3 Pro/Max, 36–64GB unified RAM — runs 32B models at full speed
+  - Tier 3 (Power): Mac Studio M2 Ultra / M3 Ultra, 96–192GB RAM — runs 70B+ locally
+  - Tier 4 (GPU Box): Linux + NVIDIA RTX 4090 (24GB VRAM) or dual 3090s — runs 70B quantized
+- [ ] `install.sh` hardware auto-detect: report tier, warn if under Tier 1
+- [ ] `docs/hardware-guide.md` — NVMe speed matters (models load from disk): min 2GB/s read
+- [ ] `docs/hardware-guide.md` — networking: gigabit LAN or better for multi-device access
+- [ ] `docs/hardware-guide.md` — power/cooling baseline per tier
+
+### Full Free Stack Map (the "own Perplexity" components)
+- [ ] **Search brain**: SearXNG (already in stack) + Perplexica as the search UI — verify wired end-to-end
+- [ ] **Code brain**: OpenHands (already in compose) — verify wizard routes CODING tasks to OpenHands
+- [ ] **Voice brain**: Whisper (STT) + Kokoro/Piper (TTS) — add to `docker-compose.yml`
+- [ ] **Image brain**: Stable Diffusion (AUTOMATIC1111 or ComfyUI) — optional compose profile
+- [ ] **Document brain**: Docling or Unstructured for PDF/doc ingestion into Qdrant
+- [ ] **Model quality**: verify `mistral-nemo`, `qwen2.5:32b`, `deepseek-r1:14b` in models.json as defaults
+- [ ] `docs/free-stack-map.md` — full component-to-paid-equivalent mapping table
+
+## 🔲 v1.3 — Competitive Gap Closers
+> These are the exact reasons open source home AI projects have failed or stayed inferior to paid tools.
+> Each item below is a documented failure pattern from real community data (2025–2026).
+> Closing these gaps is what makes Wizard as good as the paid ones.
+
+### Gap 1: Memory degrades over time (most common open-source failure)
+- Problem: RAG pipelines accumulate stale context. Model retrieves old memories alongside new ones.
+  Outputs look plausible but are wrong. Subtle, hard to catch.
+- Fix: [ ] Implement structured memory schema in Qdrant — define what gets stored, when it expires,
+  and what triggers an update. Not just "embed everything." Add `wizard memory clean` CLI command.
+
+### Gap 2: n8n + Ollama structured output failures (known production bug)
+- Problem: n8n Ollama node cancels requests mid-stream → HTTP 500 "context canceled" →
+  Structured Output Parser throws "Model output doesn't fit required format."
+  Affects any n8n agent workflow using local models with tool calls or JSON output.
+- Fix: [ ] Add response timeout + retry logic to all n8n workflows using Ollama nodes.
+  [ ] Add `wizard test-workflows` CLI command to validate all n8n workflows against local model.
+  [ ] Document workaround in `tests/README.md`.
+
+### Gap 3: No persistent cross-session identity (open source stacks feel "amnesia" by default)
+- Problem: Every new chat starts cold. Cloud tools (ChatGPT, Perplexity) remember user context
+  across sessions. Local stacks do not without explicit engineering.
+- Fix: [ ] `n8n-workflows/06-session-memory-bridge.json` — auto-inject top-5 relevant memories
+  into every new Open WebUI session via system prompt enrichment.
+
+### Gap 4: Web search quality gap vs. Perplexity
+- Problem: SearXNG returns results; Perplexica synthesizes them. But citation quality and
+  answer accuracy still trails Perplexity Pro (92% factual accuracy in LMSYS April 2026 eval).
+  Local stacks often skip re-ranking and source validation.
+- Fix: [ ] Add re-ranking step to Perplexica config (cross-encoder reranker via Ollama).
+  [ ] Add source freshness filter (prefer results < 30 days for research queries).
+  [ ] `wizard search "<query>"` CLI command to test search pipeline quality directly.
+
+### Gap 5: Setup complexity causes abandonment (most projects die here)
+- Problem: Even technical users report spending hours on Ollama/n8n connectivity issues,
+  wrong hostnames, port conflicts, and compose networking. Non-technical users give up entirely.
+- Fix: [ ] `scripts/doctor.sh` — pre-flight diagnostic that checks every service port, hostname
+  resolution, model availability, and n8n connectivity before user hits any issue.
+  [ ] `wizard doctor` CLI command wraps this.
+  [ ] Add troubleshooting section to README with the 10 most common failure modes.
+
+### Gap 6: Model quality perception gap (local models feel "dumber")
+- Problem: Users compare 7B local models to GPT-5 or Claude 3.5. Wrong comparison.
+  The right comparison is 32B+ quantized models vs. GPT-3.5-class — where local wins on privacy.
+  Perception gap causes abandonment even when the model is sufficient.
+- Fix: [ ] `docs/model-selection-guide.md` — map tasks to right model size. Stop defaulting
+  to smallest model. Set `qwen2.5:32b` as default brain on Tier 2+ hardware.
+  [ ] `install.sh` model tier auto-selection based on detected RAM.
+
+### Gap 7: No upgrade path keeps users locked on old models/versions
+- Problem: Self-hosted stacks go stale. Users run 6-month-old models because updating
+  is manual and risky. Cloud tools update silently.
+- Fix: [ ] `scripts/upgrade.sh` already exists — extend it to also pull latest models
+  from `models.json` and update n8n workflows from repo.
+  [ ] Add `wizard upgrade` to CLI. Add weekly upgrade reminder to daily briefing workflow.
+
 ---
 > **Rule:** Any new feature, bug found, or variation discovered gets added here before code is written.
 > Maintained by: TheYfactora12 | Oxford, MA
