@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════╗
-# ║        HOME AI ELITE — One-Shot Installer v0.2              ║
+# ║        HOME AI ELITE — One-Shot Installer v0.3              ║
 # ║  Perplexity + Codex + Memory + Automation on your hardware  ║
 # ║  https://github.com/TheYfactora12/home-ai-elite             ║
 # ╚══════════════════════════════════════════════════════════════╝
@@ -14,6 +14,7 @@ log()    { echo -e "${GREEN}[✓]${NC} $1"; }
 warn()   { echo -e "${YELLOW}[!]${NC} $1"; }
 err()    { echo -e "${RED}[✗]${NC} $1"; exit 1; }
 step()   { echo -e "\n${BLUE}${BOLD}━━━ $1 ━━━${NC}"; }
+info()   { echo -e "${CYAN}[i]${NC} $1"; }
 
 header() {
   clear
@@ -26,7 +27,7 @@ header() {
   echo '  ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝'
   echo -e "${NC}"
   echo -e "  ${BOLD}Home AI Elite — Your Own Perplexity + Codex${NC}"
-  echo -e "  Version 0.2  |  github.com/TheYfactora12/home-ai-elite\n"
+  echo -e "  Version 0.3  |  github.com/TheYfactora12/home-ai-elite\n"
 }
 
 header
@@ -111,15 +112,24 @@ else
   fi
 fi
 
-# Start Ollama
+# Start Ollama service
 if [[ "$OS" == "Darwin" ]]; then
   brew services start ollama 2>/dev/null || true
 else
   systemctl enable ollama 2>/dev/null || true
   systemctl start ollama 2>/dev/null || true
 fi
-sleep 3
-log "Ollama service started"
+
+# Wait for Ollama to be ready (replaces fragile sleep 3)
+log "Waiting for Ollama to be ready..."
+OLLAMA_WAIT=0
+until curl -sf http://localhost:11434 &>/dev/null; do
+  sleep 2; OLLAMA_WAIT=$((OLLAMA_WAIT+2))
+  if (( OLLAMA_WAIT >= 60 )); then
+    err "Ollama did not start within 60s. Check: brew services list (macOS) or systemctl status ollama (Linux)"
+  fi
+done
+log "Ollama service ready"
 
 # ── STEP 3: Environment Setup ─────────────────────────────────────────
 step "Environment Setup"
@@ -138,6 +148,11 @@ if [[ ! -f .env ]]; then
   warn ".env created — edit to add optional cloud API keys for escalation"
 else
   log ".env already exists — skipping"
+fi
+
+# Verify config.toml exists before attempting to patch it
+if [[ ! -f "configs/perplexica/config.toml" ]]; then
+  warn "configs/perplexica/config.toml not found — Perplexica model config will use defaults"
 fi
 
 # ── STEP 4: Pull Ollama Models (RAM-Aware) ────────────────────────────
@@ -201,8 +216,10 @@ log "OpenHands model: ${OPENHANDS_MODEL}"
 log "Perplexica chat model: ${PERPLEXICA_CHAT_MODEL}"
 
 # Update Perplexica config with correct model
-sed -i.bak "s|^CHAT_MODEL = .*|CHAT_MODEL = \"${PERPLEXICA_CHAT_MODEL}\"|" \
-  configs/perplexica/config.toml && rm -f configs/perplexica/config.toml.bak
+if [[ -f "configs/perplexica/config.toml" ]]; then
+  sed -i.bak "s|^CHAT_MODEL = .*|CHAT_MODEL = \"${PERPLEXICA_CHAT_MODEL}\"|" \
+    configs/perplexica/config.toml && rm -f configs/perplexica/config.toml.bak
+fi
 
 # ── STEP 5: Docker Compose Up ─────────────────────────────────────────
 step "Pulling Docker Images & Starting All Services"
@@ -233,12 +250,12 @@ wait_for_service() {
   return 0
 }
 
-wait_for_service "Ollama"        "http://localhost:11434"       60
-wait_for_service "LiteLLM"       "http://localhost:4000/health" 120
-wait_for_service "Open WebUI"    "http://localhost:3000"        90
-wait_for_service "SearXNG"       "http://localhost:8080"        60
+wait_for_service "Ollama"        "http://localhost:11434"        60
+wait_for_service "LiteLLM"       "http://localhost:4000/health"  120
+wait_for_service "Open WebUI"    "http://localhost:3000"         90
+wait_for_service "SearXNG"       "http://localhost:8080"         60
 wait_for_service "Qdrant"        "http://localhost:6333/healthz" 60
-wait_for_service "n8n"           "http://localhost:5678"        60
+wait_for_service "n8n"           "http://localhost:5678"         60
 
 # ── STEP 7: Optional MCP Servers ──────────────────────────────────────
 step "MCP Server Setup (Optional)"
@@ -271,7 +288,12 @@ echo -e "  ${BOLD}Hardware Tier:${NC} ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
 echo -e "  ${BOLD}Coding Model:${NC}  ${OPENHANDS_MODEL}"
 echo -e "  ${BOLD}Chat Model:${NC}    ${PERPLEXICA_CHAT_MODEL}"
 echo ""
-echo -e "  ${YELLOW}Next steps:${NC}"
+echo -e "  ${YELLOW}⚠  SECURITY: Change these defaults in .env before first use:${NC}"
+echo -e "     WEBUI_SECRET_KEY  (auto-generated if openssl available)"
+echo -e "     N8N_PASSWORD      (default: changeme)"
+echo -e "     LITELLM_MASTER_KEY (default: sk-home-ai-elite)"
+echo ""
+echo -e "  ${BOLD}Next steps:${NC}"
 echo -e "  1. http://localhost:3000  → create admin account, start chatting"
 echo -e "  2. http://localhost:3002  → try a Perplexica web search"
 echo -e "  3. http://localhost:3003  → give OpenHands a coding task"
