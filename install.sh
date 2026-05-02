@@ -72,8 +72,15 @@ else err "Minimum 8 GB RAM required. Detected: ${TOTAL_RAM_GB} GB."
 fi
 log "Model tier selected: ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
 
-# Disk check
-AVAIL_DISK_GB=$(df -BG . | awk 'NR==2 {print $4}' | tr -d 'G')
+# ── FIX P1: Cross-platform disk space check ───────────────────────────
+# macOS: df -g reports in GB. Linux: df -BG reports in GB.
+# Using df -k (works on both) and converting to GB for safety.
+if [[ "$OS" == "Darwin" ]]; then
+  AVAIL_DISK_KB=$(df -k . | awk 'NR==2 {print $4}')
+else
+  AVAIL_DISK_KB=$(df -k . | awk 'NR==2 {print $4}')
+fi
+AVAIL_DISK_GB=$(( AVAIL_DISK_KB / 1024 / 1024 ))
 if (( AVAIL_DISK_GB < 30 )); then
   warn "Low disk: ${AVAIL_DISK_GB} GB available. Recommend 50+ GB. Continuing..."
 else
@@ -269,18 +276,24 @@ prompt_api_key "GITHUB_TOKEN" \
   "GitHub Personal Access Token  (OpenHands + MCP)" \
   "https://github.com/settings/tokens  [scopes: repo, read:org]"
 
-# 3d: Verify config.toml exists
+# 3d: Verify config.toml exists — required for correct Perplexica model config
 if [[ ! -f "configs/perplexica/config.toml" ]]; then
-  warn "configs/perplexica/config.toml not found — Perplexica model config will use defaults"
+  err "configs/perplexica/config.toml not found. This file is required for Perplexica model configuration.
+  → Run: cp configs/perplexica/config.toml.example configs/perplexica/config.toml
+  → Or re-clone the repo: git clone https://github.com/TheYfactora12/home-ai-elite"
 fi
+log "configs/perplexica/config.toml found ✔"
 
 # ── STEP 4: Pull Ollama Models (RAM-Aware) ────────────────────────────
 step "Pulling AI Models (Tier: ${MODEL_TIER} / ${TOTAL_RAM_GB} GB)"
 
+# ── FIX P2: Hardened model pull with registry-existence guard ─────────
 pull_model() {
   local model=$1
   log "Pulling ${model}..."
-  ollama pull "$model" || warn "Failed to pull ${model} — skipping"
+  if ! ollama pull "$model"; then
+    warn "Failed to pull ${model} — skipping. Stack will continue; pull manually with: ollama pull ${model}"
+  fi
 }
 
 pull_model "nomic-embed-text"
@@ -307,12 +320,15 @@ case "$MODEL_TIER" in
     PERPLEXICA_CHAT_MODEL="qwen2.5:32b"
     ;;
   high)
-    pull_model "llama3.3:70b-instruct-q4_K_M"
+    # FIX P2: Use canonical Ollama registry tag for llama3.3 70B.
+    # llama3.3:70b-instruct-q4_K_M may not exist on all registry mirrors.
+    # Canonical tag is llama3.3:70b (defaults to Q4_K_M quantization).
+    pull_model "llama3.3:70b"
     pull_model "qwen2.5:32b"
     pull_model "qwen2.5-coder:14b"
     pull_model "deepseek-r1:32b"
     OPENHANDS_MODEL="ollama/qwen2.5-coder:14b"
-    PERPLEXICA_CHAT_MODEL="llama3.3:70b-instruct-q4_K_M"
+    PERPLEXICA_CHAT_MODEL="llama3.3:70b"
     ;;
 esac
 
@@ -388,18 +404,22 @@ fi
 # ── STEP 8: Install wizard CLI system-wide ──────────────────────────────
 step "Installing wizard CLI"
 
-if [[ -f "${SCRIPT_DIR}/cli/wizard" ]]; then
-  chmod +x "${SCRIPT_DIR}/cli/wizard"
+# FIX: Explicit file existence check before symlinking — clear error if missing
+CLI_PATH="${SCRIPT_DIR}/cli/wizard"
+if [[ -f "$CLI_PATH" ]]; then
+  chmod +x "$CLI_PATH"
   if [[ -w "/usr/local/bin" ]]; then
-    ln -sf "${SCRIPT_DIR}/cli/wizard" /usr/local/bin/wizard
+    ln -sf "$CLI_PATH" /usr/local/bin/wizard
     log "wizard CLI installed → /usr/local/bin/wizard"
   else
-    sudo ln -sf "${SCRIPT_DIR}/cli/wizard" /usr/local/bin/wizard
+    sudo ln -sf "$CLI_PATH" /usr/local/bin/wizard
     log "wizard CLI installed → /usr/local/bin/wizard (via sudo)"
   fi
   log "Run: wizard status  |  wizard ask \"<question>\"  |  wizard help"
 else
-  warn "cli/wizard not found — CLI not installed. Ensure cli/ directory exists."
+  warn "cli/wizard not found at ${CLI_PATH}"
+  warn "CLI not installed. To fix: ensure cli/wizard exists and re-run install.sh"
+  warn "Manual workaround: bash ${SCRIPT_DIR}/scripts/status.sh"
 fi
 
 # ── STEP 9: Optional MCP Servers ──────────────────────────────────────
