@@ -27,21 +27,47 @@
 - [x] `scripts/upgrade.sh` — backup → pull → restart → health check → auto-rollback
 - [x] `.github/workflows/release.yml` — auto-tag GitHub releases on main
 
-## 🔲 v0.5 — macOS PKG Installer
-- [ ] `pkg/build-pkg.sh` — sign & notarize a `.pkg` with pkgbuild
-- [ ] Pre-install script: preflight checks (macOS version, RAM, disk space)
-- [ ] Post-install script: runs install.sh + bootstrap.sh silently
-- [ ] LaunchAgent installed by the pkg
-- [ ] Uninstaller bundled inside the pkg
+## ✅ v0.5 — macOS PKG Installer
+- [x] `pkg/build-pkg.sh` — sign & notarize a `.pkg` with pkgbuild
+- [x] Pre-install script: preflight checks (macOS version, RAM, disk space)
+- [x] Post-install script: runs install.sh + bootstrap.sh silently
+- [x] LaunchAgent installed by the pkg
+- [x] Uninstaller bundled inside the pkg
+> ⚠️  Real-hardware test on a clean Mac still needed to fully close this out.
 
-## 🔲 v0.6 — Production Hardening
-- [ ] Nginx reverse proxy with HTTPS (self-signed + Let's Encrypt)
-- [ ] Fail2ban for Open WebUI brute-force protection
-- [ ] Watchtower for automatic Docker image updates
-- [ ] Automated daily backups with retention policy
-- [ ] Healthcheck webhook (ping uptime monitor on success)
+## ✅ v0.6 — QC Hardening & Test Layer
+- [x] `tests/e2e-test.sh` — service health end-to-end validation
+- [x] `tests/README.md` — how to run tests, expected output, failure guide
+- [x] `.gitleaks.toml` — secret scanning config
+- [x] CI: `tests/` + `pkg/scripts/` syntax check added
+- [x] CI: secret scan job (gitleaks + pattern check)
+> ⚠️  Security hardening items (Nginx, Fail2ban, Watchtower, backup timer) moved to v0.7.
 
-## 🔲 v0.7 — Model Management UI
-- [ ] Web UI for model browsing, pulling, deletion
-- [ ] One-click model tier switching (8GB / 16GB / 32GB / 64GB)
-- [ ] Bandwidth-aware pull scheduler
+## 🔲 v0.7 — Security Hardening (NEXT)
+- [ ] Nginx reverse proxy + self-signed TLS for all local services
+- [ ] Fail2ban protecting Open WebUI (brute-force login protection)
+- [ ] Watchtower for automatic Docker image security updates
+- [ ] `launchd/com.homeai.backup.plist` — daily backup timer (7-day retention)
+- [ ] Healthcheck webhook to uptime monitor (Uptime Kuma or similar)
+- [ ] `scripts/healthcheck.sh` — sends ping on stack health pass
+
+## 🔲 v0.8 — Model Management UI
+- [ ] Local web UI for model browsing, pulling, deletion
+- [ ] One-click model tier switching (8GB / 16GB / 32GB / 64GB profiles)
+- [ ] Bandwidth-aware pull scheduler (avoid large pulls during work hours)
+- [ ] Model usage dashboard (which models called, how often, latency)
+
+## 🔲 v0.9 — MCP + Agent Layer
+- [ ] Fully tested MCP server installs (GitHub, Qdrant, filesystem, fetch)
+- [ ] Claude Desktop config auto-generated from `.env`
+- [ ] n8n agent workflow: triage → route → respond → log to Qdrant
+- [ ] Perplexica connected to local Ollama (zero cloud dependency mode)
+- [ ] SearXNG verified as Perplexica backend (no OpenAI required)
+
+## 🔲 v1.0 — Signed Release
+- [ ] Signed + notarized `.pkg` tested on clean macOS 14+ machine
+- [ ] Full install-to-verify under 30 minutes documented and timed
+- [ ] GitHub Release with `.pkg` artifact attached
+- [ ] One-line install command published in README
+- [ ] CHANGELOG.md covering v0.1 → v1.0
+- [ ] Security review: no hardcoded secrets, all ports documented, firewall rules
