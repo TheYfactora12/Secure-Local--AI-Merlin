@@ -1,0 +1,41 @@
+# home-ai-elite — Fail2ban jail config (v0.7)
+# Protects Open WebUI from brute-force login attempts
+# Ban threshold: 5 failures in 10 minutes = 1 hour ban
+
+[DEFAULT]
+bantime  = 3600
+findtime = 600
+maxretry = 5
+backend  = auto
+destemail = root@localhost
+action = %(action_mw)s
+
+# ───────────────────────
+# Open WebUI login protection
+# ───────────────────────
+[open-webui]
+enabled  = true
+port     = 3000,443
+filter   = open-webui
+logpath  = /var/log/nginx/access.log
+maxretry = 5
+bantime  = 3600
+findtime = 600
+
+# ───────────────────────
+# n8n login protection
+# ───────────────────────
+[n8n]
+enabled  = true
+port     = 5678,443
+filter   = n8n
+logpath  = /var/log/nginx/access.log
+maxretry = 5
+bantime  = 3600
+findtime = 600
+
+# ───────────────────────
+# SSH protection (if applicable)
+# ───────────────────────
+[sshd]
+enabled  = false
