@@ -1,0 +1,13 @@
+{
+  "_comment": "Edit to control which models Wizard pulls on install. required:true = always pulled.",
+  "models": [
+    {"name": "llama3.2",            "role": "classifier",    "size": "2GB",   "required": true,  "description": "Fast task classifier — routes SENSITIVE/CODING/RESEARCH/GENERAL"},
+    {"name": "mistral",             "role": "general",       "size": "4GB",   "required": true,  "description": "General tasks, sensitive tasks, daily briefing"},
+    {"name": "nomic-embed-text",    "role": "embeddings",    "size": "274MB", "required": true,  "description": "Converts text to memory vectors for Qdrant RAG"},
+    {"name": "deepseek-coder:6.7b","role": "coding",        "size": "3.8GB", "required": true,  "description": "Coding fallback when no OpenAI key provided"},
+    {"name": "llama3.1:8b",         "role": "reasoning",     "size": "4.7GB", "required": false, "description": "Better reasoning — pull after setup if you have RAM"},
+    {"name": "llava",               "role": "vision",        "size": "4.5GB", "required": false, "description": "Image/screenshot analysis"},
+    {"name": "codellama:13b",       "role": "coding-pro",    "size": "7.4GB", "required": false, "description": "Stronger coding (needs 16GB+ RAM)"},
+    {"name": "llama3.1:32b",        "role": "reasoning-pro", "size": "19GB",  "required": false, "description": "Serious analysis (needs 24GB+ VRAM or 64GB RAM)"}
+  ]
+}

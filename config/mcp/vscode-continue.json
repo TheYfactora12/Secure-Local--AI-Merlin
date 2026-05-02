@@ -1,0 +1,13 @@
+{
+  "_comment": "Add to .continue/config.json in VS Code for local AI autocomplete and chat",
+  "models": [
+    { "title": "Wizard (Mistral)", "provider": "ollama", "model": "mistral", "apiBase": "http://localhost:11434" },
+    { "title": "Wizard Coder (DeepSeek)", "provider": "ollama", "model": "deepseek-coder:6.7b", "apiBase": "http://localhost:11434" }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Wizard Autocomplete",
+    "provider": "ollama",
+    "model": "deepseek-coder:6.7b",
+    "apiBase": "http://localhost:11434"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "_comment": "Merge 'mcpServers' into ~/Library/Application Support/Claude/claude_desktop_config.json then restart Claude Desktop.",
+  "mcpServers": {
+    "wizard-brain": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"],
+      "env": { "BASE_URL": "http://localhost:11434" }
+    },
+    "wizard-memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"],
+      "env": { "BASE_URL": "http://localhost:6333" }
+    }
+  },
+  "setup_instructions": [
+    "1. brew install node",
+    "2. Claude Desktop > Settings > Developer > Edit Config",
+    "3. Merge the mcpServers block above",
+    "4. Restart Claude Desktop",
+    "",
+    "VS Code Continue extension — add to .continue/config.json:",
+    "{ title: 'Wizard', provider: 'ollama', model: 'mistral', apiBase: 'http://localhost:11434' }"
+  ]
+}

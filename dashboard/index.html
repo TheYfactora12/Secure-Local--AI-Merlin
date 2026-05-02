@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WIZARD — AI Stack Dashboard</title>
+<style>
+:root {
+  --bg: #0d0d0f; --surface: #141418; --surface2: #1a1a20; --border: #2a2a35;
+  --text: #e8e8f0; --muted: #7a7a90; --faint: #3a3a4a;
+  --teal: #00d4b4; --teal2: #009e87; --blue: #4a9eff; --gold: #f0b429;
+  --red: #ff5c5c; --green: #4ade80; --purple: #a78bfa;
+  --font: 'JetBrains Mono', 'Fira Code', monospace;
+  --sans: 'Inter', system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; min-height: 100vh; }
+.header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-text { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+.logo-text span { color: var(--teal); }
+.refresh-btn { background: var(--teal2); color: #000; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; }
+.main { padding: 24px; display: grid; grid-template-columns: 260px 1fr; gap: 20px; max-width: 1400px; margin: 0 auto; }
+.sidebar { display: flex; flex-direction: column; gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; }
+.service { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--faint); }
+.service:last-child { border-bottom: none; }
+.service-left { display: flex; align-items: center; gap: 10px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot.up { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+.dot.down { background: var(--red); }
+.dot.checking { background: var(--gold); animation: blink 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.service-name { font-size: 13px; font-weight: 500; }
+.service-port { font-size: 11px; color: var(--muted); font-family: var(--font); }
+.service-link { font-size: 11px; color: var(--teal); text-decoration: none; }
+.qlink { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; text-decoration: none; color: var(--text); font-size: 13px; margin-bottom: 8px; }
+.stat-row { display: flex; justify-content: space-between; padding: 6px 0; }
+.stat-label { font-size: 12px; color: var(--muted); }
+.stat-value { font-size: 14px; font-weight: 600; font-family: var(--font); color: var(--teal); }
+.content { display: flex; flex-direction: column; gap: 20px; }
+.content-top { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.mode-pills { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.pill { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid transparent; }
+.pill[data-mode="GENERAL"] { background: rgba(74,158,255,0.15); border-color: var(--blue); color: var(--blue); }
+.pill[data-mode="GENERAL"].active { background: var(--blue); color: #000; }
+.pill[data-mode="CODING"] { background: rgba(167,139,250,0.15); border-color: var(--purple); color: var(--purple); }
+.pill[data-mode="CODING"].active { background: var(--purple); color: #000; }
+.pill[data-mode="RESEARCH"] { background: rgba(240,180,41,0.15); border-color: var(--gold); color: var(--gold); }
+.pill[data-mode="RESEARCH"].active { background: var(--gold); color: #000; }
+.pill[data-mode="SENSITIVE"] { background: rgba(255,92,92,0.15); border-color: var(--red); color: var(--red); }
+.pill[data-mode="SENSITIVE"].active { background: var(--red); color: #fff; }
+.ask-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px; resize: vertical; min-height: 80px; font-family: inherit; }
+.ask-input:focus { outline: none; border-color: var(--teal); }
+.ask-btn { margin-top: 8px; width: 100%; background: var(--teal2); color: #000; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px; }
+.response-box { margin-top: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; font-family: var(--font); display: none; max-height: 200px; overflow-y: auto; }
+.response-box.visible { display: block; }
+.response-meta { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.models-list { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
+.model-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--surface2); border-radius: 6px; }
+.model-name { font-family: var(--font); font-size: 12px; }
+.model-role { font-size: 10px; color: var(--muted); background: var(--faint); padding: 2px 6px; border-radius: 4px; }
+.model-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+.model-badge.ready { background: rgba(74,222,128,0.15); color: var(--green); }
+.model-badge.missing { background: rgba(255,92,92,0.15); color: var(--red); }
+.activity-log { height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.log-entry { display: flex; gap: 10px; padding: 6px 8px; border-radius: 6px; font-size: 12px; background: var(--surface2); }
+.log-time { color: var(--muted); font-family: var(--font); white-space: nowrap; }
+.log-level { font-weight: 600; font-size: 10px; padding: 1px 6px; border-radius: 3px; align-self: center; white-space: nowrap; }
+.log-level.info { background: rgba(74,158,255,0.2); color: var(--blue); }
+.log-level.ok { background: rgba(74,222,128,0.2); color: var(--green); }
+.log-level.warn { background: rgba(240,180,41,0.2); color: var(--gold); }
+.log-level.error { background: rgba(255,92,92,0.2); color: var(--red); }
+.log-msg { color: var(--text); flex: 1; }
+.routing-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.routing-table th { background: var(--surface2); padding: 8px 10px; text-align: left; font-size: 10px; text-transform: uppercase; color: var(--muted); }
+.routing-table td { padding: 8px 10px; border-top: 1px solid var(--faint); }
+.type-badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+.type-badge.SENSITIVE { background: rgba(255,92,92,0.15); color: var(--red); }
+.type-badge.CODING { background: rgba(167,139,250,0.15); color: var(--purple); }
+.type-badge.RESEARCH { background: rgba(240,180,41,0.15); color: var(--gold); }
+.type-badge.GENERAL { background: rgba(74,158,255,0.15); color: var(--blue); }
+.local-badge { background: rgba(74,222,128,0.1); color: var(--green); padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+.cloud-badge { background: rgba(74,158,255,0.1); color: var(--blue); padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+@media (max-width: 900px) { .main { grid-template-columns: 1fr; } .content-top { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="logo">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" stroke="#00d4b4" stroke-width="1.5"/><path d="M7 10l3.5 8L14 11l3.5 7L21 10" stroke="#00d4b4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="14" cy="6" r="2" fill="#00d4b4"/></svg>
+    <div class="logo-text"><span>WIZARD</span> AI Stack</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span style="background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px;font-size:12px;color:var(--muted)" id="stack-time">checking...</span>
+    <button class="refresh-btn" onclick="refreshAll()">↻ Refresh</button>
+  </div>
+</header>
+<div class="main">
+  <div class="sidebar">
+    <div class="card">
+      <div class="card-title">Stack Health</div>
+      <div class="service"><div class="service-left"><div class="dot checking" id="dot-brain"></div><div><div class="service-name">Wizard Brain</div><div class="service-port">:11434 — Ollama</div></div></div><a href="http://localhost:11434" target="_blank" class="service-link">open ↗</a></div>
+      <div class="service"><div class="service-left"><div class="dot checking" id="dot-chat"></div><div><div class="service-name">Wizard Chat</div><div class="service-port">:3001 — Open WebUI</div></div></div><a href="http://localhost:3001" target="_blank" class="service-link">open ↗</a></div>
+      <div class="service"><div class="service-left"><div class="dot checking" id="dot-memory"></div><div><div class="service-name">Wizard Memory</div><div class="service-port">:6333 — Qdrant</div></div></div><a href="http://localhost:6333/dashboard" target="_blank" class="service-link">open ↗</a></div>
+      <div class="service"><div class="service-left"><div class="dot checking" id="dot-auto"></div><div><div class="service-name">Automation</div><div class="service-port">:5678 — n8n</div></div></div><a href="http://localhost:5678" target="_blank" class="service-link">open ↗</a></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Quick Access</div>
+      <a href="http://localhost:3001" target="_blank" class="qlink"><span>💬</span>Chat with Wizard</a>
+      <a href="http://localhost:5678" target="_blank" class="qlink"><span>⚙️</span>n8n Workflows</a>
+      <a href="http://localhost:6333/dashboard" target="_blank" class="qlink"><span>🧠</span>Memory Browser</a>
+    </div>
+    <div class="card">
+      <div class="card-title">Memory Stats</div>
+      <div class="stat-row"><span class="stat-label">Conversations</span><span class="stat-value" id="mem-conv">—</span></div>
+      <div class="stat-row"><span class="stat-label">Documents</span><span class="stat-value" id="mem-docs">—</span></div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="content-top">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span style="font-size:18px">🧙</span><h2 style="font-size:16px;font-weight:600">Ask Wizard</h2></div>
+        <div class="mode-pills">
+          <div class="pill active" data-mode="GENERAL" onclick="setMode(this)">GENERAL</div>
+          <div class="pill" data-mode="CODING" onclick="setMode(this)">CODING</div>
+          <div class="pill" data-mode="RESEARCH" onclick="setMode(this)">RESEARCH</div>
+          <div class="pill" data-mode="SENSITIVE" onclick="setMode(this)">SENSITIVE</div>
+        </div>
+        <textarea class="ask-input" id="ask-input" placeholder="Ask Wizard anything..." rows="4"></textarea>
+        <button class="ask-btn" id="ask-btn" onclick="askWizard()">Ask Wizard →</button>
+        <div class="response-box" id="response-box"><div class="response-meta" id="response-meta"></div><div id="response-text"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Wizard Brain — Models</div>
+        <div class="models-list" id="models-list"><div style="color:var(--muted);font-size:13px;padding:8px">Checking brain...</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Task Routing Map</div>
+      <table class="routing-table">
+        <thead><tr><th>Type</th><th>Without API Keys</th><th>With API Keys</th><th>Privacy</th></tr></thead>
+        <tbody>
+          <tr><td><span class="type-badge SENSITIVE">SENSITIVE</span></td><td><span class="local-badge">Wizard (Mistral)</span></td><td><span class="local-badge">Wizard (Mistral)</span></td><td style="color:var(--green);font-size:12px;font-weight:600">🔒 Always local</td></tr>
+          <tr><td><span class="type-badge CODING">CODING</span></td><td><span class="local-badge">DeepSeek-Coder</span></td><td><span class="cloud-badge">OpenAI GPT-4o</span> → <span class="local-badge">fallback</span></td><td style="color:var(--muted);font-size:12px">Cloud optional</td></tr>
+          <tr><td><span class="type-badge RESEARCH">RESEARCH</span></td><td><span class="local-badge">Wizard (Mistral)</span></td><td><span class="cloud-badge">Perplexity sonar-pro</span> → <span class="local-badge">fallback</span></td><td style="color:var(--muted);font-size:12px">Cloud optional</td></tr>
+          <tr><td><span class="type-badge GENERAL">GENERAL</span></td><td><span class="local-badge">Wizard (Mistral)</span></td><td><span class="local-badge">Wizard (Mistral)</span></td><td style="color:var(--green);font-size:12px;font-weight:600">🔒 Always local</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Activity Log</div>
+      <div class="activity-log" id="activity-log">
+        <div class="log-entry"><span class="log-time" id="init-time">--:--:--</span><span class="log-level info">INFO</span><span class="log-msg">Dashboard initialized</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+let currentMode='GENERAL';
+const knownModels=[{name:'llama3.2',role:'classifier'},{name:'mistral',role:'general'},{name:'nomic-embed-text',role:'embeddings'},{name:'deepseek-coder:6.7b',role:'coding'}];
+function ts(){return new Date().toLocaleTimeString('en-US',{hour12:false});}
+function log(msg,level='info'){const l=document.getElementById('activity-log');const e=document.createElement('div');e.className='log-entry';e.innerHTML=`<span class="log-time">${ts()}</span><span class="log-level ${level}">${level.toUpperCase()}</span><span class="log-msg">${msg}</span>`;l.prepend(e);if(l.children.length>50)l.removeChild(l.lastChild);}
+function setDot(id,status){const d=document.getElementById('dot-'+id);if(d)d.className='dot '+status;}
+function setMode(el){document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');currentMode=el.dataset.mode;}
+async function checkService(id,url){try{const r=await fetch(url,{signal:AbortSignal.timeout(3000)});if(r.ok||r.status<500){setDot(id,'up');return true;}}catch(e){}setDot(id,'down');return false;}
+async function loadModels(){const list=document.getElementById('models-list');try{const r=await fetch('http://localhost:11434/api/tags',{signal:AbortSignal.timeout(4000)});const d=await r.json();const loaded=(d.models||[]).map(m=>m.name.split(':')[0]);list.innerHTML='';knownModels.forEach(m=>{const base=m.name.split(':')[0];const ready=loaded.some(l=>l.includes(base)||m.name.includes(l));list.innerHTML+=`<div class="model-row"><div><div class="model-name">${m.name}</div><div class="model-role">${m.role}</div></div><span class="model-badge ${ready?'ready':'missing'}">${ready?'LOADED':'MISSING'}</span></div>`;});}catch(e){list.innerHTML='<div style="color:var(--red);font-size:12px;padding:8px">Brain offline</div>';}}
+async function loadMemoryStats(){for(const[id,col]of[['mem-conv','conversations'],['mem-docs','documents']]){try{const r=await fetch(`http://localhost:6333/collections/${col}`,{signal:AbortSignal.timeout(3000)});const d=await r.json();document.getElementById(id).textContent=(d.result?.points_count??'—').toLocaleString();}catch(e){document.getElementById(id).textContent='—';}}}
+async function askWizard(){const input=document.getElementById('ask-input').value.trim();if(!input)return;const btn=document.getElementById('ask-btn');const box=document.getElementById('response-box');const meta=document.getElementById('response-meta');const txt=document.getElementById('response-text');btn.disabled=true;btn.textContent='Wizard is thinking...';box.className='response-box visible';meta.textContent=`Mode: ${currentMode} | Via: n8n router`;txt.textContent='⏳ Routing task...';log(`Task routed — type: ${currentMode}`,'info');try{const r=await fetch('http://localhost:5678/webhook/wizard-task',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task:input,mode:currentMode}),signal:AbortSignal.timeout(30000)});const d=await r.json();txt.textContent=d.result||d.response||JSON.stringify(d);meta.textContent=`Mode: ${d.wizard_classification||currentMode} | ${ts()}`;log(`Response received`,'ok');}catch(e){try{const r2=await fetch('http://localhost:11434/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'mistral',prompt:input,stream:false}),signal:AbortSignal.timeout(30000)});const d2=await r2.json();txt.textContent=d2.response||'No response';meta.textContent=`Direct to Wizard Brain | ${ts()}`;log('n8n offline — direct brain response','warn');}catch(e2){txt.textContent='Could not reach Wizard. Run: wizard start';log('Wizard unreachable','error');}}
+btn.disabled=false;btn.textContent='Ask Wizard →';}
+document.getElementById('ask-input').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))askWizard();});
+async function refreshAll(){document.getElementById('stack-time').textContent=ts();await Promise.all([checkService('brain','http://localhost:11434/api/tags'),checkService('chat','http://localhost:3001'),checkService('memory','http://localhost:6333/healthz'),checkService('auto','http://localhost:5678/healthz')]);await loadModels();await loadMemoryStats();}
+document.getElementById('init-time').textContent=ts();
+document.getElementById('stack-time').textContent=ts();
+refreshAll();
+setInterval(refreshAll,30000);
+</script>
+</body>
+</html>

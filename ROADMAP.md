@@ -1,4 +1,4 @@
-# home-ai-elite Roadmap
+# WIZARD AI Stack — Roadmap
 
 ## ✅ v0.1 — Foundation
 - [x] Repo scaffolding & folder structure
@@ -44,31 +44,50 @@
 
 ## ✅ v0.7 — Security Hardening
 - [x] `configs/nginx/nginx.conf` — Nginx TLS reverse proxy, HTTP→HTTPS redirect, rate limiting
-- [x] `configs/fail2ban/jail.local` — Fail2ban: 5 failures = 1hr ban on Open WebUI + n8n
-- [x] `configs/fail2ban/filter.d/open-webui.conf` — login failure pattern
-- [x] `configs/fail2ban/filter.d/n8n.conf` — auth failure pattern
-- [x] `docker-compose.yml` — Nginx, Fail2ban, Watchtower added to stack
-- [x] `launchd/com.homeai.backup.plist` — daily 2am backup timer (launchd)
+- [x] `configs/fail2ban/jail.local` — Fail2ban: 5 failures = 1hr ban
+- [x] `configs/fail2ban/filter.d/open-webui.conf` + `n8n.conf`
+- [x] `docker-compose.yml` — Nginx, Fail2ban, Watchtower added
+- [x] `launchd/com.homeai.backup.plist` — daily 2am backup timer
 - [x] `scripts/generate-certs.sh` — self-signed TLS cert generator
-- [x] `scripts/healthcheck.sh` — full stack health check + optional webhook ping
+- [x] `scripts/healthcheck.sh` — full stack health + optional webhook ping
 
-## 🔲 v0.8 — Model Management UI (NEXT)
-- [ ] Local web UI for model browsing, pulling, deletion
-- [ ] One-click model tier switching (8GB / 16GB / 32GB / 64GB profiles)
-- [ ] Bandwidth-aware pull scheduler (avoid large pulls during work hours)
-- [ ] Model usage dashboard (which models called, how often, latency)
+## ✅ v0.8 — Wizard Brain + Model Management (DONE)
+- [x] Brain renamed to **Wizard** — consistent across all containers, scripts, and workflows
+- [x] `config/models/models.json` — declarative model manifest (required/optional, role, size)
+- [x] `install.sh` reads `models.json` — no script editing needed to add/remove models
+- [x] `dashboard/index.html` — Wizard HQ: live health dots, Ask panel, routing map, model status, activity log
+- [x] `cli/wizard` — full CLI: `wizard ask`, `wizard route`, `wizard pull`, `wizard train`, `wizard backup`, `wizard open`, `wizard status`
+- [x] CLI symlinked system-wide on install (available as `wizard` anywhere in terminal)
+- [x] `backup/backup.sh` + `backup/restore.sh` — Qdrant memory + n8n workflow backup/restore
+- [x] `config/mcp/mcp-claude-desktop.json` — Claude Desktop MCP integration ready to paste
+- [x] `config/mcp/vscode-continue.json` — VS Code Continue extension config
 
-## 🔲 v0.9 — MCP + Agent Layer
-- [ ] Fully tested MCP server installs (GitHub, Qdrant, filesystem, fetch)
-- [ ] Claude Desktop config auto-generated from `.env`
-- [ ] n8n agent workflow: triage → route → respond → log to Qdrant
-- [ ] Perplexica connected to local Ollama (zero cloud dependency mode)
-- [ ] SearXNG verified as Perplexica backend (no OpenAI required)
+## ✅ v0.9 — Agent + Routing Layer (DONE)
+- [x] `n8n-workflows/01-smart-task-router.json` — Wizard classifies SENSITIVE/CODING/RESEARCH/GENERAL, routes accordingly
+- [x] `n8n-workflows/02-daily-briefing.json` — 6AM InfoSec briefing (Perplexity news + local checklist)
+- [x] `n8n-workflows/03-wizard-memory-ingestor.json` — RAG: embed docs into Qdrant via nomic-embed-text
+- [x] `n8n-workflows/04-wizard-training-capture.json` — Wizard self-scores exchanges, saves quality ≥7 to memory
+- [x] `n8n-workflows/05-wizard-health-monitor.json` — 15-min health check on brain + memory
+- [x] SENSITIVE tasks: hardcoded local-only — never reach cloud APIs regardless of key configuration
+- [x] All workflows use Wizard brain container hostname (`wizard`) for internal routing
 
-## 🔲 v1.0 — Signed Release
+## 🔲 v1.0 — Signed Release (NEXT)
 - [ ] Signed + notarized `.pkg` tested on clean macOS 14+ machine
-- [ ] Full install-to-verify under 30 minutes documented and timed
-- [ ] GitHub Release with `.pkg` artifact attached
-- [ ] One-line install command published in README
+- [ ] `install.sh` updated to reference new `cli/`, `dashboard/`, `backup/`, `config/` paths
+- [ ] Full install-to-verify under 30 minutes — documented and timed
+- [ ] GitHub Release with `.pkg` artifact and `WIZARD-AI-Installer-v4.zip` attached
+- [ ] One-line install command in README: `curl -fsSL https://raw.githubusercontent.com/TheYfactora12/home-ai-elite/main/install.sh | bash`
 - [ ] CHANGELOG.md covering v0.1 → v1.0
-- [ ] Security review: no hardcoded secrets, all ports documented, firewall rules
+- [ ] Security review: no hardcoded secrets, all ports documented, firewall rules verified
+- [ ] Clean Mac smoke test: Docker → wizard start → wizard status → all green
+
+## 🔲 v1.1 — Intelligence Upgrades (FUTURE)
+- [ ] Wizard voice interface (Whisper STT → Mistral → TTS output)
+- [ ] Wizard scheduled tasks (n8n cron → Wizard executes → result to memory)
+- [ ] Wizard fine-tuning pipeline (export training data from Qdrant → Unsloth/LoRA)
+- [ ] Multi-machine Wizard sync (Qdrant replication across 2+ local machines)
+- [ ] Wizard mobile companion (iOS shortcut → n8n webhook → Wizard brain)
+
+---
+> **Rule:** Any new feature, bug found, or variation discovered gets added here before code is written.
+> Maintained by: TheYfactora12 | Oxford, MA
