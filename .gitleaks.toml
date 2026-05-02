@@ -1,0 +1,16 @@
+# gitleaks config for home-ai-elite
+# Prevents real secrets from being committed.
+# Allowlists: .env.example (placeholder values only), test fixtures.
+
+title = "home-ai-elite gitleaks config"
+
+[allowlist]
+  description = "Allowlisted paths and patterns"
+  paths = [
+    '''.env.example''',
+    '''tests/''',
+  ]
+  regexes = [
+    # Allow placeholder-style values
+    '''(?i)(your[-_]?|change[-_]?me|placeholder|example|replace[-_]?me|xxx+|dummy)''',
+  ]
