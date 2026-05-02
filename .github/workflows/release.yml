@@ -1,0 +1,53 @@
+name: Release — Auto-tag on main
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from commit count
+        id: version
+        run: |
+          COUNT=$(git rev-list --count HEAD)
+          echo "tag=v0.$(( COUNT / 10 )).$(( COUNT % 10 ))" >> $GITHUB_OUTPUT
+
+      - name: Build changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            LOG=$(git log --oneline -20)
+          else
+            LOG=$(git log "${PREV_TAG}..HEAD" --oneline)
+          fi
+          echo "log<<EOF" >> $GITHUB_OUTPUT
+          echo "$LOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "home-ai-elite ${{ steps.version.outputs.tag }}"
+          body: |
+            ## What's Changed
+            ${{ steps.changelog.outputs.log }}
+
+            ## Install
+            ```bash
+            git clone https://github.com/TheYfactora12/home-ai-elite.git
+            cd home-ai-elite
+            bash install.sh
+            ```
+          draft: false
+          prerelease: false

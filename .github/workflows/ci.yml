@@ -1,0 +1,106 @@
+name: CI — Validate Installer & Stack
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  shellcheck:
+    name: ShellCheck — Lint all .sh files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ShellCheck
+        run: sudo apt-get install -y shellcheck
+      - name: Run ShellCheck
+        run: |
+          find . -name '*.sh' \
+            -not -path './.git/*' \
+            | sort \
+            | xargs shellcheck --severity=warning --shell=bash --exclude=SC1091,SC2034
+          echo "✅ All shell scripts passed ShellCheck"
+
+  compose-validate:
+    name: Docker Compose — Validate config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create .env from example
+        run: cp .env.example .env
+      - name: Validate docker-compose.yml
+        run: |
+          docker compose -f docker-compose.yml config --quiet
+          echo "✅ docker-compose.yml is valid"
+      - name: Validate docker-compose.base.yml
+        run: |
+          docker compose -f docker-compose.base.yml config --quiet
+          echo "✅ docker-compose.base.yml is valid"
+
+  install-dryrun:
+    name: install.sh — Syntax & dry-run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check install.sh syntax
+        run: |
+          bash -n install.sh
+          echo "✅ install.sh syntax OK"
+      - name: Check all scripts syntax
+        run: |
+          for f in scripts/*.sh launchd/*.sh; do
+            [ -f "$f" ] || continue
+            bash -n "$f" && echo "  ✅ $f" || (echo "  ❌ $f FAILED" && exit 1)
+          done
+      - name: Verify .env.example required keys
+        run: |
+          for key in OLLAMA_BASE_URL WEBUI_SECRET_KEY N8N_ENCRYPTION_KEY N8N_API_KEY QDRANT_URL; do
+            grep -q "^${key}=" .env.example \
+              && echo "  ✅ $key" \
+              || (echo "  ❌ Missing: $key" && exit 1)
+          done
+
+  validate-workflows:
+    name: n8n Workflows — Validate JSON
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate workflow JSON
+        run: |
+          if [ -z "$(find n8n-workflows -name '*.json' 2>/dev/null)" ]; then
+            echo "No workflow files found — skipping"; exit 0
+          fi
+          FAIL=0
+          for f in n8n-workflows/*.json; do
+            jq empty "$f" 2>/dev/null && echo "  ✅ $f" || (echo "  ❌ $f" && FAIL=1)
+          done
+          [ $FAIL -eq 0 ] || exit 1
+
+  validate-configs:
+    name: Configs — Validate YAML & XML
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install yamllint
+        run: pip install yamllint
+      - name: Validate YAML configs
+        run: |
+          for f in configs/**/*.yml configs/**/*.yaml; do
+            [ -f "$f" ] || continue
+            yamllint -d "{extends: relaxed, rules: {line-length: {max: 200}}}" "$f" \
+              && echo "  ✅ $f" || echo "  ⚠️  $f (non-blocking)"
+          done
+      - name: Validate plist XML
+        run: |
+          for f in launchd/*.plist; do
+            [ -f "$f" ] || continue
+            xmllint --noout "$f" 2>/dev/null && echo "  ✅ $f" || (echo "  ❌ $f" && exit 1)
+          done
+
+  ci-success:
+    name: CI Passed
+    needs: [shellcheck, compose-validate, install-dryrun, validate-workflows, validate-configs]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "✅ All CI checks passed — home-ai-elite installer is valid"
