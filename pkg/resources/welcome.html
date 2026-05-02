@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+         margin: 20px; color: #1d1d1f; }
+  h1   { font-size: 22px; color: #01696f; margin-bottom: 8px; }
+  h2   { font-size: 15px; color: #444; margin-top: 20px; }
+  ul   { padding-left: 18px; }
+  li   { margin: 4px 0; font-size: 14px; }
+  code { background: #f5f5f5; padding: 2px 5px; border-radius: 4px;
+         font-family: monospace; font-size: 13px; }
+  .badge { display:inline-block; background:#01696f; color:#fff;
+           padding:2px 8px; border-radius:4px; font-size:12px; }
+</style>
+</head>
+<body>
+<h1>🧠 home-ai-elite</h1>
+<p>Your private, self-hosted AI stack — a local Perplexity + Codex + memory system
+that runs entirely on your Mac. No cloud required.</p>
+
+<h2>What gets installed</h2>
+<ul>
+  <li><strong>Open WebUI</strong> — Chat UI for all your local models</li>
+  <li><strong>Ollama</strong> — Local LLM engine (Llama, Mistral, Gemma, DeepSeek)</li>
+  <li><strong>Perplexica</strong> — Private AI-powered web search</li>
+  <li><strong>n8n</strong> — AI automation & workflow engine</li>
+  <li><strong>Qdrant</strong> — Vector memory store for RAG</li>
+  <li><strong>SearXNG</strong> — Private meta-search (Google/Bing/DDG, no tracking)</li>
+  <li><strong>LiteLLM</strong> — Model router (local-first, cloud fallback)</li>
+</ul>
+
+<h2>Requirements</h2>
+<ul>
+  <li>macOS 13 Ventura or later</li>
+  <li>8GB RAM minimum (16GB+ recommended)</li>
+  <li>20GB free disk space</li>
+  <li>Docker Desktop (will be checked before install)</li>
+</ul>
+
+<h2>What this installer does</h2>
+<ul>
+  <li>Copies stack files to <code>~/home-ai-elite</code></li>
+  <li>Runs <code>install.sh</code> in the background</li>
+  <li>Installs auto-start agents (services start on every login)</li>
+  <li>Places a <em>Next Steps</em> file on your Desktop</li>
+</ul>
+</body>
+</html>

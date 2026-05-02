@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# =============================================================================
+# preinstall — Runs BEFORE files are copied by macOS Installer.app
+# Runs as root. Exit 0 = proceed. Exit non-zero = abort install.
+#
+# Checks:
+#   1. macOS version >= 13 (Ventura)
+#   2. Available RAM >= 8GB
+#   3. Available disk space >= 20GB
+#   4. Docker Desktop installed
+#   5. Git installed
+# =============================================================================
+#!/usr/bin/env bash
+set -euo pipefail
+
+log()  { echo "[preinstall] $*"; }
+fail() { echo "[preinstall] ERROR: $*" >&2; exit 1; }
+
+log "Starting home-ai-elite preflight checks..."
+
+# ---------------------------------------------------------------------------
+# 1. macOS version check (>= 13.0 Ventura)
+# ---------------------------------------------------------------------------
+OS_VERSION=$(sw_vers -productVersion)
+OS_MAJOR=$(echo "$OS_VERSION" | cut -d. -f1)
+if [[ $OS_MAJOR -lt 13 ]]; then
+  fail "macOS 13 (Ventura) or later required. Found: $OS_VERSION"
+fi
+log "  ✅ macOS $OS_VERSION"
+
+# ---------------------------------------------------------------------------
+# 2. RAM check (>= 8GB)
+# ---------------------------------------------------------------------------
+RAM_BYTES=$(sysctl -n hw.memsize)
+RAM_GB=$((RAM_BYTES / 1024 / 1024 / 1024))
+if [[ $RAM_GB -lt 8 ]]; then
+  fail "Minimum 8GB RAM required. Found: ${RAM_GB}GB"
+fi
+log "  ✅ RAM: ${RAM_GB}GB"
+
+# ---------------------------------------------------------------------------
+# 3. Disk space check (>= 20GB free on /)
+# ---------------------------------------------------------------------------
+DISK_FREE_KB=$(df / | tail -1 | awk '{print $4}')
+DISK_FREE_GB=$((DISK_FREE_KB / 1024 / 1024))
+if [[ $DISK_FREE_GB -lt 20 ]]; then
+  fail "Minimum 20GB free disk space required. Found: ${DISK_FREE_GB}GB"
+fi
+log "  ✅ Disk: ${DISK_FREE_GB}GB free"
+
+# ---------------------------------------------------------------------------
+# 4. Docker Desktop check
+# ---------------------------------------------------------------------------
+if [[ ! -d "/Applications/Docker.app" ]]; then
+  fail "Docker Desktop is required but not installed.\n  Download: https://www.docker.com/products/docker-desktop/"
+fi
+log "  ✅ Docker Desktop found"
+
+# ---------------------------------------------------------------------------
+# 5. Git check
+# ---------------------------------------------------------------------------
+if ! command -v git >/dev/null 2>&1; then
+  fail "Git is required. Install Xcode Command Line Tools: xcode-select --install"
+fi
+log "  ✅ git found: $(git --version)"
+
+log "All preflight checks passed."
+exit 0

@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+# =============================================================================
+# postinstall — Runs AFTER files are copied by macOS Installer.app
+# Runs as root. Sets up the stack silently.
+#
+# Steps:
+#   1. Fix file ownership (root → installing user)
+#   2. Install Homebrew if missing (as the user, not root)
+#   3. Run install.sh in background as the installing user
+#   4. Install launchd agents for auto-start
+#   5. Print instructions to /tmp/homeai-install.log
+# =============================================================================
+set -euo pipefail
+
+INSTALL_DIR="/usr/local/home-ai-elite"
+LOG_FILE="/tmp/homeai-install.log"
+
+log() { echo "[postinstall] $*" | tee -a "$LOG_FILE"; }
+
+# ---------------------------------------------------------------------------
+# Detect the installing user (not root)
+# ---------------------------------------------------------------------------
+INSTALLING_USER=$(stat -f '%Su' /dev/console 2>/dev/null || echo "$USER")
+INSTALLING_HOME=$(dscl . -read "/Users/${INSTALLING_USER}" NFSHomeDirectory 2>/dev/null \
+  | awk '{print $2}' || echo "/Users/${INSTALLING_USER}")
+
+log "Installing for user: $INSTALLING_USER ($INSTALLING_HOME)"
+
+# ---------------------------------------------------------------------------
+# 1. Fix ownership: installer runs as root, files should belong to user
+# ---------------------------------------------------------------------------
+chown -R "${INSTALLING_USER}:staff" "$INSTALL_DIR" 2>/dev/null || true
+log "  ✅ Ownership set to $INSTALLING_USER"
+
+# ---------------------------------------------------------------------------
+# 2. Copy install dir to user home (so it's writable for git)
+# ---------------------------------------------------------------------------
+USER_INSTALL_DIR="${INSTALLING_HOME}/home-ai-elite"
+if [[ ! -d "$USER_INSTALL_DIR" ]]; then
+  cp -R "$INSTALL_DIR" "$USER_INSTALL_DIR"
+  chown -R "${INSTALLING_USER}:staff" "$USER_INSTALL_DIR"
+  log "  ✅ Copied to: $USER_INSTALL_DIR"
+else
+  log "  Already exists: $USER_INSTALL_DIR (skipping copy)"
+fi
+
+# ---------------------------------------------------------------------------
+# 3. Create .env from .env.example if not already present
+# ---------------------------------------------------------------------------
+if [[ ! -f "${USER_INSTALL_DIR}/.env" ]]; then
+  cp "${USER_INSTALL_DIR}/.env.example" "${USER_INSTALL_DIR}/.env"
+  chown "${INSTALLING_USER}:staff" "${USER_INSTALL_DIR}/.env"
+  log "  ✅ .env created from .env.example"
+fi
+
+# ---------------------------------------------------------------------------
+# 4. Run install.sh as the user (background, logged)
+# ---------------------------------------------------------------------------
+log "  Launching install.sh as $INSTALLING_USER (background)..."
+su - "$INSTALLING_USER" -c \
+  "cd '${USER_INSTALL_DIR}' && bash install.sh >> '${LOG_FILE}' 2>&1" &
+
+# ---------------------------------------------------------------------------
+# 5. Install launchd agents for auto-start
+# ---------------------------------------------------------------------------
+log "  Installing launchd auto-start agents..."
+su - "$INSTALLING_USER" -c \
+  "bash '${USER_INSTALL_DIR}/launchd/install-launchd.sh' >> '${LOG_FILE}' 2>&1" || true
+
+# ---------------------------------------------------------------------------
+# 6. Write post-install instructions
+# ---------------------------------------------------------------------------
+cat > "${INSTALLING_HOME}/Desktop/home-ai-elite-next-steps.txt" << 'INSTRUCTIONS'
+┌────────────────────────────────────────────────┐
+│  home-ai-elite — Installation Complete!    │
+│                                            │
+│  NEXT STEPS:                               │
+│                                            │
+│  1. Open Terminal                          │
+│  2. cd ~/home-ai-elite                     │
+│  3. nano .env   (add your API keys)        │
+│  4. bash scripts/bootstrap.sh             │
+│                                            │
+│  YOUR SERVICES (after bootstrap):          │
+│   Open WebUI  → http://localhost:3001      │
+│   n8n         → http://localhost:5678      │
+│   Perplexica  → http://localhost:3000      │
+│   Qdrant      → http://localhost:6333      │
+│   SearXNG     → http://localhost:8080      │
+│                                            │
+│  Install log: /tmp/homeai-install.log      │
+│  Uninstall:   bash ~/home-ai-elite/        │
+│              pkg/scripts/uninstall.sh     │
+└────────────────────────────────────────────────┘
+INSTRUCTIONS
+
+chown "${INSTALLING_USER}:staff" \
+  "${INSTALLING_HOME}/Desktop/home-ai-elite-next-steps.txt" 2>/dev/null || true
+
+log "  ✅ Next-steps file written to Desktop"
+log "  ✅ postinstall complete. Full log: $LOG_FILE"
+exit 0
