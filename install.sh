@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════╗
-# ║        HOME AI ELITE — One-Shot Installer v0.4.1            ║
+# ║        HOME AI ELITE / WIZARD AI — One-Shot Installer v1.0   ║
 # ║  Perplexity + Codex + Memory + Automation on your hardware  ║
 # ║  https://github.com/TheYfactora12/home-ai-elite             ║
 # ╚══════════════════════════════════════════════════════════════╝
@@ -26,8 +26,8 @@ header() {
   echo '  ██║  ██║╚██████╔╝██║ ╚═╝ ██║███████╗    ██║  ██║██║'
   echo '  ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝'
   echo -e "${NC}"
-  echo -e "  ${BOLD}Home AI Elite — Your Own Perplexity + Codex${NC}"
-  echo -e "  Version 0.4.1  |  github.com/TheYfactora12/home-ai-elite\n"
+  echo -e "  ${BOLD}Wizard AI — Your Own Perplexity + Codex + Memory${NC}"
+  echo -e "  Version 1.0  |  github.com/TheYfactora12/home-ai-elite\n"
 }
 
 header
@@ -42,6 +42,17 @@ elif [[ "$OS" == "Linux" ]]; then
   log "Linux detected"
 else
   err "Unsupported OS: $OS. Requires macOS or Linux."
+fi
+
+# macOS version check
+if [[ "$OS" == "Darwin" ]]; then
+  MACOS_VERSION=$(sw_vers -productVersion)
+  MACOS_MAJOR=$(echo "$MACOS_VERSION" | cut -d. -f1)
+  if (( MACOS_MAJOR < 14 )); then
+    warn "macOS ${MACOS_VERSION} detected. macOS 14 (Sonoma)+ recommended for best performance."
+  else
+    log "macOS ${MACOS_VERSION} ✔"
+  fi
 fi
 
 # RAM detection
@@ -145,17 +156,11 @@ else
   log ".env already exists — skipping template copy"
 fi
 
-# Restrict .env permissions immediately — no world/group read
+# Restrict .env permissions immediately
 chmod 600 .env
 log ".env permissions set to 600 (owner read/write only)"
 
 # ── 3b: Auto-rotate all insecure default secrets ──────────────────────
-#
-# rotate_secret KEY
-#   Writes a new openssl-generated value ONLY if the current value is
-#   still one of the known-insecure placeholder strings.
-#   Safe to re-run — will not overwrite a key you already customized.
-# ──────────────────────────────────────────────────────────────────────
 rotate_secret() {
   local key=$1
   local current_val
@@ -177,7 +182,7 @@ rotate_secret() {
 
   if [[ "$is_insecure" == true ]]; then
     if ! command -v openssl &>/dev/null; then
-      warn "openssl not found — ${key} NOT rotated. Run: openssl rand -hex 32 and set it manually in .env"
+      warn "openssl not found — ${key} NOT rotated. Run: openssl rand -hex 32 and set manually in .env"
       return
     fi
     local new_val
@@ -199,13 +204,6 @@ rotate_secret "N8N_PASSWORD"
 rotate_secret "SEARXNG_SECRET_KEY"
 
 # ── 3c: Secure interactive prompt for cloud API keys ──────────────────
-#
-# prompt_api_key KEY LABEL HINT URL
-#   - Uses `read -s` so the key NEVER appears on screen or in shell history
-#   - Validates basic format before writing (non-empty, no spaces)
-#   - Skips gracefully if key already set in .env
-#   - Enter with nothing = skip (local-only mode)
-# ──────────────────────────────────────────────────────────────────────
 prompt_api_key() {
   local key=$1
   local label=$2
@@ -226,12 +224,11 @@ prompt_api_key() {
   while true; do
     printf "  Paste key (Enter to skip): "
     read -rs user_input
-    echo ""  # newline after silent input
+    echo ""
     if [[ -z "$user_input" ]]; then
       info "${key} skipped — local-only mode for this service"
       break
     fi
-    # Basic validation: no spaces, minimum length 8
     if [[ "$user_input" =~ [[:space:]] ]]; then
       warn "Key contains spaces — check for accidental paste. Try again."
       continue
@@ -240,7 +237,6 @@ prompt_api_key() {
       warn "Key looks too short (${#user_input} chars). Try again or press Enter to skip."
       continue
     fi
-    # Write securely to .env
     if grep -q "^${key}=" .env; then
       sed -i.bak "s|^${key}=.*|${key}=${user_input}|" .env && rm -f .env.bak
     else
@@ -287,7 +283,6 @@ pull_model() {
   ollama pull "$model" || warn "Failed to pull ${model} — skipping"
 }
 
-# Always pull embedding model (small, needed by all services)
 pull_model "nomic-embed-text"
 
 case "$MODEL_TIER" in
@@ -321,7 +316,6 @@ case "$MODEL_TIER" in
     ;;
 esac
 
-# Write selected models to .env
 for key_val in "OPENHANDS_MODEL=${OPENHANDS_MODEL}" "PERPLEXICA_CHAT_MODEL=${PERPLEXICA_CHAT_MODEL}"; do
   key=$(echo "$key_val" | cut -d= -f1)
   val=$(echo "$key_val" | cut -d= -f2-)
@@ -334,7 +328,6 @@ done
 log "OpenHands model: ${OPENHANDS_MODEL}"
 log "Perplexica chat model: ${PERPLEXICA_CHAT_MODEL}"
 
-# Update Perplexica config with correct model
 if [[ -f "configs/perplexica/config.toml" ]]; then
   sed -i.bak "s|^CHAT_MODEL = .*|CHAT_MODEL = \"${PERPLEXICA_CHAT_MODEL}\"|" \
     configs/perplexica/config.toml && rm -f configs/perplexica/config.toml.bak
@@ -376,7 +369,40 @@ wait_for_service "SearXNG"       "http://localhost:8080"         60
 wait_for_service "Qdrant"        "http://localhost:6333/healthz" 60
 wait_for_service "n8n"           "http://localhost:5678"         60
 
-# ── STEP 7: Optional MCP Servers ──────────────────────────────────────
+# ── STEP 7: First-Boot Init (bootstrap) ────────────────────────────────
+step "First-Boot Initialization"
+
+FIRST_BOOT_FLAG="${SCRIPT_DIR}/.wizard-bootstrapped"
+if [[ ! -f "$FIRST_BOOT_FLAG" ]]; then
+  if [[ -f "scripts/bootstrap.sh" ]]; then
+    log "Running first-boot bootstrap (Qdrant collections + n8n workflows)..."
+    bash "${SCRIPT_DIR}/scripts/bootstrap.sh" && touch "$FIRST_BOOT_FLAG"
+    log "Bootstrap complete"
+  else
+    warn "scripts/bootstrap.sh not found — run manually after install"
+  fi
+else
+  log "Already bootstrapped — skipping (delete .wizard-bootstrapped to force re-run)"
+fi
+
+# ── STEP 8: Install wizard CLI system-wide ──────────────────────────────
+step "Installing wizard CLI"
+
+if [[ -f "${SCRIPT_DIR}/cli/wizard" ]]; then
+  chmod +x "${SCRIPT_DIR}/cli/wizard"
+  if [[ -w "/usr/local/bin" ]]; then
+    ln -sf "${SCRIPT_DIR}/cli/wizard" /usr/local/bin/wizard
+    log "wizard CLI installed → /usr/local/bin/wizard"
+  else
+    sudo ln -sf "${SCRIPT_DIR}/cli/wizard" /usr/local/bin/wizard
+    log "wizard CLI installed → /usr/local/bin/wizard (via sudo)"
+  fi
+  log "Run: wizard status  |  wizard ask \"<question>\"  |  wizard help"
+else
+  warn "cli/wizard not found — CLI not installed. Ensure cli/ directory exists."
+fi
+
+# ── STEP 9: Optional MCP Servers ──────────────────────────────────────
 step "MCP Server Setup (Optional)"
 if [[ -f "mcp/install-mcp-servers.sh" ]]; then
   echo -e "  ${YELLOW}Install MCP servers? (GitHub + filesystem + Qdrant MCP) [y/N]${NC}"
@@ -388,10 +414,64 @@ if [[ -f "mcp/install-mcp-servers.sh" ]]; then
   fi
 fi
 
-# ── STEP 8: Done — Print Dashboard ────────────────────────────────────
+# ── STEP 10: LaunchD Auto-Start (macOS only) ───────────────────────────
+if [[ "$OS" == "Darwin" ]] && [[ -f "launchd/install-launchd.sh" ]]; then
+  step "macOS Auto-Start (LaunchD)"
+  echo -e "  ${YELLOW}Install launchd agents for auto-start on login? [y/N]${NC}"
+  read -r INSTALL_LAUNCHD
+  if [[ "$INSTALL_LAUNCHD" =~ ^[Yy]$ ]]; then
+    bash launchd/install-launchd.sh
+    log "LaunchD agents installed — Wizard will auto-start on login"
+  else
+    warn "Skipped — run manually: bash launchd/install-launchd.sh"
+  fi
+fi
+
+# ── STEP 11: Security Review Checklist ───────────────────────────────
+step "Security Review"
+
+SECURITY_PASS=true
+
+# Check no insecure defaults remain in .env
+for key in WEBUI_SECRET_KEY LITELLM_MASTER_KEY N8N_PASSWORD SEARXNG_SECRET_KEY; do
+  val=$(grep "^${key}=" .env | cut -d= -f2- || true)
+  for bad in "change-me-in-env" "change-me-run-openssl-rand-hex-32" "sk-home-ai-elite" "changeme" ""; do
+    if [[ "$val" == "$bad" ]]; then
+      warn "SECURITY: ${key} is still at insecure default! Run: openssl rand -hex 32"
+      SECURITY_PASS=false
+    fi
+  done
+done
+
+# Check .env file permissions
+ENV_PERMS=$(stat -c "%a" .env 2>/dev/null || stat -f "%A" .env 2>/dev/null || echo "unknown")
+if [[ "$ENV_PERMS" != "600" ]]; then
+  warn "SECURITY: .env permissions are ${ENV_PERMS}, expected 600. Fixing..."
+  chmod 600 .env
+  log ".env permissions corrected to 600"
+else
+  log ".env permissions: 600 ✔"
+fi
+
+# Check .env is gitignored
+if grep -q "^\.env$" .gitignore 2>/dev/null; then
+  log ".env is in .gitignore ✔"
+else
+  warn "SECURITY: .env is NOT in .gitignore! Adding now..."
+  echo ".env" >> .gitignore
+  log ".env added to .gitignore"
+fi
+
+if [[ "$SECURITY_PASS" == true ]]; then
+  log "Security review passed ✔"
+else
+  warn "Security review found issues above — resolve before exposing to any network"
+fi
+
+# ── STEP 12: Done — Print Dashboard ───────────────────────────────────
 echo ""
 echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}${BOLD}║          HOME AI ELITE IS READY  ✓                      ║${NC}"
+echo -e "${GREEN}${BOLD}║     WIZARD AI IS READY  ✓  v1.0                         ║${NC}"
 echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  ${BOLD}Your Services:${NC}"
@@ -402,6 +482,7 @@ echo -e "  ${CYAN}🔎 Private Search (SearXNG):${NC} http://localhost:8080"
 echo -e "  ${CYAN}⚙️  Automation (n8n):${NC}         http://localhost:5678"
 echo -e "  ${CYAN}📦 Vector Memory (Qdrant):${NC}  http://localhost:6333"
 echo -e "  ${CYAN}🔀 Model Router (LiteLLM):${NC}  http://localhost:4000"
+echo -e "  ${CYAN}📊 Dashboard (Wizard HQ):${NC}   file://${SCRIPT_DIR}/dashboard/index.html"
 echo ""
 echo -e "  ${BOLD}Hardware Tier:${NC} ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
 echo -e "  ${BOLD}Coding Model:${NC}  ${OPENHANDS_MODEL}"
@@ -410,15 +491,27 @@ echo ""
 echo -e "  ${GREEN}✓  All internal secrets auto-generated${NC}"
 echo -e "  ${GREEN}✓  .env locked to 600 (owner only)${NC}"
 echo -e "  ${GREEN}✓  Cloud API keys entered in hidden mode${NC}"
+echo -e "  ${GREEN}✓  Security review complete${NC}"
 echo ""
-echo -e "  ${BOLD}Next steps:${NC}"
+echo -e "  ${BOLD}First commands to run:${NC}"
+echo -e "  ${CYAN}wizard status${NC}                    → full stack health check"
+echo -e "  ${CYAN}wizard ask \"hello wizard\"${NC}        → test your AI"
+echo -e "  ${CYAN}wizard open${NC}                      → open Wizard HQ in browser"
+echo ""
+echo -e "  ${BOLD}First-time setup steps:${NC}"
 echo -e "  1. http://localhost:3000  → create your admin account"
-echo -e "     ${YELLOW}⚠ Then go to Settings → Admin → disable Sign Up${NC}"
-echo -e "  2. http://localhost:3002  → try a Perplexica web search"
+echo -e "     ${YELLOW}⚠ Settings → Admin → disable Sign Up (lock it down)${NC}"
+echo -e "  2. http://localhost:3002  → test Perplexica web search"
 echo -e "  3. http://localhost:3003  → give OpenHands a coding task"
-echo -e "  4. http://localhost:5678  → import n8n-workflows/ai-router.json"
-echo -e "  5. bash scripts/status.sh → health dashboard anytime"
-echo -e "  6. bash scripts/add-model.sh <model> → pull more models"
+echo -e "  4. http://localhost:5678  → n8n workflows already imported by bootstrap"
+echo ""
+echo -e "  ${BOLD}Useful commands:${NC}"
+echo -e "  bash scripts/status.sh         → service health dashboard"
+echo -e "  bash scripts/upgrade.sh        → safe upgrade with auto-rollback"
+echo -e "  bash scripts/backup.sh         → backup Qdrant memory + n8n workflows"
+echo -e "  bash scripts/add-model.sh <m>  → pull additional models"
+echo -e "  bash scripts/healthcheck.sh    → deep health check with port scan"
 echo ""
 echo -e "  ${BOLD}Repo:${NC} https://github.com/TheYfactora12/home-ai-elite"
+echo -e "  ${BOLD}Docs:${NC} https://github.com/TheYfactora12/home-ai-elite/tree/main/docs"
 echo ""
