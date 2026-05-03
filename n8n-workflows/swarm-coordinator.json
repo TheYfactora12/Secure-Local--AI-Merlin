@@ -1,0 +1,234 @@
+{
+  "name": "🐝 Swarm Coordinator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "swarm",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-entry",
+      "name": "Swarm Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "swarm-coordinator"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── SWARM COORDINATOR: Task Classifier ──────────────────────────────\n// Inspired by Ruflo's 3-tier routing model.\n// Routes tasks to the right specialist agent based on complexity + intent.\n\nconst body = $input.first().json.body || $input.first().json;\nconst task = (body.task || body.message || body.prompt || '').trim();\nconst forceAgent = body.agent || null; // allow manual override\n\nif (!task) {\n  throw new Error('No task provided. Send: { \"task\": \"your request here\" }');\n}\n\n// ── Complexity Classification ─────────────────────────────────────────\n// Tier 1 (tiny): lookups, formatting, yes/no, quick answers\n// Tier 2 (medium): summaries, explanations, short code, analysis\n// Tier 3 (heavy): architecture, multi-step plans, long code, research\n\nconst words = task.split(/\\s+/).length;\nconst heavyKeywords = ['architect', 'design', 'build', 'implement', 'refactor',\n  'multi-step', 'plan', 'research', 'analyze', 'investigate', 'comprehensive',\n  'full', 'complete', 'system', 'create app', 'write app', 'debug'];\nconst codeKeywords = ['code', 'function', 'script', 'bug', 'error', 'fix',\n  'write', 'implement', 'build', 'deploy', 'docker', 'python', 'javascript',\n  'bash', 'sql', 'api', 'endpoint', 'class', 'module', 'test'];\nconst searchKeywords = ['search', 'find', 'look up', 'what is', 'who is',\n  'latest', 'news', 'current', 'today', 'web', 'internet', 'google'];\n\nconst taskLower = task.toLowerCase();\n\nlet complexity = 'medium';\nif (words > 60 || heavyKeywords.some(k => taskLower.includes(k))) {\n  complexity = 'heavy';\n} else if (words < 15) {\n  complexity = 'tiny';\n}\n\n// ── Agent Routing ─────────────────────────────────────────────────────\nlet agent = 'openwebui'; // default fallback\nlet agentUrl = 'http://open-webui:3000';\nlet agentEndpoint = '/api/chat/completions';\nlet model = 'qwen2.5:7b';\n\nif (forceAgent) {\n  agent = forceAgent;\n}\n\nif (agent === 'auto' || !forceAgent) {\n  if (searchKeywords.some(k => taskLower.includes(k))) {\n    agent = 'perplexica';\n    agentUrl = 'http://perplexica:3002';\n    agentEndpoint = '/api/search';\n    model = 'search';\n  } else if (codeKeywords.some(k => taskLower.includes(k)) || complexity === 'heavy') {\n    agent = 'openhands';\n    agentUrl = 'http://openhands:3003';\n    agentEndpoint = '/api/conversations';\n    model = process.env.OPENHANDS_MODEL || 'ollama/qwen2.5-coder:14b';\n  } else {\n    agent = 'litellm';\n    agentUrl = 'http://litellm:4000';\n    agentEndpoint = '/v1/chat/completions';\n    // Complexity-based model selection (Ruflo 3-tier pattern)\n    if (complexity === 'heavy') {\n      model = process.env.PERPLEXICA_CHAT_MODEL || 'llama3.3:70b';\n    } else if (complexity === 'medium') {\n      model = 'qwen2.5:32b';\n    } else {\n      model = 'qwen2.5:7b';\n    }\n  }\n}\n\nconst taskId = `swarm_${Date.now()}_${Math.random().toString(36).substr(2,6)}`;\n\nreturn {\n  task,\n  taskId,\n  complexity,\n  agent,\n  agentUrl,\n  agentEndpoint,\n  model,\n  timestamp: new Date().toISOString(),\n  words\n};"
+      },
+      "id": "classify-task",
+      "name": "Classify & Route Task",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false },
+          "conditions": [
+            {
+              "id": "route-perplexica",
+              "leftValue": "={{ $json.agent }}",
+              "rightValue": "perplexica",
+              "operator": { "type": "string", "operation": "equals" }
+            },
+            {
+              "id": "route-openhands",
+              "leftValue": "={{ $json.agent }}",
+              "rightValue": "openhands",
+              "operator": { "type": "string", "operation": "equals" }
+            },
+            {
+              "id": "route-litellm",
+              "leftValue": "={{ $json.agent }}",
+              "rightValue": "litellm",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "agent-router",
+      "name": "Agent Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://perplexica:3002/api/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "query", "value": "={{ $('Classify & Route Task').item.json.task }}" },
+            { "name": "focusMode", "value": "webSearch" },
+            { "name": "optimizationMode", "value": "balanced" }
+          ]
+        },
+        "options": { "timeout": 60000 }
+      },
+      "id": "call-perplexica",
+      "name": "→ Perplexica (Search)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 160]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://openhands:3003/api/conversations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.OPENHANDS_API_KEY || 'wizard' }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "task", "value": "={{ $('Classify & Route Task').item.json.task }}" },
+            { "name": "selected_repository", "value": "" }
+          ]
+        },
+        "options": { "timeout": 120000 }
+      },
+      "id": "call-openhands",
+      "name": "→ OpenHands (Code)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://litellm:4000/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.LITELLM_MASTER_KEY }}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "model", "value": "={{ $('Classify & Route Task').item.json.model }}" },
+            { "name": "messages", "value": "=[{\"role\": \"user\", \"content\": \"{{ $('Classify & Route Task').item.json.task }}\"}]" },
+            { "name": "stream", "value": false }
+          ]
+        },
+        "options": { "timeout": 90000 }
+      },
+      "id": "call-litellm",
+      "name": "→ LiteLLM (Generate)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 440]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize responses from all 3 agents into a standard shape\nconst routerData = $('Classify & Route Task').first().json;\nconst raw = $input.first().json;\n\nlet result = '';\n\n// Perplexica response\nif (routerData.agent === 'perplexica') {\n  result = raw.message || raw.answer || raw.text || JSON.stringify(raw);\n}\n// OpenHands response\nelse if (routerData.agent === 'openhands') {\n  result = raw.conversation_id\n    ? `OpenHands task started. Conversation ID: ${raw.conversation_id}. Check http://localhost:3003`\n    : raw.message || JSON.stringify(raw);\n}\n// LiteLLM / OpenAI-compatible response\nelse {\n  result = raw.choices?.[0]?.message?.content\n    || raw.content\n    || raw.message\n    || JSON.stringify(raw);\n}\n\nreturn {\n  taskId: routerData.taskId,\n  task: routerData.task,\n  agent: routerData.agent,\n  model: routerData.model,\n  complexity: routerData.complexity,\n  result,\n  timestamp: routerData.timestamp,\n  completed_at: new Date().toISOString()\n};"
+      },
+      "id": "normalize-response",
+      "name": "Normalize Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://qdrant:6333/collections/swarm_memory/points",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "points",
+              "value": "=[{\"id\": \"{{ $json.taskId }}\", \"vector\": [], \"payload\": {\"task\": \"{{ $json.task }}\", \"result\": \"{{ $json.result.substring(0, 2000) }}\", \"agent\": \"{{ $json.agent }}\", \"model\": \"{{ $json.model }}\", \"complexity\": \"{{ $json.complexity }}\", \"timestamp\": \"{{ $json.timestamp }}\", \"completed_at\": \"{{ $json.completed_at }}\"}}]"
+            }
+          ]
+        },
+        "options": { "timeout": 10000 }
+      },
+      "id": "write-memory",
+      "name": "Write to Qdrant Memory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ taskId: $('Normalize Response').first().json.taskId, agent: $('Normalize Response').first().json.agent, model: $('Normalize Response').first().json.model, complexity: $('Normalize Response').first().json.complexity, result: $('Normalize Response').first().json.result, timestamp: $('Normalize Response').first().json.completed_at }) }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-to-caller",
+      "name": "Return Result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1560, 300]
+    }
+  ],
+  "connections": {
+    "Swarm Webhook": {
+      "main": [[{ "node": "Classify & Route Task", "type": "main", "index": 0 }]]
+    },
+    "Classify & Route Task": {
+      "main": [[{ "node": "Agent Router", "type": "main", "index": 0 }]]
+    },
+    "Agent Router": {
+      "main": [
+        [{ "node": "→ Perplexica (Search)", "type": "main", "index": 0 }],
+        [{ "node": "→ OpenHands (Code)", "type": "main", "index": 0 }],
+        [{ "node": "→ LiteLLM (Generate)", "type": "main", "index": 0 }]
+      ]
+    },
+    "→ Perplexica (Search)": {
+      "main": [[{ "node": "Normalize Response", "type": "main", "index": 0 }]]
+    },
+    "→ OpenHands (Code)": {
+      "main": [[{ "node": "Normalize Response", "type": "main", "index": 0 }]]
+    },
+    "→ LiteLLM (Generate)": {
+      "main": [[{ "node": "Normalize Response", "type": "main", "index": 0 }]]
+    },
+    "Normalize Response": {
+      "main": [[{ "node": "Write to Qdrant Memory", "type": "main", "index": 0 }]]
+    },
+    "Write to Qdrant Memory": {
+      "main": [[{ "node": "Return Result", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "versionId": "1.0.0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "home-ai-elite-swarm-v1"
+  },
+  "tags": [{ "name": "swarm", "createdAt": "2026-05-03" }, { "name": "phase-1" }]
+}

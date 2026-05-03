@@ -1,0 +1,137 @@
+{
+  "name": "🧠 Swarm Memory Writer",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "swarm/memory",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "memory-webhook",
+      "name": "Memory Write Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "swarm-memory-writer"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate and prepare memory payload\nconst body = $input.first().json.body || $input.first().json;\n\nconst required = ['task', 'result', 'agent'];\nfor (const field of required) {\n  if (!body[field]) throw new Error(`Missing required field: ${field}`);\n}\n\n// Generate a deterministic ID from task + timestamp\nconst timestamp = new Date().toISOString();\nconst id = `mem_${Date.now()}_${Math.random().toString(36).substr(2,8)}`;\n\n// Truncate result to 2000 chars to keep Qdrant payloads lean\nconst resultTruncated = (body.result || '').substring(0, 2000);\n\nreturn {\n  id,\n  task: body.task,\n  result: resultTruncated,\n  agent: body.agent,\n  model: body.model || 'unknown',\n  complexity: body.complexity || 'unknown',\n  tags: body.tags || [],\n  timestamp,\n  source: body.source || 'swarm-coordinator'\n};"
+      },
+      "id": "prepare-memory",
+      "name": "Prepare Memory Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "http://qdrant:6333/collections/swarm_memory",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "vectors", "value": "{\"size\": 768, \"distance\": \"Cosine\"}" }
+          ]
+        },
+        "options": { "timeout": 10000 }
+      },
+      "id": "ensure-collection",
+      "name": "Ensure Qdrant Collection",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/embeddings",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "model", "value": "nomic-embed-text" },
+            { "name": "prompt", "value": "={{ $('Prepare Memory Payload').first().json.task + ' ' + $('Prepare Memory Payload').first().json.result.substring(0, 500) }}" }
+          ]
+        },
+        "options": { "timeout": 30000 }
+      },
+      "id": "generate-embedding",
+      "name": "Generate Embedding (nomic)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://qdrant:6333/collections/swarm_memory/points",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ points: [{ id: $('Prepare Memory Payload').first().json.id, vector: $json.embedding, payload: { task: $('Prepare Memory Payload').first().json.task, result: $('Prepare Memory Payload').first().json.result, agent: $('Prepare Memory Payload').first().json.agent, model: $('Prepare Memory Payload').first().json.model, complexity: $('Prepare Memory Payload').first().json.complexity, tags: $('Prepare Memory Payload').first().json.tags, timestamp: $('Prepare Memory Payload').first().json.timestamp, source: $('Prepare Memory Payload').first().json.source } }] }) }}",
+        "options": { "timeout": 15000 }
+      },
+      "id": "upsert-to-qdrant",
+      "name": "Upsert to Qdrant",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'stored', memory_id: $('Prepare Memory Payload').first().json.id, agent: $('Prepare Memory Payload').first().json.agent, collection: 'swarm_memory' }) }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "memory-response",
+      "name": "Return Memory ID",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "Memory Write Webhook": {
+      "main": [[{ "node": "Prepare Memory Payload", "type": "main", "index": 0 }]]
+    },
+    "Prepare Memory Payload": {
+      "main": [[{ "node": "Ensure Qdrant Collection", "type": "main", "index": 0 }]]
+    },
+    "Ensure Qdrant Collection": {
+      "main": [[{ "node": "Generate Embedding (nomic)", "type": "main", "index": 0 }]]
+    },
+    "Generate Embedding (nomic)": {
+      "main": [[{ "node": "Upsert to Qdrant", "type": "main", "index": 0 }]]
+    },
+    "Upsert to Qdrant": {
+      "main": [[{ "node": "Return Memory ID", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "versionId": "1.0.0",
+  "meta": { "instanceId": "home-ai-elite-swarm-memory-v1" },
+  "tags": [{ "name": "swarm" }, { "name": "memory" }, { "name": "phase-1" }]
+}
