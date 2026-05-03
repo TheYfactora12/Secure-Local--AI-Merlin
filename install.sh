@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════╗
-# ║        HOME AI ELITE / WIZARD AI — One-Shot Installer v1.4   ║
+# ║        HOME AI ELITE / WIZARD AI — One-Shot Installer v1.5   ║
 # ║  Perplexity + Codex + Memory + Automation on your hardware  ║
 # ║  https://github.com/TheYfactora12/home-ai-elite             ║
 # ╚══════════════════════════════════════════════════════════════╝
+# CHANGELOG v1.5 (2026-05-03):
+#   BUG-09: Added openhands + all service aliases to KNOWN_CONTAINERS
+#           pre-flight stale container removal list.
+#           Fixes: "container name /openhands already in use" on re-run.
 # CHANGELOG v1.4 (2026-05-03):
 #   BUG-08: Pre-flight stale container removal before docker compose up.
 #           Silently removes any named containers left over from partial
@@ -106,7 +110,7 @@ trap 'EC=$?; log_to_file "[FAIL] Line ${LINENO} exit=${EC}"; \
   echo -e "${YELLOW}Full log: ${LOGFILE}${NC}"; \
   generate_failure_report' ERR
 
-log_to_file "[START] install.sh v1.4 — $(date)"
+log_to_file "[START] install.sh v1.5 — $(date)"
 
 # ── Helpers ───────────────────────────────────────────────────────────
 ensure_docker_cli() {
@@ -167,8 +171,7 @@ patch_compose_for_macos() {
   # On macOS, silently starting fail2ban causes the entire compose stack to
   # hang on startup waiting for a network namespace that never becomes available.
   if grep -q 'container_name: fail2ban' "$COMPOSE_FILE"; then
-    # Comment out the entire fail2ban service block by adding a profile that
-    # will never be activated — cleanest way to disable without editing YAML structure
+    # Add profiles: [linux-only] to fail2ban service so it never starts on macOS
     python3 - <<'PYEOF' "$COMPOSE_FILE"
 import sys, re
 path = sys.argv[1]
@@ -233,7 +236,7 @@ header() {
   echo '  ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝'
   echo -e "${NC}"
   echo -e "  ${BOLD}Wizard AI — Your Own Perplexity + Codex + Memory${NC}"
-  echo -e "  Version 1.4  |  github.com/TheYfactora12/home-ai-elite\n"
+  echo -e "  Version 1.5  |  github.com/TheYfactora12/home-ai-elite\n"
 }
 
 header
@@ -346,7 +349,6 @@ if [[ "$OS" == "Darwin" ]]; then
   fi
 
   # Ensure native Ollama is running (not Docker)
-  # Stop brew service first to avoid port conflict, then start raw process
   brew services stop ollama 2>/dev/null || true
   sleep 1
 
@@ -362,8 +364,6 @@ if [[ "$OS" == "Darwin" ]]; then
 fi
 
 # ── BUG-01 FIX: Patch docker-compose.yml for macOS ───────────────────
-# Called here — after OS is known and SCRIPT_DIR will be set in Step 3,
-# but we need to set it early for the patch function.
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 patch_compose_for_macos
 
@@ -373,7 +373,6 @@ log_to_file "[PASS] STEP 2: Dependencies installed"
 step "Environment Setup & Secret Hardening"
 log_to_file "[STEP 3] Environment Setup"
 
-# SCRIPT_DIR already set above — reassigning is safe (idempotent)
 cd "$SCRIPT_DIR"
 
 # 3a: Create .env from template if it doesn't exist
@@ -557,9 +556,6 @@ case "$MODEL_TIER" in
     PERPLEXICA_CHAT_MODEL="qwen2.5:32b"
     ;;
   high)
-    # FIX P2: Use canonical Ollama registry tag for llama3.3 70B.
-    # llama3.3:70b-instruct-q4_K_M may not exist on all registry mirrors.
-    # Canonical tag is llama3.3:70b (defaults to Q4_K_M quantization).
     [[ "$SKIP_MODEL_PULLS" == true ]] || MODELS_TO_PULL+=("llama3.3:70b" "qwen2.5:32b" "qwen2.5-coder:14b" "deepseek-r1:32b")
     OPENHANDS_MODEL="ollama/qwen2.5-coder:14b"
     PERPLEXICA_CHAT_MODEL="llama3.3:70b"
@@ -584,7 +580,6 @@ if [[ -f "configs/perplexica/config.toml" ]]; then
 fi
 
 # ── BUG-03: Pull models via native Ollama (not Docker exec) ──────────
-# Native Ollama on macOS uses Metal — Docker exec would use CPU only
 if (( ${#MODELS_TO_PULL[@]} > 0 )); then
   for model in "${MODELS_TO_PULL[@]}"; do
     log "Pulling ${model} via native Ollama (Metal GPU)..."
@@ -607,30 +602,36 @@ log_to_file "[STEP 5] Docker Compose up"
 docker compose pull --quiet
 log "Images pulled"
 
-# ── BUG-08 FIX: Remove stale named containers before compose up ───────
-# Partial prior install runs can leave named containers (e.g. /watchtower,
-# /n8n, /open-webui) that are NOT tracked by the current compose project.
-# Docker refuses to create a new container with the same name, causing
-# "container name already in use" errors even with --remove-orphans.
-# --remove-orphans only removes containers whose service names are no longer
-# in the compose file — it cannot remove containers from a different project.
-# This pre-flight step guarantees a clean slate.
-# The list matches all container_name values defined in docker-compose.yml.
-# Safe on first-time installs — docker rm -f on a non-existent container is a no-op.
-log_to_file "[INFO] BUG-08: pre-flight stale container removal"
+# ── BUG-09 FIX: Complete KNOWN_CONTAINERS list ────────────────────────
+# BUG-09 ROOT CAUSE: openhands was missing from this list.
+# "container name /openhands already in use" occurred because the pre-flight
+# check skipped it — leaving a stale container that blocked compose up.
+#
+# This list must match ALL container_name values in docker-compose.yml.
+# Rule: any time a new service is added to docker-compose.yml with an
+# explicit container_name, add it here too.
+#
+# Safe on first-time installs — docker rm -f on a non-existent container
+# exits 1 but we suppress it with `|| true`.
+log_to_file "[INFO] BUG-09: pre-flight stale container removal (complete list)"
 KNOWN_CONTAINERS=(
-  watchtower
+  # Core AI services
+  openhands
   open-webui
+  ollama
   litellm
-  n8n
-  qdrant
+  # Search
   perplexica-frontend
   perplexica-backend
   searxng
-  fail2ban
+  # Automation & memory
+  n8n
+  qdrant
+  # Infrastructure
   nginx-proxy
   swarm-dashboard
-  ollama
+  watchtower
+  fail2ban
 )
 for cname in "${KNOWN_CONTAINERS[@]}"; do
   if docker inspect "$cname" &>/dev/null; then
@@ -641,15 +642,9 @@ for cname in "${KNOWN_CONTAINERS[@]}"; do
 done
 log "Pre-flight stale container check complete"
 
-# BUG-07 FIX: --remove-orphans removes stale named containers (e.g. /watchtower)
-# left over from a previous run that are no longer defined in the active compose
-# profile. --force-recreate ensures containers are always rebuilt from the
-# current compose state rather than reused from cache.
-# Both flags are safe for first-time installs and idempotent re-runs.
 log_to_file "[INFO] docker compose up — flags: --remove-orphans --force-recreate"
 
 # BUG-03: Do NOT start Ollama container on macOS — use native instead
-# On Linux, Ollama container is still used
 if [[ "$OS" == "Darwin" ]]; then
   log "macOS: Skipping Ollama Docker container — using native Ollama on host"
   SERVICES=$(docker compose config --services 2>/dev/null | grep -v '^ollama$' | tr '\n' ' ')
@@ -690,9 +685,6 @@ log_to_file "[STEP 6] Health checks"
 
 wait_for_service "Ollama"        "http://localhost:11434"           60
 # BUG-02 FIX: Use /health/readiness — does NOT make live LLM calls.
-# /health triggers model connectivity checks and times out if models
-# aren't loaded. /health/readiness only checks proxy liveness.
-# NOTE FOR FUTURE UPGRADES: Verify this path on LiteLLM major version bumps.
 wait_for_service "LiteLLM"       "http://localhost:4000/health/readiness" 120
 wait_for_service "Open WebUI"    "http://localhost:3000"            90
 wait_for_service "SearXNG"       "http://localhost:8080"            60
@@ -787,7 +779,6 @@ log_to_file "[STEP 11] Security review"
 
 SECURITY_PASS=true
 
-# Check no insecure defaults remain in .env
 for key in WEBUI_SECRET_KEY LITELLM_MASTER_KEY N8N_PASSWORD SEARXNG_SECRET_KEY; do
   val=$(grep "^${key}=" .env | cut -d= -f2- || true)
   for bad in "change-me-in-env" "change-me-run-openssl-rand-hex-32" "sk-home-ai-elite" "changeme" ""; do
@@ -799,9 +790,6 @@ for key in WEBUI_SECRET_KEY LITELLM_MASTER_KEY N8N_PASSWORD SEARXNG_SECRET_KEY; 
 done
 
 # BUG-04 FIX: macOS-safe .env permission check
-# stat -c is GNU/Linux only. macOS requires stat -f "%OLp" for octal perms.
-# NOTE FOR FUTURE UPGRADES: If GNU coreutils ships natively on future macOS,
-# this Darwin branch can be simplified to use stat -c.
 if [[ "$OS" == "Darwin" ]]; then
   ENV_PERMS=$(stat -f "%OLp" .env 2>/dev/null || echo "unknown")
 else
@@ -816,7 +804,6 @@ else
   log ".env permissions: 600 ✔"
 fi
 
-# Check .env is gitignored
 if grep -q "^\.env$" .gitignore 2>/dev/null; then
   log ".env is in .gitignore ✔"
 else
@@ -838,7 +825,7 @@ log_to_file "[DONE] install.sh completed successfully"
 
 echo ""
 echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}${BOLD}║     WIZARD AI IS READY  ✓  v1.4                         ║${NC}"
+echo -e "${GREEN}${BOLD}║     WIZARD AI IS READY  ✓  v1.5                         ║${NC}"
 echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  ${BOLD}Your Services:${NC}"
