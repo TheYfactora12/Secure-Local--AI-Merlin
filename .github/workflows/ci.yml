@@ -84,6 +84,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install yamllint
         run: pip install yamllint
+      - name: Install XML tools
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
       - name: Validate YAML configs
         run: |
           for f in configs/**/*.yml configs/**/*.yaml; do
