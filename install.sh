@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════╗
-# ║        HOME AI ELITE / WIZARD AI — One-Shot Installer v1.0   ║
+# ║        HOME AI ELITE / WIZARD AI — One-Shot Installer v1.1   ║
 # ║  Perplexity + Codex + Memory + Automation on your hardware  ║
 # ║  https://github.com/TheYfactora12/home-ai-elite             ║
 # ╚══════════════════════════════════════════════════════════════╝
+# CHANGELOG v1.1 (2026-05-03):
+#   BUG-02: LiteLLM health check → /health/readiness
+#   BUG-03: Ollama runs NATIVE on macOS (Metal GPU), not in Docker
+#   BUG-04: macOS-safe stat flag for .env permission check
+#   BUG-05: Dashboard URL → http://localhost:8888
+#   BUG-06: Structured install log + trap ERR + auto failure report
+#
+# NOTE FOR FUTURE FIRMWARE / OS UPGRADES:
+#   BUG-03: Re-validate host.docker.internal bridge after macOS 26+ / Ollama 0.21+
+#   BUG-04: If GNU coreutils ships natively on future macOS, simplify stat branch
+#   BUG-02: Verify /health/readiness path on each LiteLLM major version upgrade
 set -euo pipefail
 
 NON_INTERACTIVE="${HOME_AI_NON_INTERACTIVE:-false}"
@@ -45,6 +56,46 @@ err()    { echo -e "${RED}[✗]${NC} $1"; exit 1; }
 step()   { echo -e "\n${BLUE}${BOLD}━━━ $1 ━━━${NC}"; }
 info()   { echo -e "${CYAN}[i]${NC} $1"; }
 
+# ── BUG-06 FIX: Structured logging + trap ERR + failure report ────────
+LOGFILE="${HOME}/.wizard/install.log"
+mkdir -p "$(dirname "$LOGFILE")"
+
+log_to_file() {
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*" >> "$LOGFILE"
+}
+
+generate_failure_report() {
+  # Runs inside trap — do NOT use set -e here
+  local REPORT="${SCRIPT_DIR:-$(pwd)}/wizard-failure-report-$(date +%Y%m%d-%H%M%S).txt"
+  {
+    echo "=== WIZARD AI FAILURE REPORT ==="
+    echo "Date: $(date)"
+    echo "OS: $(sw_vers 2>/dev/null || uname -a)"
+    echo "RAM: ${TOTAL_RAM_GB:-unknown} GB"
+    echo "Docker: $(docker version --format '{{.Server.Version}}' 2>/dev/null || echo 'not running')"
+    echo "Ollama: $(ollama --version 2>/dev/null || echo 'not installed')"
+    echo ""
+    echo "=== INSTALL LOG (last 50 lines) ==="
+    tail -50 "$LOGFILE" 2>/dev/null || echo "No log found"
+    echo ""
+    echo "=== DOCKER SERVICE STATUS ==="
+    docker compose ps 2>/dev/null || echo "Docker compose not available"
+    echo ""
+    echo "=== .ENV KEY NAMES (no values) ==="
+    grep -E '^[A-Z_]+=' .env 2>/dev/null | cut -d= -f1 | sed 's/$/=SET/' || echo "No .env found"
+  } > "$REPORT" 2>/dev/null || true
+  echo -e "\n${YELLOW}📋 Failure report saved: ${REPORT}${NC}"
+  echo -e "${CYAN}→ Paste this file back to continue debugging${NC}"
+}
+
+trap 'EC=$?; log_to_file "[FAIL] Line ${LINENO} exit=${EC}"; \
+  echo -e "\n${RED}[✗] Install failed at line ${LINENO} (exit code ${EC})${NC}"; \
+  echo -e "${YELLOW}Full log: ${LOGFILE}${NC}"; \
+  generate_failure_report' ERR
+
+log_to_file "[START] install.sh v1.1 — $(date)"
+
+# ── Helpers ───────────────────────────────────────────────────────────
 ensure_docker_cli() {
   if command -v docker &>/dev/null; then
     return 0
@@ -94,13 +145,14 @@ header() {
   echo '  ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝'
   echo -e "${NC}"
   echo -e "  ${BOLD}Wizard AI — Your Own Perplexity + Codex + Memory${NC}"
-  echo -e "  Version 1.0  |  github.com/TheYfactora12/home-ai-elite\n"
+  echo -e "  Version 1.1  |  github.com/TheYfactora12/home-ai-elite\n"
 }
 
 header
 
 # ── STEP 1: Preflight Checks ──────────────────────────────────────────
 step "Preflight Checks"
+log_to_file "[STEP 1] Preflight Checks"
 
 OS=$(uname -s)
 if [[ "$OS" == "Darwin" ]]; then
@@ -129,6 +181,7 @@ else
   TOTAL_RAM_GB=$(( $(grep MemTotal /proc/meminfo | awk '{print $2}') / 1024 / 1024 ))
 fi
 log "RAM detected: ${TOTAL_RAM_GB} GB"
+log_to_file "[INFO] OS=${OS} RAM=${TOTAL_RAM_GB}GB"
 
 # Model tier selection based on RAM
 if   (( TOTAL_RAM_GB >= 48 )); then MODEL_TIER="high";
@@ -139,9 +192,7 @@ else err "Minimum 8 GB RAM required. Detected: ${TOTAL_RAM_GB} GB."
 fi
 log "Model tier selected: ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
 
-# ── FIX P1: Cross-platform disk space check ───────────────────────────
-# macOS: df -g reports in GB. Linux: df -BG reports in GB.
-# Using df -k (works on both) and converting to GB for safety.
+# Disk space check (cross-platform: df -k works on macOS and Linux)
 if [[ "$OS" == "Darwin" ]]; then
   AVAIL_DISK_KB=$(df -k . | awk 'NR==2 {print $4}')
 else
@@ -163,9 +214,11 @@ if ! wait_for_docker_engine; then
 fi
 DOCKER_COMPOSE_VERSION=$(docker compose version --short 2>/dev/null || echo "0")
 log "Docker running | Compose ${DOCKER_COMPOSE_VERSION}"
+log_to_file "[PASS] STEP 1: Preflight — Docker ${DOCKER_COMPOSE_VERSION}"
 
 # ── STEP 2: Install Dependencies ──────────────────────────────────────
 step "Installing Dependencies"
+log_to_file "[STEP 2] Installing Dependencies"
 
 if [[ "$OS" == "Darwin" ]]; then
   if ! command -v brew &>/dev/null; then
@@ -191,15 +244,40 @@ else
   done
 fi
 
-if [[ "$OS" == "Darwin" ]] && command -v brew &>/dev/null; then
-  if brew services list 2>/dev/null | awk '$1 == "ollama" && $2 == "started" { found=1 } END { exit found ? 0 : 1 }'; then
-    warn "Stopping Homebrew Ollama so the Docker Ollama container can bind localhost:11434..."
-    brew services stop ollama 2>/dev/null || true
+# ── BUG-03 FIX: Ollama runs NATIVE on macOS for Metal GPU acceleration ──
+# NOTE FOR FUTURE UPGRADES: Re-validate after macOS 26+ / Ollama 0.21+
+# The host.docker.internal bridge is stable but Docker Desktop networking
+# changes between major macOS releases. Test with: curl http://host.docker.internal:11434
+if [[ "$OS" == "Darwin" ]]; then
+  # Install Ollama natively if not present
+  if ! command -v ollama &>/dev/null; then
+    log "Installing Ollama natively (required for Apple Metal GPU acceleration)..."
+    brew install ollama
+  else
+    log "Ollama already installed natively ✔"
+  fi
+
+  # Ensure native Ollama is running (not Docker)
+  # Stop brew service first to avoid port conflict, then start raw process
+  brew services stop ollama 2>/dev/null || true
+  sleep 1
+
+  if ! pgrep -x "ollama" > /dev/null; then
+    log "Starting native Ollama (Metal GPU)..."
+    OLLAMA_HOST=127.0.0.1:11434 ollama serve &>/dev/null &
+    OLLAMA_PID=$!
+    log_to_file "[INFO] Ollama native PID=${OLLAMA_PID}"
+    sleep 4
+  else
+    log "Native Ollama already running ✔"
   fi
 fi
 
+log_to_file "[PASS] STEP 2: Dependencies installed"
+
 # ── STEP 3: Environment Setup & Secret Hardening ──────────────────────
 step "Environment Setup & Secret Hardening"
+log_to_file "[STEP 3] Environment Setup"
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
@@ -354,8 +432,11 @@ else
   warn "scripts/generate-certs.sh not found — nginx HTTPS proxy may not start"
 fi
 
+log_to_file "[PASS] STEP 3: Environment & secrets configured"
+
 # ── STEP 4: Pull Ollama Models (RAM-Aware) ────────────────────────────
 step "Pulling AI Models (Tier: ${MODEL_TIER} / ${TOTAL_RAM_GB} GB)"
+log_to_file "[STEP 4] Model pulls — tier=${MODEL_TIER}"
 
 MODELS_TO_PULL=()
 
@@ -408,14 +489,38 @@ if [[ -f "configs/perplexica/config.toml" ]]; then
     configs/perplexica/config.toml && rm -f configs/perplexica/config.toml.bak
 fi
 
+# ── BUG-03: Pull models via native Ollama (not Docker exec) ──────────
+# Native Ollama on macOS uses Metal — Docker exec would use CPU only
+if (( ${#MODELS_TO_PULL[@]} > 0 )); then
+  for model in "${MODELS_TO_PULL[@]}"; do
+    log "Pulling ${model} via native Ollama (Metal GPU)..."
+    log_to_file "[INFO] Pulling model: ${model}"
+    if ! ollama pull "$model"; then
+      warn "Failed to pull ${model} — skipping. Pull manually: bash scripts/add-model.sh ${model}"
+      log_to_file "[WARN] Model pull failed: ${model}"
+    else
+      log_to_file "[PASS] Model pulled: ${model}"
+    fi
+  done
+fi
+
+log_to_file "[PASS] STEP 4: Models"
+
 # ── STEP 5: Docker Compose Up ─────────────────────────────────────────
 step "Pulling Docker Images & Starting All Services"
+log_to_file "[STEP 5] Docker Compose up"
 
 docker compose pull --quiet
 log "Images pulled"
 
-docker compose up -d ollama
-log "Ollama container started"
+# BUG-03: Do NOT start Ollama container on macOS — use native instead
+# On Linux, Ollama container is still used
+if [[ "$OS" == "Darwin" ]]; then
+  log "macOS: Skipping Ollama Docker container — using native Ollama on host"
+  docker compose up -d --scale ollama=0 2>/dev/null || docker compose up -d $(docker compose config --services | grep -v '^ollama$' | tr '\n' ' ')
+else
+  docker compose up -d
+fi
 
 wait_for_service() {
   local name=$1; local url=$2; local max_wait=${3:-90}
@@ -427,39 +532,40 @@ wait_for_service() {
     if (( elapsed >= max_wait )); then
       echo " TIMEOUT"
       warn "${name} not responding — check: docker compose logs"
+      log_to_file "[WARN] ${name} health check TIMEOUT after ${max_wait}s"
       return 0
     fi
   done
   echo " ✓"
+  log_to_file "[PASS] ${name} health check OK"
   return 0
 }
 
-wait_for_service "Ollama" "http://localhost:11434" 90
+# Wait for native Ollama on macOS
+wait_for_service "Ollama (native)" "http://localhost:11434" 90
 
-if (( ${#MODELS_TO_PULL[@]} > 0 )); then
-  for model in "${MODELS_TO_PULL[@]}"; do
-    log "Pulling ${model} into Docker Ollama..."
-    if ! docker compose exec -T ollama ollama pull "$model"; then
-      warn "Failed to pull ${model} — skipping. Stack will continue; pull manually with: bash scripts/add-model.sh ${model}"
-    fi
-  done
-fi
-
-docker compose up -d
-log "All services started"
+log_to_file "[PASS] STEP 5: Docker services up"
 
 # ── STEP 6: Health Checks ─────────────────────────────────────────────
 step "Waiting for Services to be Ready"
+log_to_file "[STEP 6] Health checks"
 
-wait_for_service "Ollama"        "http://localhost:11434"        60
-wait_for_service "LiteLLM"       "http://localhost:4000"         120
-wait_for_service "Open WebUI"    "http://localhost:3000"         90
-wait_for_service "SearXNG"       "http://localhost:8080"         60
-wait_for_service "Qdrant"        "http://localhost:6333/healthz" 60
-wait_for_service "n8n"           "http://localhost:5678"         60
+wait_for_service "Ollama"        "http://localhost:11434"           60
+# BUG-02 FIX: Use /health/readiness — does NOT make live LLM calls.
+# /health triggers model connectivity checks and times out if models
+# aren't loaded. /health/readiness only checks proxy liveness.
+# NOTE FOR FUTURE UPGRADES: Verify this path on LiteLLM major version bumps.
+wait_for_service "LiteLLM"       "http://localhost:4000/health/readiness" 120
+wait_for_service "Open WebUI"    "http://localhost:3000"            90
+wait_for_service "SearXNG"       "http://localhost:8080"            60
+wait_for_service "Qdrant"        "http://localhost:6333/healthz"    60
+wait_for_service "n8n"           "http://localhost:5678"            60
+
+log_to_file "[PASS] STEP 6: All health checks complete"
 
 # ── STEP 7: First-Boot Init (bootstrap) ────────────────────────────────
 step "First-Boot Initialization"
+log_to_file "[STEP 7] First-boot bootstrap"
 
 FIRST_BOOT_FLAG="${SCRIPT_DIR}/.wizard-bootstrapped"
 if [[ ! -f "$FIRST_BOOT_FLAG" ]]; then
@@ -468,20 +574,23 @@ if [[ ! -f "$FIRST_BOOT_FLAG" ]]; then
     if HOME_AI_STACK_DIR="${SCRIPT_DIR}" bash "${SCRIPT_DIR}/scripts/bootstrap.sh"; then
       touch "$FIRST_BOOT_FLAG"
       log "Bootstrap complete"
+      log_to_file "[PASS] STEP 7: Bootstrap complete"
     else
       warn "Bootstrap reported issues — run manually after install: bash scripts/bootstrap.sh"
+      log_to_file "[WARN] Bootstrap reported issues"
     fi
   else
     warn "scripts/bootstrap.sh not found — run manually after install"
   fi
 else
   log "Already bootstrapped — skipping (delete .wizard-bootstrapped to force re-run)"
+  log_to_file "[INFO] STEP 7: Already bootstrapped — skipped"
 fi
 
 # ── STEP 8: Install wizard CLI system-wide ──────────────────────────────
 step "Installing wizard CLI"
+log_to_file "[STEP 8] CLI install"
 
-# FIX: Explicit file existence check before symlinking — clear error if missing
 CLI_PATH="${SCRIPT_DIR}/cli/wizard"
 if [[ -f "$CLI_PATH" ]]; then
   chmod +x "$CLI_PATH"
@@ -493,10 +602,12 @@ if [[ -f "$CLI_PATH" ]]; then
     log "wizard CLI installed → /usr/local/bin/wizard (via sudo)"
   fi
   log "Run: wizard status  |  wizard ask \"<question>\"  |  wizard help"
+  log_to_file "[PASS] STEP 8: CLI installed"
 else
   warn "cli/wizard not found at ${CLI_PATH}"
   warn "CLI not installed. To fix: ensure cli/wizard exists and re-run install.sh"
   warn "Manual workaround: bash ${SCRIPT_DIR}/scripts/status.sh"
+  log_to_file "[WARN] STEP 8: CLI not found at ${CLI_PATH}"
 fi
 
 # ── STEP 9: Optional MCP Servers ──────────────────────────────────────
@@ -534,6 +645,7 @@ fi
 
 # ── STEP 11: Security Review Checklist ───────────────────────────────
 step "Security Review"
+log_to_file "[STEP 11] Security review"
 
 SECURITY_PASS=true
 
@@ -548,8 +660,16 @@ for key in WEBUI_SECRET_KEY LITELLM_MASTER_KEY N8N_PASSWORD SEARXNG_SECRET_KEY; 
   done
 done
 
-# Check .env file permissions
-ENV_PERMS=$(stat -c "%a" .env 2>/dev/null || stat -f "%A" .env 2>/dev/null || echo "unknown")
+# BUG-04 FIX: macOS-safe .env permission check
+# stat -c is GNU/Linux only. macOS requires stat -f "%OLp" for octal perms.
+# NOTE FOR FUTURE UPGRADES: If GNU coreutils ships natively on future macOS,
+# this Darwin branch can be simplified to use stat -c.
+if [[ "$OS" == "Darwin" ]]; then
+  ENV_PERMS=$(stat -f "%OLp" .env 2>/dev/null || echo "unknown")
+else
+  ENV_PERMS=$(stat -c "%a" .env 2>/dev/null || echo "unknown")
+fi
+
 if [[ "$ENV_PERMS" != "600" ]]; then
   warn "SECURITY: .env permissions are ${ENV_PERMS}, expected 600. Fixing..."
   chmod 600 .env
@@ -569,14 +689,18 @@ fi
 
 if [[ "$SECURITY_PASS" == true ]]; then
   log "Security review passed ✔"
+  log_to_file "[PASS] STEP 11: Security review passed"
 else
   warn "Security review found issues above — resolve before exposing to any network"
+  log_to_file "[WARN] STEP 11: Security review found issues"
 fi
 
 # ── STEP 12: Done — Print Dashboard ───────────────────────────────────
+log_to_file "[DONE] install.sh completed successfully"
+
 echo ""
 echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}${BOLD}║     WIZARD AI IS READY  ✓  v1.0                         ║${NC}"
+echo -e "${GREEN}${BOLD}║     WIZARD AI IS READY  ✓  v1.1                         ║${NC}"
 echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  ${BOLD}Your Services:${NC}"
@@ -587,7 +711,7 @@ echo -e "  ${CYAN}🔎 Private Search (SearXNG):${NC} http://localhost:8080"
 echo -e "  ${CYAN}⚙️  Automation (n8n):${NC}         http://localhost:5678"
 echo -e "  ${CYAN}📦 Vector Memory (Qdrant):${NC}  http://localhost:6333"
 echo -e "  ${CYAN}🔀 Model Router (LiteLLM):${NC}  http://localhost:4000"
-echo -e "  ${CYAN}📊 Dashboard (Wizard HQ):${NC}   file://${SCRIPT_DIR}/dashboard/index.html"
+echo -e "  ${CYAN}📊 Dashboard (Wizard HQ):${NC}   http://localhost:8888"
 echo ""
 echo -e "  ${BOLD}Hardware Tier:${NC} ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
 echo -e "  ${BOLD}Coding Model:${NC}  ${OPENHANDS_MODEL}"
@@ -597,6 +721,7 @@ echo -e "  ${GREEN}✓  All internal secrets auto-generated${NC}"
 echo -e "  ${GREEN}✓  .env locked to 600 (owner only)${NC}"
 echo -e "  ${GREEN}✓  Cloud API keys entered in hidden mode${NC}"
 echo -e "  ${GREEN}✓  Security review complete${NC}"
+echo -e "  ${GREEN}✓  Install log: ${LOGFILE}${NC}"
 echo ""
 echo -e "  ${BOLD}First commands to run:${NC}"
 echo -e "  ${CYAN}wizard status${NC}                    → full stack health check"
