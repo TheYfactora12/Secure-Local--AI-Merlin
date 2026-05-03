@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════╗
-# ║        HOME AI ELITE / WIZARD AI — One-Shot Installer v1.3   ║
+# ║        HOME AI ELITE / WIZARD AI — One-Shot Installer v1.4   ║
 # ║  Perplexity + Codex + Memory + Automation on your hardware  ║
 # ║  https://github.com/TheYfactora12/home-ai-elite             ║
 # ╚══════════════════════════════════════════════════════════════╝
+# CHANGELOG v1.4 (2026-05-03):
+#   BUG-08: Pre-flight stale container removal before docker compose up.
+#           Silently removes any named containers left over from partial
+#           prior runs (e.g. /watchtower). Prevents "container name already
+#           in use" errors on all re-runs.
 # CHANGELOG v1.3 (2026-05-03):
 #   BUG-07: docker compose up now uses --remove-orphans + --force-recreate
 #           Fixes "container name already in use" on any re-run (e.g. /watchtower)
@@ -101,7 +106,7 @@ trap 'EC=$?; log_to_file "[FAIL] Line ${LINENO} exit=${EC}"; \
   echo -e "${YELLOW}Full log: ${LOGFILE}${NC}"; \
   generate_failure_report' ERR
 
-log_to_file "[START] install.sh v1.3 — $(date)"
+log_to_file "[START] install.sh v1.4 — $(date)"
 
 # ── Helpers ───────────────────────────────────────────────────────────
 ensure_docker_cli() {
@@ -228,7 +233,7 @@ header() {
   echo '  ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝'
   echo -e "${NC}"
   echo -e "  ${BOLD}Wizard AI — Your Own Perplexity + Codex + Memory${NC}"
-  echo -e "  Version 1.3  |  github.com/TheYfactora12/home-ai-elite\n"
+  echo -e "  Version 1.4  |  github.com/TheYfactora12/home-ai-elite\n"
 }
 
 header
@@ -602,6 +607,40 @@ log_to_file "[STEP 5] Docker Compose up"
 docker compose pull --quiet
 log "Images pulled"
 
+# ── BUG-08 FIX: Remove stale named containers before compose up ───────
+# Partial prior install runs can leave named containers (e.g. /watchtower,
+# /n8n, /open-webui) that are NOT tracked by the current compose project.
+# Docker refuses to create a new container with the same name, causing
+# "container name already in use" errors even with --remove-orphans.
+# --remove-orphans only removes containers whose service names are no longer
+# in the compose file — it cannot remove containers from a different project.
+# This pre-flight step guarantees a clean slate.
+# The list matches all container_name values defined in docker-compose.yml.
+# Safe on first-time installs — docker rm -f on a non-existent container is a no-op.
+log_to_file "[INFO] BUG-08: pre-flight stale container removal"
+KNOWN_CONTAINERS=(
+  watchtower
+  open-webui
+  litellm
+  n8n
+  qdrant
+  perplexica-frontend
+  perplexica-backend
+  searxng
+  fail2ban
+  nginx-proxy
+  swarm-dashboard
+  ollama
+)
+for cname in "${KNOWN_CONTAINERS[@]}"; do
+  if docker inspect "$cname" &>/dev/null; then
+    warn "Removing stale container: ${cname}"
+    docker rm -f "$cname" 2>/dev/null || true
+    log_to_file "[INFO] Removed stale container: ${cname}"
+  fi
+done
+log "Pre-flight stale container check complete"
+
 # BUG-07 FIX: --remove-orphans removes stale named containers (e.g. /watchtower)
 # left over from a previous run that are no longer defined in the active compose
 # profile. --force-recreate ensures containers are always rebuilt from the
@@ -799,7 +838,7 @@ log_to_file "[DONE] install.sh completed successfully"
 
 echo ""
 echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}${BOLD}║     WIZARD AI IS READY  ✓  v1.3                         ║${NC}"
+echo -e "${GREEN}${BOLD}║     WIZARD AI IS READY  ✓  v1.4                         ║${NC}"
 echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  ${BOLD}Your Services:${NC}"
