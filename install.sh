@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════╗
-# ║        HOME AI ELITE / WIZARD AI — One-Shot Installer v1.2   ║
+# ║        HOME AI ELITE / WIZARD AI — One-Shot Installer v1.3   ║
 # ║  Perplexity + Codex + Memory + Automation on your hardware  ║
 # ║  https://github.com/TheYfactora12/home-ai-elite             ║
 # ╚══════════════════════════════════════════════════════════════╝
+# CHANGELOG v1.3 (2026-05-03):
+#   BUG-07: docker compose up now uses --remove-orphans + --force-recreate
+#           Fixes "container name already in use" on any re-run (e.g. /watchtower)
 # CHANGELOG v1.2 (2026-05-03):
 #   BUG-01: patch_compose_for_macos() — disables fail2ban (network_mode:host
 #           breaks Docker Desktop on macOS), rewrites OLLAMA_BASE_URL to
@@ -98,7 +101,7 @@ trap 'EC=$?; log_to_file "[FAIL] Line ${LINENO} exit=${EC}"; \
   echo -e "${YELLOW}Full log: ${LOGFILE}${NC}"; \
   generate_failure_report' ERR
 
-log_to_file "[START] install.sh v1.2 — $(date)"
+log_to_file "[START] install.sh v1.3 — $(date)"
 
 # ── Helpers ───────────────────────────────────────────────────────────
 ensure_docker_cli() {
@@ -225,7 +228,7 @@ header() {
   echo '  ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝'
   echo -e "${NC}"
   echo -e "  ${BOLD}Wizard AI — Your Own Perplexity + Codex + Memory${NC}"
-  echo -e "  Version 1.2  |  github.com/TheYfactora12/home-ai-elite\n"
+  echo -e "  Version 1.3  |  github.com/TheYfactora12/home-ai-elite\n"
 }
 
 header
@@ -599,14 +602,24 @@ log_to_file "[STEP 5] Docker Compose up"
 docker compose pull --quiet
 log "Images pulled"
 
+# BUG-07 FIX: --remove-orphans removes stale named containers (e.g. /watchtower)
+# left over from a previous run that are no longer defined in the active compose
+# profile. --force-recreate ensures containers are always rebuilt from the
+# current compose state rather than reused from cache.
+# Both flags are safe for first-time installs and idempotent re-runs.
+log_to_file "[INFO] docker compose up — flags: --remove-orphans --force-recreate"
+
 # BUG-03: Do NOT start Ollama container on macOS — use native instead
 # On Linux, Ollama container is still used
 if [[ "$OS" == "Darwin" ]]; then
   log "macOS: Skipping Ollama Docker container — using native Ollama on host"
-  docker compose up -d --scale ollama=0 2>/dev/null || docker compose up -d $(docker compose config --services | grep -v '^ollama$' | tr '\n' ' ')
+  SERVICES=$(docker compose config --services 2>/dev/null | grep -v '^ollama$' | tr '\n' ' ')
+  docker compose up -d --remove-orphans --force-recreate $SERVICES
 else
-  docker compose up -d
+  docker compose up -d --remove-orphans --force-recreate
 fi
+
+log_to_file "[PASS] STEP 5: Docker compose up complete"
 
 wait_for_service() {
   local name=$1; local url=$2; local max_wait=${3:-90}
@@ -786,7 +799,7 @@ log_to_file "[DONE] install.sh completed successfully"
 
 echo ""
 echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}${BOLD}║     WIZARD AI IS READY  ✓  v1.2                         ║${NC}"
+echo -e "${GREEN}${BOLD}║     WIZARD AI IS READY  ✓  v1.3                         ║${NC}"
 echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  ${BOLD}Your Services:${NC}"
