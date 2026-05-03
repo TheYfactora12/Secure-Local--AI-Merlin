@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════╗
-# ║        HOME AI ELITE / WIZARD AI — One-Shot Installer v1.1   ║
+# ║        HOME AI ELITE / WIZARD AI — One-Shot Installer v1.2   ║
 # ║  Perplexity + Codex + Memory + Automation on your hardware  ║
 # ║  https://github.com/TheYfactora12/home-ai-elite             ║
 # ╚══════════════════════════════════════════════════════════════╝
+# CHANGELOG v1.2 (2026-05-03):
+#   BUG-01: patch_compose_for_macos() — disables fail2ban (network_mode:host
+#           breaks Docker Desktop on macOS), rewrites OLLAMA_BASE_URL to
+#           host.docker.internal for open-webui, litellm, perplexica-backend
 # CHANGELOG v1.1 (2026-05-03):
 #   BUG-02: LiteLLM health check → /health/readiness
 #   BUG-03: Ollama runs NATIVE on macOS (Metal GPU), not in Docker
@@ -12,6 +16,7 @@
 #   BUG-06: Structured install log + trap ERR + auto failure report
 #
 # NOTE FOR FUTURE FIRMWARE / OS UPGRADES:
+#   BUG-01: Re-test fail2ban on macOS if Docker Desktop adds iptables support
 #   BUG-03: Re-validate host.docker.internal bridge after macOS 26+ / Ollama 0.21+
 #   BUG-04: If GNU coreutils ships natively on future macOS, simplify stat branch
 #   BUG-02: Verify /health/readiness path on each LiteLLM major version upgrade
@@ -93,7 +98,7 @@ trap 'EC=$?; log_to_file "[FAIL] Line ${LINENO} exit=${EC}"; \
   echo -e "${YELLOW}Full log: ${LOGFILE}${NC}"; \
   generate_failure_report' ERR
 
-log_to_file "[START] install.sh v1.1 — $(date)"
+log_to_file "[START] install.sh v1.2 — $(date)"
 
 # ── Helpers ───────────────────────────────────────────────────────────
 ensure_docker_cli() {
@@ -134,6 +139,81 @@ wait_for_docker_engine() {
   return 1
 }
 
+# ── BUG-01 FIX: Patch docker-compose.yml for macOS incompatibilities ──
+# Must be called AFTER .env exists and BEFORE docker compose up.
+# Safe to call on Linux — all branches are no-ops when OS != Darwin.
+# NOTE FOR FUTURE UPGRADES: Re-test fail2ban if Docker Desktop for macOS
+# ever adds iptables/nftables support in the Linux VM.
+patch_compose_for_macos() {
+  if [[ "$OS" != "Darwin" ]]; then
+    return 0
+  fi
+
+  step "Patching docker-compose.yml for macOS"
+  log_to_file "[STEP] patch_compose_for_macos — applying macOS compatibility patches"
+
+  local COMPOSE_FILE="${SCRIPT_DIR}/docker-compose.yml"
+
+  # ── Patch 1: Disable fail2ban (network_mode: host breaks Docker Desktop) ──
+  # fail2ban needs iptables which Docker Desktop's Linux VM does not expose.
+  # On macOS, silently starting fail2ban causes the entire compose stack to
+  # hang on startup waiting for a network namespace that never becomes available.
+  if grep -q 'container_name: fail2ban' "$COMPOSE_FILE"; then
+    # Comment out the entire fail2ban service block by adding a profile that
+    # will never be activated — cleanest way to disable without editing YAML structure
+    python3 - <<'PYEOF' "$COMPOSE_FILE"
+import sys, re
+path = sys.argv[1]
+with open(path) as f:
+    content = f.read()
+# Add profiles: [linux-only] to fail2ban service so it never starts on macOS
+content = re.sub(
+    r'(  fail2ban:\n    image: crazymax/fail2ban)',
+    r'  fail2ban:\n    profiles: ["linux-only"]  # disabled on macOS: network_mode:host unsupported\n    image: crazymax/fail2ban',
+    content
+)
+with open(path, 'w') as f:
+    f.write(content)
+PYEOF
+    warn "fail2ban disabled on macOS (network_mode:host not supported by Docker Desktop)"
+    warn "On Linux/VPS deployments, fail2ban runs normally for brute-force protection."
+    log_to_file "[PATCH] fail2ban disabled via profiles:linux-only"
+  else
+    log "fail2ban already patched or not present — skipping"
+  fi
+
+  # ── Patch 2: Rewrite OLLAMA_BASE_URL to host.docker.internal ──────────
+  # When Ollama runs natively on the Mac (BUG-03 fix), the 'ollama' service
+  # name resolves to nothing inside containers — the container doesn't exist.
+  # host.docker.internal is Docker Desktop's stable bridge to the host network
+  # and resolves correctly from all containers on macOS.
+  if grep -q 'OLLAMA_BASE_URL=.*ollama:11434' "$COMPOSE_FILE"; then
+    sed -i.bak 's|OLLAMA_BASE_URL=\${OLLAMA_BASE_URL:-http://ollama:11434}|OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}|g' "$COMPOSE_FILE"
+    rm -f "${COMPOSE_FILE}.bak"
+    log "OLLAMA_BASE_URL rewritten → host.docker.internal:11434 (open-webui, litellm)"
+    log_to_file "[PATCH] OLLAMA_BASE_URL → host.docker.internal:11434"
+  fi
+
+  if grep -q 'OLLAMA_HOST=.*ollama:11434' "$COMPOSE_FILE"; then
+    sed -i.bak 's|OLLAMA_HOST=\${OLLAMA_BASE_URL:-http://ollama:11434}|OLLAMA_HOST=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}|g' "$COMPOSE_FILE"
+    rm -f "${COMPOSE_FILE}.bak"
+    log "OLLAMA_HOST rewritten → host.docker.internal:11434 (perplexica-backend)"
+    log_to_file "[PATCH] OLLAMA_HOST → host.docker.internal:11434"
+  fi
+
+  # ── Patch 3: Set OLLAMA_BASE_URL in .env for any other services reading it ──
+  if grep -q '^OLLAMA_BASE_URL=' .env 2>/dev/null; then
+    sed -i.bak 's|^OLLAMA_BASE_URL=.*|OLLAMA_BASE_URL=http://host.docker.internal:11434|' .env && rm -f .env.bak
+  else
+    echo "OLLAMA_BASE_URL=http://host.docker.internal:11434" >> .env
+  fi
+  log ".env OLLAMA_BASE_URL → http://host.docker.internal:11434"
+  log_to_file "[PATCH] .env OLLAMA_BASE_URL set"
+
+  log "docker-compose.yml patched for macOS ✔"
+  log_to_file "[PASS] patch_compose_for_macos complete"
+}
+
 header() {
   clear 2>/dev/null || true
   echo -e "${CYAN}"
@@ -145,7 +225,7 @@ header() {
   echo '  ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝'
   echo -e "${NC}"
   echo -e "  ${BOLD}Wizard AI — Your Own Perplexity + Codex + Memory${NC}"
-  echo -e "  Version 1.1  |  github.com/TheYfactora12/home-ai-elite\n"
+  echo -e "  Version 1.2  |  github.com/TheYfactora12/home-ai-elite\n"
 }
 
 header
@@ -226,7 +306,7 @@ if [[ "$OS" == "Darwin" ]]; then
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   fi
   log "Homebrew ready"
-  for pkg in git curl jq; do
+  for pkg in git curl jq python3; do
     if command -v "$pkg" &>/dev/null; then
       log "$pkg already installed"
     else
@@ -236,7 +316,7 @@ if [[ "$OS" == "Darwin" ]]; then
   done
 else
   sudo apt-get update -qq
-  for pkg in git curl jq; do
+  for pkg in git curl jq python3; do
     if ! command -v "$pkg" &>/dev/null; then
       sudo apt-get install -y -qq "$pkg"
     fi
@@ -273,13 +353,19 @@ if [[ "$OS" == "Darwin" ]]; then
   fi
 fi
 
+# ── BUG-01 FIX: Patch docker-compose.yml for macOS ───────────────────
+# Called here — after OS is known and SCRIPT_DIR will be set in Step 3,
+# but we need to set it early for the patch function.
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+patch_compose_for_macos
+
 log_to_file "[PASS] STEP 2: Dependencies installed"
 
 # ── STEP 3: Environment Setup & Secret Hardening ──────────────────────
 step "Environment Setup & Secret Hardening"
 log_to_file "[STEP 3] Environment Setup"
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# SCRIPT_DIR already set above — reassigning is safe (idempotent)
 cd "$SCRIPT_DIR"
 
 # 3a: Create .env from template if it doesn't exist
@@ -700,7 +786,7 @@ log_to_file "[DONE] install.sh completed successfully"
 
 echo ""
 echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}${BOLD}║     WIZARD AI IS READY  ✓  v1.1                         ║${NC}"
+echo -e "${GREEN}${BOLD}║     WIZARD AI IS READY  ✓  v1.2                         ║${NC}"
 echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  ${BOLD}Your Services:${NC}"

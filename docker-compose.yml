@@ -1,5 +1,5 @@
-# home-ai-elite — Full Stack Docker Compose v1.0-rc2
-# Services: Ollama, Open WebUI, Perplexica, SearXNG, OpenHands, Qdrant, n8n, LiteLLM
+# home-ai-elite — Full Stack Docker Compose v1.1
+# Services: Open WebUI, Perplexica, SearXNG, OpenHands, Qdrant, n8n, LiteLLM
 #           + Nginx (TLS reverse proxy), Watchtower (auto-updates), Fail2ban (brute-force)
 # Start:  docker compose up -d
 # Stop:   docker compose down
@@ -10,6 +10,12 @@
 # Or:  cp .env.example .env && edit .env manually
 # Containers with REQUIRED_CHANGE_ME fallbacks will FAIL TO START
 # intentionally if .env is missing — this is by design.
+#
+# macOS NOTE: install.sh patches this file automatically for macOS:
+#   - Ollama runs NATIVELY (Metal GPU) — ollama service scaled to 0
+#   - fail2ban disabled (network_mode:host unsupported on Docker Desktop)
+#   - OLLAMA_BASE_URL rewritten to host.docker.internal:11434
+# On Linux, no patches are applied and all services run in Docker.
 
 networks:
   ai-net:
@@ -57,7 +63,11 @@ services:
   # ───────────────────────────────────────────
   # SECURITY — Fail2ban
   # Bans IPs after repeated failed logins
-  # NOTE: network_mode: host required for iptables
+  # NOTE: network_mode: host required for iptables access.
+  # MACOS INCOMPATIBILITY: Docker Desktop on macOS does not support
+  # network_mode: host — iptables is not available in the Linux VM.
+  # install.sh automatically disables this service on macOS.
+  # On Linux (VPS/server deployments), this runs normally.
   # ───────────────────────────────────────────
   fail2ban:
     image: crazymax/fail2ban:latest
@@ -105,6 +115,9 @@ services:
   # Local LLM server — all models run here
   # SECURITY: Bound to 127.0.0.1 only.
   # LAN devices must go through LiteLLM proxy.
+  # MACOS: This service is scaled to 0 by install.sh.
+  #        Ollama runs natively for Metal GPU acceleration.
+  #        Services connect via host.docker.internal:11434 on macOS.
   # ───────────────────────────────────────────
   ollama:
     image: ollama/ollama:latest
@@ -126,6 +139,7 @@ services:
   # ───────────────────────────────────────────
   # LAYER 2 — Model Router (LiteLLM)
   # Unified API: local Ollama + optional cloud
+  # MACOS: OLLAMA_BASE_URL patched to host.docker.internal by install.sh
   # ───────────────────────────────────────────
   litellm:
     image: ghcr.io/berriai/litellm:main-latest
@@ -141,6 +155,8 @@ services:
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-REQUIRED_CHANGE_ME}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-none}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-none}
+      # On macOS, install.sh rewrites this to http://host.docker.internal:11434
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
     networks:
       - ai-net
     depends_on:
@@ -154,6 +170,7 @@ services:
   # Your Perplexity / ChatGPT front end
   # SECURITY: Set ENABLE_SIGNUP=false in .env
   # after creating your admin account.
+  # MACOS: OLLAMA_BASE_URL patched to host.docker.internal by install.sh
   # ───────────────────────────────────────────
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
@@ -164,7 +181,8 @@ services:
     volumes:
       - open-webui:/app/backend/data
     environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
+      # On macOS, install.sh rewrites this to http://host.docker.internal:11434
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
       - OPENAI_API_BASE_URL=http://litellm:4000
       - OPENAI_API_KEY=${LITELLM_MASTER_KEY:-REQUIRED_CHANGE_ME}
       # REQUIRED: set WEBUI_SECRET_KEY in .env (install.sh auto-generates it)
@@ -220,6 +238,7 @@ services:
   # ───────────────────────────────────────────
   # LAYER 2 — Search AI (Perplexica)
   # Open-source Perplexity clone with citations
+  # MACOS: OLLAMA_BASE_URL patched to host.docker.internal by install.sh
   # ───────────────────────────────────────────
   perplexica-backend:
     image: itzcrazykns1337/perplexica-backend:main
@@ -230,6 +249,9 @@ services:
     volumes:
       - ./configs/perplexica/config.toml:/home/perplexica/config.toml
       - perplexica-data:/home/perplexica/data
+    environment:
+      # On macOS, install.sh rewrites this to http://host.docker.internal:11434
+      - OLLAMA_HOST=${OLLAMA_BASE_URL:-http://ollama:11434}
     networks:
       - ai-net
     depends_on:
