@@ -17,11 +17,29 @@ cd home-ai-elite
 bash install.sh
 ```
 
+**Or install directly from GitHub (no clone needed):**
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/TheYfactora12/home-ai-elite/main/install.sh)
+```
+
 **Requirements:**
 - Docker Desktop (running)
 - macOS 13+ or Ubuntu 22.04+
 - 8 GB RAM minimum (24 GB recommended)
 - 50 GB free disk
+
+---
+
+## 🔁 Codex Resume
+
+> **Active session** — resume Codex to continue where we left off building this project.
+
+```bash
+codex resume 019def0f-35cd-7083-aa1a-9e14d69338bd
+```
+
+Run this from the repo root to pick up the ongoing build context (dashboard, install feedback loop, swarm monitoring, macOS stress test fixes).
 
 ---
 
