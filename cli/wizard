@@ -1,18 +1,39 @@
 #!/bin/bash
 # ============================================================
-# wizard — Wizard AI Stack CLI
+# wizard — Wizard AI Stack CLI  v5
 # Usage: wizard <command> [args]
 # ============================================================
 WIZARD_DIR="$HOME/wizard-ai"
-CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'; BOLD='\033[1m'
+CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+RED='\033[0;31m'; NC='\033[0m'; BOLD='\033[1m'; DIM='\033[2m'
 
 n8n_url="http://localhost:5678"
 brain_url="http://localhost:11434"
 memory_url="http://localhost:6333"
+litellm_url="http://localhost:4000"
 
+# ── helpers ─────────────────────────────────────────────────
+require_running() {
+  docker inspect ollama &>/dev/null 2>&1 || \
+  docker inspect wizard-brain &>/dev/null 2>&1 || {
+    echo -e "${RED}Stack is not running. Run: wizard start${NC}"; exit 1
+  }
+}
+
+json_val() {
+  # lightweight jq fallback: json_val <key> <<< "$json"
+  python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('$1',''))" 2>/dev/null
+}
+
+pretty_json() {
+  python3 -m json.tool 2>/dev/null || cat
+}
+
+# ── usage ────────────────────────────────────────────────────
 usage() {
 cat << 'EOF'
-  WIZARD CLI v4
+
+  WIZARD CLI v5
 
   Stack control:
     wizard start              Start Wizard stack
@@ -21,15 +42,29 @@ cat << 'EOF'
     wizard status             Show health of all services
 
   Brain:
-    wizard ask "question"     Ask Wizard a question (local Mistral)
-    wizard route "task"       Send task through smart router (n8n)
-    wizard models             List loaded models
+    wizard ask "question"     Ask a quick question (swarm-tiny, fastest)
+    wizard route "task"       Alias for wizard swarm (full coordinator)
+    wizard models             List loaded Ollama models
     wizard pull <model>       Pull a new model into Wizard's brain
+
+  Swarm (Phase 1-3):
+    wizard swarm "task"       Route through full swarm coordinator
+                               → classifies complexity
+                               → recalls relevant memory (RAG)
+                               → injects context
+                               → dispatches to best agent
+                               → stores result in swarm_memory
+
+    wizard recall "query"     Semantic search over past swarm results
+                               Returns top-5 ranked memories with scores
+
+    wizard swarm-status       Show swarm memory health + last 5 tasks
+    wizard swarm-flush        Reset swarm_memory (clears all context)
 
   Memory:
     wizard ingest "title" "content"   Teach Wizard a document
     wizard collections                List Qdrant collections
-    wizard memory-stats               Show memory usage
+    wizard memory-stats               Show all collection point counts
 
   Training:
     wizard train "prompt" "response"  Capture exchange for training
@@ -38,17 +73,19 @@ cat << 'EOF'
     wizard backup             Backup Qdrant + n8n data to ~/wizard-backups
     wizard restore <file>     Restore from backup file
 
+  Debug:
+    wizard debug              Generate sanitized debug report
+                               → saves to ~/.wizard-debug-YYYY-MM-DD.txt
+
   Info:
     wizard help               Show this help
     wizard open               Open all UIs in browser
     wizard logs               Tail stack logs
+
 EOF
 }
 
-require_running() {
-  docker inspect wizard-brain &>/dev/null || { echo -e "${RED}Wizard is not running. Run: wizard start${NC}"; exit 1; }
-}
-
+# ── commands ─────────────────────────────────────────────────
 case "$1" in
 
   start)
@@ -69,53 +106,192 @@ case "$1" in
   status)
     echo ""
     echo -e "${BOLD}  WIZARD Stack Status${NC}"
-    echo "  ───────────────────────────────────"
-    for svc in wizard-brain wizard-chat wizard-memory wizard-automation wizard-dashboard; do
+    echo "  ─────────────────────────────────────────"
+    for svc in ollama open-webui litellm n8n qdrant perplexica openhands; do
       ST=$(docker inspect --format='{{.State.Status}}' "$svc" 2>/dev/null || echo "not found")
       [[ "$ST" == "running" ]] \
         && echo -e "  ${GREEN}✓${NC} $svc" \
-        || echo -e "  ${RED}✗${NC} $svc ($ST)"
+        || echo -e "  ${RED}✗${NC} $svc (${DIM}$ST${NC})"
     done
     echo ""
-    echo "  Chat:       http://localhost:3001"
-    echo "  Automation: http://localhost:5678"
-    echo "  Memory:     http://localhost:6333/dashboard"
-    echo "  Dashboard:  http://localhost:8888"
+    echo "  Open WebUI:   http://localhost:3000"
+    echo "  Perplexica:   http://localhost:3002"
+    echo "  OpenHands:    http://localhost:3003"
+    echo "  LiteLLM:      http://localhost:4000"
+    echo "  n8n:          http://localhost:5678"
+    echo "  Qdrant:       http://localhost:6333/dashboard"
     echo ""
     ;;
 
+  # ── ask: quick single question via swarm-tiny ──────────────
   ask)
     require_running
     [[ -z "$2" ]] && { echo "Usage: wizard ask \"your question\""; exit 1; }
     echo -e "${CYAN}Wizard is thinking...${NC}"
-    RESP=$(curl -s -X POST "$brain_url/api/generate" \
+    RESP=$(curl -s -X POST "$litellm_url/v1/chat/completions" \
       -H "Content-Type: application/json" \
-      -d "{\"model\":\"mistral\",\"prompt\":\"$2\",\"stream\":false}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('response',''))")
+      -H "Authorization: Bearer ${LITELLM_MASTER_KEY:-wizard}" \
+      -d "{\"model\":\"swarm-tiny\",\"messages\":[{\"role\":\"user\",\"content\":\"$2\"}],\"stream\":false}" \
+      | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['choices'][0]['message']['content'])" 2>/dev/null)
     echo ""
     echo -e "${BOLD}Wizard:${NC} $RESP"
     echo ""
     ;;
 
-  route)
+  # ── swarm: full Phase 1-3 coordinator ──────────────────────
+  swarm|route)
     require_running
-    [[ -z "$2" ]] && { echo "Usage: wizard route \"your task\""; exit 1; }
-    echo -e "${CYAN}Routing through Wizard...${NC}"
-    curl -s -X POST "$n8n_url/webhook/wizard-task" \
+    [[ -z "$2" ]] && { echo "Usage: wizard swarm \"your task\""; exit 1; }
+    echo ""
+    echo -e "${CYAN}  🐝 Sending to swarm coordinator...${NC}"
+    echo ""
+    RAW=$(curl -s -X POST "$n8n_url/webhook/swarm" \
       -H "Content-Type: application/json" \
-      -d "{\"task\":\"$2\"}" | python3 -m json.tool
+      -d "{\"task\":\"$2\"}")
+
+    if [[ -z "$RAW" ]]; then
+      echo -e "${RED}  ✗ No response from swarm. Is n8n running and the workflow active?${NC}"
+      echo "    Check: $n8n_url"
+      exit 1
+    fi
+
+    AGENT=$(echo "$RAW"     | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('agent','?'))"      2>/dev/null)
+    MODEL=$(echo "$RAW"     | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('model','?'))"      2>/dev/null)
+    COMPLEX=$(echo "$RAW"   | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('complexity','?'))" 2>/dev/null)
+    MEM=$(echo "$RAW"       | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('memory_used',False))" 2>/dev/null)
+    MEMCOUNT=$(echo "$RAW"  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('memory_count',0))"    2>/dev/null)
+    RESULT=$(echo "$RAW"    | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('result',''))"      2>/dev/null)
+    TS=$(echo "$RAW"        | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('timestamp',''))"   2>/dev/null)
+
+    echo -e "${BOLD}  ─── Swarm Result ────────────────────────────────${NC}"
+    echo -e "  Agent:      ${GREEN}$AGENT${NC}"
+    echo -e "  Model:      ${GREEN}$MODEL${NC}  (tier: ${YELLOW}$COMPLEX${NC})"
+    if [[ "$MEM" == "True" || "$MEM" == "true" ]]; then
+      echo -e "  Memory:     ${GREEN}✓ $MEMCOUNT prior result(s) injected${NC}"
+    else
+      echo -e "  Memory:     ${DIM}none (first run for this topic)${NC}"
+    fi
+    echo -e "  Timestamp:  ${DIM}$TS${NC}"
+    echo ""
+    echo -e "${BOLD}  Result:${NC}"
+    echo ""
+    echo "$RESULT" | fold -s -w 80 | sed 's/^/  /'
+    echo ""
     ;;
 
+  # ── recall: semantic search over swarm_memory ──────────────
+  recall)
+    require_running
+    [[ -z "$2" ]] && { echo "Usage: wizard recall \"your query\""; exit 1; }
+    echo ""
+    echo -e "${CYAN}  🔍 Searching swarm memory...${NC}"
+    echo ""
+    RAW=$(curl -s -X POST "$n8n_url/webhook/swarm/recall" \
+      -H "Content-Type: application/json" \
+      -d "{\"query\":\"$2\",\"top_k\":5}")
+
+    if [[ -z "$RAW" ]]; then
+      echo -e "${RED}  ✗ No response. Is the swarm-query-memory workflow active in n8n?${NC}"
+      exit 1
+    fi
+
+    COUNT=$(echo "$RAW" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('count',0))" 2>/dev/null)
+
+    if [[ "$COUNT" == "0" || -z "$COUNT" ]]; then
+      echo -e "  ${YELLOW}No memories found for: \"$2\"${NC}"
+      echo -e "  ${DIM}Run a few swarm tasks first to build memory.${NC}"
+      echo ""
+    else
+      echo -e "  Found ${GREEN}$COUNT${NC} relevant memories for: \"$2\""
+      echo ""
+      echo "$RAW" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+for m in d.get('memories', []):
+    print(f\"  [{m['rank']}] Score: {m['score']} | Agent: {m['agent']} | Model: {m['model']} | {m['complexity']}\")
+    print(f\"      Task:   {m['task'][:120]}\")
+    print(f\"      Result: {m['result'][:200]}\")
+    print()
+"
+    fi
+    ;;
+
+  # ── swarm-status: health of swarm memory + last tasks ──────
+  swarm-status)
+    require_running
+    echo ""
+    echo -e "${BOLD}  🐝 Swarm Memory Status${NC}"
+    echo "  ─────────────────────────────────────────"
+
+    # Point count
+    COUNT=$(curl -s "$memory_url/collections/swarm_memory" \
+      | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('result',{}).get('points_count','?'))" 2>/dev/null || echo "?")
+    echo -e "  Total memories stored:  ${GREEN}$COUNT${NC}"
+
+    # nomic-embed-text availability
+    MODELS=$(curl -s "$brain_url/api/tags" \
+      | python3 -c "import sys,json; d=json.load(sys.stdin); names=[m['name'] for m in d.get('models',[])]; print('yes' if any('nomic' in n for n in names) else 'no')" 2>/dev/null)
+    if [[ "$MODELS" == "yes" ]]; then
+      echo -e "  nomic-embed-text:       ${GREEN}✓ loaded${NC}"
+    else
+      echo -e "  nomic-embed-text:       ${RED}✗ not pulled — run: wizard pull nomic-embed-text${NC}"
+    fi
+
+    # Last 5 tasks via Qdrant scroll
+    echo ""
+    echo -e "  ${BOLD}Last 5 swarm tasks:${NC}"
+    curl -s -X POST "$memory_url/collections/swarm_memory/points/scroll" \
+      -H "Content-Type: application/json" \
+      -d '{"limit":5,"with_payload":true,"with_vectors":false}' \
+      | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+points = d.get('result', {}).get('points', [])
+if not points:
+    print('  (no tasks stored yet)')
+else:
+    for p in points:
+        pl = p.get('payload', {})
+        ts = pl.get('completed_at', pl.get('timestamp',''))[:19]
+        print(f\"  {ts}  [{pl.get('complexity','?'):6}]  {pl.get('agent','?'):10}  {pl.get('task','')[:60]}\")
+" 2>/dev/null || echo "  (could not reach Qdrant)"
+    echo ""
+    ;;
+
+  # ── swarm-flush: reset swarm_memory collection ─────────────
+  swarm-flush)
+    require_running
+    echo -e "${YELLOW}  ⚠ This will delete all swarm memory. Are you sure? [y/N]${NC}"
+    read -r CONFIRM
+    [[ "$CONFIRM" =~ ^[Yy]$ ]] || { echo "Cancelled."; exit 0; }
+    # Delete
+    curl -s -X DELETE "$memory_url/collections/swarm_memory" > /dev/null
+    # Recreate with correct vector size
+    curl -s -X PUT "$memory_url/collections/swarm_memory" \
+      -H "Content-Type: application/json" \
+      -d '{"vectors":{"size":768,"distance":"Cosine"}}' > /dev/null
+    echo -e "${GREEN}  ✓ swarm_memory reset. Fresh start.${NC}"
+    echo ""
+    ;;
+
+  # ── models ──────────────────────────────────────────────────
   models)
     require_running
     echo -e "${BOLD}  Models in Wizard's brain:${NC}"
-    docker exec wizard-brain ollama list
+    docker exec ollama ollama list 2>/dev/null || \
+    docker exec wizard-brain ollama list 2>/dev/null || \
+    curl -s "$brain_url/api/tags" | python3 -c "
+import sys,json; d=json.load(sys.stdin)
+for m in d.get('models',[]): print(f\"  {m['name']:40} {m.get('size',0)//1024//1024:>6} MB\")
+"
     ;;
 
   pull)
     require_running
     [[ -z "$2" ]] && { echo "Usage: wizard pull <model-name>"; exit 1; }
+    docker exec ollama ollama pull "$2" 2>/dev/null || \
     docker exec wizard-brain ollama pull "$2"
-    echo -e "${GREEN}✓ $2 added to Wizard${NC}"
+    echo -e "${GREEN}✓ $2 added${NC}"
     ;;
 
   ingest)
@@ -123,21 +299,23 @@ case "$1" in
     [[ -z "$3" ]] && { echo "Usage: wizard ingest \"title\" \"content\""; exit 1; }
     curl -s -X POST "$n8n_url/webhook/ingest-doc" \
       -H "Content-Type: application/json" \
-      -d "{\"title\":\"$2\",\"content\":\"$3\",\"collection\":\"documents\"}" | python3 -m json.tool
+      -d "{\"title\":\"$2\",\"content\":\"$3\",\"collection\":\"documents\"}" | pretty_json
     ;;
 
   collections)
     require_running
-    curl -s "$memory_url/collections" | python3 -m json.tool
+    curl -s "$memory_url/collections" | pretty_json
     ;;
 
   memory-stats)
     require_running
     echo -e "${BOLD}  Wizard Memory Collections:${NC}"
-    for col in conversations documents; do
-      COUNT=$(curl -s "$memory_url/collections/$col" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('result',{}).get('points_count','?'))" 2>/dev/null || echo "?")
+    for col in conversations documents swarm_memory; do
+      COUNT=$(curl -s "$memory_url/collections/$col" 2>/dev/null \
+        | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('result',{}).get('points_count','?'))" 2>/dev/null || echo "?")
       echo "  $col: $COUNT points"
     done
+    echo ""
     ;;
 
   train)
@@ -145,7 +323,7 @@ case "$1" in
     [[ -z "$3" ]] && { echo "Usage: wizard train \"prompt\" \"response\""; exit 1; }
     curl -s -X POST "$n8n_url/webhook/capture-training" \
       -H "Content-Type: application/json" \
-      -d "{\"prompt\":\"$2\",\"response\":\"$3\",\"source\":\"cli\"}" | python3 -m json.tool
+      -d "{\"prompt\":\"$2\",\"response\":\"$3\",\"source\":\"cli\"}" | pretty_json
     ;;
 
   backup)
@@ -157,11 +335,82 @@ case "$1" in
     bash "$WIZARD_DIR/backup/restore.sh" "$2"
     ;;
 
+  # ── debug: sanitized snapshot report ───────────────────────
+  debug)
+    REPORT="$HOME/.wizard-debug-$(date +%Y-%m-%d).txt"
+    echo -e "${CYAN}  Generating debug report...${NC}"
+    {
+      echo "WIZARD AI DEBUG REPORT"
+      echo "Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+      echo "========================================"
+      echo ""
+      echo "── SYSTEM ──────────────────────────────"
+      echo "OS:       $(uname -srm)"
+      echo "Hostname: $(hostname)"
+      echo "RAM:      $(python3 -c "import os; p=os.popen('sysctl -n hw.memsize 2>/dev/null || grep MemTotal /proc/meminfo 2>/dev/null'); v=p.read().strip(); print(str(round(int(v.split()[0] if 'kB' in v else v)/1024/1024/1024))+'GB')" 2>/dev/null || echo "?")"
+      echo "Disk:     $(df -h "$HOME" | awk 'NR==2{print $4" free of "$2}')"
+      echo ""
+      echo "── DOCKER ──────────────────────────────"
+      echo "Version:  $(docker --version 2>/dev/null || echo 'not found')"
+      echo "Compose:  $(docker compose version 2>/dev/null || echo 'not found')"
+      echo ""
+      echo "── CONTAINERS ──────────────────────────"
+      docker ps --format "{{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "docker ps failed"
+      echo ""
+      echo "── OLLAMA MODELS ───────────────────────"
+      curl -s "$brain_url/api/tags" \
+        | python3 -c "import sys,json; [print(f\"  {m['name']}\") for m in json.load(sys.stdin).get('models',[])]" 2>/dev/null || echo "  ollama unreachable"
+      echo ""
+      echo "── SERVICE PORTS ───────────────────────"
+      for port_label in "3000:open-webui" "3002:perplexica" "3003:openhands" "4000:litellm" "5678:n8n" "6333:qdrant" "11434:ollama"; do
+        PORT="${port_label%%:*}"; SVC="${port_label##*:}"
+        STATUS=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://localhost:$PORT" 2>/dev/null || echo "err")
+        echo "  :$PORT  $SVC  →  HTTP $STATUS"
+      done
+      echo ""
+      echo "── ENV KEYS (names only — no values) ───"
+      if [[ -f "$WIZARD_DIR/.env" ]]; then
+        grep -v '^\s*#' "$WIZARD_DIR/.env" | grep '=' | cut -d'=' -f1 | while read -r KEY; do
+          VAL=$(grep "^$KEY=" "$WIZARD_DIR/.env" | cut -d'=' -f2-)
+          if [[ -z "$VAL" || "$VAL" == '""' || "$VAL" == "''" ]]; then
+            echo "  $KEY = EMPTY"
+          else
+            echo "  $KEY = SET"
+          fi
+        done
+      else
+        echo "  .env not found at $WIZARD_DIR/.env"
+      fi
+      echo ""
+      echo "── SWARM MEMORY ────────────────────────"
+      curl -s "$memory_url/collections/swarm_memory" \
+        | python3 -c "import sys,json; d=json.load(sys.stdin); r=d.get('result',{}); print(f\"  points: {r.get('points_count','?')}  status: {r.get('status','?')}\")" 2>/dev/null || echo "  qdrant unreachable"
+      echo ""
+      echo "── n8n LAST 5 EXECUTIONS ───────────────"
+      curl -s "$n8n_url/api/v1/executions?limit=5" \
+        | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  for e in d.get('data',[]):
+    print(f\"  [{e.get('id')}] {e.get('workflowData',{}).get('name','?')} → {e.get('finished',False) and 'done' or 'running'}  {e.get('startedAt','')[:19]}\")
+except: print('  n8n API unreachable or auth required')
+" 2>/dev/null
+      echo ""
+      echo "========================================"
+      echo "Paste this file in a GitHub Issue or share with support."
+      echo "No secrets or API key values are included."
+    } > "$REPORT"
+    echo -e "${GREEN}  ✓ Debug report saved: $REPORT${NC}"
+    echo ""
+    cat "$REPORT"
+    ;;
+
   open)
-    open http://localhost:3001
-    open http://localhost:5678
-    open http://localhost:6333/dashboard
-    open http://localhost:8888
+    open http://localhost:3000 2>/dev/null || xdg-open http://localhost:3000
+    open http://localhost:3002 2>/dev/null || xdg-open http://localhost:3002
+    open http://localhost:5678 2>/dev/null || xdg-open http://localhost:5678
+    open http://localhost:6333/dashboard 2>/dev/null || xdg-open http://localhost:6333/dashboard
     ;;
 
   logs)
