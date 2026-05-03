@@ -6,6 +6,35 @@
 # ╚══════════════════════════════════════════════════════════════╝
 set -euo pipefail
 
+NON_INTERACTIVE="${HOME_AI_NON_INTERACTIVE:-false}"
+SKIP_MODEL_PULLS="${HOME_AI_SKIP_MODEL_PULLS:-false}"
+
+for arg in "$@"; do
+  case "$arg" in
+    --non-interactive|--yes)
+      NON_INTERACTIVE=true
+      ;;
+    --skip-model-pulls)
+      SKIP_MODEL_PULLS=true
+      ;;
+    -h|--help)
+      cat <<'EOF'
+Usage: bash install.sh [options]
+
+Options:
+  --non-interactive   Do not prompt for optional API keys or setup choices.
+  --skip-model-pulls  Start services without pulling Ollama models.
+  -h, --help          Show this help.
+
+Environment:
+  HOME_AI_NON_INTERACTIVE=true
+  HOME_AI_SKIP_MODEL_PULLS=true
+EOF
+      exit 0
+      ;;
+  esac
+done
+
 # ── Colors ────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
@@ -16,8 +45,46 @@ err()    { echo -e "${RED}[✗]${NC} $1"; exit 1; }
 step()   { echo -e "\n${BLUE}${BOLD}━━━ $1 ━━━${NC}"; }
 info()   { echo -e "${CYAN}[i]${NC} $1"; }
 
+ensure_docker_cli() {
+  if command -v docker &>/dev/null; then
+    return 0
+  fi
+
+  local docker_app_cli="/Applications/Docker.app/Contents/Resources/bin"
+  if [[ -x "${docker_app_cli}/docker" ]]; then
+    export PATH="${docker_app_cli}:$PATH"
+    return 0
+  fi
+
+  return 1
+}
+
+wait_for_docker_engine() {
+  if docker info &>/dev/null; then
+    return 0
+  fi
+
+  if [[ "$(uname -s)" == "Darwin" ]] && [[ -d "/Applications/Docker.app" ]]; then
+    warn "Docker Desktop is installed but not running. Opening Docker Desktop..."
+    open -a Docker >/dev/null 2>&1 || true
+
+    local elapsed=0
+    until docker info &>/dev/null; do
+      sleep 5
+      elapsed=$((elapsed + 5))
+      if (( elapsed >= 300 )); then
+        return 1
+      fi
+      (( elapsed % 30 == 0 )) && info "Still waiting for Docker Desktop (${elapsed}s)..."
+    done
+    return 0
+  fi
+
+  return 1
+}
+
 header() {
-  clear
+  clear 2>/dev/null || true
   echo -e "${CYAN}"
   echo '  ██╗  ██╗ ██████╗ ███╗   ███╗███████╗     █████╗ ██╗'
   echo '  ██║  ██║██╔═══██╗████╗ ████║██╔════╝    ██╔══██╗██║'
@@ -88,10 +155,10 @@ else
 fi
 
 # Docker check
-if ! command -v docker &>/dev/null; then
+if ! ensure_docker_cli; then
   err "Docker not found. Install Docker Desktop: https://docker.com/products/docker-desktop then re-run."
 fi
-if ! docker info &>/dev/null; then
+if ! wait_for_docker_engine; then
   err "Docker is not running. Start Docker Desktop and re-run."
 fi
 DOCKER_COMPOSE_VERSION=$(docker compose version --short 2>/dev/null || echo "0")
@@ -106,7 +173,7 @@ if [[ "$OS" == "Darwin" ]]; then
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   fi
   log "Homebrew ready"
-  for pkg in ollama git curl jq; do
+  for pkg in git curl jq; do
     if command -v "$pkg" &>/dev/null; then
       log "$pkg already installed"
     else
@@ -122,32 +189,14 @@ else
     fi
     log "$pkg ready"
   done
-  if ! command -v ollama &>/dev/null; then
-    log "Installing Ollama..."
-    curl -fsSL https://ollama.ai/install.sh | sh
-  else
-    log "Ollama already installed"
-  fi
 fi
 
-# Start Ollama service
-if [[ "$OS" == "Darwin" ]]; then
-  brew services start ollama 2>/dev/null || true
-else
-  systemctl enable ollama 2>/dev/null || true
-  systemctl start ollama 2>/dev/null || true
-fi
-
-# Wait for Ollama to be ready
-log "Waiting for Ollama to be ready..."
-OLLAMA_WAIT=0
-until curl -sf http://localhost:11434 &>/dev/null; do
-  sleep 2; OLLAMA_WAIT=$((OLLAMA_WAIT+2))
-  if (( OLLAMA_WAIT >= 60 )); then
-    err "Ollama did not start within 60s. Check: brew services list (macOS) or systemctl status ollama (Linux)"
+if [[ "$OS" == "Darwin" ]] && command -v brew &>/dev/null; then
+  if brew services list 2>/dev/null | awk '$1 == "ollama" && $2 == "started" { found=1 } END { exit found ? 0 : 1 }'; then
+    warn "Stopping Homebrew Ollama so the Docker Ollama container can bind localhost:11434..."
+    brew services stop ollama 2>/dev/null || true
   fi
-done
-log "Ollama service ready"
+fi
 
 # ── STEP 3: Environment Setup & Secret Hardening ──────────────────────
 step "Environment Setup & Secret Hardening"
@@ -208,6 +257,7 @@ rotate_secret() {
 rotate_secret "WEBUI_SECRET_KEY"
 rotate_secret "LITELLM_MASTER_KEY"
 rotate_secret "N8N_PASSWORD"
+rotate_secret "N8N_ENCRYPTION_KEY"
 rotate_secret "SEARXNG_SECRET_KEY"
 
 # ── 3c: Secure interactive prompt for cloud API keys ──────────────────
@@ -220,6 +270,11 @@ prompt_api_key() {
   current_val=$(grep "^${key}=" .env | cut -d= -f2- 2>/dev/null || true)
   if [[ -n "$current_val" ]]; then
     log "${key} already set — skipping"
+    return
+  fi
+
+  if [[ "$NON_INTERACTIVE" == true ]]; then
+    info "${key} skipped — non-interactive install"
     return
   fi
 
@@ -254,11 +309,15 @@ prompt_api_key() {
   done
 }
 
-echo ""
-echo -e "  ${CYAN}${BOLD}━━━ Optional: Cloud API Keys ━━━${NC}"
-echo -e "  The stack runs ${BOLD}100% locally${NC} without any of these."
-echo -e "  Add keys only if you want cloud model fallback for complex tasks."
-echo -e "  ${YELLOW}Keys are entered in hidden mode — they will NOT be echoed to screen.${NC}\n"
+if [[ "$NON_INTERACTIVE" == true ]]; then
+  info "Non-interactive mode enabled — optional cloud API key prompts will be skipped."
+else
+  echo ""
+  echo -e "  ${CYAN}${BOLD}━━━ Optional: Cloud API Keys ━━━${NC}"
+  echo -e "  The stack runs ${BOLD}100% locally${NC} without any of these."
+  echo -e "  Add keys only if you want cloud model fallback for complex tasks."
+  echo -e "  ${YELLOW}Keys are entered in hidden mode — they will NOT be echoed to screen.${NC}\n"
+fi
 
 prompt_api_key "OPENAI_API_KEY" \
   "OpenAI API Key  (GPT-4o fallback)" \
@@ -284,38 +343,41 @@ if [[ ! -f "configs/perplexica/config.toml" ]]; then
 fi
 log "configs/perplexica/config.toml found ✔"
 
+# 3e: Generate local TLS certificate for nginx if needed
+if [[ -f "scripts/generate-certs.sh" ]]; then
+  if [[ ! -f "certs/selfsigned.crt" || ! -f "certs/selfsigned.key" ]]; then
+    HOME_AI_STACK_DIR="${SCRIPT_DIR}" bash scripts/generate-certs.sh
+  else
+    log "Nginx TLS certificate already exists — skipping generation"
+  fi
+else
+  warn "scripts/generate-certs.sh not found — nginx HTTPS proxy may not start"
+fi
+
 # ── STEP 4: Pull Ollama Models (RAM-Aware) ────────────────────────────
 step "Pulling AI Models (Tier: ${MODEL_TIER} / ${TOTAL_RAM_GB} GB)"
 
-# ── FIX P2: Hardened model pull with registry-existence guard ─────────
-pull_model() {
-  local model=$1
-  log "Pulling ${model}..."
-  if ! ollama pull "$model"; then
-    warn "Failed to pull ${model} — skipping. Stack will continue; pull manually with: ollama pull ${model}"
-  fi
-}
+MODELS_TO_PULL=()
 
-pull_model "nomic-embed-text"
+if [[ "$SKIP_MODEL_PULLS" == true ]]; then
+  warn "Skipping Ollama model pulls. Pull models later with: bash scripts/add-model.sh <model>"
+else
+  MODELS_TO_PULL+=("nomic-embed-text")
+fi
 
 case "$MODEL_TIER" in
   low)
-    pull_model "mistral:7b"
-    pull_model "qwen2.5:7b"
+    [[ "$SKIP_MODEL_PULLS" == true ]] || MODELS_TO_PULL+=("mistral:7b" "qwen2.5:7b")
     OPENHANDS_MODEL="ollama/qwen2.5:7b"
     PERPLEXICA_CHAT_MODEL="qwen2.5:7b"
     ;;
   base)
-    pull_model "qwen2.5:7b"
-    pull_model "qwen2.5-coder:7b"
-    pull_model "deepseek-r1:7b"
+    [[ "$SKIP_MODEL_PULLS" == true ]] || MODELS_TO_PULL+=("qwen2.5:7b" "qwen2.5-coder:7b" "deepseek-r1:7b")
     OPENHANDS_MODEL="ollama/qwen2.5-coder:7b"
     PERPLEXICA_CHAT_MODEL="qwen2.5:7b"
     ;;
   mid)
-    pull_model "qwen2.5:32b"
-    pull_model "qwen2.5-coder:14b"
-    pull_model "deepseek-r1:14b"
+    [[ "$SKIP_MODEL_PULLS" == true ]] || MODELS_TO_PULL+=("qwen2.5:32b" "qwen2.5-coder:14b" "deepseek-r1:14b")
     OPENHANDS_MODEL="ollama/qwen2.5-coder:14b"
     PERPLEXICA_CHAT_MODEL="qwen2.5:32b"
     ;;
@@ -323,10 +385,7 @@ case "$MODEL_TIER" in
     # FIX P2: Use canonical Ollama registry tag for llama3.3 70B.
     # llama3.3:70b-instruct-q4_K_M may not exist on all registry mirrors.
     # Canonical tag is llama3.3:70b (defaults to Q4_K_M quantization).
-    pull_model "llama3.3:70b"
-    pull_model "qwen2.5:32b"
-    pull_model "qwen2.5-coder:14b"
-    pull_model "deepseek-r1:32b"
+    [[ "$SKIP_MODEL_PULLS" == true ]] || MODELS_TO_PULL+=("llama3.3:70b" "qwen2.5:32b" "qwen2.5-coder:14b" "deepseek-r1:32b")
     OPENHANDS_MODEL="ollama/qwen2.5-coder:14b"
     PERPLEXICA_CHAT_MODEL="llama3.3:70b"
     ;;
@@ -355,11 +414,8 @@ step "Pulling Docker Images & Starting All Services"
 docker compose pull --quiet
 log "Images pulled"
 
-docker compose up -d
-log "All services started"
-
-# ── STEP 6: Health Checks ─────────────────────────────────────────────
-step "Waiting for Services to be Ready"
+docker compose up -d ollama
+log "Ollama container started"
 
 wait_for_service() {
   local name=$1; local url=$2; local max_wait=${3:-90}
@@ -371,15 +427,32 @@ wait_for_service() {
     if (( elapsed >= max_wait )); then
       echo " TIMEOUT"
       warn "${name} not responding — check: docker compose logs"
-      return 1
+      return 0
     fi
   done
   echo " ✓"
   return 0
 }
 
+wait_for_service "Ollama" "http://localhost:11434" 90
+
+if (( ${#MODELS_TO_PULL[@]} > 0 )); then
+  for model in "${MODELS_TO_PULL[@]}"; do
+    log "Pulling ${model} into Docker Ollama..."
+    if ! docker compose exec -T ollama ollama pull "$model"; then
+      warn "Failed to pull ${model} — skipping. Stack will continue; pull manually with: bash scripts/add-model.sh ${model}"
+    fi
+  done
+fi
+
+docker compose up -d
+log "All services started"
+
+# ── STEP 6: Health Checks ─────────────────────────────────────────────
+step "Waiting for Services to be Ready"
+
 wait_for_service "Ollama"        "http://localhost:11434"        60
-wait_for_service "LiteLLM"       "http://localhost:4000/health"  120
+wait_for_service "LiteLLM"       "http://localhost:4000"         120
 wait_for_service "Open WebUI"    "http://localhost:3000"         90
 wait_for_service "SearXNG"       "http://localhost:8080"         60
 wait_for_service "Qdrant"        "http://localhost:6333/healthz" 60
@@ -392,8 +465,12 @@ FIRST_BOOT_FLAG="${SCRIPT_DIR}/.wizard-bootstrapped"
 if [[ ! -f "$FIRST_BOOT_FLAG" ]]; then
   if [[ -f "scripts/bootstrap.sh" ]]; then
     log "Running first-boot bootstrap (Qdrant collections + n8n workflows)..."
-    bash "${SCRIPT_DIR}/scripts/bootstrap.sh" && touch "$FIRST_BOOT_FLAG"
-    log "Bootstrap complete"
+    if HOME_AI_STACK_DIR="${SCRIPT_DIR}" bash "${SCRIPT_DIR}/scripts/bootstrap.sh"; then
+      touch "$FIRST_BOOT_FLAG"
+      log "Bootstrap complete"
+    else
+      warn "Bootstrap reported issues — run manually after install: bash scripts/bootstrap.sh"
+    fi
   else
     warn "scripts/bootstrap.sh not found — run manually after install"
   fi
@@ -425,25 +502,33 @@ fi
 # ── STEP 9: Optional MCP Servers ──────────────────────────────────────
 step "MCP Server Setup (Optional)"
 if [[ -f "mcp/install-mcp-servers.sh" ]]; then
-  echo -e "  ${YELLOW}Install MCP servers? (GitHub + filesystem + Qdrant MCP) [y/N]${NC}"
-  read -r INSTALL_MCP
-  if [[ "$INSTALL_MCP" =~ ^[Yy]$ ]]; then
-    bash mcp/install-mcp-servers.sh
+  if [[ "$NON_INTERACTIVE" == true ]]; then
+    warn "Skipped MCP server install in non-interactive mode — run manually: bash mcp/install-mcp-servers.sh"
   else
-    warn "Skipped — run manually: bash mcp/install-mcp-servers.sh"
+    echo -e "  ${YELLOW}Install MCP servers? (GitHub + filesystem + Qdrant MCP) [y/N]${NC}"
+    read -r INSTALL_MCP
+    if [[ "$INSTALL_MCP" =~ ^[Yy]$ ]]; then
+      bash mcp/install-mcp-servers.sh
+    else
+      warn "Skipped — run manually: bash mcp/install-mcp-servers.sh"
+    fi
   fi
 fi
 
 # ── STEP 10: LaunchD Auto-Start (macOS only) ───────────────────────────
 if [[ "$OS" == "Darwin" ]] && [[ -f "launchd/install-launchd.sh" ]]; then
   step "macOS Auto-Start (LaunchD)"
-  echo -e "  ${YELLOW}Install launchd agents for auto-start on login? [y/N]${NC}"
-  read -r INSTALL_LAUNCHD
-  if [[ "$INSTALL_LAUNCHD" =~ ^[Yy]$ ]]; then
-    bash launchd/install-launchd.sh
-    log "LaunchD agents installed — Wizard will auto-start on login"
+  if [[ "$NON_INTERACTIVE" == true ]]; then
+    warn "Skipped launchd setup in non-interactive mode — run manually: bash launchd/install-launchd.sh"
   else
-    warn "Skipped — run manually: bash launchd/install-launchd.sh"
+    echo -e "  ${YELLOW}Install launchd agents for auto-start on login? [y/N]${NC}"
+    read -r INSTALL_LAUNCHD
+    if [[ "$INSTALL_LAUNCHD" =~ ^[Yy]$ ]]; then
+      bash launchd/install-launchd.sh
+      log "LaunchD agents installed — Wizard will auto-start on login"
+    else
+      warn "Skipped — run manually: bash launchd/install-launchd.sh"
+    fi
   fi
 fi
 

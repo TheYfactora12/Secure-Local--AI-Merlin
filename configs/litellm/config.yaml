@@ -199,12 +199,6 @@ router_settings:
 
   # Rate limits per tier (rpm = requests per minute)
   # Prevents tiny tasks from starving heavy ones at the Ollama level.
-  model_group_alias:
-    swarm-tiny:   { tpm: 100000, rpm: 50 }
-    swarm-medium: { tpm: 50000,  rpm: 20 }
-    swarm-heavy:  { tpm: 20000,  rpm: 5  }
-    swarm-code:   { tpm: 50000,  rpm: 15 }
-
 # ── General Settings ───────────────────────────────────────────────────────────
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY

@@ -16,7 +16,8 @@
 # =============================================================================
 set -euo pipefail
 
-STACK_DIR="${HOME}/home-ai-elite"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+STACK_DIR="${HOME_AI_STACK_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 COMPOSE_FILE="${STACK_DIR}/docker-compose.yml"
 ENV_FILE="${STACK_DIR}/.env"
 WORKFLOW_DIR="${STACK_DIR}/n8n-workflows"
@@ -38,6 +39,20 @@ fail()   { echo "[bootstrap] ERROR: $*" >&2; exit 1; }
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+ensure_docker_cli() {
+  if command -v docker >/dev/null 2>&1; then
+    return 0
+  fi
+
+  local docker_app_cli="/Applications/Docker.app/Contents/Resources/bin"
+  if [[ -x "${docker_app_cli}/docker" ]]; then
+    export PATH="${docker_app_cli}:$PATH"
+    return 0
+  fi
+
+  return 1
+}
+
 wait_for_http() {
   local url="$1"
   local label="$2"
@@ -84,6 +99,7 @@ echo -e "${RESET}"
 banner "Step 1/7: Preflight"
 [[ -d "$STACK_DIR" ]] || fail "Missing $STACK_DIR — re-run the installer"
 [[ -f "$COMPOSE_FILE" ]] || fail "Missing docker-compose.yml"
+ensure_docker_cli || fail "Docker CLI not found — install Docker Desktop first"
 docker info >/dev/null 2>&1 || fail "Docker engine not running — open Docker Desktop first"
 log "  ✅ Preflight passed"
 
@@ -95,13 +111,16 @@ if [[ ! -f "$ENV_FILE" ]]; then
 fi
 
 # Source .env so N8N_API_KEY and QDRANT_* overrides are picked up
-set -a; source "$ENV_FILE" 2>/dev/null || true; set +a
+set -a
+# shellcheck disable=SC1090
+source "$ENV_FILE" 2>/dev/null || true
+set +a
 
 # ---------------------------------------------------------------------------
 # Step 2: Start stack
 # ---------------------------------------------------------------------------
 banner "Step 2/7: Starting Services"
-cd "$STACK_DIR"
+cd "$STACK_DIR" || exit 1
 docker compose up -d
 log "  ✅ docker compose up -d complete"
 
@@ -177,16 +196,16 @@ fi
 # Step 6: Ollama model check
 # ---------------------------------------------------------------------------
 banner "Step 6/7: Ollama Models"
-if command -v ollama >/dev/null 2>&1; then
-  MODEL_COUNT=$(ollama list 2>/dev/null | tail -n +2 | wc -l | tr -d ' ')
+if docker compose ps ollama >/dev/null 2>&1; then
+  MODEL_COUNT=$(docker compose exec -T ollama ollama list 2>/dev/null | tail -n +2 | wc -l | tr -d ' ')
   if [[ "$MODEL_COUNT" -eq 0 ]]; then
     log "Pulling default model: $OLLAMA_DEFAULT_MODEL"
-    ollama pull "$OLLAMA_DEFAULT_MODEL" || warn "Model pull failed — retry with: ollama pull $OLLAMA_DEFAULT_MODEL"
+    docker compose exec -T ollama ollama pull "$OLLAMA_DEFAULT_MODEL" || warn "Model pull failed — retry with: bash scripts/add-model.sh $OLLAMA_DEFAULT_MODEL"
   else
     log "  ✅ $MODEL_COUNT Ollama model(s) already present — skipping pull"
   fi
 else
-  warn "Ollama CLI not found in PATH — open http://localhost:11434 to verify Ollama is running in Docker"
+  warn "Ollama container not running — open http://localhost:11434 after the stack starts"
 fi
 
 # ---------------------------------------------------------------------------
@@ -197,11 +216,13 @@ echo -e "${GREEN}${BOLD}"
 echo "  ╔══════════════════════════════════════════╗"
 echo "  ║  SERVICE               URL                 ║"
 echo "  ╠══════════════════════════════════════════╣"
-echo "  ║  Open WebUI            http://localhost:3001 ║"
+echo "  ║  Open WebUI            http://localhost:3000 ║"
+echo "  ║  Perplexica Search     http://localhost:3002 ║"
+echo "  ║  OpenHands Agent       http://localhost:3003 ║"
 echo "  ║  n8n Automation        http://localhost:5678 ║"
-echo "  ║  Perplexica Search     http://localhost:3000 ║"
 echo "  ║  Qdrant Dashboard      http://localhost:6333 ║"
 echo "  ║  SearXNG               http://localhost:8080 ║"
+echo "  ║  LiteLLM Router        http://localhost:4000 ║"
 echo "  ║  Ollama API            http://localhost:11434 ║"
 echo "  ╚══════════════════════════════════════════╝"
 echo -e "${RESET}"

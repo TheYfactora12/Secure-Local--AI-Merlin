@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # home-ai-elite — Generate self-signed TLS certificate for Nginx (v0.7)
 # Run once on first boot. Re-run to regenerate.
-# Output: ~/home-ai-elite/certs/selfsigned.crt + selfsigned.key
+# Output: <repo>/certs/selfsigned.crt + selfsigned.key
 
 set -euo pipefail
 
-CERTS_DIR="${HOME}/home-ai-elite/certs"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+STACK_DIR="${HOME_AI_STACK_DIR:-$( cd "${SCRIPT_DIR}/.." && pwd )}"
+CERTS_DIR="${HOME_AI_CERTS_DIR:-${STACK_DIR}/certs}"
 DAYS=3650  # 10-year self-signed cert
 
 mkdir -p "${CERTS_DIR}"

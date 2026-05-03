@@ -7,7 +7,7 @@
 #   1. macOS version >= 13 (Ventura)
 #   2. Available RAM >= 8GB
 #   3. Available disk space >= 20GB
-#   4. Docker Desktop installed
+#   4. Docker Desktop installed and launchable
 #   5. Git installed
 # =============================================================================
 #!/usr/bin/env bash
@@ -55,6 +55,11 @@ if [[ ! -d "/Applications/Docker.app" ]]; then
   fail "Docker Desktop is required but not installed.\n  Download: https://www.docker.com/products/docker-desktop/"
 fi
 log "  ✅ Docker Desktop found"
+
+if [[ ! -x "/Applications/Docker.app/Contents/Resources/bin/docker" ]]; then
+  fail "Docker Desktop is installed, but the Docker CLI was not found inside Docker.app."
+fi
+log "  ✅ Docker CLI found inside Docker.app"
 
 # ---------------------------------------------------------------------------
 # 5. Git check

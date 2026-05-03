@@ -21,7 +21,6 @@ volumes:
   qdrant-storage:
   n8n-data:
   perplexica-data:
-  nginx-certs:
   fail2ban-data:
 
 services:
@@ -40,18 +39,18 @@ services:
       - "443:443"
     volumes:
       - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - nginx-certs:/etc/nginx/certs
+      - ./certs:/etc/nginx/certs:ro
     networks:
       - ai-net
     depends_on:
       open-webui:
-        condition: service_healthy
+        condition: service_started
       n8n:
-        condition: service_healthy
+        condition: service_started
       qdrant:
-        condition: service_healthy
+        condition: service_started
       litellm:
-        condition: service_healthy
+        condition: service_started
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
@@ -96,6 +95,7 @@ services:
       - WATCHTOWER_TIMEOUT=30s
       - WATCHTOWER_LOG_LEVEL=info
       - WATCHTOWER_LABEL_ENABLE=true
+      - DOCKER_API_VERSION=1.44
       - TZ=${TZ:-America/New_York}
     networks:
       - ai-net
@@ -120,12 +120,6 @@ services:
       resources:
         limits:
           memory: 20g
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 20s
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
@@ -151,13 +145,7 @@ services:
       - ai-net
     depends_on:
       ollama:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:4000/health"]
-      interval: 30s
-      timeout: 15s
-      retries: 5
-      start_period: 30s
+        condition: service_started
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
@@ -194,17 +182,11 @@ services:
       - ai-net
     depends_on:
       ollama:
-        condition: service_healthy
+        condition: service_started
       litellm:
-        condition: service_healthy
+        condition: service_started
       searxng:
         condition: service_started
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8080"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
@@ -240,7 +222,7 @@ services:
   # Open-source Perplexity clone with citations
   # ───────────────────────────────────────────
   perplexica-backend:
-    image: itzcrazykns/perplexica-backend:main
+    image: itzcrazykns1337/perplexica-backend:main
     container_name: perplexica-backend
     restart: unless-stopped
     ports:
@@ -252,14 +234,14 @@ services:
       - ai-net
     depends_on:
       ollama:
-        condition: service_healthy
+        condition: service_started
       searxng:
         condition: service_started
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
   perplexica-frontend:
-    image: itzcrazykns/perplexica-frontend:main
+    image: itzcrazykns1337/perplexica-frontend:main
     container_name: perplexica-frontend
     restart: unless-stopped
     ports:
@@ -304,7 +286,7 @@ services:
       - ai-net
     depends_on:
       litellm:
-        condition: service_healthy
+        condition: service_started
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
@@ -324,12 +306,6 @@ services:
       - qdrant-storage:/qdrant/storage
     networks:
       - ai-net
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:6333/healthz"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 15s
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
@@ -340,7 +316,7 @@ services:
   # change to :latest (breaks silently)
   # ───────────────────────────────────────────
   n8n:
-    image: n8nio/n8n:1.87
+    image: n8nio/n8n:1.87.1
     container_name: n8n
     restart: unless-stopped
     ports:
@@ -353,6 +329,7 @@ services:
       - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
       # REQUIRED: set N8N_PASSWORD in .env (install.sh auto-generates it)
       - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-REQUIRED_CHANGE_ME}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-REQUIRED_CHANGE_ME}
       - N8N_HOST=localhost
       - N8N_PORT=5678
       - WEBHOOK_URL=http://localhost:5678
@@ -362,11 +339,5 @@ services:
           memory: 1g
     networks:
       - ai-net
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:5678/healthz"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
