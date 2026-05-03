@@ -38,7 +38,7 @@ check "Ollama      (AI Brain)      " "http://localhost:11434"          11434
 
 echo ""
 echo -e "${BOLD}Docker Containers:${NC}"
-cd "$STACK_DIR"
+cd "$STACK_DIR" || exit 1
 docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || docker ps
 echo ""
 echo -e "${BOLD}Ollama Models Loaded:${NC}"

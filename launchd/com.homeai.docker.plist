@@ -42,7 +42,7 @@
   <key>StandardErrorPath</key>
   <string>/tmp/homeai-docker.log</string>
 
-  <!-- Do NOT restart continuously -- Docker manages itself once open -->
+  <!-- Docker manages itself once open -->
   <key>KeepAlive</key>
   <false/>
 </dict>

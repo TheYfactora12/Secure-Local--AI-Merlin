@@ -12,7 +12,6 @@
     <string>/Users/Shared/home-ai-elite/scripts/backup.sh</string>
   </array>
 
-  <!-- Run daily at 2:00 AM -->
   <key>StartCalendarInterval</key>
   <dict>
     <key>Hour</key>

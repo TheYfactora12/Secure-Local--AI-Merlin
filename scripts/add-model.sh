@@ -27,7 +27,7 @@ if [[ -z "${1:-}" ]]; then
   exit 1
 fi
 
-cd "$STACK_DIR"
+cd "$STACK_DIR" || exit 1
 MODEL="$1"
 echo "Pulling: $MODEL"
 docker compose exec -T ollama ollama pull "$MODEL"

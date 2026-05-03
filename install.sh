@@ -257,6 +257,7 @@ rotate_secret() {
 rotate_secret "WEBUI_SECRET_KEY"
 rotate_secret "LITELLM_MASTER_KEY"
 rotate_secret "N8N_PASSWORD"
+rotate_secret "N8N_ENCRYPTION_KEY"
 rotate_secret "SEARXNG_SECRET_KEY"
 
 # ── 3c: Secure interactive prompt for cloud API keys ──────────────────
