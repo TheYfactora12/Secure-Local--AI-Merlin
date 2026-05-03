@@ -1,6 +1,15 @@
 # Perplexica Config — home-ai-elite
 # Open-source Perplexity AI clone
 # Docs: https://github.com/ItzCrazyKns/Perplexica
+#
+# USAGE:
+#   cp configs/perplexica/config.toml.example configs/perplexica/config.toml
+#   install.sh will auto-copy this file if config.toml is missing.
+#
+# OLLAMA ENDPOINT NOTE:
+#   - Linux/VPS:  use http://ollama:11434  (Docker service name)
+#   - macOS:      use http://host.docker.internal:11434  (native Ollama on host)
+#   install.sh patches this automatically based on your OS.
 
 [GENERAL]
 PORT = 3001
@@ -12,12 +21,13 @@ OPENAI = ""
 GROQ = ""
 
 [API_ENDPOINTS]
-# install.sh patches OLLAMA to host.docker.internal on macOS automatically
+# install.sh will rewrite OLLAMA to host.docker.internal on macOS automatically
 OLLAMA = "http://ollama:11434"
 SEARXNG = "http://searxng:8080"
 
 [MODELS]
 # install.sh sets CHAT_MODEL automatically based on your RAM tier
+# Change manually if you want a different model
 CHAT_MODEL_PROVIDER = "ollama"
 CHAT_MODEL = "llama3.3:latest"
 EMBEDDING_MODEL_PROVIDER = "ollama"
