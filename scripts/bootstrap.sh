@@ -111,8 +111,10 @@ if [[ ! -f "$ENV_FILE" ]]; then
 fi
 
 # Source .env so N8N_API_KEY and QDRANT_* overrides are picked up
-# shellcheck source=/dev/null
-set -a; source "$ENV_FILE" 2>/dev/null || true; set +a
+set -a
+# shellcheck disable=SC1090
+source "$ENV_FILE" 2>/dev/null || true
+set +a
 
 # ---------------------------------------------------------------------------
 # Step 2: Start stack
