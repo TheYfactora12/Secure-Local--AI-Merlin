@@ -16,7 +16,8 @@
 # =============================================================================
 set -euo pipefail
 
-STACK_DIR="${HOME}/home-ai-elite"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+STACK_DIR="${HOME_AI_STACK_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 COMPOSE_FILE="${STACK_DIR}/docker-compose.yml"
 ENV_FILE="${STACK_DIR}/.env"
 WORKFLOW_DIR="${STACK_DIR}/n8n-workflows"
@@ -192,16 +193,16 @@ fi
 # Step 6: Ollama model check
 # ---------------------------------------------------------------------------
 banner "Step 6/7: Ollama Models"
-if command -v ollama >/dev/null 2>&1; then
-  MODEL_COUNT=$(ollama list 2>/dev/null | tail -n +2 | wc -l | tr -d ' ')
+if docker compose ps ollama >/dev/null 2>&1; then
+  MODEL_COUNT=$(docker compose exec -T ollama ollama list 2>/dev/null | tail -n +2 | wc -l | tr -d ' ')
   if [[ "$MODEL_COUNT" -eq 0 ]]; then
     log "Pulling default model: $OLLAMA_DEFAULT_MODEL"
-    ollama pull "$OLLAMA_DEFAULT_MODEL" || warn "Model pull failed — retry with: ollama pull $OLLAMA_DEFAULT_MODEL"
+    docker compose exec -T ollama ollama pull "$OLLAMA_DEFAULT_MODEL" || warn "Model pull failed — retry with: bash scripts/add-model.sh $OLLAMA_DEFAULT_MODEL"
   else
     log "  ✅ $MODEL_COUNT Ollama model(s) already present — skipping pull"
   fi
 else
-  warn "Ollama CLI not found in PATH — open http://localhost:11434 to verify Ollama is running in Docker"
+  warn "Ollama container not running — open http://localhost:11434 after the stack starts"
 fi
 
 # ---------------------------------------------------------------------------

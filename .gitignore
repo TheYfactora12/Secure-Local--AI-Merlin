@@ -2,6 +2,7 @@
 data/
 backups/
 logs/
+certs/
 install-manifest.txt
 *.copy
 .DS_Store

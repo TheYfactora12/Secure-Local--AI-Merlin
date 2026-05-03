@@ -84,7 +84,7 @@ wait_for_docker_engine() {
 }
 
 header() {
-  clear
+  clear 2>/dev/null || true
   echo -e "${CYAN}"
   echo '  ██╗  ██╗ ██████╗ ███╗   ███╗███████╗     █████╗ ██╗'
   echo '  ██║  ██║██╔═══██╗████╗ ████║██╔════╝    ██╔══██╗██║'
@@ -173,7 +173,7 @@ if [[ "$OS" == "Darwin" ]]; then
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   fi
   log "Homebrew ready"
-  for pkg in ollama git curl jq; do
+  for pkg in git curl jq; do
     if command -v "$pkg" &>/dev/null; then
       log "$pkg already installed"
     else
@@ -189,35 +189,14 @@ else
     fi
     log "$pkg ready"
   done
-  if ! command -v ollama &>/dev/null; then
-    log "Installing Ollama..."
-    curl -fsSL https://ollama.ai/install.sh | sh
-  else
-    log "Ollama already installed"
-  fi
 fi
 
-# Start Ollama service
-if [[ "$OS" == "Darwin" ]]; then
-  if ! brew services start ollama 2>/dev/null; then
-    warn "Could not register Ollama as a background service. Starting it for this install session..."
-    nohup ollama serve >/tmp/homeai-ollama.log 2>&1 &
+if [[ "$OS" == "Darwin" ]] && command -v brew &>/dev/null; then
+  if brew services list 2>/dev/null | awk '$1 == "ollama" && $2 == "started" { found=1 } END { exit found ? 0 : 1 }'; then
+    warn "Stopping Homebrew Ollama so the Docker Ollama container can bind localhost:11434..."
+    brew services stop ollama 2>/dev/null || true
   fi
-else
-  systemctl enable ollama 2>/dev/null || true
-  systemctl start ollama 2>/dev/null || true
 fi
-
-# Wait for Ollama to be ready
-log "Waiting for Ollama to be ready..."
-OLLAMA_WAIT=0
-until curl -sf http://localhost:11434 &>/dev/null; do
-  sleep 2; OLLAMA_WAIT=$((OLLAMA_WAIT+2))
-  if (( OLLAMA_WAIT >= 60 )); then
-    err "Ollama did not start within 60s. Check: brew services list (macOS) or systemctl status ollama (Linux)"
-  fi
-done
-log "Ollama service ready"
 
 # ── STEP 3: Environment Setup & Secret Hardening ──────────────────────
 step "Environment Setup & Secret Hardening"
@@ -363,42 +342,41 @@ if [[ ! -f "configs/perplexica/config.toml" ]]; then
 fi
 log "configs/perplexica/config.toml found ✔"
 
+# 3e: Generate local TLS certificate for nginx if needed
+if [[ -f "scripts/generate-certs.sh" ]]; then
+  if [[ ! -f "certs/selfsigned.crt" || ! -f "certs/selfsigned.key" ]]; then
+    HOME_AI_STACK_DIR="${SCRIPT_DIR}" bash scripts/generate-certs.sh
+  else
+    log "Nginx TLS certificate already exists — skipping generation"
+  fi
+else
+  warn "scripts/generate-certs.sh not found — nginx HTTPS proxy may not start"
+fi
+
 # ── STEP 4: Pull Ollama Models (RAM-Aware) ────────────────────────────
 step "Pulling AI Models (Tier: ${MODEL_TIER} / ${TOTAL_RAM_GB} GB)"
 
-# ── FIX P2: Hardened model pull with registry-existence guard ─────────
-pull_model() {
-  local model=$1
-  log "Pulling ${model}..."
-  if ! ollama pull "$model"; then
-    warn "Failed to pull ${model} — skipping. Stack will continue; pull manually with: ollama pull ${model}"
-  fi
-}
+MODELS_TO_PULL=()
 
 if [[ "$SKIP_MODEL_PULLS" == true ]]; then
   warn "Skipping Ollama model pulls. Pull models later with: bash scripts/add-model.sh <model>"
 else
-  pull_model "nomic-embed-text"
+  MODELS_TO_PULL+=("nomic-embed-text")
 fi
 
 case "$MODEL_TIER" in
   low)
-    [[ "$SKIP_MODEL_PULLS" == true ]] || pull_model "mistral:7b"
-    [[ "$SKIP_MODEL_PULLS" == true ]] || pull_model "qwen2.5:7b"
+    [[ "$SKIP_MODEL_PULLS" == true ]] || MODELS_TO_PULL+=("mistral:7b" "qwen2.5:7b")
     OPENHANDS_MODEL="ollama/qwen2.5:7b"
     PERPLEXICA_CHAT_MODEL="qwen2.5:7b"
     ;;
   base)
-    [[ "$SKIP_MODEL_PULLS" == true ]] || pull_model "qwen2.5:7b"
-    [[ "$SKIP_MODEL_PULLS" == true ]] || pull_model "qwen2.5-coder:7b"
-    [[ "$SKIP_MODEL_PULLS" == true ]] || pull_model "deepseek-r1:7b"
+    [[ "$SKIP_MODEL_PULLS" == true ]] || MODELS_TO_PULL+=("qwen2.5:7b" "qwen2.5-coder:7b" "deepseek-r1:7b")
     OPENHANDS_MODEL="ollama/qwen2.5-coder:7b"
     PERPLEXICA_CHAT_MODEL="qwen2.5:7b"
     ;;
   mid)
-    [[ "$SKIP_MODEL_PULLS" == true ]] || pull_model "qwen2.5:32b"
-    [[ "$SKIP_MODEL_PULLS" == true ]] || pull_model "qwen2.5-coder:14b"
-    [[ "$SKIP_MODEL_PULLS" == true ]] || pull_model "deepseek-r1:14b"
+    [[ "$SKIP_MODEL_PULLS" == true ]] || MODELS_TO_PULL+=("qwen2.5:32b" "qwen2.5-coder:14b" "deepseek-r1:14b")
     OPENHANDS_MODEL="ollama/qwen2.5-coder:14b"
     PERPLEXICA_CHAT_MODEL="qwen2.5:32b"
     ;;
@@ -406,10 +384,7 @@ case "$MODEL_TIER" in
     # FIX P2: Use canonical Ollama registry tag for llama3.3 70B.
     # llama3.3:70b-instruct-q4_K_M may not exist on all registry mirrors.
     # Canonical tag is llama3.3:70b (defaults to Q4_K_M quantization).
-    [[ "$SKIP_MODEL_PULLS" == true ]] || pull_model "llama3.3:70b"
-    [[ "$SKIP_MODEL_PULLS" == true ]] || pull_model "qwen2.5:32b"
-    [[ "$SKIP_MODEL_PULLS" == true ]] || pull_model "qwen2.5-coder:14b"
-    [[ "$SKIP_MODEL_PULLS" == true ]] || pull_model "deepseek-r1:32b"
+    [[ "$SKIP_MODEL_PULLS" == true ]] || MODELS_TO_PULL+=("llama3.3:70b" "qwen2.5:32b" "qwen2.5-coder:14b" "deepseek-r1:32b")
     OPENHANDS_MODEL="ollama/qwen2.5-coder:14b"
     PERPLEXICA_CHAT_MODEL="llama3.3:70b"
     ;;
@@ -438,11 +413,8 @@ step "Pulling Docker Images & Starting All Services"
 docker compose pull --quiet
 log "Images pulled"
 
-docker compose up -d
-log "All services started"
-
-# ── STEP 6: Health Checks ─────────────────────────────────────────────
-step "Waiting for Services to be Ready"
+docker compose up -d ollama
+log "Ollama container started"
 
 wait_for_service() {
   local name=$1; local url=$2; local max_wait=${3:-90}
@@ -454,15 +426,32 @@ wait_for_service() {
     if (( elapsed >= max_wait )); then
       echo " TIMEOUT"
       warn "${name} not responding — check: docker compose logs"
-      return 1
+      return 0
     fi
   done
   echo " ✓"
   return 0
 }
 
+wait_for_service "Ollama" "http://localhost:11434" 90
+
+if (( ${#MODELS_TO_PULL[@]} > 0 )); then
+  for model in "${MODELS_TO_PULL[@]}"; do
+    log "Pulling ${model} into Docker Ollama..."
+    if ! docker compose exec -T ollama ollama pull "$model"; then
+      warn "Failed to pull ${model} — skipping. Stack will continue; pull manually with: bash scripts/add-model.sh ${model}"
+    fi
+  done
+fi
+
+docker compose up -d
+log "All services started"
+
+# ── STEP 6: Health Checks ─────────────────────────────────────────────
+step "Waiting for Services to be Ready"
+
 wait_for_service "Ollama"        "http://localhost:11434"        60
-wait_for_service "LiteLLM"       "http://localhost:4000/health"  120
+wait_for_service "LiteLLM"       "http://localhost:4000"         120
 wait_for_service "Open WebUI"    "http://localhost:3000"         90
 wait_for_service "SearXNG"       "http://localhost:8080"         60
 wait_for_service "Qdrant"        "http://localhost:6333/healthz" 60
@@ -475,8 +464,12 @@ FIRST_BOOT_FLAG="${SCRIPT_DIR}/.wizard-bootstrapped"
 if [[ ! -f "$FIRST_BOOT_FLAG" ]]; then
   if [[ -f "scripts/bootstrap.sh" ]]; then
     log "Running first-boot bootstrap (Qdrant collections + n8n workflows)..."
-    bash "${SCRIPT_DIR}/scripts/bootstrap.sh" && touch "$FIRST_BOOT_FLAG"
-    log "Bootstrap complete"
+    if HOME_AI_STACK_DIR="${SCRIPT_DIR}" bash "${SCRIPT_DIR}/scripts/bootstrap.sh"; then
+      touch "$FIRST_BOOT_FLAG"
+      log "Bootstrap complete"
+    else
+      warn "Bootstrap reported issues — run manually after install: bash scripts/bootstrap.sh"
+    fi
   else
     warn "scripts/bootstrap.sh not found — run manually after install"
   fi
