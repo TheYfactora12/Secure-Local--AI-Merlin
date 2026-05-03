@@ -1,47 +1,170 @@
 # LiteLLM Gateway Config — home-ai-elite
+# Ruflo-pattern 3-tier complexity routing (Phase 2)
 # Local-first model router with optional cloud fallback
 # Docs: https://docs.litellm.ai/docs/proxy/configs
 
+# ── Model Registry ───────────────────────────────────────────────────────────
 model_list:
 
-  # ── Local Models (Ollama) ─────────────────────────────────────────
+  # ── Local Models (Ollama) ─────────────────────────────────────────────
+
+  # — Named aliases (direct access, unchanged from v1) —
   - model_name: llama3
     litellm_params:
-      model: ollama/llama3.3:latest
+      model: ollama/llama3.3:70b
       api_base: http://ollama:11434
+      timeout: 180
 
   - model_name: qwen-coder
     litellm_params:
       model: ollama/qwen2.5-coder:14b
       api_base: http://ollama:11434
+      timeout: 120
 
   - model_name: qwen32b
     litellm_params:
       model: ollama/qwen2.5:32b
       api_base: http://ollama:11434
+      timeout: 120
 
   - model_name: qwen7b
     litellm_params:
       model: ollama/qwen2.5:7b
       api_base: http://ollama:11434
+      timeout: 60
 
   - model_name: deepseek
     litellm_params:
       model: ollama/deepseek-r1:14b
       api_base: http://ollama:11434
+      timeout: 120
 
   - model_name: mistral
     litellm_params:
       model: ollama/mistral:7b
       api_base: http://ollama:11434
+      timeout: 60
 
   - model_name: embeddings
     litellm_params:
       model: ollama/nomic-embed-text
       api_base: http://ollama:11434
+      timeout: 30
 
-  # ── Cloud Fallback (optional — add API keys to .env to enable) ────
-  # Uncomment to enable cloud escalation for hard tasks:
+  # ── SWARM ROUTING GROUPS (Phase 2) ──────────────────────────────────────
+  # Maps directly to the 3-tier complexity model from swarm-coordinator.
+  # Tier 1 (tiny): fast, cheap, < 15 word tasks.
+  # Tier 2 (medium): balanced, 15-60 word tasks.
+  # Tier 3 (heavy): full power, architecture / long code / research.
+  # Each tier falls back to the tier below if preferred model unavailable.
+
+  # — Tier 1: TINY tasks — speed over quality —
+  - model_name: swarm-tiny
+    litellm_params:
+      model: ollama/qwen2.5:7b
+      api_base: http://ollama:11434
+      timeout: 30
+    model_info:
+      id: swarm-tiny-primary
+      description: "Swarm Tier 1: tiny tasks, max speed"
+      max_tokens: 2048
+
+  # Fallback: mistral:7b if qwen2.5:7b is loading
+  - model_name: swarm-tiny
+    litellm_params:
+      model: ollama/mistral:7b
+      api_base: http://ollama:11434
+      timeout: 30
+    model_info:
+      id: swarm-tiny-fallback
+      description: "Swarm Tier 1: tiny fallback"
+
+  # — Tier 2: MEDIUM tasks — quality + speed balance —
+  - model_name: swarm-medium
+    litellm_params:
+      model: ollama/qwen2.5:32b
+      api_base: http://ollama:11434
+      timeout: 90
+    model_info:
+      id: swarm-medium-primary
+      description: "Swarm Tier 2: medium tasks, balanced"
+      max_tokens: 8192
+
+  # Fallback: qwen2.5:14b if 32b is under load
+  - model_name: swarm-medium
+    litellm_params:
+      model: ollama/qwen2.5-coder:14b
+      api_base: http://ollama:11434
+      timeout: 90
+    model_info:
+      id: swarm-medium-fallback
+      description: "Swarm Tier 2: medium fallback"
+
+  # — Tier 3: HEAVY tasks — full reasoning power —
+  - model_name: swarm-heavy
+    litellm_params:
+      model: ollama/llama3.3:70b
+      api_base: http://ollama:11434
+      timeout: 180
+    model_info:
+      id: swarm-heavy-primary
+      description: "Swarm Tier 3: heavy tasks, max reasoning"
+      max_tokens: 32768
+
+  # Fallback: deepseek-r1 (strong reasoning, lighter RAM)
+  - model_name: swarm-heavy
+    litellm_params:
+      model: ollama/deepseek-r1:32b
+      api_base: http://ollama:11434
+      timeout: 180
+    model_info:
+      id: swarm-heavy-fallback-1
+      description: "Swarm Tier 3: heavy fallback (deepseek-r1:32b)"
+
+  # Last resort local fallback: 32b if 70b not available (RAM < 48GB)
+  - model_name: swarm-heavy
+    litellm_params:
+      model: ollama/qwen2.5:32b
+      api_base: http://ollama:11434
+      timeout: 120
+    model_info:
+      id: swarm-heavy-fallback-2
+      description: "Swarm Tier 3: heavy fallback (qwen2.5:32b)"
+
+  # — Swarm Code: specialist coding agent tier —
+  - model_name: swarm-code
+    litellm_params:
+      model: ollama/qwen2.5-coder:14b
+      api_base: http://ollama:11434
+      timeout: 120
+    model_info:
+      id: swarm-code-primary
+      description: "Swarm Code: specialist coding model"
+      max_tokens: 16384
+
+  # Fallback: deepseek-r1 for harder reasoning-heavy code
+  - model_name: swarm-code
+    litellm_params:
+      model: ollama/deepseek-r1:14b
+      api_base: http://ollama:11434
+      timeout: 120
+    model_info:
+      id: swarm-code-fallback
+      description: "Swarm Code: fallback (deepseek-r1:14b)"
+
+  # ── Cloud Fallback (optional) ───────────────────────────────────────────
+  # Only activates if: (1) API key is set in .env, AND
+  # (2) all local fallbacks fail or time out.
+  # Treats cloud as last-resort escalation, not primary routing.
+
+  # - model_name: swarm-heavy   # Cloud escalation for truly impossible local tasks
+  #   litellm_params:
+  #     model: gpt-4o
+  #     api_key: os.environ/OPENAI_API_KEY
+  #     timeout: 60
+  #   model_info:
+  #     id: swarm-heavy-cloud-escalation
+  #     description: "Cloud escalation: GPT-4o (last resort only)"
 
   # - model_name: gpt-4o
   #   litellm_params:
@@ -58,20 +181,42 @@ model_list:
   #     model: perplexity/llama-3.1-sonar-large-128k-online
   #     api_key: os.environ/PERPLEXITY_API_KEY
 
-# ── Router Settings ───────────────────────────────────────────────────
+# ── Router Settings (Phase 2: complexity-aware) ──────────────────────────
 router_settings:
-  routing_strategy: simple-shuffle
-  num_retries: 2
-  timeout: 120
-  retry_after: 5
+  # least-busy: routes to whichever model instance has fewest active requests.
+  # Far better than simple-shuffle for a swarm where tiny tasks run 10x more
+  # often than heavy tasks and should never queue behind a 70B generation.
+  routing_strategy: least-busy
 
-# ── General Settings ──────────────────────────────────────────────────
+  num_retries: 3
+  timeout: 180
+  retry_after: 3
+
+  # Allow_fallbacks: if primary model fails, try the next model_name match.
+  # This is what makes the tier fallback chains above work.
+  allowed_fails: 2
+  cooldown_time: 30
+
+  # Rate limits per tier (rpm = requests per minute)
+  # Prevents tiny tasks from starving heavy ones at the Ollama level.
+  model_group_alias:
+    swarm-tiny:   { tpm: 100000, rpm: 50 }
+    swarm-medium: { tpm: 50000,  rpm: 20 }
+    swarm-heavy:  { tpm: 20000,  rpm: 5  }
+    swarm-code:   { tpm: 50000,  rpm: 15 }
+
+# ── General Settings ───────────────────────────────────────────────────────────
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
   drop_params: true
-  max_parallel_requests: 10
+  # Increased for swarm concurrency: multiple agents firing simultaneously
+  max_parallel_requests: 20
+  # Background health checks keep model availability status fresh
+  health_check_interval: 30
 
 litellm_settings:
   drop_params: true
   set_verbose: false
-  request_timeout: 120
+  request_timeout: 180
+  # telemetry: false ensures no usage data leaves your machine
+  telemetry: false

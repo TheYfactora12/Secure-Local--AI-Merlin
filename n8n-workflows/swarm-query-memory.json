@@ -1,0 +1,122 @@
+{
+  "name": "🔍 Swarm Memory Query",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "swarm/recall",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "recall-webhook",
+      "name": "Recall Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "swarm-memory-query"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst query = (body.query || body.task || '').trim();\nif (!query) throw new Error('No query provided. Send: { \"query\": \"your search here\" }');\nconst topK = body.top_k || 5;\nconst filterAgent = body.agent || null;\nreturn { query, topK, filterAgent };"
+      },
+      "id": "parse-recall-request",
+      "name": "Parse Recall Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/embeddings",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "model", "value": "nomic-embed-text" },
+            { "name": "prompt", "value": "={{ $('Parse Recall Request').first().json.query }}" }
+          ]
+        },
+        "options": { "timeout": 30000 }
+      },
+      "id": "embed-query",
+      "name": "Embed Query (nomic)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://qdrant:6333/collections/swarm_memory/points/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ vector: $json.embedding, limit: $('Parse Recall Request').first().json.topK, with_payload: true, with_vectors: false, score_threshold: 0.6 }) }}",
+        "options": { "timeout": 15000 }
+      },
+      "id": "search-qdrant",
+      "name": "Search Qdrant Memory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nconst results = raw.result || [];\nconst query = $('Parse Recall Request').first().json.query;\n\n// Format results for human readability + agent consumption\nconst memories = results.map((r, i) => ({\n  rank: i + 1,\n  score: Math.round(r.score * 1000) / 1000,\n  task: r.payload?.task || '',\n  result: r.payload?.result || '',\n  agent: r.payload?.agent || 'unknown',\n  model: r.payload?.model || 'unknown',\n  complexity: r.payload?.complexity || 'unknown',\n  timestamp: r.payload?.timestamp || ''\n}));\n\n// Build a compact context string for agent injection (Phase 3)\nconst contextBlock = memories.map(m =>\n  `[Memory ${m.rank} | score:${m.score} | agent:${m.agent} | model:${m.model}]\\nTask: ${m.task}\\nResult: ${m.result.substring(0, 500)}`\n).join('\\n\\n---\\n\\n');\n\nreturn {\n  query,\n  count: memories.length,\n  memories,\n  context_block: contextBlock  // ready to prepend to any agent prompt (Phase 3)\n};"
+      },
+      "id": "format-memories",
+      "name": "Format Memory Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "recall-response",
+      "name": "Return Memories",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "Recall Webhook": {
+      "main": [[{ "node": "Parse Recall Request", "type": "main", "index": 0 }]]
+    },
+    "Parse Recall Request": {
+      "main": [[{ "node": "Embed Query (nomic)", "type": "main", "index": 0 }]]
+    },
+    "Embed Query (nomic)": {
+      "main": [[{ "node": "Search Qdrant Memory", "type": "main", "index": 0 }]]
+    },
+    "Search Qdrant Memory": {
+      "main": [[{ "node": "Format Memory Results", "type": "main", "index": 0 }]]
+    },
+    "Format Memory Results": {
+      "main": [[{ "node": "Return Memories", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "versionId": "1.0.0",
+  "meta": { "instanceId": "home-ai-elite-swarm-recall-v1" },
+  "tags": [{ "name": "swarm" }, { "name": "memory" }, { "name": "phase-2" }]
+}
