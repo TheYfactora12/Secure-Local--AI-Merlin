@@ -3,6 +3,8 @@ data/
 backups/
 logs/
 certs/
+pkg/build/
+*.pkg
 install-manifest.txt
 *.copy
 .DS_Store

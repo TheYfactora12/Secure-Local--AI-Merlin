@@ -43,9 +43,9 @@ done
 GREEN="\033[0;32m"; YELLOW="\033[1;33m"; CYAN="\033[0;36m"
 BOLD="\033[1m"; RESET="\033[0m"
 
-log()    { echo -e "${GREEN}[pkg-build]${RESET} $*"; }
-warn()   { echo -e "${YELLOW}[pkg-build]${RESET} $*"; }
-banner() { echo -e "\n${CYAN}${BOLD}━━━ $* ━━━${RESET}\n"; }
+log()    { echo -e "${GREEN}[pkg-build]${RESET} $*" >&2; }
+warn()   { echo -e "${YELLOW}[pkg-build]${RESET} $*" >&2; }
+banner() { echo -e "\n${CYAN}${BOLD}━━━ $* ━━━${RESET}\n" >&2; }
 
 # ---------------------------------------------------------------------------
 # Preflight
@@ -141,7 +141,9 @@ build_component_pkg() {
     --identifier "${PKG_ID}" \
     --version    "${PKG_VERSION}" \
     --install-location "/" \
-    "${component_pkg}"
+    "${component_pkg}" >&2
+
+  [[ -f "$component_pkg" ]] || return 1
 
   log "  ✅ Component pkg: ${component_pkg}"
   echo "$component_pkg"
@@ -162,12 +164,9 @@ build_distribution_pkg() {
   productbuild \
     --synthesize \
     --package "${component_pkg}" \
-    "${dist_xml}"
+    "${dist_xml}" >&2
 
-  # Inject minimum OS version and UI title into distribution.xml
-  sed -i '' \
-    's|<installer-gui-script|<installer-gui-script minSpecVersion="1"|' \
-    "${dist_xml}" 2>/dev/null || true
+  [[ -s "$dist_xml" ]] || return 1
 
   # Build final distribution pkg with resources (welcome/readme/license)
   local sign_args=()
@@ -176,12 +175,22 @@ build_distribution_pkg() {
     log "  Signing with: ${DEVELOPER_ID_INSTALLER}"
   fi
 
-  productbuild \
-    --distribution  "${dist_xml}" \
-    --resources     "${BUILD_DIR}/resources" \
-    --package-path  "${BUILD_DIR}" \
-    "${sign_args[@]}" \
-    "${final_pkg}"
+  if [[ "$SIGN" == true ]]; then
+    productbuild \
+      --distribution  "${dist_xml}" \
+      --resources     "${BUILD_DIR}/resources" \
+      --package-path  "${BUILD_DIR}" \
+      "${sign_args[@]}" \
+      "${final_pkg}" >&2
+  else
+    productbuild \
+      --distribution  "${dist_xml}" \
+      --resources     "${BUILD_DIR}/resources" \
+      --package-path  "${BUILD_DIR}" \
+      "${final_pkg}" >&2
+  fi
+
+  [[ -f "$final_pkg" ]] || return 1
 
   log "  ✅ Final pkg: ${final_pkg}"
   log "  Size: $(du -sh "${final_pkg}" | cut -f1)"
