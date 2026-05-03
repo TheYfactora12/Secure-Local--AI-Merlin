@@ -38,6 +38,20 @@ fail()   { echo "[bootstrap] ERROR: $*" >&2; exit 1; }
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+ensure_docker_cli() {
+  if command -v docker >/dev/null 2>&1; then
+    return 0
+  fi
+
+  local docker_app_cli="/Applications/Docker.app/Contents/Resources/bin"
+  if [[ -x "${docker_app_cli}/docker" ]]; then
+    export PATH="${docker_app_cli}:$PATH"
+    return 0
+  fi
+
+  return 1
+}
+
 wait_for_http() {
   local url="$1"
   local label="$2"
@@ -84,6 +98,7 @@ echo -e "${RESET}"
 banner "Step 1/7: Preflight"
 [[ -d "$STACK_DIR" ]] || fail "Missing $STACK_DIR — re-run the installer"
 [[ -f "$COMPOSE_FILE" ]] || fail "Missing docker-compose.yml"
+ensure_docker_cli || fail "Docker CLI not found — install Docker Desktop first"
 docker info >/dev/null 2>&1 || fail "Docker engine not running — open Docker Desktop first"
 log "  ✅ Preflight passed"
 
@@ -197,11 +212,13 @@ echo -e "${GREEN}${BOLD}"
 echo "  ╔══════════════════════════════════════════╗"
 echo "  ║  SERVICE               URL                 ║"
 echo "  ╠══════════════════════════════════════════╣"
-echo "  ║  Open WebUI            http://localhost:3001 ║"
+echo "  ║  Open WebUI            http://localhost:3000 ║"
+echo "  ║  Perplexica Search     http://localhost:3002 ║"
+echo "  ║  OpenHands Agent       http://localhost:3003 ║"
 echo "  ║  n8n Automation        http://localhost:5678 ║"
-echo "  ║  Perplexica Search     http://localhost:3000 ║"
 echo "  ║  Qdrant Dashboard      http://localhost:6333 ║"
 echo "  ║  SearXNG               http://localhost:8080 ║"
+echo "  ║  LiteLLM Router        http://localhost:4000 ║"
 echo "  ║  Ollama API            http://localhost:11434 ║"
 echo "  ╚══════════════════════════════════════════╝"
 echo -e "${RESET}"

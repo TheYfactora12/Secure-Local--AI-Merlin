@@ -35,15 +35,26 @@ Output: `home-ai-elite-<version>.pkg` in the repo root.
 ## Install Flow (what happens when user double-clicks)
 
 1. macOS Installer.app shows Welcome + Readme screens
-2. `preinstall` runs: checks macOS ≥13, RAM ≥8GB, disk ≥20GB, Docker installed, git installed
+2. `preinstall` runs: checks macOS ≥13, RAM ≥8GB, disk ≥20GB, Docker Desktop installed, git installed
 3. If all checks pass: files copied to `/usr/local/home-ai-elite`
 4. `postinstall` runs:
    - Copies stack to `~/home-ai-elite`
    - Creates `.env` from `.env.example`
-   - Launches `install.sh` in background (pulls Docker images, starts services)
+   - Opens Docker Desktop so the user can finish first-run setup
+   - Launches `install.sh --non-interactive` in background (pulls Docker images, starts services)
    - Installs launchd auto-start agents
    - Drops a **Next Steps** file on the Desktop
-5. Done — services start automatically, user opens `http://localhost:3001`
+5. Done — services start automatically after Docker Desktop is running, user opens `http://localhost:3000`
+
+## Docker Desktop Caveat
+
+The package does not bundle Docker Desktop. Users should install and open Docker
+Desktop before running Home AI Elite. If Docker Desktop is installed without
+shell symlinks, the installer uses Docker's bundled CLI at:
+
+```bash
+/Applications/Docker.app/Contents/Resources/bin/docker
+```
 
 ## Signing & Notarization
 
