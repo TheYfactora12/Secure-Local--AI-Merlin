@@ -10,11 +10,77 @@ set -euo pipefail
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 
-log()    { echo -e "${GREEN}[✓]${NC} $1"; }
-warn()   { echo -e "${YELLOW}[!]${NC} $1"; }
-err()    { echo -e "${RED}[✗]${NC} $1"; exit 1; }
-step()   { echo -e "\n${BLUE}${BOLD}━━━ $1 ━━━${NC}"; }
-info()   { echo -e "${CYAN}[i]${NC} $1"; }
+log()    { echo -e "${GREEN}[✓]${NC} $1"; log_to_file "[INFO] $1"; }
+warn()   { echo -e "${YELLOW}[!]${NC} $1"; log_to_file "[WARN] $1"; }
+err()    { echo -e "${RED}[✗]${NC} $1"; log_to_file "[ERROR] $1"; exit 1; }
+step()   { echo -e "\n${BLUE}${BOLD}━━━ $1 ━━━${NC}"; log_to_file "[STEP] $1"; }
+info()   { echo -e "${CYAN}[i]${NC} $1"; log_to_file "[INFO] $1"; }
+
+# ── BUG-06: Structured install log + trap ERR + failure report ────────
+LOGFILE="${HOME}/.wizard/install.log"
+mkdir -p "$(dirname "$LOGFILE")"
+
+log_to_file() {
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*" >> "$LOGFILE"
+}
+
+generate_failure_report() {
+  local REPORT
+  REPORT="${SCRIPT_DIR:-$(pwd)}/wizard-failure-report-$(date +%Y%m%d-%H%M%S).txt"
+  {
+    echo "=== WIZARD AI FAILURE REPORT ==="
+    echo "Generated: $(date)"
+    echo "OS: $(uname -a)"
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+      echo "macOS: $(sw_vers -productVersion 2>/dev/null || echo 'unknown')"
+    fi
+    echo "RAM: ${TOTAL_RAM_GB:-unknown} GB"
+    echo "Model Tier: ${MODEL_TIER:-unknown}"
+    echo "Docker: $(docker version --format '{{.Server.Version}}' 2>/dev/null || echo 'not running')"
+    echo "Ollama: $(ollama --version 2>/dev/null || echo 'not installed')"
+    echo "Disk Available: ${AVAIL_DISK_GB:-unknown} GB"
+    echo ""
+    echo "=== INSTALL LOG (last 60 lines) ==="
+    tail -60 "$LOGFILE" 2>/dev/null || echo "No log found at ${LOGFILE}"
+    echo ""
+    echo "=== DOCKER SERVICE STATUS ==="
+    docker compose ps 2>/dev/null || echo "Docker compose not available"
+    echo ""
+    echo "=== DOCKER SERVICE LOGS (last 20 lines each) ==="
+    for svc in ollama litellm open-webui searxng qdrant n8n; do
+      echo "--- ${svc} ---"
+      docker compose logs --tail=20 "$svc" 2>/dev/null || echo "(no logs)"
+    done
+    echo ""
+    echo "=== .ENV KEY NAMES (values hidden) ==="
+    if [[ -f .env ]]; then
+      grep -E '^[A-Z_]+=' .env 2>/dev/null | cut -d= -f1 | \
+        while read -r k; do
+          v=$(grep "^${k}=" .env | cut -d= -f2-)
+          if [[ -z "$v" ]]; then echo "${k}=EMPTY"
+          else echo "${k}=SET"
+          fi
+        done
+    else
+      echo "No .env file found"
+    fi
+    echo ""
+    echo "=== BREW SERVICES (macOS) ==="
+    brew services list 2>/dev/null || echo "(not macOS or brew not available)"
+  } > "$REPORT"
+  echo -e "\n${YELLOW}📋 Failure report saved: ${REPORT}${NC}"
+  echo -e "${CYAN}→ Paste this file back to Wizard AI to continue debugging${NC}"
+}
+
+# Trap ERR: capture line number, exit code, log it, generate report
+trap 'EC=$?; LN=${LINENO};
+  log_to_file "[FAIL] Line ${LN}: exit code ${EC}";
+  echo -e "\n${RED}[✗] Install failed at line ${LN} (exit code ${EC})${NC}";
+  echo -e "${YELLOW}Full log: ${LOGFILE}${NC}";
+  echo -e "${YELLOW}Run: wizard debug  — to generate a shareable report${NC}";
+  generate_failure_report' ERR
+
+log_to_file "[START] install.sh launched — PID $$ — $(uname -s) $(uname -m)"
 
 header() {
   clear
@@ -72,14 +138,8 @@ else err "Minimum 8 GB RAM required. Detected: ${TOTAL_RAM_GB} GB."
 fi
 log "Model tier selected: ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
 
-# ── FIX P1: Cross-platform disk space check ───────────────────────────
-# macOS: df -g reports in GB. Linux: df -BG reports in GB.
-# Using df -k (works on both) and converting to GB for safety.
-if [[ "$OS" == "Darwin" ]]; then
-  AVAIL_DISK_KB=$(df -k . | awk 'NR==2 {print $4}')
-else
-  AVAIL_DISK_KB=$(df -k . | awk 'NR==2 {print $4}')
-fi
+# Disk space check — df -k works on both macOS and Linux
+AVAIL_DISK_KB=$(df -k . | awk 'NR==2 {print $4}')
 AVAIL_DISK_GB=$(( AVAIL_DISK_KB / 1024 / 1024 ))
 if (( AVAIL_DISK_GB < 30 )); then
   warn "Low disk: ${AVAIL_DISK_GB} GB available. Recommend 50+ GB. Continuing..."
@@ -130,7 +190,7 @@ else
   fi
 fi
 
-# Start Ollama service
+# Start Ollama service (native — not in Docker)
 if [[ "$OS" == "Darwin" ]]; then
   brew services start ollama 2>/dev/null || true
 else
@@ -287,7 +347,6 @@ log "configs/perplexica/config.toml found ✔"
 # ── STEP 4: Pull Ollama Models (RAM-Aware) ────────────────────────────
 step "Pulling AI Models (Tier: ${MODEL_TIER} / ${TOTAL_RAM_GB} GB)"
 
-# ── FIX P2: Hardened model pull with registry-existence guard ─────────
 pull_model() {
   local model=$1
   log "Pulling ${model}..."
@@ -320,9 +379,6 @@ case "$MODEL_TIER" in
     PERPLEXICA_CHAT_MODEL="qwen2.5:32b"
     ;;
   high)
-    # FIX P2: Use canonical Ollama registry tag for llama3.3 70B.
-    # llama3.3:70b-instruct-q4_K_M may not exist on all registry mirrors.
-    # Canonical tag is llama3.3:70b (defaults to Q4_K_M quantization).
     pull_model "llama3.3:70b"
     pull_model "qwen2.5:32b"
     pull_model "qwen2.5-coder:14b"
@@ -370,20 +426,23 @@ wait_for_service() {
     sleep 3; elapsed=$((elapsed+3))
     if (( elapsed >= max_wait )); then
       echo " TIMEOUT"
-      warn "${name} not responding — check: docker compose logs"
+      warn "${name} not responding — check: docker compose logs ${name,,}"
+      log_to_file "[TIMEOUT] ${name} did not respond within ${max_wait}s at ${url}"
       return 1
     fi
   done
   echo " ✓"
+  log_to_file "[PASS] ${name} healthy at ${url}"
   return 0
 }
 
-wait_for_service "Ollama"        "http://localhost:11434"        60
-wait_for_service "LiteLLM"       "http://localhost:4000/health"  120
-wait_for_service "Open WebUI"    "http://localhost:3000"         90
-wait_for_service "SearXNG"       "http://localhost:8080"         60
-wait_for_service "Qdrant"        "http://localhost:6333/healthz" 60
-wait_for_service "n8n"           "http://localhost:5678"         60
+wait_for_service "Ollama"        "http://localhost:11434"                 60
+# BUG-02 FIX: Use /health/readiness — only checks proxy liveness, not live LLM calls
+wait_for_service "LiteLLM"       "http://localhost:4000/health/readiness" 120
+wait_for_service "Open WebUI"    "http://localhost:3000"                  90
+wait_for_service "SearXNG"       "http://localhost:8080"                  60
+wait_for_service "Qdrant"        "http://localhost:6333/healthz"          60
+wait_for_service "n8n"           "http://localhost:5678"                  60
 
 # ── STEP 7: First-Boot Init (bootstrap) ────────────────────────────────
 step "First-Boot Initialization"
@@ -404,7 +463,6 @@ fi
 # ── STEP 8: Install wizard CLI system-wide ──────────────────────────────
 step "Installing wizard CLI"
 
-# FIX: Explicit file existence check before symlinking — clear error if missing
 CLI_PATH="${SCRIPT_DIR}/cli/wizard"
 if [[ -f "$CLI_PATH" ]]; then
   chmod +x "$CLI_PATH"
@@ -463,8 +521,13 @@ for key in WEBUI_SECRET_KEY LITELLM_MASTER_KEY N8N_PASSWORD SEARXNG_SECRET_KEY; 
   done
 done
 
-# Check .env file permissions
-ENV_PERMS=$(stat -c "%a" .env 2>/dev/null || stat -f "%A" .env 2>/dev/null || echo "unknown")
+# BUG-04 FIX: Darwin-safe stat — macOS uses -f "%OLp", Linux uses -c "%a"
+# Both return the octal permission bits as a plain number e.g. "600"
+if [[ "$OS" == "Darwin" ]]; then
+  ENV_PERMS=$(stat -f "%OLp" .env 2>/dev/null || echo "unknown")
+else
+  ENV_PERMS=$(stat -c "%a" .env 2>/dev/null || echo "unknown")
+fi
 if [[ "$ENV_PERMS" != "600" ]]; then
   warn "SECURITY: .env permissions are ${ENV_PERMS}, expected 600. Fixing..."
   chmod 600 .env
@@ -488,6 +551,8 @@ else
   warn "Security review found issues above — resolve before exposing to any network"
 fi
 
+log_to_file "[COMPLETE] install.sh finished successfully"
+
 # ── STEP 12: Done — Print Dashboard ───────────────────────────────────
 echo ""
 echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════════════════╗${NC}"
@@ -502,7 +567,8 @@ echo -e "  ${CYAN}🔎 Private Search (SearXNG):${NC} http://localhost:8080"
 echo -e "  ${CYAN}⚙️  Automation (n8n):${NC}         http://localhost:5678"
 echo -e "  ${CYAN}📦 Vector Memory (Qdrant):${NC}  http://localhost:6333"
 echo -e "  ${CYAN}🔀 Model Router (LiteLLM):${NC}  http://localhost:4000"
-echo -e "  ${CYAN}📊 Dashboard (Wizard HQ):${NC}   file://${SCRIPT_DIR}/dashboard/index.html"
+# BUG-05 FIX: Dashboard served over HTTP by nginx — file:// blocks fetch() via CORS
+echo -e "  ${CYAN}📊 Dashboard (Wizard HQ):${NC}   http://localhost:8888"
 echo ""
 echo -e "  ${BOLD}Hardware Tier:${NC} ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
 echo -e "  ${BOLD}Coding Model:${NC}  ${OPENHANDS_MODEL}"
@@ -512,6 +578,7 @@ echo -e "  ${GREEN}✓  All internal secrets auto-generated${NC}"
 echo -e "  ${GREEN}✓  .env locked to 600 (owner only)${NC}"
 echo -e "  ${GREEN}✓  Cloud API keys entered in hidden mode${NC}"
 echo -e "  ${GREEN}✓  Security review complete${NC}"
+echo -e "  ${GREEN}✓  Install log: ${LOGFILE}${NC}"
 echo ""
 echo -e "  ${BOLD}First commands to run:${NC}"
 echo -e "  ${CYAN}wizard status${NC}                    → full stack health check"
