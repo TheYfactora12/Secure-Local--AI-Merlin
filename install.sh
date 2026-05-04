@@ -251,7 +251,7 @@ PYEOF
   # It is a no-op on Linux (this entire function returns early for non-Darwin).
   # NOTE FOR FUTURE UPGRADES: If new services are added that depend on ollama,
   # add them to the `services_to_patch` list in the Python block below.
-  if grep -qP 'depends_on:' "$COMPOSE_FILE" && grep -q 'ollama:' "$COMPOSE_FILE"; then
+  if grep -q 'depends_on:' "$COMPOSE_FILE" && grep -q 'ollama:' "$COMPOSE_FILE"; then
     python3 - <<'PYEOF' "$COMPOSE_FILE"
 import sys, re
 path = sys.argv[1]
