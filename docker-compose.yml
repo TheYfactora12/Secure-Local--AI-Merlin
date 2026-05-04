@@ -80,7 +80,7 @@ services:
     volumes:
       - ./configs/fail2ban:/data
       - fail2ban-data:/var/lib/fail2ban
-      - /var/log:/var/log:ro
+      - /var/log:/var/log:ro,nocopy
     environment:
       - TZ=${TZ:-America/New_York}
       - F2B_LOG_LEVEL=INFO
