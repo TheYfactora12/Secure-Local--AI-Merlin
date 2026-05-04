@@ -137,6 +137,23 @@ bash scripts/add-model.sh qwen2.5:32b  # Pull a new model
 | `configs/searxng/settings.yml` | Search engines, privacy settings |
 | `configs/perplexica/config.toml` | Perplexica model + endpoint config |
 
+### n8n Local HTTP vs HTTPS
+
+For local browser access at `http://localhost:5678`, keep:
+
+```bash
+N8N_SECURE_COOKIE=false
+```
+
+If you expose n8n only through HTTPS, switch it back on:
+
+```bash
+N8N_SECURE_COOKIE=true
+docker compose restart n8n
+```
+
+Do not expose n8n over LAN or internet with `N8N_SECURE_COOKIE=false`.
+
 ---
 
 ## 🔑 Optional: Cloud Escalation

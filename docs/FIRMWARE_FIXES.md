@@ -98,6 +98,8 @@ Validated outcomes:
 - `tests/e2e-test.sh` passed with 15 checks and 0 failures.
 - Fixed LiteLLM default routes that still pointed at uninstalled large models on base-tier hardware. The `llama3` alias and swarm defaults now resolve to installed base-tier models, preventing `model 'llama3.3:70b' not found` errors on 16 GB installs.
 - Verified `POST /v1/chat/completions` with `model=llama3` returns successfully through LiteLLM.
+- Added `N8N_SECURE_COOKIE=false` for local HTTP browser access to n8n. Documented that it must be set back to `true` when n8n is served only through HTTPS.
+- Stopped writing RAM-tier Perplexica model selection into tracked `configs/perplexica/config.toml`. The installer now writes an ignored runtime copy at `configs/perplexica/config.runtime.toml` and points Compose to it through `PERPLEXICA_CONFIG_FILE`.
 
 ## Compose safety follow-up
 

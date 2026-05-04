@@ -17,8 +17,8 @@ OLLAMA = "http://host.docker.internal:11434"
 SEARXNG = "http://searxng:8080"
 
 [MODELS]
-# install.sh sets CHAT_MODEL automatically based on your RAM tier
+# install.sh writes RAM-tier overrides to ignored config.runtime.toml
 CHAT_MODEL_PROVIDER = "ollama"
-CHAT_MODEL = "llama3.3:latest"
+CHAT_MODEL = "qwen2.5:7b"
 EMBEDDING_MODEL_PROVIDER = "ollama"
 EMBEDDING_MODEL = "nomic-embed-text"

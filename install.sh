@@ -559,7 +559,12 @@ case "$MODEL_TIER" in
     ;;
 esac
 
-for key_val in "OPENHANDS_MODEL=${OPENHANDS_MODEL}" "PERPLEXICA_CHAT_MODEL=${PERPLEXICA_CHAT_MODEL}"; do
+PERPLEXICA_CONFIG_FILE="./configs/perplexica/config.runtime.toml"
+
+for key_val in \
+  "OPENHANDS_MODEL=${OPENHANDS_MODEL}" \
+  "PERPLEXICA_CHAT_MODEL=${PERPLEXICA_CHAT_MODEL}" \
+  "PERPLEXICA_CONFIG_FILE=${PERPLEXICA_CONFIG_FILE}"; do
   key=$(echo "$key_val" | cut -d= -f1)
   val=$(echo "$key_val" | cut -d= -f2-)
   if grep -q "^${key}" .env; then
@@ -568,12 +573,21 @@ for key_val in "OPENHANDS_MODEL=${OPENHANDS_MODEL}" "PERPLEXICA_CHAT_MODEL=${PER
     echo "${key}=${val}" >> .env
   fi
 done
+
+if grep -q "^N8N_SECURE_COOKIE=" .env; then
+  log "N8N secure cookie mode: $(grep '^N8N_SECURE_COOKIE=' .env | cut -d= -f2-) (preserved)"
+else
+  echo "N8N_SECURE_COOKIE=false" >> .env
+  log "N8N secure cookie mode: false (local HTTP)"
+fi
+
 log "OpenHands model: ${OPENHANDS_MODEL}"
 log "Perplexica chat model: ${PERPLEXICA_CHAT_MODEL}"
 
 if [[ -f "configs/perplexica/config.toml" ]]; then
+  cp configs/perplexica/config.toml "${PERPLEXICA_CONFIG_FILE}"
   sed -i.bak "s|^CHAT_MODEL = .*|CHAT_MODEL = \"${PERPLEXICA_CHAT_MODEL}\"|" \
-    configs/perplexica/config.toml && rm -f configs/perplexica/config.toml.bak
+    "${PERPLEXICA_CONFIG_FILE}" && rm -f "${PERPLEXICA_CONFIG_FILE}.bak"
 fi
 
 # ── BUG-03: Pull models via native Ollama (not Docker exec) ──────────

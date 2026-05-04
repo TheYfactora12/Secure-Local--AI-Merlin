@@ -18,3 +18,4 @@ node_modules/
 docker-compose.yml.bak
 .env.bak
 configs/**/*.bak
+configs/perplexica/config.runtime.toml

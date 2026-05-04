@@ -267,7 +267,7 @@ services:
     ports:
       - "3001:3001"
     volumes:
-      - ./configs/perplexica/config.toml:/home/perplexica/config.toml
+      - ${PERPLEXICA_CONFIG_FILE:-./configs/perplexica/config.toml}:/home/perplexica/config.toml
       - perplexica-data:/home/perplexica/data
     environment:
       - OLLAMA_HOST=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
@@ -373,6 +373,7 @@ services:
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-REQUIRED_CHANGE_ME}
       - N8N_HOST=localhost
       - N8N_PORT=5678
+      - N8N_SECURE_COOKIE=${N8N_SECURE_COOKIE:-false}
       - WEBHOOK_URL=http://localhost:5678
     deploy:
       resources:
