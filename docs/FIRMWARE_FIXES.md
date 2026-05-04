@@ -84,6 +84,19 @@ Validated outcomes:
 - `tests/e2e-test.sh` passed with 14 checks and 0 failures.
 - Real-test logs were collected at `/private/tmp/home-ai-elite-realtest-logs`.
 
+## May 3 local repo install validation
+
+After pulling the latest `main`, `bash install.sh` was run from `/Users/medeiros/Desktop/home-ai-elite` with optional cloud keys, MCP server install, and launchd auto-start skipped.
+
+Validated outcomes:
+
+- Base RAM tier selected on 16 GB hardware.
+- Native Ollama pulled `nomic-embed-text`, `qwen2.5:7b`, `qwen2.5-coder:7b`, and `deepseek-r1:7b`.
+- Health gates passed for native Ollama, LiteLLM, Open WebUI, SearXNG, Qdrant, and n8n.
+- Bootstrap completed and created Qdrant collection `home_ai_memory`.
+- `scripts/status.sh` reported all services running, including Wizard HQ on `http://localhost:8888`.
+- `tests/e2e-test.sh` passed with 15 checks and 0 failures.
+
 ## Compose safety follow-up
 
 - Made raw `docker-compose.yml` macOS-safe without relying on installer patching by moving Docker Ollama behind the `docker-ollama` profile and fail2ban behind the `linux-security` profile.

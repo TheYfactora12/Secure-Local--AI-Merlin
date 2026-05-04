@@ -6,6 +6,7 @@ certs/
 pkg/build/
 *.pkg
 install-manifest.txt
+.wizard-bootstrapped
 *.copy
 .DS_Store
 __pycache__/
