@@ -2,6 +2,8 @@
 # Services: Open WebUI, Perplexica, SearXNG, OpenHands, Qdrant, n8n, LiteLLM
 #           + Nginx (TLS reverse proxy), Watchtower (auto-updates), Fail2ban (brute-force)
 # Start:  docker compose up -d
+# Linux full-stack mode:
+#   docker compose --profile docker-ollama --profile linux-security up -d
 # Stop:   docker compose down
 # Status: bash scripts/status.sh
 #
@@ -11,11 +13,11 @@
 # Containers with REQUIRED_CHANGE_ME fallbacks will FAIL TO START
 # intentionally if .env is missing — this is by design.
 #
-# macOS NOTE: install.sh patches this file automatically for macOS:
-#   - Ollama runs NATIVELY (Metal GPU) — ollama service scaled to 0
-#   - fail2ban disabled (network_mode:host unsupported on Docker Desktop)
-#   - OLLAMA_BASE_URL rewritten to host.docker.internal:11434
-# On Linux, no patches are applied and all services run in Docker.
+# macOS NOTE: Ollama runs NATIVELY (Metal GPU). Services connect through
+# host.docker.internal:11434. The Docker Ollama service is behind the
+# docker-ollama profile so direct `docker compose up` is safe on macOS.
+# On Linux, use install.sh or enable the docker-ollama and linux-security
+# profiles manually.
 
 networks:
   ai-net:
@@ -70,6 +72,7 @@ services:
   # On Linux (VPS/server deployments), this runs normally.
   # ───────────────────────────────────────────
   fail2ban:
+    profiles: ["linux-security"]
     image: crazymax/fail2ban:latest
     container_name: fail2ban
     restart: unless-stopped
@@ -111,6 +114,23 @@ services:
       - ai-net
 
   # ───────────────────────────────────────────
+  # DASHBOARD — Wizard HQ
+  # Static local status dashboard
+  # ───────────────────────────────────────────
+  dashboard:
+    image: nginx:alpine
+    container_name: swarm-dashboard
+    restart: unless-stopped
+    ports:
+      - "8888:80"
+    volumes:
+      - ./dashboard:/usr/share/nginx/html:ro
+    networks:
+      - ai-net
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # ───────────────────────────────────────────
   # LAYER 1 — AI Brain (Ollama)
   # Local LLM server — all models run here
   # SECURITY: Bound to 127.0.0.1 only.
@@ -120,6 +140,7 @@ services:
   #        Services connect via host.docker.internal:11434 on macOS.
   # ───────────────────────────────────────────
   ollama:
+    profiles: ["docker-ollama"]
     image: ollama/ollama:latest
     container_name: ollama
     restart: unless-stopped
@@ -139,7 +160,9 @@ services:
   # ───────────────────────────────────────────
   # LAYER 2 — Model Router (LiteLLM)
   # Unified API: local Ollama + optional cloud
-  # MACOS: OLLAMA_BASE_URL patched to host.docker.internal by install.sh
+  # Services use host.docker.internal so macOS can reach native Ollama.
+  # Linux Docker-Ollama mode publishes Ollama on the host and reaches it
+  # through host-gateway.
   # ───────────────────────────────────────────
   litellm:
     image: ghcr.io/berriai/litellm:main-latest
@@ -155,13 +178,11 @@ services:
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-REQUIRED_CHANGE_ME}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-none}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-none}
-      # On macOS, install.sh rewrites this to http://host.docker.internal:11434
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - ai-net
-    depends_on:
-      ollama:
-        condition: service_started
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
@@ -170,7 +191,7 @@ services:
   # Your Perplexity / ChatGPT front end
   # SECURITY: Set ENABLE_SIGNUP=false in .env
   # after creating your admin account.
-  # MACOS: OLLAMA_BASE_URL patched to host.docker.internal by install.sh
+  # Uses host.docker.internal for native macOS Ollama and Linux host-gateway.
   # ───────────────────────────────────────────
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
@@ -181,8 +202,7 @@ services:
     volumes:
       - open-webui:/app/backend/data
     environment:
-      # On macOS, install.sh rewrites this to http://host.docker.internal:11434
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       - OPENAI_API_BASE_URL=http://litellm:4000
       - OPENAI_API_KEY=${LITELLM_MASTER_KEY:-REQUIRED_CHANGE_ME}
       # REQUIRED: set WEBUI_SECRET_KEY in .env (install.sh auto-generates it)
@@ -192,6 +212,8 @@ services:
       - ENABLE_SIGNUP=${ENABLE_SIGNUP:-true}
       - ENABLE_COMMUNITY_SHARING=false
       - SEARXNG_QUERY_URL=http://searxng:8080/search?q=<query>&format=json
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     deploy:
       resources:
         limits:
@@ -199,8 +221,6 @@ services:
     networks:
       - ai-net
     depends_on:
-      ollama:
-        condition: service_started
       litellm:
         condition: service_started
       searxng:
@@ -238,7 +258,7 @@ services:
   # ───────────────────────────────────────────
   # LAYER 2 — Search AI (Perplexica)
   # Open-source Perplexity clone with citations
-  # MACOS: OLLAMA_BASE_URL patched to host.docker.internal by install.sh
+  # Uses host.docker.internal for native macOS Ollama and Linux host-gateway.
   # ───────────────────────────────────────────
   perplexica-backend:
     image: itzcrazykns1337/perplexica-backend:main
@@ -250,13 +270,12 @@ services:
       - ./configs/perplexica/config.toml:/home/perplexica/config.toml
       - perplexica-data:/home/perplexica/data
     environment:
-      # On macOS, install.sh rewrites this to http://host.docker.internal:11434
-      - OLLAMA_HOST=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - OLLAMA_HOST=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - ai-net
     depends_on:
-      ollama:
-        condition: service_started
       searxng:
         condition: service_started
     labels:

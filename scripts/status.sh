@@ -27,6 +27,7 @@ check() {
 echo -e "\n${CYAN}${BOLD}HOME AI ELITE — Service Status${NC}"
 echo -e "$(date)\n"
 
+check "Dashboard   (Wizard HQ)    " "http://localhost:8888"           8888
 check "Open WebUI  (Chat UI)       " "http://localhost:3000"           3000
 check "Perplexica  (Search AI)     " "http://localhost:3002"           3002
 check "OpenHands   (Codex Agent)   " "http://localhost:3003"           3003

@@ -9,20 +9,22 @@ A one-shot installer that sets up a complete local AI stack — private web sear
 
 ---
 
-> ⚠️ **macOS Users — Always use `bash install.sh`**
+> ⚠️ **macOS Users — `bash install.sh` is still the supported path**
 >
-> Do **not** run `docker compose up` directly on macOS.
+> `docker compose up` is now safe on macOS because Docker Ollama is profile-gated,
+> but `bash install.sh` remains the recommended command.
 >
 > On macOS, `install.sh` automatically:
 > - Runs Ollama **natively** for Apple Metal GPU acceleration
-> - Patches `docker-compose.yml` to remove `depends_on: ollama` for services
->   that connect via `host.docker.internal` instead
+> - Sets `OLLAMA_BASE_URL` to `host.docker.internal` for container-to-host routing
 > - Disables `fail2ban` (incompatible with Docker Desktop networking)
 >
-> Running `docker compose up` directly on macOS will hang waiting for the
-> `ollama` Docker container, which is intentionally skipped.
+> Running `docker compose up` directly skips installer steps such as secret
+> rotation, RAM-tier model pulls, Qdrant bootstrap, and n8n workflow import.
 >
-> **Linux users:** `docker compose up` works normally.
+> **Linux Docker-Ollama users:** run
+> `docker compose --profile docker-ollama --profile linux-security up -d` or use
+> `bash install.sh`.
 
 ## ⚡ Install
 
@@ -63,6 +65,7 @@ Run this from the repo root to pick up the ongoing build context (dashboard, ins
 ```
 You
  │
+ ├──► Dashboard    :8888   ← Wizard HQ service dashboard
  ├──► Open WebUI   :3000   ← Chat UI (your ChatGPT / Perplexity)
  ├──► Perplexica   :3002   ← Search AI with citations (your Perplexity)
  ├──► OpenHands    :3003   ← Autonomous coding agent (your Codex)
@@ -85,6 +88,7 @@ You
 
 | Service | Port | What It Does | Replaces |
 |---------|------|--------------|----------|
+| **Dashboard (Wizard HQ)** | 8888 | Unified local stack dashboard | Manual status checks |
 | **Open WebUI** | 3000 | Chat, RAG, voice, web search UI | ChatGPT, Perplexity UI |
 | **Perplexica** | 3002 | AI-powered web search with citations | Perplexity AI |
 | **OpenHands** | 3003 | Autonomous multi-file coding agent | GitHub Copilot Workspace / Codex |

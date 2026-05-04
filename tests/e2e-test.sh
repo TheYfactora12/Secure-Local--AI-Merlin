@@ -11,6 +11,7 @@
 #   6. SearXNG is reachable
 #   7. n8n is reachable
 #   8. Ollama API is reachable
+#   9. Dashboard is reachable
 #
 # Usage:
 #   bash tests/e2e-test.sh
@@ -28,6 +29,7 @@ OPENWEBUI_URL="${OPENWEBUI_URL:-http://localhost:3000}"
 PERPLEXICA_URL="${PERPLEXICA_URL:-http://localhost:3002}"
 SEARXNG_URL="${SEARXNG_URL:-http://localhost:8080}"
 OLLAMA_URL="${OLLAMA_URL:-http://localhost:11434}"
+DASHBOARD_URL="${DASHBOARD_URL:-http://localhost:8888}"
 
 PASS=0; FAIL=0
 FAILED_CHECKS=()
@@ -139,6 +141,7 @@ fi
 # 7. Service HTTP checks
 # ---------------------------------------------------------------------------
 check_http "$QDRANT_URL/collections"  "Qdrant API"
+check_http "$DASHBOARD_URL"           "Dashboard"
 check_http "$OPENWEBUI_URL"           "Open WebUI"
 check_http "$PERPLEXICA_URL"          "Perplexica"
 check_http "$SEARXNG_URL"             "SearXNG"

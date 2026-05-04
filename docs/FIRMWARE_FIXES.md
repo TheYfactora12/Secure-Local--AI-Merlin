@@ -83,3 +83,12 @@ Validated outcomes:
 - Bootstrap completed, including Qdrant `home_ai_memory` collection creation.
 - `tests/e2e-test.sh` passed with 14 checks and 0 failures.
 - Real-test logs were collected at `/private/tmp/home-ai-elite-realtest-logs`.
+
+## Compose safety follow-up
+
+- Made raw `docker-compose.yml` macOS-safe without relying on installer patching by moving Docker Ollama behind the `docker-ollama` profile and fail2ban behind the `linux-security` profile.
+- Removed hard `depends_on: ollama` edges from LiteLLM, Open WebUI, and Perplexica backend.
+- Standardized Ollama container clients on `http://host.docker.internal:11434`; Linux Docker-Ollama mode reaches the published Ollama port through Docker `host-gateway`.
+- Updated Linux installer/bootstrap startup to enable `docker-ollama` and `linux-security` profiles explicitly.
+- Added the Wizard HQ dashboard as an actual Compose service on `http://localhost:8888` and included it in README, status, bootstrap output, and e2e checks.
+- Corrected the high RAM tier model pull list to `llama3.3:70b`, `qwen2.5:32b`, and `deepseek-r1:32b`.

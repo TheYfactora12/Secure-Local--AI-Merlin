@@ -5,16 +5,10 @@
 # ║  https://github.com/TheYfactora12/home-ai-elite             ║
 # ╚══════════════════════════════════════════════════════════════╝
 # CHANGELOG v1.6 (2026-05-03):
-#   BUG-10 + BUG-15: Strip depends_on:ollama from litellm, open-webui,
-#           and perplexica-backend on macOS via patch_compose_for_macos().
-#           Root cause: Docker Compose resolves depends_on before filtering
-#           the service list, so even with `docker compose up ... $SERVICES`
-#           (which excludes ollama), Compose still tries to start the ollama
-#           container to satisfy declared dependencies — causing a hang or
-#           immediate crash on macOS where the ollama service is skipped.
-#           Fix: Patch 4 in patch_compose_for_macos() uses Python to
-#           surgically remove the ollama depends_on block from all three
-#           affected services. Idempotent + no-op on Linux.
+#   BUG-10 + BUG-15: Services no longer hard-depend on the Ollama Docker
+#           container. macOS uses native Ollama through host.docker.internal;
+#           Linux installer runs the Docker Ollama service through the
+#           docker-ollama Compose profile.
 # CHANGELOG v1.5 (2026-05-03):
 #   BUG-09: Added openhands + all service aliases to KNOWN_CONTAINERS
 #           pre-flight stale container removal list.
@@ -43,7 +37,7 @@
 #   BUG-03: Re-validate host.docker.internal bridge after macOS 26+ / Ollama 0.21+
 #   BUG-04: If GNU coreutils ships natively on future macOS, simplify stat branch
 #   BUG-02: Verify /health/readiness path on each LiteLLM major version upgrade
-#   BUG-10/15: Re-validate depends_on stripping if services add new ollama deps
+#   BUG-10/15: Re-validate compose defaults if services add new Ollama routes
 set -euo pipefail
 
 NON_INTERACTIVE="${HOME_AI_NON_INTERACTIVE:-false}"
@@ -166,7 +160,7 @@ wait_for_docker_engine() {
   return 1
 }
 
-# ── BUG-01 FIX: Patch docker-compose.yml for macOS incompatibilities ──
+# ── BUG-01 FIX: Patch runtime config for macOS incompatibilities ──────
 # Must be called AFTER .env exists and BEFORE docker compose up.
 # Safe to call on Linux — all branches are no-ops when OS != Darwin.
 # NOTE FOR FUTURE UPGRADES: Re-test fail2ban if Docker Desktop for macOS
@@ -208,26 +202,7 @@ PYEOF
     log "fail2ban already patched or not present — skipping"
   fi
 
-  # ── Patch 2: Rewrite OLLAMA_BASE_URL to host.docker.internal ──────────
-  # When Ollama runs natively on the Mac (BUG-03 fix), the 'ollama' service
-  # name resolves to nothing inside containers — the container doesn't exist.
-  # host.docker.internal is Docker Desktop's stable bridge to the host network
-  # and resolves correctly from all containers on macOS.
-  if grep -q 'OLLAMA_BASE_URL=.*ollama:11434' "$COMPOSE_FILE"; then
-    sed -i.bak 's|OLLAMA_BASE_URL=\${OLLAMA_BASE_URL:-http://ollama:11434}|OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}|g' "$COMPOSE_FILE"
-    rm -f "${COMPOSE_FILE}.bak"
-    log "OLLAMA_BASE_URL rewritten → host.docker.internal:11434 (open-webui, litellm)"
-    log_to_file "[PATCH] OLLAMA_BASE_URL → host.docker.internal:11434"
-  fi
-
-  if grep -q 'OLLAMA_HOST=.*ollama:11434' "$COMPOSE_FILE"; then
-    sed -i.bak 's|OLLAMA_HOST=\${OLLAMA_BASE_URL:-http://ollama:11434}|OLLAMA_HOST=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}|g' "$COMPOSE_FILE"
-    rm -f "${COMPOSE_FILE}.bak"
-    log "OLLAMA_HOST rewritten → host.docker.internal:11434 (perplexica-backend)"
-    log_to_file "[PATCH] OLLAMA_HOST → host.docker.internal:11434"
-  fi
-
-  # ── Patch 3: Set OLLAMA_BASE_URL in .env for any other services reading it ──
+  # ── Patch 2: Set OLLAMA_BASE_URL in .env for services reading it ─────
   if grep -q '^OLLAMA_BASE_URL=' .env 2>/dev/null; then
     sed -i.bak 's|^OLLAMA_BASE_URL=.*|OLLAMA_BASE_URL=http://host.docker.internal:11434|' .env && rm -f .env.bak
   else
@@ -235,80 +210,6 @@ PYEOF
   fi
   log ".env OLLAMA_BASE_URL → http://host.docker.internal:11434"
   log_to_file "[PATCH] .env OLLAMA_BASE_URL set"
-
-  # ── Patch 4: Strip depends_on: ollama from litellm, open-webui, perplexica-backend ──
-  # BUG-10 / BUG-15 ROOT CAUSE:
-  # Docker Compose resolves depends_on BEFORE filtering the service list.
-  # Even though `docker compose up ... $SERVICES` excludes the ollama container
-  # (BUG-03 fix), Compose still tries to start it to satisfy declared dependencies
-  # in litellm, open-webui, and perplexica-backend — causing a hang or crash.
-  #
-  # Fix: remove the `ollama: condition: service_started` stanza from depends_on
-  # for those three services. The URL rewrite (Patch 2) already ensures they
-  # connect to native Ollama via host.docker.internal instead.
-  #
-  # This patch is idempotent: guarded by grep for 'depends_on:' + 'ollama:' co-occurrence.
-  # It is a no-op on Linux (this entire function returns early for non-Darwin).
-  # NOTE FOR FUTURE UPGRADES: If new services are added that depend on ollama,
-  # add them to the `services_to_patch` list in the Python block below.
-  if grep -q 'depends_on:' "$COMPOSE_FILE" && grep -q 'ollama:' "$COMPOSE_FILE"; then
-    python3 - <<'PYEOF' "$COMPOSE_FILE"
-import sys, re
-path = sys.argv[1]
-with open(path) as f:
-    content = f.read()
-
-# Services that must NOT depend on the ollama Docker container on macOS.
-# Ollama runs natively; these services connect via host.docker.internal.
-services_to_patch = ['litellm', 'open-webui', 'perplexica-backend']
-
-for svc in services_to_patch:
-    # Match the service block's depends_on section and remove the ollama entry.
-    # Pattern: inside depends_on of target service, remove the `ollama:` key
-    # and its `condition: service_started` child line.
-    # Uses a two-step approach: find the service, then strip the ollama dep block.
-    #
-    # Before:
-    #   depends_on:
-    #     ollama:
-    #       condition: service_started
-    #     litellm:          <-- may exist for open-webui
-    #       condition: service_started
-    #
-    # After:
-    #   depends_on:
-    #     litellm:
-    #       condition: service_started
-    #
-    # If ollama is the ONLY depends_on entry, remove the entire depends_on block.
-    pattern = (
-        r'(  ' + re.escape(svc) + r':.*?)(    depends_on:\n)'
-        r'((?:      [^\n]+\n)*?)'
-        r'      ollama:\n        condition: service_started\n'
-        r'((?:      [^\n]+\n)*)'
-    )
-    def replace_dep(m):
-        pre = m.group(1)
-        dep_header = m.group(2)
-        before_ollama = m.group(3)
-        after_ollama = m.group(4)
-        remaining = before_ollama + after_ollama
-        if remaining.strip() == '':
-            # ollama was the only dep — drop the entire depends_on block
-            return pre
-        return pre + dep_header + remaining
-    content = re.sub(pattern, replace_dep, content, flags=re.DOTALL)
-
-with open(path, 'w') as f:
-    f.write(content)
-print('Patch 4 applied: depends_on:ollama removed from', ', '.join(services_to_patch))
-PYEOF
-    log "depends_on:ollama stripped from litellm, open-webui, perplexica-backend (macOS)"
-    log_to_file "[PATCH] BUG-10/BUG-15: depends_on:ollama removed for macOS services"
-  else
-    log "depends_on:ollama already patched — skipping Patch 4"
-    log_to_file "[PATCH] Patch 4 already applied — skipped"
-  fi
 
   log "docker-compose.yml patched for macOS ✔"
   log_to_file "[PASS] patch_compose_for_macos complete"
@@ -652,8 +553,8 @@ case "$MODEL_TIER" in
     PERPLEXICA_CHAT_MODEL="qwen2.5:32b"
     ;;
   high)
-    [[ "$SKIP_MODEL_PULLS" == true ]] || MODELS_TO_PULL+=("llama3.3:70b" "qwen2.5:32b" "qwen2.5-coder:14b" "deepseek-r1:32b")
-    OPENHANDS_MODEL="ollama/qwen2.5-coder:14b"
+    [[ "$SKIP_MODEL_PULLS" == true ]] || MODELS_TO_PULL+=("llama3.3:70b" "qwen2.5:32b" "deepseek-r1:32b")
+    OPENHANDS_MODEL="ollama/qwen2.5:32b"
     PERPLEXICA_CHAT_MODEL="llama3.3:70b"
     ;;
 esac
@@ -750,7 +651,7 @@ if [[ "$OS" == "Darwin" ]]; then
   done < <(docker compose config --services 2>/dev/null | grep -v '^ollama$')
   docker compose up -d --remove-orphans --force-recreate "${SERVICES[@]}"
 else
-  docker compose up -d --remove-orphans --force-recreate
+  docker compose --profile docker-ollama --profile linux-security up -d --remove-orphans --force-recreate
 fi
 
 log_to_file "[PASS] STEP 5: Docker compose up complete"

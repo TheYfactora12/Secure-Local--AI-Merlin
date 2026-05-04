@@ -130,7 +130,7 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
   done < <(docker compose config --services 2>/dev/null | grep -v '^ollama$')
   docker compose up -d "${SERVICES[@]}"
 else
-  docker compose up -d
+  docker compose --profile docker-ollama --profile linux-security up -d
 fi
 log "  ✅ docker compose up -d complete"
 
@@ -236,6 +236,7 @@ echo -e "${GREEN}${BOLD}"
 echo "  ╔══════════════════════════════════════════╗"
 echo "  ║  SERVICE               URL                 ║"
 echo "  ╠══════════════════════════════════════════╣"
+echo "  ║  Dashboard             http://localhost:8888 ║"
 echo "  ║  Open WebUI            http://localhost:3000 ║"
 echo "  ║  Perplexica Search     http://localhost:3002 ║"
 echo "  ║  OpenHands Agent       http://localhost:3003 ║"

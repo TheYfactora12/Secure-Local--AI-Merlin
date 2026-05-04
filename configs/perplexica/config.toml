@@ -12,8 +12,8 @@ OPENAI = ""
 GROQ = ""
 
 [API_ENDPOINTS]
-# install.sh patches OLLAMA to host.docker.internal on macOS automatically
-OLLAMA = "http://ollama:11434"
+# host.docker.internal reaches native macOS Ollama and Linux Docker-Ollama via host-gateway
+OLLAMA = "http://host.docker.internal:11434"
 SEARXNG = "http://searxng:8080"
 
 [MODELS]

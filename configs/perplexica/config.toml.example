@@ -7,9 +7,8 @@
 #   install.sh will auto-copy this file if config.toml is missing.
 #
 # OLLAMA ENDPOINT NOTE:
-#   - Linux/VPS:  use http://ollama:11434  (Docker service name)
-#   - macOS:      use http://host.docker.internal:11434  (native Ollama on host)
-#   install.sh patches this automatically based on your OS.
+#   - macOS: use host.docker.internal for native Ollama on the host
+#   - Linux/VPS Docker-Ollama: keep host.docker.internal; compose maps it via host-gateway
 
 [GENERAL]
 PORT = 3001
@@ -21,8 +20,8 @@ OPENAI = ""
 GROQ = ""
 
 [API_ENDPOINTS]
-# install.sh will rewrite OLLAMA to host.docker.internal on macOS automatically
-OLLAMA = "http://ollama:11434"
+# host.docker.internal reaches native macOS Ollama and Linux Docker-Ollama via host-gateway
+OLLAMA = "http://host.docker.internal:11434"
 SEARXNG = "http://searxng:8080"
 
 [MODELS]
