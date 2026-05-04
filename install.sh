@@ -95,7 +95,8 @@ log_to_file() {
 
 generate_failure_report() {
   # Runs inside trap — do NOT use set -e here
-  local REPORT="${SCRIPT_DIR:-$(pwd)}/wizard-failure-report-$(date +%Y%m%d-%H%M%S).txt"
+  local REPORT
+  REPORT="${SCRIPT_DIR:-$(pwd)}/wizard-failure-report-$(date +%Y%m%d-%H%M%S).txt"
   {
     echo "=== WIZARD AI FAILURE REPORT ==="
     echo "Date: $(date)"
