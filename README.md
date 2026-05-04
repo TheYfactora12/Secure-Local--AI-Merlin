@@ -126,6 +126,16 @@ bash scripts/backup.sh              # Backup all data volumes
 bash scripts/add-model.sh qwen2.5:32b  # Pull a new model
 ```
 
+Native Ollama brain control:
+
+```bash
+wizard brain status                 # Show API, loaded models, installed models
+wizard brain stop                   # Cool down local model runners
+wizard brain start                  # Start native Ollama again
+```
+
+See `docs/MODEL_OPERATIONS.md` for model efficiency and cooldown notes.
+
 ---
 
 ## 🔧 Configuration Files

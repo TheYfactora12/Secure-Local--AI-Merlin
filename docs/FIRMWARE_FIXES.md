@@ -100,6 +100,8 @@ Validated outcomes:
 - Verified `POST /v1/chat/completions` with `model=llama3` returns successfully through LiteLLM.
 - Added `N8N_SECURE_COOKIE=false` for local HTTP browser access to n8n. Documented that it must be set back to `true` when n8n is served only through HTTPS.
 - Stopped writing RAM-tier Perplexica model selection into tracked `configs/perplexica/config.toml`. The installer now writes an ignored runtime copy at `configs/perplexica/config.runtime.toml` and points Compose to it through `PERPLEXICA_CONFIG_FILE`.
+- Added `wizard brain status|start|stop|cooldown` so a hot native Ollama runner can be inspected and stopped without taking down the Docker stack.
+- Added `docs/MODEL_OPERATIONS.md` with model efficiency notes, base-tier defaults, cooldown commands, and future optimization work.
 
 ## Compose safety follow-up
 

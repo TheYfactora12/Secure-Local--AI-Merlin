@@ -3,7 +3,8 @@
 # wizard — Wizard AI Stack CLI  v5
 # Usage: wizard <command> [args]
 # ============================================================
-WIZARD_DIR="$HOME/wizard-ai"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WIZARD_DIR="${WIZARD_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 RED='\033[0;31m'; NC='\033[0m'; BOLD='\033[1m'; DIM='\033[2m'
 
@@ -29,6 +30,115 @@ pretty_json() {
   python3 -m json.tool 2>/dev/null || cat
 }
 
+ensure_docker_cli() {
+  if command -v docker >/dev/null 2>&1; then
+    return 0
+  fi
+
+  local docker_app_cli="/Applications/Docker.app/Contents/Resources/bin"
+  if [[ -x "${docker_app_cli}/docker" ]]; then
+    export PATH="${docker_app_cli}:$PATH"
+    return 0
+  fi
+
+  return 1
+}
+
+brain_status() {
+  if curl -sf --max-time 2 "$brain_url" >/dev/null 2>&1; then
+    echo -e "  ${GREEN}✓${NC} Ollama API: ${GREEN}RUNNING${NC}  →  $brain_url"
+  else
+    echo -e "  ${RED}✗${NC} Ollama API: ${RED}STOPPED${NC}"
+    return 1
+  fi
+
+  echo ""
+  echo -e "${BOLD}  Loaded models:${NC}"
+  curl -s --max-time 5 "$brain_url/api/ps" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+models=d.get('models',[])
+if not models:
+    print('  none loaded')
+else:
+    for m in models:
+        exp=m.get('expires_at','')
+        print(f\"  {m.get('name','?')}  expires: {exp}\")
+" 2>/dev/null || echo "  unable to query loaded models"
+
+  echo ""
+  echo -e "${BOLD}  Installed models:${NC}"
+  curl -s --max-time 5 "$brain_url/api/tags" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+models=d.get('models',[])
+if not models:
+    print('  none installed')
+else:
+    for m in models:
+        size=int(m.get('size',0))/1024/1024/1024
+        print(f\"  {m.get('name','?'):30} {size:5.1f} GB\")
+" 2>/dev/null || echo "  unable to query installed models"
+}
+
+brain_start() {
+  if curl -sf --max-time 2 "$brain_url" >/dev/null 2>&1; then
+    echo -e "${GREEN}✓ Wizard brain already running${NC}"
+    return 0
+  fi
+
+  if command -v brew >/dev/null 2>&1 && brew services list 2>/dev/null | grep -q '^ollama'; then
+    brew services start ollama >/dev/null
+    sleep 2
+  elif command -v ollama >/dev/null 2>&1; then
+    OLLAMA_HOST=127.0.0.1:11434 ollama serve >/tmp/wizard-ollama.log 2>&1 &
+    sleep 2
+  else
+    echo -e "${RED}Ollama CLI not found. Install Ollama first.${NC}"
+    return 1
+  fi
+
+  if curl -sf --max-time 5 "$brain_url" >/dev/null 2>&1; then
+    echo -e "${GREEN}✓ Wizard brain started${NC}"
+  else
+    echo -e "${RED}Wizard brain did not respond on $brain_url${NC}"
+    return 1
+  fi
+}
+
+brain_stop() {
+  local models
+  models=$(curl -s --max-time 5 "$brain_url/api/ps" 2>/dev/null | python3 -c "
+import sys,json
+try:
+    print(' '.join(m.get('name','') for m in json.load(sys.stdin).get('models',[]) if m.get('name')))
+except Exception:
+    pass
+" 2>/dev/null)
+
+  for model in $models; do
+    ollama stop "$model" >/dev/null 2>&1 || true
+    curl -s --max-time 10 "$brain_url/api/generate" \
+      -H 'Content-Type: application/json' \
+      -d "{\"model\":\"$model\",\"keep_alive\":0}" >/dev/null 2>&1 || true
+  done
+
+  if command -v brew >/dev/null 2>&1; then
+    brew services stop ollama >/dev/null 2>&1 || true
+  fi
+
+  pkill -f 'ollama runner' >/dev/null 2>&1 || true
+  pkill -f 'ollama serve' >/dev/null 2>&1 || true
+
+  sleep 2
+  if curl -sf --max-time 2 "$brain_url" >/dev/null 2>&1; then
+    echo -e "${YELLOW}Wizard brain still responding. Check: ps aux | grep ollama${NC}"
+    return 1
+  fi
+
+  echo -e "${GREEN}✓ Wizard brain stopped${NC}"
+}
+
 # ── usage ────────────────────────────────────────────────────
 usage() {
 cat << 'EOF'
@@ -42,6 +152,10 @@ cat << 'EOF'
     wizard status             Show health of all services
 
   Brain:
+    wizard brain status      Show Ollama API, loaded models, installed models
+    wizard brain start       Start native Ollama brain
+    wizard brain stop        Stop native Ollama and unload hot runners
+    wizard brain cooldown    Alias for brain stop when CPU is running hot
     wizard ask "question"     Ask a quick question (swarm-tiny, fastest)
     wizard route "task"       Alias for wizard swarm (full coordinator)
     wizard models             List loaded Ollama models
@@ -89,31 +203,39 @@ EOF
 case "$1" in
 
   start)
+    ensure_docker_cli || { echo -e "${RED}Docker CLI not found${NC}"; exit 1; }
     cd "$WIZARD_DIR" && docker compose up -d
     echo -e "${GREEN}✓ Wizard is awake${NC}"
     ;;
 
   stop)
+    ensure_docker_cli || { echo -e "${RED}Docker CLI not found${NC}"; exit 1; }
     cd "$WIZARD_DIR" && docker compose down
     echo -e "${YELLOW}Wizard is asleep.${NC}"
     ;;
 
   restart)
+    ensure_docker_cli || { echo -e "${RED}Docker CLI not found${NC}"; exit 1; }
     cd "$WIZARD_DIR" && docker compose restart
     echo -e "${GREEN}✓ Wizard restarted${NC}"
     ;;
 
   status)
+    ensure_docker_cli || { echo -e "${RED}Docker CLI not found${NC}"; exit 1; }
     echo ""
     echo -e "${BOLD}  WIZARD Stack Status${NC}"
     echo "  ─────────────────────────────────────────"
-    for svc in ollama open-webui litellm n8n qdrant perplexica openhands; do
+    for svc in open-webui litellm n8n qdrant perplexica-backend perplexica-frontend openhands swarm-dashboard; do
       ST=$(docker inspect --format='{{.State.Status}}' "$svc" 2>/dev/null || echo "not found")
       [[ "$ST" == "running" ]] \
         && echo -e "  ${GREEN}✓${NC} $svc" \
         || echo -e "  ${RED}✗${NC} $svc (${DIM}$ST${NC})"
     done
+    curl -sf --max-time 2 "$brain_url" >/dev/null 2>&1 \
+      && echo -e "  ${GREEN}✓${NC} ollama-native" \
+      || echo -e "  ${RED}✗${NC} ollama-native (${DIM}stopped${NC})"
     echo ""
+    echo "  Wizard HQ:    http://localhost:8888"
     echo "  Open WebUI:   http://localhost:3000"
     echo "  Perplexica:   http://localhost:3002"
     echo "  OpenHands:    http://localhost:3003"
@@ -121,6 +243,28 @@ case "$1" in
     echo "  n8n:          http://localhost:5678"
     echo "  Qdrant:       http://localhost:6333/dashboard"
     echo ""
+    ;;
+
+  brain)
+    case "${2:-status}" in
+      status)
+        brain_status
+        ;;
+      start)
+        brain_start
+        ;;
+      stop|cooldown)
+        brain_stop
+        ;;
+      restart)
+        brain_stop || true
+        brain_start
+        ;;
+      *)
+        echo "Usage: wizard brain [status|start|stop|cooldown|restart]"
+        exit 1
+        ;;
+    esac
     ;;
 
   # ── ask: quick single question via swarm-tiny ──────────────
@@ -276,21 +420,17 @@ else:
 
   # ── models ──────────────────────────────────────────────────
   models)
-    require_running
     echo -e "${BOLD}  Models in Wizard's brain:${NC}"
-    docker exec ollama ollama list 2>/dev/null || \
-    docker exec wizard-brain ollama list 2>/dev/null || \
     curl -s "$brain_url/api/tags" | python3 -c "
 import sys,json; d=json.load(sys.stdin)
 for m in d.get('models',[]): print(f\"  {m['name']:40} {m.get('size',0)//1024//1024:>6} MB\")
-"
+" 2>/dev/null || echo "  Ollama is stopped. Run: wizard brain start"
     ;;
 
   pull)
-    require_running
     [[ -z "$2" ]] && { echo "Usage: wizard pull <model-name>"; exit 1; }
-    docker exec ollama ollama pull "$2" 2>/dev/null || \
-    docker exec wizard-brain ollama pull "$2"
+    brain_start
+    ollama pull "$2"
     echo -e "${GREEN}✓ $2 added${NC}"
     ;;
 
