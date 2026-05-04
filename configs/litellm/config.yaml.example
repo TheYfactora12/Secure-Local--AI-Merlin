@@ -1,0 +1,25 @@
+# LiteLLM config — copy to config.yaml and edit before running install.sh
+# Docs: https://docs.litellm.ai/docs/proxy/configs
+model_list:
+  - model_name: default
+    litellm_params:
+      model: ollama/qwen2.5:7b
+      api_base: http://host.docker.internal:11434  # macOS
+      # api_base: http://ollama:11434              # Linux — uncomment this, comment above
+
+  - model_name: coder
+    litellm_params:
+      model: ollama/qwen2.5-coder:7b
+      api_base: http://host.docker.internal:11434  # macOS
+
+# Optional: cloud fallback (uncomment and add keys to .env)
+#  - model_name: gpt-4o
+#    litellm_params:
+#      model: gpt-4o
+#      api_key: os.environ/OPENAI_API_KEY
+
+router_settings:
+  routing_strategy: simple-shuffle
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
