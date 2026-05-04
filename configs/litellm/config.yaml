@@ -11,21 +11,21 @@ model_list:
   # — Named aliases (direct access, unchanged from v1) —
   - model_name: llama3
     litellm_params:
-      model: ollama/llama3.3:70b
+      model: ollama/qwen2.5:7b
       api_base: http://host.docker.internal:11434
-      timeout: 180
+      timeout: 60
 
   - model_name: qwen-coder
     litellm_params:
-      model: ollama/qwen2.5-coder:14b
+      model: ollama/qwen2.5-coder:7b
       api_base: http://host.docker.internal:11434
-      timeout: 120
+      timeout: 60
 
   - model_name: qwen32b
     litellm_params:
-      model: ollama/qwen2.5:32b
+      model: ollama/qwen2.5:7b
       api_base: http://host.docker.internal:11434
-      timeout: 120
+      timeout: 60
 
   - model_name: qwen7b
     litellm_params:
@@ -35,13 +35,13 @@ model_list:
 
   - model_name: deepseek
     litellm_params:
-      model: ollama/deepseek-r1:14b
+      model: ollama/deepseek-r1:7b
       api_base: http://host.docker.internal:11434
-      timeout: 120
+      timeout: 90
 
   - model_name: mistral
     litellm_params:
-      model: ollama/mistral:7b
+      model: ollama/qwen2.5:7b
       api_base: http://host.docker.internal:11434
       timeout: 60
 
@@ -69,12 +69,12 @@ model_list:
       description: "Swarm Tier 1: tiny tasks, max speed"
       max_tokens: 2048
 
-  # Fallback: mistral:7b if qwen2.5:7b is loading
+  # Fallback: deepseek-r1:7b if qwen2.5:7b is loading
   - model_name: swarm-tiny
     litellm_params:
-      model: ollama/mistral:7b
+      model: ollama/deepseek-r1:7b
       api_base: http://host.docker.internal:11434
-      timeout: 30
+      timeout: 60
     model_info:
       id: swarm-tiny-fallback
       description: "Swarm Tier 1: tiny fallback"
@@ -82,20 +82,20 @@ model_list:
   # — Tier 2: MEDIUM tasks — quality + speed balance —
   - model_name: swarm-medium
     litellm_params:
-      model: ollama/qwen2.5:32b
+      model: ollama/qwen2.5:7b
       api_base: http://host.docker.internal:11434
-      timeout: 90
+      timeout: 60
     model_info:
       id: swarm-medium-primary
       description: "Swarm Tier 2: medium tasks, balanced"
       max_tokens: 8192
 
-  # Fallback: qwen2.5:14b if 32b is under load
+  # Fallback: qwen2.5-coder:7b if qwen2.5:7b is under load
   - model_name: swarm-medium
     litellm_params:
-      model: ollama/qwen2.5-coder:14b
+      model: ollama/qwen2.5-coder:7b
       api_base: http://host.docker.internal:11434
-      timeout: 90
+      timeout: 60
     model_info:
       id: swarm-medium-fallback
       description: "Swarm Tier 2: medium fallback"
@@ -103,40 +103,40 @@ model_list:
   # — Tier 3: HEAVY tasks — full reasoning power —
   - model_name: swarm-heavy
     litellm_params:
-      model: ollama/llama3.3:70b
+      model: ollama/deepseek-r1:7b
       api_base: http://host.docker.internal:11434
-      timeout: 180
+      timeout: 120
     model_info:
       id: swarm-heavy-primary
       description: "Swarm Tier 3: heavy tasks, max reasoning"
       max_tokens: 32768
 
-  # Fallback: deepseek-r1 (strong reasoning, lighter RAM)
+  # Fallback: qwen2.5:7b (general local model)
   - model_name: swarm-heavy
     litellm_params:
-      model: ollama/deepseek-r1:32b
+      model: ollama/qwen2.5:7b
       api_base: http://host.docker.internal:11434
-      timeout: 180
+      timeout: 90
     model_info:
       id: swarm-heavy-fallback-1
-      description: "Swarm Tier 3: heavy fallback (deepseek-r1:32b)"
+      description: "Swarm Tier 3: heavy fallback (qwen2.5:7b)"
 
-  # Last resort local fallback: 32b if 70b not available (RAM < 48GB)
+  # Last resort local fallback: qwen2.5-coder:7b
   - model_name: swarm-heavy
     litellm_params:
-      model: ollama/qwen2.5:32b
+      model: ollama/qwen2.5-coder:7b
       api_base: http://host.docker.internal:11434
-      timeout: 120
+      timeout: 90
     model_info:
       id: swarm-heavy-fallback-2
-      description: "Swarm Tier 3: heavy fallback (qwen2.5:32b)"
+      description: "Swarm Tier 3: heavy fallback (qwen2.5-coder:7b)"
 
   # — Swarm Code: specialist coding agent tier —
   - model_name: swarm-code
     litellm_params:
-      model: ollama/qwen2.5-coder:14b
+      model: ollama/qwen2.5-coder:7b
       api_base: http://host.docker.internal:11434
-      timeout: 120
+      timeout: 90
     model_info:
       id: swarm-code-primary
       description: "Swarm Code: specialist coding model"
@@ -145,12 +145,12 @@ model_list:
   # Fallback: deepseek-r1 for harder reasoning-heavy code
   - model_name: swarm-code
     litellm_params:
-      model: ollama/deepseek-r1:14b
+      model: ollama/deepseek-r1:7b
       api_base: http://host.docker.internal:11434
-      timeout: 120
+      timeout: 90
     model_info:
       id: swarm-code-fallback
-      description: "Swarm Code: fallback (deepseek-r1:14b)"
+      description: "Swarm Code: fallback (deepseek-r1:7b)"
 
   # ── Cloud Fallback (optional) ───────────────────────────────────────────
   # Only activates if: (1) API key is set in .env, AND

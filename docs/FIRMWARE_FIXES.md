@@ -96,6 +96,8 @@ Validated outcomes:
 - Bootstrap completed and created Qdrant collection `home_ai_memory`.
 - `scripts/status.sh` reported all services running, including Wizard HQ on `http://localhost:8888`.
 - `tests/e2e-test.sh` passed with 15 checks and 0 failures.
+- Fixed LiteLLM default routes that still pointed at uninstalled large models on base-tier hardware. The `llama3` alias and swarm defaults now resolve to installed base-tier models, preventing `model 'llama3.3:70b' not found` errors on 16 GB installs.
+- Verified `POST /v1/chat/completions` with `model=llama3` returns successfully through LiteLLM.
 
 ## Compose safety follow-up
 
