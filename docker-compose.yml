@@ -52,7 +52,7 @@ services:
       open-webui:
         condition: service_started
       n8n:
-        condition: service_started
+        condition: service_healthy
       qdrant:
         condition: service_started
       litellm:
@@ -361,5 +361,11 @@ services:
           memory: 1g
     networks:
       - ai-net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
