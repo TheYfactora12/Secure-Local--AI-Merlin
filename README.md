@@ -9,6 +9,21 @@ A one-shot installer that sets up a complete local AI stack — private web sear
 
 ---
 
+> ⚠️ **macOS Users — Always use `bash install.sh`**
+>
+> Do **not** run `docker compose up` directly on macOS.
+>
+> On macOS, `install.sh` automatically:
+> - Runs Ollama **natively** for Apple Metal GPU acceleration
+> - Patches `docker-compose.yml` to remove `depends_on: ollama` for services
+>   that connect via `host.docker.internal` instead
+> - Disables `fail2ban` (incompatible with Docker Desktop networking)
+>
+> Running `docker compose up` directly on macOS will hang waiting for the
+> `ollama` Docker container, which is intentionally skipped.
+>
+> **Linux users:** `docker compose up` works normally.
+
 ## ⚡ Install
 
 ```bash
