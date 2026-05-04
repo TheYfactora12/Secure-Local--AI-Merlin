@@ -39,6 +39,8 @@ During a fresh GitHub clone smoke test from `/private/tmp/home-ai-elite-smoke`, 
 - The n8n Docker healthcheck used `localhost`, which resolved to `::1` inside the container. n8n listens on IPv4, so Docker marked it unhealthy while `http://localhost:5678/healthz` worked from the host. Fix: healthcheck now probes `http://127.0.0.1:5678/healthz`.
 - `scripts/bootstrap.sh` also called plain `docker compose up -d`, which reintroduced the Ollama container after the installer correctly skipped it. Fix: bootstrap now skips the Ollama Docker service on macOS and uses native Ollama for model checks.
 - Both installer and bootstrap now build the filtered Compose service list as a Bash array before invoking `docker compose up`.
+- `scripts/status.sh` now lists native Ollama models on macOS instead of reporting "Ollama container not running".
+- `tests/e2e-test.sh` now resolves the repo path from its own location, uses the current service ports, discovers Docker Desktop's bundled CLI, and increments counters safely under `set -e`.
 
 ## Package fixes
 
@@ -64,3 +66,20 @@ Validated running endpoints:
 - n8n: `http://localhost:5678`
 - Qdrant: `http://localhost:6333`
 - Ollama: `http://localhost:11434`
+
+## Full macOS pull-down validation
+
+After pushing the macOS installer/bootstrap fixes, a fresh GitHub clone was tested at `/private/tmp/home-ai-elite-realtest` using:
+
+```bash
+HOME_AI_NON_INTERACTIVE=true bash install.sh --non-interactive
+```
+
+Validated outcomes:
+
+- Native Ollama model pulls completed for `nomic-embed-text`, `qwen2.5:7b`, `qwen2.5-coder:7b`, and `deepseek-r1:7b`.
+- Docker Compose started all non-Ollama services and did not start the Ollama Docker container on macOS.
+- n8n became Docker-healthy using the IPv4 healthcheck.
+- Bootstrap completed, including Qdrant `home_ai_memory` collection creation.
+- `tests/e2e-test.sh` passed with 14 checks and 0 failures.
+- Real-test logs were collected at `/private/tmp/home-ai-elite-realtest-logs`.

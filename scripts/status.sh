@@ -42,5 +42,11 @@ cd "$STACK_DIR" || exit 1
 docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || docker ps
 echo ""
 echo -e "${BOLD}Ollama Models Loaded:${NC}"
-docker compose exec -T ollama ollama list 2>/dev/null || echo "  Ollama container not running"
+if docker compose ps --services --filter status=running 2>/dev/null | grep -q '^ollama$'; then
+  docker compose exec -T ollama ollama list 2>/dev/null || echo "  Unable to list Docker Ollama models"
+elif command -v ollama >/dev/null 2>&1; then
+  ollama list 2>/dev/null || echo "  Native Ollama running, but model list unavailable"
+else
+  echo "  Ollama CLI not found"
+fi
 echo ""

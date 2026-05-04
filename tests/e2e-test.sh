@@ -20,11 +20,12 @@
 # =============================================================================
 set -euo pipefail
 
-STACK_DIR="${HOME}/home-ai-elite"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+STACK_DIR="${HOME_AI_STACK_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 QDRANT_URL="${QDRANT_URL:-http://localhost:6333}"
 N8N_URL="${N8N_URL:-http://localhost:5678}"
-OPENWEBUI_URL="${OPENWEBUI_URL:-http://localhost:3001}"
-PERPLEXICA_URL="${PERPLEXICA_URL:-http://localhost:3000}"
+OPENWEBUI_URL="${OPENWEBUI_URL:-http://localhost:3000}"
+PERPLEXICA_URL="${PERPLEXICA_URL:-http://localhost:3002}"
 SEARXNG_URL="${SEARXNG_URL:-http://localhost:8080}"
 OLLAMA_URL="${OLLAMA_URL:-http://localhost:11434}"
 
@@ -36,12 +37,12 @@ CYAN="\033[0;36m"; BOLD="\033[1m"; RESET="\033[0m"
 
 pass() {
   echo -e "${GREEN}[PASS]${RESET} $*"
-  ((PASS++))
+  ((PASS+=1))
 }
 
 fail() {
   echo -e "${RED}[FAIL]${RESET} $*"
-  ((FAIL++))
+  ((FAIL+=1))
   FAILED_CHECKS+=("$*")
 }
 
@@ -87,6 +88,13 @@ fi
 # ---------------------------------------------------------------------------
 # 3. Docker binary found
 # ---------------------------------------------------------------------------
+if ! command -v docker >/dev/null 2>&1; then
+  DOCKER_APP_CLI="/Applications/Docker.app/Contents/Resources/bin"
+  if [[ -x "${DOCKER_APP_CLI}/docker" ]]; then
+    export PATH="${DOCKER_APP_CLI}:$PATH"
+  fi
+fi
+
 if command -v docker >/dev/null 2>&1; then
   DOCKER_VERSION=$(docker --version 2>&1 | head -1)
   pass "Docker binary found: $DOCKER_VERSION"
