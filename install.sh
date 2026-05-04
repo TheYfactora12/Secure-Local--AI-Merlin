@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════╗
-# ║        HOME AI ELITE / WIZARD AI — One-Shot Installer v1.5   ║
+# ║        HOME AI ELITE / WIZARD AI — One-Shot Installer v1.6   ║
 # ║  Perplexity + Codex + Memory + Automation on your hardware  ║
 # ║  https://github.com/TheYfactora12/home-ai-elite             ║
 # ╚══════════════════════════════════════════════════════════════╝
+# CHANGELOG v1.6 (2026-05-03):
+#   BUG-10 + BUG-15: Strip depends_on:ollama from litellm, open-webui,
+#           and perplexica-backend on macOS via patch_compose_for_macos().
+#           Root cause: Docker Compose resolves depends_on before filtering
+#           the service list, so even with `docker compose up ... $SERVICES`
+#           (which excludes ollama), Compose still tries to start the ollama
+#           container to satisfy declared dependencies — causing a hang or
+#           immediate crash on macOS where the ollama service is skipped.
+#           Fix: Patch 4 in patch_compose_for_macos() uses Python to
+#           surgically remove the ollama depends_on block from all three
+#           affected services. Idempotent + no-op on Linux.
 # CHANGELOG v1.5 (2026-05-03):
 #   BUG-09: Added openhands + all service aliases to KNOWN_CONTAINERS
 #           pre-flight stale container removal list.
@@ -32,6 +43,7 @@
 #   BUG-03: Re-validate host.docker.internal bridge after macOS 26+ / Ollama 0.21+
 #   BUG-04: If GNU coreutils ships natively on future macOS, simplify stat branch
 #   BUG-02: Verify /health/readiness path on each LiteLLM major version upgrade
+#   BUG-10/15: Re-validate depends_on stripping if services add new ollama deps
 set -euo pipefail
 
 NON_INTERACTIVE="${HOME_AI_NON_INTERACTIVE:-false}"
@@ -98,8 +110,10 @@ generate_failure_report() {
     echo "=== DOCKER SERVICE STATUS ==="
     docker compose ps 2>/dev/null || echo "Docker compose not available"
     echo ""
-    echo "=== .ENV KEY NAMES (no values) ==="
-    grep -E '^[A-Z_]+=' .env 2>/dev/null | cut -d= -f1 | sed 's/$/=SET/' || echo "No .env found"
+    echo "=== .ENV KEY STATUS ==="
+    grep -E '^[A-Z_]+=' .env 2>/dev/null | while IFS='=' read -r k v; do
+      if [[ -n "$v" ]]; then echo "${k}=SET"; else echo "${k}=MISSING"; fi
+    done || echo "No .env found"
   } > "$REPORT" 2>/dev/null || true
   echo -e "\n${YELLOW}📋 Failure report saved: ${REPORT}${NC}"
   echo -e "${CYAN}→ Paste this file back to continue debugging${NC}"
@@ -110,7 +124,7 @@ trap 'EC=$?; log_to_file "[FAIL] Line ${LINENO} exit=${EC}"; \
   echo -e "${YELLOW}Full log: ${LOGFILE}${NC}"; \
   generate_failure_report' ERR
 
-log_to_file "[START] install.sh v1.5 — $(date)"
+log_to_file "[START] install.sh v1.6 — $(date)"
 
 # ── Helpers ───────────────────────────────────────────────────────────
 ensure_docker_cli() {
@@ -221,6 +235,80 @@ PYEOF
   log ".env OLLAMA_BASE_URL → http://host.docker.internal:11434"
   log_to_file "[PATCH] .env OLLAMA_BASE_URL set"
 
+  # ── Patch 4: Strip depends_on: ollama from litellm, open-webui, perplexica-backend ──
+  # BUG-10 / BUG-15 ROOT CAUSE:
+  # Docker Compose resolves depends_on BEFORE filtering the service list.
+  # Even though `docker compose up ... $SERVICES` excludes the ollama container
+  # (BUG-03 fix), Compose still tries to start it to satisfy declared dependencies
+  # in litellm, open-webui, and perplexica-backend — causing a hang or crash.
+  #
+  # Fix: remove the `ollama: condition: service_started` stanza from depends_on
+  # for those three services. The URL rewrite (Patch 2) already ensures they
+  # connect to native Ollama via host.docker.internal instead.
+  #
+  # This patch is idempotent: guarded by grep for 'depends_on:' + 'ollama:' co-occurrence.
+  # It is a no-op on Linux (this entire function returns early for non-Darwin).
+  # NOTE FOR FUTURE UPGRADES: If new services are added that depend on ollama,
+  # add them to the `services_to_patch` list in the Python block below.
+  if grep -qP 'depends_on:' "$COMPOSE_FILE" && grep -q 'ollama:' "$COMPOSE_FILE"; then
+    python3 - <<'PYEOF' "$COMPOSE_FILE"
+import sys, re
+path = sys.argv[1]
+with open(path) as f:
+    content = f.read()
+
+# Services that must NOT depend on the ollama Docker container on macOS.
+# Ollama runs natively; these services connect via host.docker.internal.
+services_to_patch = ['litellm', 'open-webui', 'perplexica-backend']
+
+for svc in services_to_patch:
+    # Match the service block's depends_on section and remove the ollama entry.
+    # Pattern: inside depends_on of target service, remove the `ollama:` key
+    # and its `condition: service_started` child line.
+    # Uses a two-step approach: find the service, then strip the ollama dep block.
+    #
+    # Before:
+    #   depends_on:
+    #     ollama:
+    #       condition: service_started
+    #     litellm:          <-- may exist for open-webui
+    #       condition: service_started
+    #
+    # After:
+    #   depends_on:
+    #     litellm:
+    #       condition: service_started
+    #
+    # If ollama is the ONLY depends_on entry, remove the entire depends_on block.
+    pattern = (
+        r'(  ' + re.escape(svc) + r':.*?)(    depends_on:\n)'
+        r'((?:      [^\n]+\n)*?)'
+        r'      ollama:\n        condition: service_started\n'
+        r'((?:      [^\n]+\n)*)'
+    )
+    def replace_dep(m):
+        pre = m.group(1)
+        dep_header = m.group(2)
+        before_ollama = m.group(3)
+        after_ollama = m.group(4)
+        remaining = before_ollama + after_ollama
+        if remaining.strip() == '':
+            # ollama was the only dep — drop the entire depends_on block
+            return pre
+        return pre + dep_header + remaining
+    content = re.sub(pattern, replace_dep, content, flags=re.DOTALL)
+
+with open(path, 'w') as f:
+    f.write(content)
+print('Patch 4 applied: depends_on:ollama removed from', ', '.join(services_to_patch))
+PYEOF
+    log "depends_on:ollama stripped from litellm, open-webui, perplexica-backend (macOS)"
+    log_to_file "[PATCH] BUG-10/BUG-15: depends_on:ollama removed for macOS services"
+  else
+    log "depends_on:ollama already patched — skipping Patch 4"
+    log_to_file "[PATCH] Patch 4 already applied — skipped"
+  fi
+
   log "docker-compose.yml patched for macOS ✔"
   log_to_file "[PASS] patch_compose_for_macos complete"
 }
@@ -236,7 +324,7 @@ header() {
   echo '  ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝'
   echo -e "${NC}"
   echo -e "  ${BOLD}Wizard AI — Your Own Perplexity + Codex + Memory${NC}"
-  echo -e "  Version 1.5  |  github.com/TheYfactora12/home-ai-elite\n"
+  echo -e "  Version 1.6  |  github.com/TheYfactora12/home-ai-elite\n"
 }
 
 header
@@ -284,11 +372,7 @@ fi
 log "Model tier selected: ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
 
 # Disk space check (cross-platform: df -k works on macOS and Linux)
-if [[ "$OS" == "Darwin" ]]; then
-  AVAIL_DISK_KB=$(df -k . | awk 'NR==2 {print $4}')
-else
-  AVAIL_DISK_KB=$(df -k . | awk 'NR==2 {print $4}')
-fi
+AVAIL_DISK_KB=$(df -k . | awk 'NR==2 {print $4}')
 AVAIL_DISK_GB=$(( AVAIL_DISK_KB / 1024 / 1024 ))
 if (( AVAIL_DISK_GB < 30 )); then
   warn "Low disk: ${AVAIL_DISK_GB} GB available. Recommend 50+ GB. Continuing..."
@@ -506,13 +590,24 @@ prompt_api_key "GITHUB_TOKEN" \
   "GitHub Personal Access Token  (OpenHands + MCP)" \
   "https://github.com/settings/tokens  [scopes: repo, read:org]"
 
-# 3d: Verify config.toml exists — required for correct Perplexica model config
+# 3d: Verify required config files exist
+# ── configs/perplexica/config.toml ──
 if [[ ! -f "configs/perplexica/config.toml" ]]; then
   err "configs/perplexica/config.toml not found. This file is required for Perplexica model configuration.
   → Run: cp configs/perplexica/config.toml.example configs/perplexica/config.toml
   → Or re-clone the repo: git clone https://github.com/TheYfactora12/home-ai-elite"
 fi
 log "configs/perplexica/config.toml found ✔"
+
+# ── BUG-17 FIX: configs/litellm/config.yaml pre-flight guard ──────────
+# Without this check, a missing config causes LiteLLM to crash on start,
+# and wait_for_service then burns the full 120s timeout with no clear error.
+if [[ ! -f "configs/litellm/config.yaml" ]]; then
+  err "configs/litellm/config.yaml not found. This file is required for LiteLLM model routing.
+  → Run: cp configs/litellm/config.yaml.example configs/litellm/config.yaml
+  Then edit it to match your model setup."
+fi
+log "configs/litellm/config.yaml found ✔"
 
 # 3e: Generate local TLS certificate for nginx if needed
 if [[ -f "scripts/generate-certs.sh" ]]; then
@@ -628,6 +723,7 @@ KNOWN_CONTAINERS=(
   n8n
   qdrant
   # Infrastructure
+  nginx
   nginx-proxy
   swarm-dashboard
   watchtower
@@ -674,8 +770,10 @@ wait_for_service() {
   return 0
 }
 
-# Wait for native Ollama on macOS
-wait_for_service "Ollama (native)" "http://localhost:11434" 90
+# Wait for native Ollama on macOS (Step 5 — before compose services come up)
+if [[ "$OS" == "Darwin" ]]; then
+  wait_for_service "Ollama (native)" "http://localhost:11434" 90
+fi
 
 log_to_file "[PASS] STEP 5: Docker services up"
 
@@ -683,13 +781,17 @@ log_to_file "[PASS] STEP 5: Docker services up"
 step "Waiting for Services to be Ready"
 log_to_file "[STEP 6] Health checks"
 
+# BUG-11 FIX: Single Ollama health check — removed duplicate from Step 5.
+# On macOS, Ollama is already verified above before compose starts.
+# On Linux, Ollama runs in Docker and is checked here once.
 wait_for_service "Ollama"        "http://localhost:11434"           60
 # BUG-02 FIX: Use /health/readiness — does NOT make live LLM calls.
 wait_for_service "LiteLLM"       "http://localhost:4000/health/readiness" 120
 wait_for_service "Open WebUI"    "http://localhost:3000"            90
 wait_for_service "SearXNG"       "http://localhost:8080"            60
 wait_for_service "Qdrant"        "http://localhost:6333/healthz"    60
-wait_for_service "n8n"           "http://localhost:5678"            60
+# BUG-16 FIX: Use /healthz endpoint now that n8n healthcheck is defined in compose.
+wait_for_service "n8n"           "http://localhost:5678/healthz"    90
 
 log_to_file "[PASS] STEP 6: All health checks complete"
 
@@ -701,13 +803,17 @@ FIRST_BOOT_FLAG="${SCRIPT_DIR}/.wizard-bootstrapped"
 if [[ ! -f "$FIRST_BOOT_FLAG" ]]; then
   if [[ -f "scripts/bootstrap.sh" ]]; then
     log "Running first-boot bootstrap (Qdrant collections + n8n workflows)..."
+    # BUG-18 FIX: Verbose failure messaging so user knows exactly what to do.
     if HOME_AI_STACK_DIR="${SCRIPT_DIR}" bash "${SCRIPT_DIR}/scripts/bootstrap.sh"; then
       touch "$FIRST_BOOT_FLAG"
       log "Bootstrap complete"
       log_to_file "[PASS] STEP 7: Bootstrap complete"
     else
-      warn "Bootstrap reported issues — run manually after install: bash scripts/bootstrap.sh"
-      log_to_file "[WARN] Bootstrap reported issues"
+      warn "💥 Bootstrap reported issues — check log: ${LOGFILE}"
+      warn "Re-run manually: bash scripts/bootstrap.sh"
+      warn "The AI stack WILL start but Qdrant collections and n8n workflows may be missing."
+      warn "Memory/RAG features will not work until bootstrap completes successfully."
+      log_to_file "[WARN] STEP 7: Bootstrap failed — manual action required"
     fi
   else
     warn "scripts/bootstrap.sh not found — run manually after install"
@@ -825,7 +931,7 @@ log_to_file "[DONE] install.sh completed successfully"
 
 echo ""
 echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}${BOLD}║     WIZARD AI IS READY  ✓  v1.5                         ║${NC}"
+echo -e "${GREEN}${BOLD}║     WIZARD AI IS READY  ✓  v1.6                         ║${NC}"
 echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  ${BOLD}Your Services:${NC}"
