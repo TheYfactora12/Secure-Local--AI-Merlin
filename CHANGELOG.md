@@ -15,6 +15,76 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.6.0] — 2026-05-03 🎉 First Clean macOS Smoke Test
+
+> **Milestone:** First end-to-end clean install on macOS with native Ollama.
+> All 10 services green. 18 bugs identified, documented, and fixed in a single session.
+
+### 🏆 Verified
+- **First clean macOS full-stack install** — all 10 services up and healthy
+  - open-webui ✅ · n8n ✅ · litellm ✅ · perplexica-frontend ✅ · perplexica-backend ✅
+  - openhands ✅ · searxng ✅ · qdrant ✅ · swarm-dashboard ✅ · watchtower ✅
+- Native Ollama (Metal GPU) — no Docker Ollama container on macOS
+- Wizard HQ dashboard live at :8888 with task routing log
+- Base-tier models pulled successfully (qwen2.5:7b, qwen2.5-coder:7b, deepseek-r1:7b)
+
+### Fixed (BUG-10 / Issue #11)
+- `litellm`, `open-webui`, `perplexica-backend` declared `depends_on: ollama` — hung every macOS install because Docker Ollama container is never started on macOS. Patch 4 in `patch_compose_for_macos()` strips this dependency at install time via Python3 YAML surgery. Idempotent, macOS-only.
+
+### Fixed (BUG-11 / Issue #12)
+- `wait_for_service` called twice for Ollama — once unconditionally (crashed Linux via `trap ERR`) and once in Docker path on macOS. Each call now wrapped in correct OS guard.
+
+### Fixed (BUG-12 / Issue #13)
+- False-positive `.env` key validation — `set_env_key()` triggered insecure-default warning on legitimate generated secrets that contained the word `change`. Regex tightened to exact placeholder match only.
+
+### Fixed (BUG-13 / Issue #14)
+- `.bak` files from `sed -i .bak` committed to repo — potential secret leakage. Added `*.bak`, `**/*.bak` to `.gitignore`. All `sed -i .bak` calls now followed by `rm -f *.bak`.
+
+### Fixed (BUG-14 / Issue #15)
+- `fail2ban` `/var/log` mount printed Docker Desktop warning on macOS. Added `nocopy` flag to suppress.
+
+### Fixed (BUG-15 / Issue #16)
+- `open-webui` same `depends_on: ollama` root cause as BUG-10. Covered by same Patch 4.
+
+### Fixed (BUG-16 / Issue #17)
+- `n8n` had no Docker healthcheck — nginx `depends_on: n8n` was unconditional. Added `/healthz` healthcheck to n8n; nginx now waits for `service_healthy`.
+
+### Fixed (BUG-17 / Issue #18)
+- No `litellm` config pre-flight — installer hard-stopped on fresh clones if `configs/litellm/config.yaml` was missing. Now auto-copies from `.example` with a warning, never hard-stops.
+
+### Fixed (BUG-18 / Issue #19)
+- Bootstrap failure messaging was silent — failures in `scripts/bootstrap.sh` produced no user-visible output. Added explicit error messages, exit codes, and log-to-file on every failure path.
+
+### Fixed (GAP-02)
+- Missing `perplexica/config.toml` hard-stopped the installer. Now auto-copies from `.example` or writes a safe inline fallback. Never hard-stops on fresh clone.
+
+### Fixed (ARCH)
+- `docker-compose.yml` macOS safety — compose file is now macOS-safe by default without requiring runtime patch. `depends_on: ollama` blocks removed natively. Resolves Issue #20.
+
+### Added
+- `docs/CODEX_CONTEXT.md` — master context prompt for drift-free Codex/AI session resume
+- `N8N_SECURE_COOKIE=false` — added to `.env.example` to prevent n8n cookie block on local `http://` access
+- Native Ollama brain cooldown controls in `cli/wizard`
+- LiteLLM default aliases now route to installed base-tier models (not hardcoded mid/high tier)
+- Wizard HQ dashboard model list aligned to v1.6 base tier
+- Validation scripts updated for native macOS Ollama (no Docker Ollama dependency)
+- Config examples added for clean-clone test readiness
+- ShellCheck SC2155 CI fix — failure report path variable declaration
+- Issues #6–#8, #20–#22 filed from roadmap and session findings
+
+### Session Log (2026-05-03)
+| Time | Event |
+|------|-------|
+| ~20:00 | Repo audit → 18 bugs mapped → Issues #11–#19 filed |
+| ~21:00 | Reference repo research (mhajder, coleam00, n8n-io starter kit) |
+| ~22:00 | Master context prompt built and committed |
+| ~22:20 | **First clean macOS install — 10/10 services green** |
+| ~22:27 | Wizard HQ dashboard live, task routing confirmed |
+| ~22:30 | n8n secure cookie fix identified and applied |
+| ~23:18 | Full stack analysis — Mr. Ora plan finalized |
+
+---
+
 ## [0.9.1] — 2026-05-02
 
 ### Security (install.sh v0.4.1)
