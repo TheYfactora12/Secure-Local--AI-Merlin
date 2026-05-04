@@ -1,0 +1,434 @@
+searxng     | SearXNG 2026.5.2-aefc3c316
+searxng     | Updating certificates in /etc/ssl/certs...
+searxng     | 0 added, 0 removed; done.
+searxng     | Running hooks in /etc/ca-certificates/update.d...
+searxng     | done.
+searxng     | [INFO] Starting granian (main PID: 1)
+searxng     | [INFO] Listening at: http://:::8080
+searxng     | [INFO] Spawning worker-1 with PID: 928
+searxng     | 2026-05-04 01:45:42,232 ERROR:searx.engines: loading engine ahmia failed: set engine to inactive!
+searxng     | 2026-05-04 01:45:42,513 ERROR:searx.engines: Cannot load engine "stackoverflow"
+searxng     | Traceback (most recent call last):
+searxng     |   File "/usr/local/searxng/searx/engines/__init__.py", line 123, in load_engine
+searxng     |     engine = load_module(module_name + '.py', ENGINE_DIR)
+searxng     |   File "/usr/local/searxng/searx/utils.py", line 437, in load_module
+searxng     |     spec.loader.exec_module(module)
+searxng     |     ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+searxng     |   File "<frozen importlib._bootstrap_external>", line 755, in exec_module
+searxng     |   File "<frozen importlib._bootstrap_external>", line 892, in get_code
+searxng     |   File "<frozen importlib._bootstrap_external>", line 950, in get_data
+searxng     | FileNotFoundError: [Errno 2] No such file or directory: '/usr/local/searxng/searx/engines/stackoverflow.py'
+searxng     | 2026-05-04 01:45:42,516 ERROR:searx.engines: loading engine stackoverflow failed: set engine to inactive!
+searxng     | 2026-05-04 01:45:42,533 ERROR:searx.engines: loading engine torch failed: set engine to inactive!
+searxng     | [INFO] Started worker-1
+searxng     | 2026-05-04 01:45:43,005 ERROR:searx.searx.search.processor: Init method of engine wikidata failed due to an exception.
+searxng     | Traceback (most recent call last):
+searxng     |   File "/usr/local/searxng/searx/search/processors/abstract.py", line 155, in init_engine
+searxng     |     init_ok = self.engine.init(eng_setting)
+searxng     |   File "/usr/local/searxng/searx/engines/wikidata.py", line 805, in init
+searxng     |     name = result['name']['value']
+searxng     |            ~~~~~~^^^^^^^^
+searxng     | KeyError: 'name'
+searxng     | 2026-05-04 01:45:43,015 ERROR:searx.search.processors: can't register engine processor: wikidata (init failed)
+searxng     | 2026-05-04 01:46:33,311 ERROR:searx.botdetection: X-Forwarded-For nor X-Real-IP header is set!
+watchtower  | time="2026-05-03T21:45:40-04:00" level=info msg="Watchtower 1.7.1"
+watchtower  | time="2026-05-03T21:45:40-04:00" level=info msg="Using no notifications"
+watchtower  | time="2026-05-03T21:45:40-04:00" level=info msg="Only checking containers using enable label"
+watchtower  | time="2026-05-03T21:45:40-04:00" level=info msg="Scheduling first run: 2026-05-04 03:00:00 -0400 EDT"
+watchtower  | time="2026-05-03T21:45:40-04:00" level=info msg="Note that the first check will be performed in 5 hours, 14 minutes, 19 seconds"
+litellm     | INFO:     Started server process [1]
+litellm     | INFO:     Waiting for application startup.
+litellm     | 
+litellm     |    ██╗     ██╗████████╗███████╗██╗     ██╗     ███╗   ███╗
+litellm     |    ██║     ██║╚══██╔══╝██╔════╝██║     ██║     ████╗ ████║
+litellm     |    ██║     ██║   ██║   █████╗  ██║     ██║     ██╔████╔██║
+litellm     |    ██║     ██║   ██║   ██╔══╝  ██║     ██║     ██║╚██╔╝██║
+litellm     |    ███████╗██║   ██║   ███████╗███████╗███████╗██║ ╚═╝ ██║
+litellm     |    ╚══════╝╚═╝   ╚═╝   ╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝
+litellm     | 
+litellm     | INFO:     Application startup complete.
+litellm     | INFO:     Uvicorn running on http://0.0.0.0:4000 (Press CTRL+C to quit)
+litellm     | 
+litellm     | [1;37m#------------------------------------------------------------#[0m
+litellm     | [1;37m#                                                            #[0m
+litellm     | [1;37m#            'The thing I wish you improved is...'            #[0m
+litellm     | [1;37m#        https://github.com/BerriAI/litellm/issues/new        #[0m
+litellm     | [1;37m#                                                            #[0m
+litellm     | [1;37m#------------------------------------------------------------#[0m
+litellm     | 
+litellm     |  Thank you for using LiteLLM! - Krrish & Ishaan
+litellm     | 
+litellm     | 
+litellm     | 
+litellm     | [1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+litellm     | 
+litellm     | 
+litellm     | [32mLiteLLM: Proxy initialized with Config, Set models:[0m
+litellm     | [32m    llama3[0m
+litellm     | [32m    qwen-coder[0m
+litellm     | [32m    qwen32b[0m
+litellm     | [32m    qwen7b[0m
+litellm     | [32m    deepseek[0m
+litellm     | [32m    mistral[0m
+litellm     | [32m    embeddings[0m
+litellm     | [32m    swarm-tiny[0m
+litellm     | [32m    swarm-tiny[0m
+litellm     | [32m    swarm-medium[0m
+litellm     | [32m    swarm-medium[0m
+litellm     | [32m    swarm-heavy[0m
+litellm     | [32m    swarm-heavy[0m
+litellm     | [32m    swarm-heavy[0m
+litellm     | [32m    swarm-code[0m
+litellm     | [32m    swarm-code[0m
+litellm     | INFO:     172.67.68.102:24816 - "GET /health/readiness HTTP/1.1" 200 OK
+litellm     | INFO:     172.67.68.102:39071 - "GET / HTTP/1.1" 200 OK
+litellm     | INFO:     172.67.68.102:61862 - "GET /health/readiness HTTP/1.1" 200 OK
+litellm     | INFO:     172.67.68.102:50137 - "GET / HTTP/1.1" 200 OK
+open-webui  | INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+open-webui  | INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade  -> 7e5b5dc7342b, init
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 7e5b5dc7342b -> ca81bd47c050, Add config table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade ca81bd47c050 -> c0fbf31ca0db, Update file table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade c0fbf31ca0db -> 6a39f3d8e55c, Add knowledge table
+open-webui  | Creating knowledge table
+open-webui  | Migrating data from document table to knowledge table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 6a39f3d8e55c -> 242a2047eae0, Update chat table
+open-webui  | Converting 'chat' column to JSON
+open-webui  | Renaming 'chat' column to 'old_chat'
+open-webui  | Adding new 'chat' column of type JSON
+open-webui  | Dropping 'old_chat' column
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 242a2047eae0 -> 1af9b942657b, Migrate tags
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 1af9b942657b -> 3ab32c4b8f59, Update tags
+open-webui  | Primary Key: {'name': None, 'constrained_columns': []}
+open-webui  | Unique Constraints: [{'name': 'uq_id_user_id', 'column_names': ['id', 'user_id']}]
+open-webui  | Indexes: [{'name': 'tag_id', 'column_names': ['id'], 'unique': 1, 'dialect_options': {}}]
+open-webui  | Creating new primary key with 'id' and 'user_id'.
+open-webui  | Dropping unique constraint: uq_id_user_id
+open-webui  | Dropping unique index: tag_id
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 3ab32c4b8f59 -> c69f45358db4, Add folder table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade c69f45358db4 -> c29facfe716b, Update file table path
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade c29facfe716b -> af906e964978, Add feedback table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade af906e964978 -> 4ace53fd72c8, Update folder table and change DateTime to BigInteger for timestamp fields
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 4ace53fd72c8 -> 922e7a387820, Add group table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 922e7a387820 -> 57c599a3cb57, Add channel table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 57c599a3cb57 -> 7826ab40b532, Update file table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 7826ab40b532 -> 3781e22d8b01, Update message & channel tables
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 3781e22d8b01 -> 9f0c9cd09105, Add note table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 9f0c9cd09105 -> d31026856c01, Update folder table data
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade d31026856c01 -> 018012973d35, Add indexes
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 018012973d35 -> 3af16a1c9fb6, update user table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 3af16a1c9fb6 -> 38d63c18f30f, Add oauth_session table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 38d63c18f30f -> a5c220713937, Add reply_to_id column to message
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade a5c220713937 -> 37f288994c47, add_group_member_table
+open-webui  | []
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 37f288994c47 -> 2f1211949ecc, Update messages and channel member table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 2f1211949ecc -> b10670c03dd5, Update user table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade b10670c03dd5 -> 90ef40d4714e, Update channel and channel members table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 90ef40d4714e -> 3e0e00844bb0, Add knowledge_file table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 3e0e00844bb0 -> 6283dc0e4d8d, Add channel file table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 6283dc0e4d8d -> 81cc2ce44d79, Update channel file and knowledge table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 81cc2ce44d79 -> c440947495f3, Add chat_file table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade c440947495f3 -> 374d2f66af06, Add prompt history table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 374d2f66af06 -> 8452d01d26d7, Add chat_message table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade 8452d01d26d7 -> f1e2d3c4b5a6, Add access_grant table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade f1e2d3c4b5a6 -> a1b2c3d4e5f6, Add skill table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade a1b2c3d4e5f6 -> b2c3d4e5f6a7, add scim column to user table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade b2c3d4e5f6a7 -> a3dd5bedd151, Add tasks and summary columns to chat table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade a3dd5bedd151 -> d4e5f6a7b8c9, add automation tables
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade d4e5f6a7b8c9 -> b7c8d9e0f1a2, add last_read_at to chat
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade b7c8d9e0f1a2 -> e1f2a3b4c5d6, Add is_pinned to note table
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade e1f2a3b4c5d6 -> c1d2e3f4a5b6, Add shared_chat table and migrate existing shares
+open-webui  | INFO  [alembic.runtime.migration] Running upgrade c1d2e3f4a5b6 -> 56359461a091, add calendar tables
+open-webui  | WARNI [open_webui.env] 
+open-webui  | 
+open-webui  | WARNING: CORS_ALLOW_ORIGIN IS SET TO '*' - NOT RECOMMENDED FOR PRODUCTION DEPLOYMENTS.
+open-webui  | 
+open-webui  | WARNI [langchain_community.utils.user_agent] USER_AGENT environment variable not set, consider setting it to identify your requests.
+open-webui  | 
+open-webui  |  ██████╗ ██████╗ ███████╗███╗   ██╗    ██╗    ██╗███████╗██████╗ ██╗   ██╗██╗
+open-webui  | ██╔═══██╗██╔══██╗██╔════╝████╗  ██║    ██║    ██║██╔════╝██╔══██╗██║   ██║██║
+open-webui  | ██║   ██║██████╔╝█████╗  ██╔██╗ ██║    ██║ █╗ ██║█████╗  ██████╔╝██║   ██║██║
+open-webui  | ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║    ██║███╗██║██╔══╝  ██╔══██╗██║   ██║██║
+open-webui  | ╚██████╔╝██║     ███████╗██║ ╚████║    ╚███╔███╔╝███████╗██████╔╝╚██████╔╝██║
+open-webui  |  ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝     ╚══╝╚══╝ ╚══════╝╚═════╝  ╚═════╝ ╚═╝
+open-webui  | 
+open-webui  | 
+open-webui  | v0.9.2 - building the best AI user interface.
+open-webui  | 
+open-webui  | https://github.com/open-webui/open-webui
+open-webui  | 
+open-webui  | Fetching 30 files:   0%|          | 0/30 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN [REDACTED] enable higher rate limits and faster downloads.
+open-webui  | WARNI [huggingface_hub.utils._http] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN [REDACTED] enable higher rate limits and faster downloads.
+open-webui  | Fetching 30 files:  20%|██        | 6/30 [00:00<00:00, 32.17it/s]Fetching 30 files:  20%|██        | 6/30 [00:10<00:00, 32.17it/s]Fetching 30 files:  30%|███       | 9/30 [00:15<00:43,  2.09s/it]Fetching 30 files:  73%|███████▎  | 22/30 [00:16<00:05,  1.53it/s]Fetching 30 files:  80%|████████  | 24/30 [00:17<00:03,  1.63it/s]Fetching 30 files:  87%|████████▋ | 26/30 [00:18<00:02,  1.58it/s]Fetching 30 files: 100%|██████████| 30/30 [00:18<00:00,  1.62it/s]
+open-webui  | Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 3815.23it/s]
+open-webui  | [1mBertModel LOAD REPORT[0m from: /app/backend/data/cache/embedding/models/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/c9745ed1d9f207416be6d2e6f8de32d1f16199bf
+open-webui  | Key                     | Status     |  | 
+open-webui  | ------------------------+------------+--+-
+open-webui  | embeddings.position_ids | UNEXPECTED |  | 
+open-webui  | 
+open-webui  | Notes:
+open-webui  | - UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+open-webui  | INFO:     Started server process [1]
+open-webui  | INFO:     Waiting for application startup.
+open-webui  | 2026-05-04 01:46:31.271 | INFO     | open_webui.utils.logger:start_logger:194 - GLOBAL_LOG_LEVEL: INFO
+open-webui  | 2026-05-04 01:46:31.275 | INFO     | open_webui.main:lifespan:659 - Installing external dependencies of functions and tools...
+open-webui  | 2026-05-04 01:46:31.456 | INFO     | open_webui.utils.plugin:install_frontmatter_requirements:407 - No requirements found in frontmatter.
+open-webui  | 2026-05-04 01:46:31.458 | INFO     | open_webui.utils.automations:scheduler_worker_loop:172 - Scheduler worker started (poll interval: 10s)
+open-webui  | 2026-05-04 01:46:33.189 | INFO     | uvicorn.protocols.http.httptools_impl:send:483 - 172.67.68.102:43668 - "GET / HTTP/1.1" 200
+open-webui  | 2026-05-04 01:46:57.792 | INFO     | uvicorn.protocols.http.httptools_impl:send:483 - 172.67.68.102:28399 - "GET / HTTP/1.1" 200
+open-webui  | 2026-05-04 01:47:03.788 | INFO     | uvicorn.protocols.http.httptools_impl:send:483 - 172.67.68.102:23101 - "GET / HTTP/1.1" 200
+open-webui  | 2026-05-04 01:48:55.599 | INFO     | uvicorn.protocols.http.httptools_impl:send:483 - 172.67.68.102:53281 - "GET / HTTP/1.1" 200
+open-webui  | 2026-05-04 01:48:56.353 | INFO     | uvicorn.protocols.http.httptools_impl:send:483 - 172.67.68.102:46333 - "GET / HTTP/1.1" 200
+qdrant      |            _                 _    
+qdrant              |   __ _  __| |_ __ __ _ _ __ | |_  
+qdrant              |  / _` |/ _` | '__/ _` | '_ \| __| 
+qdrant              | | (_| | (_| | | | (_| | | | | |_  
+qdrant              |  \__, |\__,_|_|  \__,_|_| |_|\__| 
+perplexica-backend  | yarn run v1.22.22
+perplexica-backend  | $ npm run db:push && node dist/app.js
+perplexica-backend  | 
+perplexica-backend  | > perplexica-backend@1.10.0-rc3 db:push
+perplexica-backend  | > drizzle-kit push sqlite
+perplexica-backend  | 
+perplexica-backend  | drizzle-kit: v0.22.7
+perplexica-backend  | drizzle-orm: v0.31.2
+perplexica-backend  | 
+openhands            | Starting OpenHands...
+openhands            | Running OpenHands as root
+openhands            | [92m01:46:00 - openhands:INFO[0m: server_config.py:55 - Using config class None
+openhands            | /app/.venv/lib/python3.13/site-packages/fastmcp/server/server.py:255: DeprecationWarning: Providing `stateless_http` when creating a server is deprecated. Provide it when calling `run` or as a global setting instead.
+openhands            |   self._handle_deprecated_settings(
+qdrant              |     |_|                           
+qdrant               | 
+qdrant               | Version: 1.17.1, build: eabee371
+qdrant               | Access web UI at http://localhost:6333/dashboard
+qdrant               | 
+qdrant               | 2026-05-04T01:45:36.494711Z  INFO storage::content_manager::consensus::persistent: Initializing new raft state at ./storage/raft_state.json
+qdrant               | 2026-05-04T01:45:36.586100Z  INFO qdrant: Distributed mode disabled
+qdrant               | 2026-05-04T01:45:36.586153Z  INFO qdrant: Telemetry reporting enabled, id: 68cf0de9-7720-4bda-b3b8-d9e2ec450902
+qdrant               | 2026-05-04T01:45:36.692948Z  INFO qdrant::actix: REST transport settings: keep_alive=5s, client_request_timeout=5s, client_disconnect_timeout=5s
+qdrant               | 2026-05-04T01:45:36.693021Z  INFO qdrant::actix: TLS disabled for REST API
+qdrant               | 2026-05-04T01:45:36.693090Z  INFO qdrant::actix: Qdrant HTTP listening on 6333
+nginx               | /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+nginx                | /docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+nginx                | /docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+nginx                | 10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf
+nginx                | 10-listen-on-ipv6-by-default.sh: info: Enabled listen on IPv6 in /etc/nginx/conf.d/default.conf
+nginx                | /docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+perplexica-frontend  | yarn run v1.22.22
+perplexica-frontend  | $ next start
+qdrant               | 2026-05-04T01:45:36.693097Z  INFO actix_server::builder: starting 11 workers
+qdrant               | 2026-05-04T01:45:36.693105Z  INFO actix_server::server: Actix runtime found; starting in Actix runtime
+nginx                | /docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+nginx                | /docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+nginx                | /docker-entrypoint.sh: Configuration complete; ready for start up
+qdrant               | 2026-05-04T01:45:36.693110Z  INFO actix_server::server: starting service: "actix-web-service-0.0.0.0:6333", workers: 11, listening on: 0.0.0.0:6333
+qdrant               | 2026-05-04T01:45:36.715681Z  INFO qdrant::tonic: Qdrant gRPC listening on 6334
+qdrant               | 2026-05-04T01:45:36.715754Z  INFO qdrant::tonic: TLS disabled for gRPC API
+qdrant               | 2026-05-04T01:46:35.545422Z  INFO actix_web::middleware::logger: 172.67.68.102 "GET /collections HTTP/1.1" 200 59 "-" "curl/8.7.1" 0.000091
+qdrant               | 2026-05-04T01:46:35.563672Z  INFO actix_web::middleware::logger: 172.67.68.102 "GET /collections/home_ai_memory HTTP/1.1" 404 92 "-" "curl/8.7.1" 0.000164
+qdrant               | 2026-05-04T01:46:35.581837Z  INFO storage::content_manager::toc::collection_meta_ops: Creating collection home_ai_memory
+qdrant               | 2026-05-04T01:46:35.642498Z  INFO actix_web::middleware::logger: 172.67.68.102 "PUT /collections/home_ai_memory HTTP/1.1" 200 48 "-" "curl/8.7.1" 0.060933
+openhands            | INFO:     Started server process [8]
+openhands            | INFO:     Waiting for application startup.
+perplexica-frontend  |    ▲ Next.js 14.1.4
+perplexica-frontend  |    - Local:        http://localhost:3000
+perplexica-frontend  | 
+perplexica-backend   | No config path provided, using default path
+perplexica-frontend  |  ✓ Ready in 1486ms
+perplexica-backend   | Reading config file '/home/perplexica/drizzle.config.ts'
+perplexica-backend   | [⣷] Pulling schema from database...
+perplexica-backend   | [2K[1G[✓] Pulling schema from database...
+perplexica-backend   | [✓] Changes applied
+openhands            | INFO:mcp.server.streamable_http_manager:StreamableHTTP session manager started
+openhands            | INFO:alembic.runtime.migration:Context impl SQLiteImpl.
+openhands            | INFO:alembic.runtime.migration:Will assume non-transactional DDL.
+qdrant               | 2026-05-04T01:47:05.469677Z  INFO actix_web::middleware::logger: 172.67.68.102 "GET /collections/home_ai_memory HTTP/1.1" 200 833 "-" "curl/8.7.1" 0.001087
+qdrant               | 2026-05-04T01:48:56.330800Z  INFO actix_web::middleware::logger: 172.67.68.102 "GET /collections HTTP/1.1" 200 87 "-" "curl/8.7.1" 0.000158
+openhands            | INFO:alembic.runtime.migration:Running upgrade  -> 001, Sync DB with Models
+qdrant               | 2026-05-04T01:48:56.458971Z  INFO actix_web::middleware::logger: 172.67.68.102 "GET /collections/home_ai_memory HTTP/1.1" 200 833 "-" "curl/8.7.1" 0.000883
+n8n                  | Permissions 0644 for n8n settings file /home/node/.n8n/config are too wide. This is ignored for now, but in the future n8n will attempt to change the permissions automatically. To automatically enforce correct permissions now set N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true (recommended), or turn this check off set N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false.
+n8n                  | Initializing n8n process
+n8n                  | Error tracking disabled because this release is older than 6 weeks.
+n8n                  | n8n ready on 0.0.0.0, port 5678
+n8n                  | Migrations in progress, please do NOT stop the process.
+n8n                  | Starting migration InitialMigration1588102412422
+n8n                  | Finished migration InitialMigration1588102412422
+n8n                  | Starting migration WebhookModel1592445003908
+n8n                  | Finished migration WebhookModel1592445003908
+perplexica-backend   | npm notice
+perplexica-backend   | npm notice New major version of npm available! 10.8.2 -> 11.13.0
+n8n                  | Starting migration CreateIndexStoppedAt1594825041918
+n8n                  | Finished migration CreateIndexStoppedAt1594825041918
+n8n                  | Starting migration MakeStoppedAtNullable1607431743769
+n8n                  | Finished migration MakeStoppedAtNullable1607431743769
+n8n                  | Starting migration AddWebhookId1611071044839
+n8n                  | Finished migration AddWebhookId1611071044839
+openhands            | INFO:     Application startup complete.
+openhands            | INFO:     Uvicorn running on http://0.0.0.0:3000 (Press CTRL+C to quit)
+openhands            | INFO:     172.67.68.102:34469 - "GET / HTTP/1.1" 200 OK
+openhands            | INFO:     172.67.68.102:22743 - "GET / HTTP/1.1" 200 OK
+perplexica-backend   | npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.13.0
+perplexica-backend   | npm notice To update run: npm install -g npm@11.13.0
+perplexica-backend   | npm notice
+perplexica-backend   | [32minfo[39m: WebSocket server started on port 3001
+perplexica-backend   | [32minfo[39m: Server is running on port 3001
+n8n                  | Starting migration CreateTagEntity1617213344594
+n8n                  | Finished migration CreateTagEntity1617213344594
+n8n                  | Starting migration UniqueWorkflowNames1620821879465
+n8n                  | Finished migration UniqueWorkflowNames1620821879465
+n8n                  | Starting migration AddWaitColumn1621707690587
+n8n                  | Finished migration AddWaitColumn1621707690587
+n8n                  | Starting migration UpdateWorkflowCredentials1630330987096
+n8n                  | Finished migration UpdateWorkflowCredentials1630330987096
+n8n                  | Starting migration AddExecutionEntityIndexes1644421939510
+n8n                  | Finished migration AddExecutionEntityIndexes1644421939510
+n8n                  | Starting migration CreateUserManagement1646992772331
+n8n                  | Finished migration CreateUserManagement1646992772331
+n8n                  | Starting migration LowerCaseUserEmail1648740597343
+n8n                  | Finished migration LowerCaseUserEmail1648740597343
+n8n                  | Starting migration CommunityNodes1652254514001
+n8n                  | Finished migration CommunityNodes1652254514001
+n8n                  | Starting migration AddUserSettings1652367743993
+n8n                  | Finished migration AddUserSettings1652367743993
+n8n                  | Starting migration AddAPIKeyColumn1652905585850
+n8n                  | Finished migration AddAPIKeyColumn1652905585850
+n8n                  | Starting migration IntroducePinData1654089251344
+n8n                  | Finished migration IntroducePinData1654089251344
+n8n                  | Starting migration AddNodeIds1658930531669
+n8n                  | Finished migration AddNodeIds1658930531669
+n8n                  | Starting migration AddJsonKeyPinData1659888469333
+n8n                  | Finished migration AddJsonKeyPinData1659888469333
+n8n                  | Starting migration CreateCredentialsUserRole1660062385367
+n8n                  | Finished migration CreateCredentialsUserRole1660062385367
+n8n                  | Starting migration CreateWorkflowsEditorRole1663755770892
+n8n                  | Finished migration CreateWorkflowsEditorRole1663755770892
+n8n                  | Starting migration WorkflowStatistics1664196174000
+n8n                  | Finished migration WorkflowStatistics1664196174000
+n8n                  | Starting migration CreateCredentialUsageTable1665484192211
+n8n                  | Finished migration CreateCredentialUsageTable1665484192211
+n8n                  | Starting migration RemoveCredentialUsageTable1665754637024
+n8n                  | Finished migration RemoveCredentialUsageTable1665754637024
+n8n                  | Starting migration AddWorkflowVersionIdColumn1669739707124
+n8n                  | Finished migration AddWorkflowVersionIdColumn1669739707124
+n8n                  | Starting migration AddTriggerCountColumn1669823906993
+n8n                  | Finished migration AddTriggerCountColumn1669823906993
+n8n                  | Starting migration MessageEventBusDestinations1671535397530
+n8n                  | Finished migration MessageEventBusDestinations1671535397530
+n8n                  | Starting migration RemoveWorkflowDataLoadedFlag1671726148419
+n8n                  | Finished migration RemoveWorkflowDataLoadedFlag1671726148419
+n8n                  | Starting migration DeleteExecutionsWithWorkflows1673268682475
+n8n                  | Finished migration DeleteExecutionsWithWorkflows1673268682475
+n8n                  | Starting migration AddStatusToExecutions1674138566000
+n8n                  | Finished migration AddStatusToExecutions1674138566000
+n8n                  | Starting migration CreateLdapEntities1674509946020
+n8n                  | Finished migration CreateLdapEntities1674509946020
+n8n                  | Starting migration PurgeInvalidWorkflowConnections1675940580449
+n8n                  | Finished migration PurgeInvalidWorkflowConnections1675940580449
+n8n                  | Starting migration MigrateExecutionStatus1676996103000
+n8n                  | Finished migration MigrateExecutionStatus1676996103000
+n8n                  | Starting migration UpdateRunningExecutionStatus1677237073720
+n8n                  | Finished migration UpdateRunningExecutionStatus1677237073720
+n8n                  | Starting migration CreateVariables1677501636752
+n8n                  | Finished migration CreateVariables1677501636752
+n8n                  | Starting migration CreateExecutionMetadataTable1679416281777
+n8n                  | Finished migration CreateExecutionMetadataTable1679416281777
+n8n                  | Starting migration AddUserActivatedProperty1681134145996
+n8n                  | Finished migration AddUserActivatedProperty1681134145996
+n8n                  | Starting migration RemoveSkipOwnerSetup1681134145997
+n8n                  | Finished migration RemoveSkipOwnerSetup1681134145997
+n8n                  | Starting migration MigrateIntegerKeysToString1690000000002
+n8n                  | Finished migration MigrateIntegerKeysToString1690000000002
+n8n                  | Starting migration SeparateExecutionData1690000000010
+n8n                  | Finished migration SeparateExecutionData1690000000010
+n8n                  | Starting migration FixMissingIndicesFromStringIdMigration1690000000020
+n8n                  | Finished migration FixMissingIndicesFromStringIdMigration1690000000020
+n8n                  | Starting migration RemoveResetPasswordColumns1690000000030
+n8n                  | Finished migration RemoveResetPasswordColumns1690000000030
+n8n                  | Starting migration AddMfaColumns1690000000030
+n8n                  | Finished migration AddMfaColumns1690000000030
+n8n                  | Starting migration CreateWorkflowNameIndex1691088862123
+n8n                  | Finished migration CreateWorkflowNameIndex1691088862123
+n8n                  | Starting migration CreateWorkflowHistoryTable1692967111175
+n8n                  | Finished migration CreateWorkflowHistoryTable1692967111175
+n8n                  | Starting migration ExecutionSoftDelete1693491613982
+n8n                  | Finished migration ExecutionSoftDelete1693491613982
+n8n                  | Starting migration DisallowOrphanExecutions1693554410387
+n8n                  | Finished migration DisallowOrphanExecutions1693554410387
+n8n                  | Starting migration AddWorkflowMetadata1695128658538
+n8n                  | Finished migration AddWorkflowMetadata1695128658538
+n8n                  | Starting migration ModifyWorkflowHistoryNodesAndConnections1695829275184
+n8n                  | Finished migration ModifyWorkflowHistoryNodesAndConnections1695829275184
+n8n                  | Starting migration AddGlobalAdminRole1700571993961
+n8n                  | Finished migration AddGlobalAdminRole1700571993961
+n8n                  | Starting migration DropRoleMapping1705429061930
+n8n                  | Finished migration DropRoleMapping1705429061930
+n8n                  | Starting migration RemoveFailedExecutionStatus1711018413374
+n8n                  | Finished migration RemoveFailedExecutionStatus1711018413374
+n8n                  | Starting migration MoveSshKeysToDatabase1711390882123
+n8n                  | [MoveSshKeysToDatabase1711390882123] No SSH keys in filesystem, skipping
+n8n                  | Finished migration MoveSshKeysToDatabase1711390882123
+n8n                  | Starting migration RemoveNodesAccess1712044305787
+n8n                  | Finished migration RemoveNodesAccess1712044305787
+n8n                  | Starting migration CreateProject1714133768519
+n8n                  | Finished migration CreateProject1714133768519
+n8n                  | Starting migration MakeExecutionStatusNonNullable1714133768521
+n8n                  | Finished migration MakeExecutionStatusNonNullable1714133768521
+n8n                  | Starting migration AddActivatedAtUserSetting1717498465931
+n8n                  | Finished migration AddActivatedAtUserSetting1717498465931
+n8n                  | Starting migration AddConstraintToExecutionMetadata1720101653148
+n8n                  | Finished migration AddConstraintToExecutionMetadata1720101653148
+n8n                  | Starting migration CreateInvalidAuthTokenTable1723627610222
+n8n                  | Finished migration CreateInvalidAuthTokenTable1723627610222
+n8n                  | Starting migration RefactorExecutionIndices1723796243146
+n8n                  | Finished migration RefactorExecutionIndices1723796243146
+n8n                  | Starting migration CreateAnnotationTables1724753530828
+n8n                  | Finished migration CreateAnnotationTables1724753530828
+n8n                  | Starting migration AddApiKeysTable1724951148974
+n8n                  | Finished migration AddApiKeysTable1724951148974
+n8n                  | Starting migration CreateProcessedDataTable1726606152711
+n8n                  | Finished migration CreateProcessedDataTable1726606152711
+n8n                  | Starting migration SeparateExecutionCreationFromStart1727427440136
+n8n                  | Finished migration SeparateExecutionCreationFromStart1727427440136
+n8n                  | Starting migration AddMissingPrimaryKeyOnAnnotationTagMapping1728659839644
+n8n                  | Finished migration AddMissingPrimaryKeyOnAnnotationTagMapping1728659839644
+n8n                  | Starting migration UpdateProcessedDataValueColumnToText1729607673464
+n8n                  | Finished migration UpdateProcessedDataValueColumnToText1729607673464
+n8n                  | Starting migration AddProjectIcons1729607673469
+n8n                  | Finished migration AddProjectIcons1729607673469
+n8n                  | Starting migration CreateTestDefinitionTable1730386903556
+n8n                  | Finished migration CreateTestDefinitionTable1730386903556
+n8n                  | Starting migration AddDescriptionToTestDefinition1731404028106
+n8n                  | Finished migration AddDescriptionToTestDefinition1731404028106
+n8n                  | Starting migration MigrateTestDefinitionKeyToString1731582748663
+n8n                  | Finished migration MigrateTestDefinitionKeyToString1731582748663
+n8n                  | Starting migration CreateTestMetricTable1732271325258
+n8n                  | Finished migration CreateTestMetricTable1732271325258
+n8n                  | Starting migration CreateTestRun1732549866705
+n8n                  | Finished migration CreateTestRun1732549866705
+n8n                  | Starting migration AddMockedNodesColumnToTestDefinition1733133775640
+n8n                  | Finished migration AddMockedNodesColumnToTestDefinition1733133775640
+n8n                  | Starting migration AddManagedColumnToCredentialsTable1734479635324
+n8n                  | Finished migration AddManagedColumnToCredentialsTable1734479635324
+n8n                  | Starting migration AddStatsColumnsToTestRun1736172058779
+n8n                  | Finished migration AddStatsColumnsToTestRun1736172058779
+n8n                  | Starting migration CreateTestCaseExecutionTable1736947513045
+n8n                  | Finished migration CreateTestCaseExecutionTable1736947513045
+n8n                  | Starting migration AddErrorColumnsToTestRuns1737715421462
+n8n                  | Finished migration AddErrorColumnsToTestRuns1737715421462
+n8n                  | Starting migration CreateFolderTable1738709609940
+n8n                  | Finished migration CreateFolderTable1738709609940
+n8n                  | Starting migration CreateAnalyticsTables1739549398681
+n8n                  | Finished migration CreateAnalyticsTables1739549398681
+n8n                  | Starting migration UpdateParentFolderIdColumn1740445074052
+n8n                  | Finished migration UpdateParentFolderIdColumn1740445074052
+n8n                  | Starting migration RenameAnalyticsToInsights1741167584277
+n8n                  | Finished migration RenameAnalyticsToInsights1741167584277
+n8n                  | 
+n8n                  | There is a deprecation related to your environment variables. Please take the recommended actions to update your configuration:
+n8n                  |  - N8N_RUNNERS_ENABLED -> Running n8n without task runners is deprecated. Task runners will be turned on by default in a future version. Please set `N8N_RUNNERS_ENABLED=true` to enable task runners now and avoid potential issues in the future. Learn more: https://docs.n8n.io/hosting/configuration/task-runners/
+n8n                  | 
+n8n                  | Version: 1.87.1
+n8n                  | 
+n8n                  | Editor is now accessible via:
+n8n                  | http://localhost:5678

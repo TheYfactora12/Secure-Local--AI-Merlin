@@ -1,0 +1,355 @@
+[2026-05-03T20:41:12Z] [START] install.sh v1.1 — Sun May  3 16:41:12 EDT 2026
+[2026-05-03T20:41:12Z] [STEP 1] Preflight Checks
+[2026-05-03T20:41:12Z] [INFO] OS=Darwin RAM=16GB
+[2026-05-03T20:41:14Z] [PASS] STEP 1: Preflight — Docker 5.1.3
+[2026-05-03T20:41:14Z] [STEP 2] Installing Dependencies
+[2026-05-03T20:41:17Z] [INFO] Ollama native PID=23921
+[2026-05-03T20:41:21Z] [PASS] STEP 2: Dependencies installed
+[2026-05-03T20:41:21Z] [STEP 3] Environment Setup
+[2026-05-03T20:41:21Z] [FAIL] Line 291 exit=1
+[2026-05-03T21:01:38Z] [START] install.sh v1.1 — Sun May  3 17:01:38 EDT 2026
+[2026-05-03T21:01:38Z] [STEP 1] Preflight Checks
+[2026-05-03T21:01:39Z] [INFO] OS=Darwin RAM=16GB
+[2026-05-03T21:01:40Z] [PASS] STEP 1: Preflight — Docker 5.1.3
+[2026-05-03T21:01:40Z] [STEP 2] Installing Dependencies
+[2026-05-03T21:01:43Z] [INFO] Ollama native PID=24582
+[2026-05-03T21:01:47Z] [PASS] STEP 2: Dependencies installed
+[2026-05-03T21:01:47Z] [STEP 3] Environment Setup
+[2026-05-03T21:04:53Z] [PASS] STEP 3: Environment & secrets configured
+[2026-05-03T21:04:53Z] [STEP 4] Model pulls — tier=base
+[2026-05-03T21:04:53Z] [INFO] Pulling model: nomic-embed-text
+[2026-05-03T21:05:05Z] [PASS] Model pulled: nomic-embed-text
+[2026-05-03T21:05:05Z] [INFO] Pulling model: qwen2.5:7b
+[2026-05-03T21:06:32Z] [PASS] Model pulled: qwen2.5:7b
+[2026-05-03T21:06:32Z] [INFO] Pulling model: qwen2.5-coder:7b
+[2026-05-03T21:07:54Z] [PASS] Model pulled: qwen2.5-coder:7b
+[2026-05-03T21:07:54Z] [INFO] Pulling model: deepseek-r1:7b
+[2026-05-03T21:09:34Z] [PASS] Model pulled: deepseek-r1:7b
+[2026-05-03T21:09:34Z] [PASS] STEP 4: Models
+[2026-05-03T21:09:34Z] [STEP 5] Docker Compose up
+[2026-05-03T21:09:38Z] [FAIL] Line 523 exit=1
+[2026-05-03T22:20:55Z] [START] install.sh v1.4 — Sun May  3 18:20:55 EDT 2026
+[2026-05-03T22:20:55Z] [STEP 1] Preflight Checks
+[2026-05-03T22:20:55Z] [INFO] OS=Darwin RAM=16GB
+[2026-05-03T22:20:56Z] [PASS] STEP 1: Preflight — Docker 5.1.3
+[2026-05-03T22:20:56Z] [STEP 2] Installing Dependencies
+[2026-05-03T22:21:00Z] [INFO] Ollama native PID=25932
+[2026-05-03T22:21:04Z] [STEP] patch_compose_for_macos — applying macOS compatibility patches
+[2026-05-03T22:21:05Z] [PATCH] fail2ban disabled via profiles:linux-only
+[2026-05-03T22:21:05Z] [PATCH] OLLAMA_BASE_URL → host.docker.internal:11434
+[2026-05-03T22:21:05Z] [PATCH] OLLAMA_HOST → host.docker.internal:11434
+[2026-05-03T22:21:05Z] [PATCH] .env OLLAMA_BASE_URL set
+[2026-05-03T22:21:05Z] [PASS] patch_compose_for_macos complete
+[2026-05-03T22:21:05Z] [PASS] STEP 2: Dependencies installed
+[2026-05-03T22:21:05Z] [STEP 3] Environment Setup
+[2026-05-03T22:31:31Z] [PASS] STEP 3: Environment & secrets configured
+[2026-05-03T22:31:31Z] [STEP 4] Model pulls — tier=base
+[2026-05-03T22:31:31Z] [INFO] Pulling model: nomic-embed-text
+[2026-05-03T22:31:32Z] [PASS] Model pulled: nomic-embed-text
+[2026-05-03T22:31:32Z] [INFO] Pulling model: qwen2.5:7b
+[2026-05-03T22:31:32Z] [PASS] Model pulled: qwen2.5:7b
+[2026-05-03T22:31:32Z] [INFO] Pulling model: qwen2.5-coder:7b
+[2026-05-03T22:31:33Z] [PASS] Model pulled: qwen2.5-coder:7b
+[2026-05-03T22:31:33Z] [INFO] Pulling model: deepseek-r1:7b
+[2026-05-03T22:31:33Z] [PASS] Model pulled: deepseek-r1:7b
+[2026-05-03T22:31:33Z] [PASS] STEP 4: Models
+[2026-05-03T22:31:33Z] [STEP 5] Docker Compose up
+[2026-05-03T22:31:35Z] [INFO] BUG-08: pre-flight stale container removal
+[2026-05-03T22:31:36Z] [INFO] Removed stale container: fail2ban
+[2026-05-03T22:31:37Z] [INFO] Removed stale container: ollama
+[2026-05-03T22:31:37Z] [INFO] docker compose up — flags: --remove-orphans --force-recreate
+[2026-05-03T22:31:38Z] [FAIL] Line 659 exit=1
+[2026-05-03T22:42:17Z] [START] install.sh v1.5 — Sun May  3 18:42:17 EDT 2026
+[2026-05-03T22:42:17Z] [STEP 1] Preflight Checks
+[2026-05-03T22:42:17Z] [INFO] OS=Darwin RAM=16GB
+[2026-05-03T22:42:18Z] [PASS] STEP 1: Preflight — Docker 5.1.3
+[2026-05-03T22:42:18Z] [STEP 2] Installing Dependencies
+[2026-05-03T22:42:22Z] [INFO] Ollama native PID=26602
+[2026-05-03T22:42:26Z] [STEP] patch_compose_for_macos — applying macOS compatibility patches
+[2026-05-03T22:42:26Z] [PATCH] fail2ban disabled via profiles:linux-only
+[2026-05-03T22:42:26Z] [PATCH] .env OLLAMA_BASE_URL set
+[2026-05-03T22:42:26Z] [PASS] patch_compose_for_macos complete
+[2026-05-03T22:42:26Z] [PASS] STEP 2: Dependencies installed
+[2026-05-03T22:42:26Z] [STEP 3] Environment Setup
+[2026-05-03T22:44:58Z] [PASS] STEP 3: Environment & secrets configured
+[2026-05-03T22:44:58Z] [STEP 4] Model pulls — tier=base
+[2026-05-03T22:44:58Z] [INFO] Pulling model: nomic-embed-text
+[2026-05-03T22:45:09Z] [PASS] Model pulled: nomic-embed-text
+[2026-05-03T22:45:09Z] [INFO] Pulling model: qwen2.5:7b
+[2026-05-03T22:46:40Z] [PASS] Model pulled: qwen2.5:7b
+[2026-05-03T22:46:40Z] [INFO] Pulling model: qwen2.5-coder:7b
+[2026-05-03T22:48:08Z] [PASS] Model pulled: qwen2.5-coder:7b
+[2026-05-03T22:48:08Z] [INFO] Pulling model: deepseek-r1:7b
+[2026-05-03T22:49:38Z] [PASS] Model pulled: deepseek-r1:7b
+[2026-05-03T22:49:38Z] [PASS] STEP 4: Models
+[2026-05-03T22:49:38Z] [STEP 5] Docker Compose up
+[2026-05-03T22:49:40Z] [INFO] BUG-09: pre-flight stale container removal (complete list)
+[2026-05-03T22:49:42Z] [INFO] Removed stale container: openhands
+[2026-05-03T22:49:42Z] [INFO] Removed stale container: open-webui
+[2026-05-03T22:49:42Z] [INFO] Removed stale container: ollama
+[2026-05-03T22:49:42Z] [INFO] Removed stale container: litellm
+[2026-05-03T22:49:42Z] [INFO] Removed stale container: perplexica-frontend
+[2026-05-03T22:49:42Z] [INFO] Removed stale container: perplexica-backend
+[2026-05-03T22:49:42Z] [INFO] Removed stale container: searxng
+[2026-05-03T22:49:42Z] [INFO] Removed stale container: n8n
+[2026-05-03T22:49:43Z] [INFO] Removed stale container: qdrant
+[2026-05-03T22:49:43Z] [INFO] Removed stale container: watchtower
+[2026-05-03T22:49:43Z] [INFO] docker compose up — flags: --remove-orphans --force-recreate
+[2026-05-03T22:49:44Z] [FAIL] Line 654 exit=1
+[2026-05-04T01:23:25Z] [START] install.sh v1.6 — Sun May  3 21:23:25 EDT 2026
+[2026-05-04T01:23:25Z] [STEP 1] Preflight Checks
+[2026-05-04T01:23:26Z] [INFO] OS=Darwin RAM=16GB
+[2026-05-04T01:23:27Z] [PASS] STEP 1: Preflight — Docker 5.1.3
+[2026-05-04T01:23:27Z] [STEP 2] Installing Dependencies
+[2026-05-04T01:23:30Z] [STEP] patch_compose_for_macos — applying macOS compatibility patches
+[2026-05-04T01:23:31Z] [PATCH] fail2ban disabled via profiles:linux-only
+[2026-05-04T01:23:31Z] [PATCH] OLLAMA_BASE_URL → host.docker.internal:11434
+[2026-05-04T01:23:31Z] [PATCH] OLLAMA_HOST → host.docker.internal:11434
+[2026-05-04T01:23:31Z] [PATCH] .env OLLAMA_BASE_URL set
+[2026-05-04T01:23:31Z] [PATCH] Patch 4 already applied — skipped
+[2026-05-04T01:23:31Z] [PASS] patch_compose_for_macos complete
+[2026-05-04T01:23:31Z] [PASS] STEP 2: Dependencies installed
+[2026-05-04T01:23:31Z] [STEP 3] Environment Setup
+[2026-05-04T01:23:32Z] [PASS] STEP 3: Environment & secrets configured
+[2026-05-04T01:23:32Z] [STEP 4] Model pulls — tier=base
+[2026-05-04T01:23:32Z] [PASS] STEP 4: Models
+[2026-05-04T01:23:32Z] [STEP 5] Docker Compose up
+[2026-05-04T01:25:12Z] [INFO] BUG-09: pre-flight stale container removal (complete list)
+[2026-05-04T01:25:12Z] [INFO] Removed stale container: openhands
+[2026-05-04T01:25:13Z] [INFO] Removed stale container: open-webui
+[2026-05-04T01:25:13Z] [INFO] Removed stale container: ollama
+[2026-05-04T01:25:13Z] [INFO] Removed stale container: litellm
+[2026-05-04T01:25:13Z] [INFO] Removed stale container: perplexica-frontend
+[2026-05-04T01:25:13Z] [INFO] Removed stale container: perplexica-backend
+[2026-05-04T01:25:13Z] [INFO] Removed stale container: searxng
+[2026-05-04T01:25:13Z] [INFO] Removed stale container: n8n
+[2026-05-04T01:25:13Z] [INFO] Removed stale container: qdrant
+[2026-05-04T01:25:14Z] [INFO] Removed stale container: nginx
+[2026-05-04T01:25:14Z] [INFO] Removed stale container: watchtower
+[2026-05-04T01:25:14Z] [INFO] docker compose up — flags: --remove-orphans --force-recreate
+[2026-05-04T01:25:16Z] [FAIL] Line 751 exit=1
+[2026-05-04T01:26:47Z] [START] install.sh v1.6 — Sun May  3 21:26:47 EDT 2026
+[2026-05-04T01:26:47Z] [STEP 1] Preflight Checks
+[2026-05-04T01:26:47Z] [INFO] OS=Darwin RAM=16GB
+[2026-05-04T01:26:49Z] [PASS] STEP 1: Preflight — Docker 5.1.3
+[2026-05-04T01:26:49Z] [STEP 2] Installing Dependencies
+[2026-05-04T01:26:52Z] [STEP] patch_compose_for_macos — applying macOS compatibility patches
+[2026-05-04T01:26:53Z] [PATCH] fail2ban disabled via profiles:linux-only
+[2026-05-04T01:26:53Z] [PATCH] .env OLLAMA_BASE_URL set
+[2026-05-04T01:26:53Z] [PATCH] BUG-10/BUG-15: depends_on:ollama removed for macOS services
+[2026-05-04T01:26:53Z] [PASS] patch_compose_for_macos complete
+[2026-05-04T01:26:53Z] [PASS] STEP 2: Dependencies installed
+[2026-05-04T01:26:53Z] [STEP 3] Environment Setup
+[2026-05-04T01:26:53Z] [PASS] STEP 3: Environment & secrets configured
+[2026-05-04T01:26:53Z] [STEP 4] Model pulls — tier=base
+[2026-05-04T01:26:53Z] [PASS] STEP 4: Models
+[2026-05-04T01:26:53Z] [STEP 5] Docker Compose up
+[2026-05-04T01:26:55Z] [INFO] BUG-09: pre-flight stale container removal (complete list)
+[2026-05-04T01:26:56Z] [INFO] docker compose up — flags: --remove-orphans --force-recreate
+[2026-05-04T01:27:03Z] [FAIL] Line 751 exit=1
+[2026-05-04T01:28:05Z] [START] install.sh v1.6 — Sun May  3 21:28:05 EDT 2026
+[2026-05-04T01:28:05Z] [STEP 1] Preflight Checks
+[2026-05-04T01:28:05Z] [INFO] OS=Darwin RAM=16GB
+[2026-05-04T01:28:06Z] [PASS] STEP 1: Preflight — Docker 5.1.3
+[2026-05-04T01:28:06Z] [STEP 2] Installing Dependencies
+[2026-05-04T01:28:10Z] [STEP] patch_compose_for_macos — applying macOS compatibility patches
+[2026-05-04T01:28:10Z] [PATCH] fail2ban disabled via profiles:linux-only
+[2026-05-04T01:28:10Z] [PATCH] .env OLLAMA_BASE_URL set
+[2026-05-04T01:28:10Z] [PATCH] BUG-10/BUG-15: depends_on:ollama removed for macOS services
+[2026-05-04T01:28:10Z] [PASS] patch_compose_for_macos complete
+[2026-05-04T01:28:10Z] [PASS] STEP 2: Dependencies installed
+[2026-05-04T01:28:10Z] [STEP 3] Environment Setup
+[2026-05-04T01:28:10Z] [PASS] STEP 3: Environment & secrets configured
+[2026-05-04T01:28:10Z] [STEP 4] Model pulls — tier=base
+[2026-05-04T01:28:10Z] [PASS] STEP 4: Models
+[2026-05-04T01:28:10Z] [STEP 5] Docker Compose up
+[2026-05-04T01:28:12Z] [INFO] BUG-09: pre-flight stale container removal (complete list)
+[2026-05-04T01:28:13Z] [INFO] docker compose up — flags: --remove-orphans --force-recreate
+[2026-05-04T01:30:46Z] [FAIL] Line 751 exit=1
+[2026-05-04T01:33:09Z] [START] install.sh v1.6 — Sun May  3 21:33:09 EDT 2026
+[2026-05-04T01:33:09Z] [STEP 1] Preflight Checks
+[2026-05-04T01:33:09Z] [INFO] OS=Darwin RAM=16GB
+[2026-05-04T01:33:10Z] [PASS] STEP 1: Preflight — Docker 5.1.3
+[2026-05-04T01:33:10Z] [STEP 2] Installing Dependencies
+[2026-05-04T01:33:13Z] [STEP] patch_compose_for_macos — applying macOS compatibility patches
+[2026-05-04T01:33:13Z] [PATCH] fail2ban disabled via profiles:linux-only
+[2026-05-04T01:33:13Z] [PATCH] OLLAMA_BASE_URL → host.docker.internal:11434
+[2026-05-04T01:33:14Z] [PATCH] OLLAMA_HOST → host.docker.internal:11434
+[2026-05-04T01:33:14Z] [PATCH] .env OLLAMA_BASE_URL set
+[2026-05-04T01:33:14Z] [PATCH] BUG-10/BUG-15: depends_on:ollama removed for macOS services
+[2026-05-04T01:33:14Z] [PASS] patch_compose_for_macos complete
+[2026-05-04T01:33:14Z] [PASS] STEP 2: Dependencies installed
+[2026-05-04T01:33:14Z] [STEP 3] Environment Setup
+[2026-05-04T01:33:14Z] [PASS] STEP 3: Environment & secrets configured
+[2026-05-04T01:33:14Z] [STEP 4] Model pulls — tier=base
+[2026-05-04T01:33:14Z] [PASS] STEP 4: Models
+[2026-05-04T01:33:14Z] [STEP 5] Docker Compose up
+[2026-05-04T01:33:16Z] [INFO] BUG-09: pre-flight stale container removal (complete list)
+[2026-05-04T01:33:17Z] [INFO] docker compose up — flags: --remove-orphans --force-recreate
+[2026-05-04T01:33:30Z] [PASS] STEP 5: Docker compose up complete
+[2026-05-04T01:33:30Z] [PASS] Ollama (native) health check OK
+[2026-05-04T01:33:30Z] [PASS] STEP 5: Docker services up
+[2026-05-04T01:33:30Z] [STEP 6] Health checks
+[2026-05-04T01:33:30Z] [PASS] Ollama health check OK
+[2026-05-04T01:33:39Z] [PASS] LiteLLM health check OK
+[2026-05-04T01:34:06Z] [PASS] Open WebUI health check OK
+[2026-05-04T01:34:06Z] [PASS] SearXNG health check OK
+[2026-05-04T01:34:06Z] [PASS] Qdrant health check OK
+[2026-05-04T01:34:06Z] [PASS] n8n health check OK
+[2026-05-04T01:34:06Z] [PASS] STEP 6: All health checks complete
+[2026-05-04T01:34:06Z] [STEP 7] First-boot bootstrap
+[2026-05-04T01:34:08Z] [WARN] STEP 7: Bootstrap failed — manual action required
+[2026-05-04T01:34:08Z] [STEP 8] CLI install
+[2026-05-04T01:34:08Z] [PASS] STEP 8: CLI installed
+[2026-05-04T01:34:08Z] [STEP 11] Security review
+[2026-05-04T01:34:08Z] [PASS] STEP 11: Security review passed
+[2026-05-04T01:34:08Z] [DONE] install.sh completed successfully
+[2026-05-04T01:38:31Z] [START] install.sh v1.6 — Sun May  3 21:38:31 EDT 2026
+[2026-05-04T01:38:31Z] [STEP 1] Preflight Checks
+[2026-05-04T01:38:31Z] [INFO] OS=Darwin RAM=16GB
+[2026-05-04T01:38:32Z] [PASS] STEP 1: Preflight — Docker 5.1.3
+[2026-05-04T01:38:32Z] [STEP 2] Installing Dependencies
+[2026-05-04T01:38:35Z] [STEP] patch_compose_for_macos — applying macOS compatibility patches
+[2026-05-04T01:38:35Z] [PATCH] fail2ban disabled via profiles:linux-only
+[2026-05-04T01:38:35Z] [PATCH] OLLAMA_BASE_URL → host.docker.internal:11434
+[2026-05-04T01:38:35Z] [PATCH] OLLAMA_HOST → host.docker.internal:11434
+[2026-05-04T01:38:35Z] [PATCH] .env OLLAMA_BASE_URL set
+[2026-05-04T01:38:35Z] [PATCH] BUG-10/BUG-15: depends_on:ollama removed for macOS services
+[2026-05-04T01:38:35Z] [PASS] patch_compose_for_macos complete
+[2026-05-04T01:38:35Z] [PASS] STEP 2: Dependencies installed
+[2026-05-04T01:38:35Z] [STEP 3] Environment Setup
+[2026-05-04T01:38:36Z] [PASS] STEP 3: Environment & secrets configured
+[2026-05-04T01:38:36Z] [STEP 4] Model pulls — tier=base
+[2026-05-04T01:38:36Z] [PASS] STEP 4: Models
+[2026-05-04T01:38:36Z] [STEP 5] Docker Compose up
+[2026-05-04T01:38:38Z] [INFO] BUG-09: pre-flight stale container removal (complete list)
+[2026-05-04T01:38:39Z] [INFO] docker compose up — flags: --remove-orphans --force-recreate
+[2026-05-04T01:38:51Z] [PASS] STEP 5: Docker compose up complete
+[2026-05-04T01:38:51Z] [PASS] Ollama (native) health check OK
+[2026-05-04T01:38:51Z] [PASS] STEP 5: Docker services up
+[2026-05-04T01:38:51Z] [STEP 6] Health checks
+[2026-05-04T01:38:51Z] [PASS] Ollama health check OK
+[2026-05-04T01:39:00Z] [PASS] LiteLLM health check OK
+[2026-05-04T01:39:28Z] [PASS] Open WebUI health check OK
+[2026-05-04T01:39:28Z] [PASS] SearXNG health check OK
+[2026-05-04T01:39:28Z] [PASS] Qdrant health check OK
+[2026-05-04T01:39:28Z] [PASS] n8n health check OK
+[2026-05-04T01:39:28Z] [PASS] STEP 6: All health checks complete
+[2026-05-04T01:39:28Z] [STEP 7] First-boot bootstrap
+[2026-05-04T01:39:30Z] [PASS] STEP 7: Bootstrap complete
+[2026-05-04T01:39:30Z] [STEP 8] CLI install
+[2026-05-04T01:39:30Z] [PASS] STEP 8: CLI installed
+[2026-05-04T01:39:30Z] [STEP 11] Security review
+[2026-05-04T01:39:30Z] [PASS] STEP 11: Security review passed
+[2026-05-04T01:39:30Z] [DONE] install.sh completed successfully
+[2026-05-04T01:45:21Z] [START] install.sh v1.6 — Sun May  3 21:45:21 EDT 2026
+[2026-05-04T01:45:21Z] [STEP 1] Preflight Checks
+[2026-05-04T01:45:21Z] [INFO] OS=Darwin RAM=16GB
+[2026-05-04T01:45:23Z] [PASS] STEP 1: Preflight — Docker 5.1.3
+[2026-05-04T01:45:23Z] [STEP 2] Installing Dependencies
+[2026-05-04T01:45:26Z] [STEP] patch_compose_for_macos — applying macOS compatibility patches
+[2026-05-04T01:45:26Z] [PATCH] fail2ban disabled via profiles:linux-only
+[2026-05-04T01:45:26Z] [PATCH] OLLAMA_BASE_URL → host.docker.internal:11434
+[2026-05-04T01:45:26Z] [PATCH] OLLAMA_HOST → host.docker.internal:11434
+[2026-05-04T01:45:26Z] [PATCH] .env OLLAMA_BASE_URL set
+[2026-05-04T01:45:27Z] [PATCH] BUG-10/BUG-15: depends_on:ollama removed for macOS services
+[2026-05-04T01:45:27Z] [PASS] patch_compose_for_macos complete
+[2026-05-04T01:45:27Z] [PASS] STEP 2: Dependencies installed
+[2026-05-04T01:45:27Z] [STEP 3] Environment Setup
+[2026-05-04T01:45:29Z] [PASS] STEP 3: Environment & secrets configured
+[2026-05-04T01:45:29Z] [STEP 4] Model pulls — tier=base
+[2026-05-04T01:45:29Z] [INFO] Pulling model: nomic-embed-text
+[2026-05-04T01:45:29Z] [PASS] Model pulled: nomic-embed-text
+[2026-05-04T01:45:29Z] [INFO] Pulling model: qwen2.5:7b
+[2026-05-04T01:45:30Z] [PASS] Model pulled: qwen2.5:7b
+[2026-05-04T01:45:30Z] [INFO] Pulling model: qwen2.5-coder:7b
+[2026-05-04T01:45:30Z] [PASS] Model pulled: qwen2.5-coder:7b
+[2026-05-04T01:45:30Z] [INFO] Pulling model: deepseek-r1:7b
+[2026-05-04T01:45:30Z] [PASS] Model pulled: deepseek-r1:7b
+[2026-05-04T01:45:30Z] [PASS] STEP 4: Models
+[2026-05-04T01:45:31Z] [STEP 5] Docker Compose up
+[2026-05-04T01:45:33Z] [INFO] BUG-09: pre-flight stale container removal (complete list)
+[2026-05-04T01:45:34Z] [INFO] docker compose up — flags: --remove-orphans --force-recreate
+[2026-05-04T01:45:47Z] [PASS] STEP 5: Docker compose up complete
+[2026-05-04T01:45:47Z] [PASS] Ollama (native) health check OK
+[2026-05-04T01:45:47Z] [PASS] STEP 5: Docker services up
+[2026-05-04T01:45:47Z] [STEP 6] Health checks
+[2026-05-04T01:45:47Z] [PASS] Ollama health check OK
+[2026-05-04T01:46:02Z] [PASS] LiteLLM health check OK
+[2026-05-04T01:46:33Z] [PASS] Open WebUI health check OK
+[2026-05-04T01:46:33Z] [PASS] SearXNG health check OK
+[2026-05-04T01:46:33Z] [PASS] Qdrant health check OK
+[2026-05-04T01:46:33Z] [PASS] n8n health check OK
+[2026-05-04T01:46:33Z] [PASS] STEP 6: All health checks complete
+[2026-05-04T01:46:33Z] [STEP 7] First-boot bootstrap
+[2026-05-04T01:46:35Z] [PASS] STEP 7: Bootstrap complete
+[2026-05-04T01:46:35Z] [STEP 8] CLI install
+[2026-05-04T01:46:35Z] [PASS] STEP 8: CLI installed
+[2026-05-04T01:46:35Z] [STEP 11] Security review
+[2026-05-04T01:46:35Z] [PASS] STEP 11: Security review passed
+[2026-05-04T01:46:35Z] [DONE] install.sh completed successfully
+[2026-05-04T02:08:17Z] [START] install.sh v1.6 — Sun May  3 22:08:17 EDT 2026
+[2026-05-04T02:08:17Z] [STEP 1] Preflight Checks
+[2026-05-04T02:08:17Z] [INFO] OS=Darwin RAM=16GB
+[2026-05-04T02:08:19Z] [PASS] STEP 1: Preflight — Docker 5.1.3
+[2026-05-04T02:08:19Z] [STEP 2] Installing Dependencies
+[2026-05-04T02:08:22Z] [STEP] patch_compose_for_macos — applying macOS compatibility patches
+[2026-05-04T02:08:22Z] [PATCH] fail2ban disabled via profiles:linux-only
+[2026-05-04T02:08:22Z] [PATCH] .env OLLAMA_BASE_URL set
+[2026-05-04T02:08:22Z] [PASS] patch_compose_for_macos complete
+[2026-05-04T02:08:22Z] [PASS] STEP 2: Dependencies installed
+[2026-05-04T02:08:22Z] [STEP 3] Environment Setup
+[2026-05-04T02:08:39Z] [START] install.sh v1.6 — Sun May  3 22:08:39 EDT 2026
+[2026-05-04T02:08:39Z] [STEP 1] Preflight Checks
+[2026-05-04T02:08:39Z] [INFO] OS=Darwin RAM=16GB
+[2026-05-04T02:08:39Z] [PASS] STEP 1: Preflight — Docker 5.1.3
+[2026-05-04T02:08:39Z] [STEP 2] Installing Dependencies
+[2026-05-04T02:08:42Z] [STEP] patch_compose_for_macos — applying macOS compatibility patches
+[2026-05-04T02:08:42Z] [PATCH] fail2ban disabled via profiles:linux-only
+[2026-05-04T02:08:42Z] [PATCH] .env OLLAMA_BASE_URL set
+[2026-05-04T02:08:42Z] [PASS] patch_compose_for_macos complete
+[2026-05-04T02:08:42Z] [PASS] STEP 2: Dependencies installed
+[2026-05-04T02:08:42Z] [STEP 3] Environment Setup
+[2026-05-04T02:09:12Z] [PASS] STEP 3: Environment & secrets configured
+[2026-05-04T02:09:12Z] [STEP 4] Model pulls — tier=base
+[2026-05-04T02:09:12Z] [INFO] Pulling model: nomic-embed-text
+[2026-05-04T02:09:18Z] [PASS] Model pulled: nomic-embed-text
+[2026-05-04T02:09:18Z] [INFO] Pulling model: qwen2.5:7b
+[2026-05-04T02:09:23Z] [PASS] Model pulled: qwen2.5:7b
+[2026-05-04T02:09:23Z] [INFO] Pulling model: qwen2.5-coder:7b
+[2026-05-04T02:09:29Z] [PASS] Model pulled: qwen2.5-coder:7b
+[2026-05-04T02:09:29Z] [INFO] Pulling model: deepseek-r1:7b
+[2026-05-04T02:09:34Z] [PASS] Model pulled: deepseek-r1:7b
+[2026-05-04T02:09:34Z] [PASS] STEP 4: Models
+[2026-05-04T02:09:34Z] [STEP 5] Docker Compose up
+[2026-05-04T02:09:37Z] [INFO] BUG-09: pre-flight stale container removal (complete list)
+[2026-05-04T02:09:37Z] [INFO] Removed stale container: openhands
+[2026-05-04T02:09:38Z] [INFO] Removed stale container: open-webui
+[2026-05-04T02:09:38Z] [INFO] Removed stale container: litellm
+[2026-05-04T02:09:39Z] [INFO] Removed stale container: perplexica-frontend
+[2026-05-04T02:09:39Z] [INFO] Removed stale container: perplexica-backend
+[2026-05-04T02:09:39Z] [INFO] Removed stale container: searxng
+[2026-05-04T02:09:40Z] [INFO] Removed stale container: n8n
+[2026-05-04T02:09:40Z] [INFO] Removed stale container: qdrant
+[2026-05-04T02:09:40Z] [INFO] Removed stale container: nginx
+[2026-05-04T02:09:41Z] [INFO] Removed stale container: swarm-dashboard
+[2026-05-04T02:09:41Z] [INFO] Removed stale container: watchtower
+[2026-05-04T02:09:41Z] [INFO] docker compose up — flags: --remove-orphans --force-recreate
+[2026-05-04T02:09:55Z] [PASS] STEP 5: Docker compose up complete
+[2026-05-04T02:09:55Z] [PASS] Ollama (native) health check OK
+[2026-05-04T02:09:55Z] [PASS] STEP 5: Docker services up
+[2026-05-04T02:09:55Z] [STEP 6] Health checks
+[2026-05-04T02:09:55Z] [PASS] Ollama health check OK
+[2026-05-04T02:10:04Z] [PASS] LiteLLM health check OK
+[2026-05-04T02:10:31Z] [PASS] Open WebUI health check OK
+[2026-05-04T02:10:31Z] [PASS] SearXNG health check OK
+[2026-05-04T02:10:31Z] [PASS] Qdrant health check OK
+[2026-05-04T02:10:31Z] [PASS] n8n health check OK
+[2026-05-04T02:10:31Z] [PASS] STEP 6: All health checks complete
+[2026-05-04T02:10:31Z] [STEP 7] First-boot bootstrap
+[2026-05-04T02:10:34Z] [PASS] STEP 7: Bootstrap complete
+[2026-05-04T02:10:34Z] [STEP 8] CLI install
+[2026-05-04T02:10:34Z] [PASS] STEP 8: CLI installed
+[2026-05-04T02:11:28Z] [STEP 11] Security review
+[2026-05-04T02:11:28Z] [PASS] STEP 11: Security review passed
+[2026-05-04T02:11:28Z] [DONE] install.sh completed successfully

@@ -1,0 +1,11 @@
+NAME                  IMAGE                                      COMMAND                  SERVICE               CREATED         STATUS                   PORTS
+litellm               ghcr.io/berriai/litellm:main-latest        "docker/prod_entrypo…"   litellm               3 minutes ago   Up 3 minutes             0.0.0.0:4000->4000/tcp, [::]:4000->4000/tcp
+n8n                   n8nio/n8n:1.87.1                           "tini -- /docker-ent…"   n8n                   3 minutes ago   Up 3 minutes (healthy)   0.0.0.0:5678->5678/tcp, [::]:5678->5678/tcp
+nginx                 nginx:alpine                               "/docker-entrypoint.…"   nginx                 3 minutes ago   Up 3 minutes             0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp
+open-webui            ghcr.io/open-webui/open-webui:main         "bash start.sh"          open-webui            3 minutes ago   Up 3 minutes (healthy)   0.0.0.0:3000->8080/tcp, [::]:3000->8080/tcp
+openhands             ghcr.io/all-hands-ai/openhands:main        "/app/entrypoint.sh …"   openhands             3 minutes ago   Up 3 minutes             0.0.0.0:3003->3000/tcp, [::]:3003->3000/tcp
+perplexica-backend    itzcrazykns1337/perplexica-backend:main    "docker-entrypoint.s…"   perplexica-backend    3 minutes ago   Up 3 minutes             0.0.0.0:3001->3001/tcp, [::]:3001->3001/tcp
+perplexica-frontend   itzcrazykns1337/perplexica-frontend:main   "docker-entrypoint.s…"   perplexica-frontend   3 minutes ago   Up 3 minutes             0.0.0.0:3002->3000/tcp, [::]:3002->3000/tcp
+qdrant                qdrant/qdrant:latest                       "./entrypoint.sh"        qdrant                3 minutes ago   Up 3 minutes             0.0.0.0:6333->6333/tcp, [::]:6333->6333/tcp
+searxng               searxng/searxng:latest                     "/usr/local/searxng/…"   searxng               3 minutes ago   Up 3 minutes             0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+watchtower            containrrr/watchtower:latest               "/watchtower"            watchtower            3 minutes ago   Up 3 minutes (healthy)   8080/tcp
