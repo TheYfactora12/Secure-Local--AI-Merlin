@@ -744,8 +744,11 @@ log_to_file "[INFO] docker compose up — flags: --remove-orphans --force-recrea
 # BUG-03: Do NOT start Ollama container on macOS — use native instead
 if [[ "$OS" == "Darwin" ]]; then
   log "macOS: Skipping Ollama Docker container — using native Ollama on host"
-  SERVICES=$(docker compose config --services 2>/dev/null | grep -v '^ollama$' | tr '\n' ' ')
-  docker compose up -d --remove-orphans --force-recreate $SERVICES
+  SERVICES=()
+  while IFS= read -r service; do
+    SERVICES+=("$service")
+  done < <(docker compose config --services 2>/dev/null | grep -v '^ollama$')
+  docker compose up -d --remove-orphans --force-recreate "${SERVICES[@]}"
 else
   docker compose up -d --remove-orphans --force-recreate
 fi

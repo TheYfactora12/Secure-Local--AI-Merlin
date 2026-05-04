@@ -27,6 +27,7 @@ QDRANT_VECTOR_SIZE="${QDRANT_VECTOR_SIZE:-768}"
 N8N_URL="${N8N_URL:-http://localhost:5678}"
 N8N_API_KEY="${N8N_API_KEY:-}"
 OLLAMA_DEFAULT_MODEL="${OLLAMA_DEFAULT_MODEL:-llama3.2}"
+SKIP_MODEL_PULLS="${HOME_AI_SKIP_MODEL_PULLS:-false}"
 
 GREEN="\033[0;32m"; YELLOW="\033[1;33m"; CYAN="\033[0;36m"
 BOLD="\033[1m"; RESET="\033[0m"
@@ -121,7 +122,16 @@ set +a
 # ---------------------------------------------------------------------------
 banner "Step 2/7: Starting Services"
 cd "$STACK_DIR" || exit 1
-docker compose up -d
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  log "macOS detected — skipping Ollama Docker container; using native Ollama"
+  SERVICES=()
+  while IFS= read -r service; do
+    SERVICES+=("$service")
+  done < <(docker compose config --services 2>/dev/null | grep -v '^ollama$')
+  docker compose up -d "${SERVICES[@]}"
+else
+  docker compose up -d
+fi
 log "  ✅ docker compose up -d complete"
 
 # ---------------------------------------------------------------------------
@@ -196,7 +206,17 @@ fi
 # Step 6: Ollama model check
 # ---------------------------------------------------------------------------
 banner "Step 6/7: Ollama Models"
-if docker compose ps ollama >/dev/null 2>&1; then
+if [[ "$SKIP_MODEL_PULLS" == true ]]; then
+  warn "Skipping bootstrap model pull because HOME_AI_SKIP_MODEL_PULLS=true"
+elif [[ "$(uname -s)" == "Darwin" ]]; then
+  MODEL_COUNT=$(ollama list 2>/dev/null | tail -n +2 | wc -l | tr -d ' ')
+  if [[ "$MODEL_COUNT" -eq 0 ]]; then
+    log "Pulling default native Ollama model: $OLLAMA_DEFAULT_MODEL"
+    ollama pull "$OLLAMA_DEFAULT_MODEL" || warn "Model pull failed — retry with: bash scripts/add-model.sh $OLLAMA_DEFAULT_MODEL"
+  else
+    log "  ✅ $MODEL_COUNT native Ollama model(s) already present — skipping pull"
+  fi
+elif docker compose ps ollama >/dev/null 2>&1; then
   MODEL_COUNT=$(docker compose exec -T ollama ollama list 2>/dev/null | tail -n +2 | wc -l | tr -d ' ')
   if [[ "$MODEL_COUNT" -eq 0 ]]; then
     log "Pulling default model: $OLLAMA_DEFAULT_MODEL"

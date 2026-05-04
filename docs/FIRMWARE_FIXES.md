@@ -9,8 +9,8 @@ This log captures the installer and stack fixes made while preparing Home AI Eli
 - Added non-interactive install support with `--non-interactive`, `--yes`, `--skip-model-pulls`, `HOME_AI_NON_INTERACTIVE`, and `HOME_AI_SKIP_MODEL_PULLS`.
 - Added Docker CLI discovery for Docker Desktop's bundled CLI at `/Applications/Docker.app/Contents/Resources/bin`.
 - Added Docker Desktop startup/wait handling on macOS when Docker is installed but not running.
-- Removed the hard dependency on Homebrew Ollama for runtime model serving; the installer now uses the Docker Ollama container.
-- Added Homebrew Ollama conflict handling so a locally running Homebrew service does not block Docker Ollama from binding `localhost:11434`.
+- On macOS, uses native Ollama for runtime model serving so Apple Metal acceleration is available.
+- Skips the Docker Ollama container on macOS so native Ollama can own `localhost:11434`.
 - Made terminal clearing safe in non-interactive runs so `clear` cannot abort the installer under `set -e`.
 - Changed health waits so timeout warnings do not abort the entire install after services are launched.
 - Generated nginx TLS certificates during install and mounted them into nginx from the repo-local `certs/` directory.
@@ -27,9 +27,18 @@ This log captures the installer and stack fixes made while preparing Home AI Eli
 ## Script fixes
 
 - Updated `scripts/bootstrap.sh` to run from the actual repository path instead of hardcoding `${HOME}/home-ai-elite`.
-- Updated bootstrap model checks and pulls to use Docker Ollama through `docker compose exec`.
+- Updated bootstrap model checks and pulls to use native Ollama on macOS and Docker Ollama on Linux.
 - Updated `scripts/add-model.sh` to pull and list models inside the Docker Ollama container.
 - Updated `scripts/status.sh` to check LiteLLM on the root endpoint and list Ollama models from the Docker container.
+
+## May 3 macOS clean-clone smoke follow-up
+
+During a fresh GitHub clone smoke test from `/private/tmp/home-ai-elite-smoke`, two macOS-specific boot blockers were found and fixed:
+
+- Patch 4 used `grep -P`, which is GNU grep-only and fails on macOS BSD grep. Result: the installer skipped the `depends_on: ollama` removal and Docker Compose tried to start the Ollama container, conflicting with native Ollama on `127.0.0.1:11434`. Fix: use portable `grep -q`.
+- The n8n Docker healthcheck used `localhost`, which resolved to `::1` inside the container. n8n listens on IPv4, so Docker marked it unhealthy while `http://localhost:5678/healthz` worked from the host. Fix: healthcheck now probes `http://127.0.0.1:5678/healthz`.
+- `scripts/bootstrap.sh` also called plain `docker compose up -d`, which reintroduced the Ollama container after the installer correctly skipped it. Fix: bootstrap now skips the Ollama Docker service on macOS and uses native Ollama for model checks.
+- Both installer and bootstrap now build the filtered Compose service list as a Bash array before invoking `docker compose up`.
 
 ## Package fixes
 
