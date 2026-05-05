@@ -101,6 +101,23 @@ jobs:
             xmllint --noout "$f" 2>/dev/null && echo "  ✅ $f" || (echo "  ❌ $f" && exit 1)
           done
 
+  static-smoke-tests:
+    name: Static smoke tests — profiles, memory, release safety
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run static smoke tests
+        run: |
+          bash tests/profile-selection-smoke.sh
+          bash tests/memory-config-smoke.sh
+          bash tests/wizard-memory-config-smoke.sh
+          bash tests/doctor-model-smoke.sh
+          bash tests/installer-model-pull-policy-smoke.sh
+          bash tests/update-upgrade-profile-smoke.sh
+          bash tests/pkg-readiness-smoke.sh
+          bash tests/release-workflow-smoke.sh
+          echo "✅ Static smoke tests passed"
+
   secret-scan:
     name: Security — Secret pattern scan
     runs-on: ubuntu-latest
@@ -140,7 +157,7 @@ jobs:
 
   ci-success:
     name: CI Passed
-    needs: [shellcheck, compose-validate, install-dryrun, validate-workflows, validate-configs, secret-scan]
+    needs: [shellcheck, compose-validate, install-dryrun, validate-workflows, validate-configs, static-smoke-tests, secret-scan]
     runs-on: ubuntu-latest
     steps:
       - run: echo "✅ All CI checks passed — home-ai-elite installer is valid"
