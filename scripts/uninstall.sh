@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd "$(dirname "$0")/.."
-read -r -p "This will stop all containers and remove stack data. Type YES to confirm: " confirm
-[[ "$confirm" == "YES" ]] || { echo "Cancelled."; exit 0; }
-docker compose down -v || true
-brew services stop ollama || true
-echo "Stack stopped and volumes removed."
-echo "Stack directory $(pwd) was NOT deleted. Remove manually if desired."
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+UNINSTALLER="${ROOT_DIR}/pkg/scripts/uninstall.sh"
+
+if [[ ! -f "$UNINSTALLER" ]]; then
+  echo "ERROR: missing package uninstaller: ${UNINSTALLER}" >&2
+  exit 1
+fi
+
+exec bash "$UNINSTALLER" "$@"

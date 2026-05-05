@@ -204,6 +204,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Core install budget smoke test
 - [x] Package readiness smoke test
 - [x] Package signing preflight smoke test
+- [x] Uninstaller smoke test
 - [x] Release workflow smoke test
 - [x] Static smoke tests run in CI
 - [ ] Search test: Perplexica, SearXNG

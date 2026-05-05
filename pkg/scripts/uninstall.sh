@@ -1,111 +1,202 @@
 #!/usr/bin/env bash
-# =============================================================================
-# uninstall.sh — Completely remove home-ai-elite from this Mac
+# Home AI Elite uninstaller.
 #
-# What it removes:
-#   - All running Docker containers (stack services)
-#   - Docker volumes created by the stack
-#   - launchd auto-start agents
-#   - The install directory (~/ home-ai-elite)
-#   - The system payload (/usr/local/home-ai-elite)
-#   - pkgutil receipt (so macOS knows it's uninstalled)
-#
-# What it KEEPS:
-#   - Docker Desktop itself
-#   - Homebrew
-#   - Ollama models (large, expensive to re-download)
-#   - Your .env file (backed up before removal)
-# =============================================================================
+# Safe defaults:
+# - stops Home AI Elite services
+# - removes launchd agents
+# - backs up .env before deleting files
+# - keeps Docker Desktop, Homebrew, and Ollama models
+# - removes Docker volumes only with --remove-data
 set -euo pipefail
 
 INSTALL_DIR="${HOME}/home-ai-elite"
 SYSTEM_DIR="/usr/local/home-ai-elite"
 PKG_ID="com.homeai.elite"
 
-GREEN="\033[0;32m"; YELLOW="\033[1;33m"; RED="\033[0;31m"
-CYAN="\033[0;36m"; BOLD="\033[1m"; RESET="\033[0m"
+YES=false
+DRY_RUN=false
+REMOVE_DATA=false
+REMOVE_FILES=true
+FORGET_RECEIPT=true
 
-log()    { echo -e "${GREEN}[uninstall]${RESET} $*"; }
-warn()   { echo -e "${YELLOW}[uninstall]${RESET} $*"; }
-danger() { echo -e "${RED}[uninstall]${RESET} $*"; }
-banner() { echo -e "\n${CYAN}${BOLD}━━━ $* ━━━${RESET}\n"; }
+usage() {
+  cat <<'USAGE'
+Usage: bash pkg/scripts/uninstall.sh [options]
 
-# ---------------------------------------------------------------------------
-# Confirmation prompt
-# ---------------------------------------------------------------------------
-banner "home-ai-elite Uninstaller"
-danger "This will remove all home-ai-elite services, containers, and files."
-danger "Ollama models and Docker Desktop will NOT be removed."
-echo ""
-read -r -p "  Are you sure? Type 'yes' to continue: " CONFIRM
-[[ "$CONFIRM" != "yes" ]] && echo "Cancelled." && exit 0
+Options:
+  --yes             Do not prompt for confirmation.
+  --dry-run         Print what would be removed without changing anything.
+  --remove-data     Remove Docker volumes/data for the stack.
+  --keep-files      Stop services and agents, but keep install directories.
+  --keep-receipt    Do not forget the macOS pkgutil receipt.
+  -h, --help        Show this help.
 
-# ---------------------------------------------------------------------------
-# 1. Stop and remove Docker containers + volumes
-# ---------------------------------------------------------------------------
-banner "Step 1/5: Stopping Services"
-if [[ -f "${INSTALL_DIR}/docker-compose.yml" ]] && docker info >/dev/null 2>&1; then
-  docker compose -f "${INSTALL_DIR}/docker-compose.yml" down --volumes --remove-orphans 2>/dev/null \
-    && log "  ✅ Services stopped and volumes removed" \
-    || warn "  Could not stop services (may already be down)"
-else
-  warn "  Docker not running or stack not found — skipping"
-fi
+Default behavior removes Home AI Elite app files after confirmation, but keeps
+Docker Desktop, Homebrew, Ollama, and Ollama models. Docker volumes are kept
+unless --remove-data is provided.
+USAGE
+}
 
-# ---------------------------------------------------------------------------
-# 2. Remove launchd agents
-# ---------------------------------------------------------------------------
-banner "Step 2/5: Removing Auto-Start Agents"
-if [[ -f "${INSTALL_DIR}/launchd/install-launchd.sh" ]]; then
-  bash "${INSTALL_DIR}/launchd/install-launchd.sh" --uninstall 2>/dev/null \
-    && log "  ✅ launchd agents removed" \
-    || warn "  Could not remove launchd agents (may already be gone)"
-else
-  # Manual removal fallback
-  for label in com.homeai.docker com.homeai.stack; do
-    launchctl bootout "gui/$(id -u)/${label}" 2>/dev/null || true
-    rm -f "${HOME}/Library/LaunchAgents/${label}.plist"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --yes)
+      YES=true
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      ;;
+    --remove-data)
+      REMOVE_DATA=true
+      ;;
+    --keep-files)
+      REMOVE_FILES=false
+      ;;
+    --keep-receipt)
+      FORGET_RECEIPT=false
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "ERROR: unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
+
+log() { printf '[uninstall] %s\n' "$*"; }
+warn() { printf '[uninstall] WARNING: %s\n' "$*" >&2; }
+
+run() {
+  if [[ "$DRY_RUN" == true ]]; then
+    printf '[dry-run] %s\n' "$*"
+    return 0
+  fi
+  "$@"
+}
+
+confirm() {
+  [[ "$YES" == true || "$DRY_RUN" == true ]] && return 0
+
+  echo "This will uninstall Home AI Elite from this Mac."
+  echo "Kept: Docker Desktop, Homebrew, Ollama, Ollama models."
+  if [[ "$REMOVE_DATA" == true ]]; then
+    echo "Removed: app files, launchd agents, Docker containers, Docker volumes."
+  else
+    echo "Removed: app files, launchd agents, Docker containers."
+    echo "Kept: Docker volumes/data. Use --remove-data for a clean reset."
+  fi
+  echo ""
+  read -r -p "Type YES to continue: " answer
+  [[ "$answer" == "YES" ]] || { echo "Cancelled."; exit 0; }
+}
+
+compose_down() {
+  local compose_file="${INSTALL_DIR}/docker-compose.yml"
+  [[ -f "$compose_file" ]] || compose_file="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/docker-compose.yml"
+
+  if [[ ! -f "$compose_file" ]]; then
+    warn "docker-compose.yml not found; skipping Docker cleanup"
+    return 0
+  fi
+
+  if [[ "$DRY_RUN" == true ]]; then
+    if [[ "$REMOVE_DATA" == true ]]; then
+      log "Stopping services and removing Docker volumes"
+      run docker compose -f "$compose_file" down --volumes --remove-orphans
+    else
+      log "Stopping services without removing Docker volumes"
+      run docker compose -f "$compose_file" down --remove-orphans
+    fi
+    return 0
+  fi
+
+  if ! command -v docker >/dev/null 2>&1; then
+    warn "Docker CLI not found; skipping Docker cleanup"
+    return 0
+  fi
+
+  if ! docker info >/dev/null 2>&1; then
+    warn "Docker engine not running; skipping Docker cleanup"
+    return 0
+  fi
+
+  if [[ "$REMOVE_DATA" == true ]]; then
+    log "Stopping services and removing Docker volumes"
+    run docker compose -f "$compose_file" down --volumes --remove-orphans
+  else
+    log "Stopping services without removing Docker volumes"
+    run docker compose -f "$compose_file" down --remove-orphans
+  fi
+}
+
+remove_launchd_agents() {
+  local uid
+  uid="$(id -u)"
+  local labels=(
+    com.homeai.docker
+    com.homeai.stack
+    com.homeai.backup
+  )
+
+  log "Removing launchd agents"
+  for label in "${labels[@]}"; do
+    run launchctl bootout "gui/${uid}/${label}" 2>/dev/null || true
+    run rm -f "${HOME}/Library/LaunchAgents/${label}.plist"
   done
-  log "  ✅ launchd agents removed (manual)"
-fi
+}
 
-# ---------------------------------------------------------------------------
-# 3. Backup .env before deletion
-# ---------------------------------------------------------------------------
-banner "Step 3/5: Backing Up Config"
-if [[ -f "${INSTALL_DIR}/.env" ]]; then
-  BACKUP_PATH="${HOME}/home-ai-elite-env-backup-$(date +%Y%m%d_%H%M%S).env"
-  cp "${INSTALL_DIR}/.env" "$BACKUP_PATH"
-  log "  ✅ .env backed up to: $BACKUP_PATH"
-fi
+backup_env() {
+  [[ -f "${INSTALL_DIR}/.env" ]] || return 0
+  local backup_path="${HOME}/home-ai-elite-env-backup-$(date +%Y%m%d_%H%M%S).env"
+  log "Backing up .env to ${backup_path}"
+  run cp "${INSTALL_DIR}/.env" "$backup_path"
+  run chmod 600 "$backup_path" 2>/dev/null || true
+}
 
-# ---------------------------------------------------------------------------
-# 4. Remove install directories
-# ---------------------------------------------------------------------------
-banner "Step 4/5: Removing Files"
-rm -rf "$INSTALL_DIR" && log "  ✅ Removed: $INSTALL_DIR"
-sudo rm -rf "$SYSTEM_DIR" 2>/dev/null && log "  ✅ Removed: $SYSTEM_DIR" || \
-  warn "  Could not remove $SYSTEM_DIR (run with sudo if needed)"
+remove_files() {
+  [[ "$REMOVE_FILES" == true ]] || { log "Keeping install directories because --keep-files was set"; return 0; }
 
-# ---------------------------------------------------------------------------
-# 5. Remove pkgutil receipt
-# ---------------------------------------------------------------------------
-banner "Step 5/5: Removing Package Receipt"
-sudo pkgutil --forget "$PKG_ID" 2>/dev/null \
-  && log "  ✅ Package receipt removed" \
-  || warn "  No receipt found for $PKG_ID (may not have been installed via .pkg)"
+  if [[ -d "$INSTALL_DIR" ]]; then
+    log "Removing ${INSTALL_DIR}"
+    run rm -rf "$INSTALL_DIR"
+  fi
 
-# ---------------------------------------------------------------------------
-# Done
-# ---------------------------------------------------------------------------
-echo -e "${GREEN}${BOLD}"
-echo "  ╔══════════════════════════════════════════╗"
-echo "  ║   ✅ Uninstall complete!                ║"
-echo "  ╠══════════════════════════════════════════╣"
-echo "  ║  Docker Desktop: NOT removed           ║"
-echo "  ║  Ollama models:  NOT removed           ║"
-echo "  ║  Homebrew:       NOT removed           ║"
-[[ -n "${BACKUP_PATH:-}" ]] && \
-echo "  ║  .env backup: $BACKUP_PATH"
-echo "  ╚══════════════════════════════════════════╝"
-echo -e "${RESET}"
+  if [[ -d "$SYSTEM_DIR" ]]; then
+    log "Removing ${SYSTEM_DIR}"
+    if [[ "$DRY_RUN" == true ]]; then
+      printf '[dry-run] sudo rm -rf %s\n' "$SYSTEM_DIR"
+    else
+      sudo rm -rf "$SYSTEM_DIR"
+    fi
+  fi
+}
+
+forget_receipt() {
+  [[ "$FORGET_RECEIPT" == true ]] || { log "Keeping pkgutil receipt because --keep-receipt was set"; return 0; }
+
+  if ! command -v pkgutil >/dev/null 2>&1; then
+    warn "pkgutil not found; skipping receipt cleanup"
+    return 0
+  fi
+
+  log "Forgetting package receipt ${PKG_ID}"
+  if [[ "$DRY_RUN" == true ]]; then
+    printf '[dry-run] sudo pkgutil --forget %s\n' "$PKG_ID"
+  else
+    sudo pkgutil --forget "$PKG_ID" >/dev/null 2>&1 || warn "No package receipt found for ${PKG_ID}"
+  fi
+}
+
+confirm
+compose_down
+remove_launchd_agents
+backup_env
+remove_files
+forget_receipt
+
+log "Uninstall complete"
+log "Docker Desktop, Homebrew, Ollama, and Ollama models were not removed"

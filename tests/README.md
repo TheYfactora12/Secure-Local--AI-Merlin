@@ -146,3 +146,16 @@ image tag used by Compose files is documented in
 ```bash
 bash tests/container-image-policy-smoke.sh
 ```
+
+---
+
+## uninstall-smoke.sh
+
+This test does not remove anything. It validates that the uninstaller has
+syntax-safe help, rejects unknown flags, supports dry-run mode, keeps Docker
+volumes unless `--remove-data` is explicit, and documents that Ollama models are
+preserved.
+
+```bash
+bash tests/uninstall-smoke.sh
+```

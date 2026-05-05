@@ -15,6 +15,17 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.2] — 2026-05-05
+
+### Uninstall
+- Added guarded root/package uninstall path with `--dry-run`, `--yes`, `--keep-files`, `--keep-receipt`, and explicit `--remove-data`.
+- Docker volumes are preserved by default and removed only when `--remove-data` is supplied.
+- `.env` is backed up before install directories are removed.
+- Docker Desktop, Homebrew, Ollama, and Ollama models are never removed by the Home AI Elite uninstaller.
+- Added `tests/uninstall-smoke.sh` and CI coverage for uninstaller behavior.
+
+---
+
 ## [0.8.1] — 2026-05-05
 
 ### Release Candidate

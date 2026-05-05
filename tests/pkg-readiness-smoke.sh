@@ -49,5 +49,9 @@ grep -Fq -- "--exclude='*.pkg'" "${STACK_DIR}/pkg/build-pkg.sh" \
   || fail "package builder does not exclude pkg artifacts"
 grep -q 'APPLE_APP_PASSWORD must be set for notarization' "${STACK_DIR}/pkg/build-pkg.sh" \
   || fail "package builder does not guard notarization credentials"
+grep -q -- '--dry-run' "${STACK_DIR}/pkg/scripts/uninstall.sh" \
+  || fail "package uninstaller does not support dry-run"
+grep -q -- '--remove-data' "${STACK_DIR}/pkg/scripts/uninstall.sh" \
+  || fail "package uninstaller does not require explicit data removal"
 
 echo "PASS: package readiness checks are valid"

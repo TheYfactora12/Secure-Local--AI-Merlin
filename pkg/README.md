@@ -83,5 +83,17 @@ environment variables.
 bash ~/home-ai-elite/pkg/scripts/uninstall.sh
 ```
 
-Removes: containers, volumes, launchd agents, install directory, pkgutil receipt.
-Keeps: Docker Desktop, Homebrew, Ollama models.
+Default removes: containers, launchd agents, install directory, pkgutil receipt.
+Default keeps: Docker Desktop, Homebrew, Ollama models, Docker volumes, and a timestamped `.env` backup.
+
+Clean-reset uninstall:
+
+```bash
+bash ~/home-ai-elite/pkg/scripts/uninstall.sh --remove-data
+```
+
+Preview first:
+
+```bash
+bash ~/home-ai-elite/pkg/scripts/uninstall.sh --dry-run
+```
