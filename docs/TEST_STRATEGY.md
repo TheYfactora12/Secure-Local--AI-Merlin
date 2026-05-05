@@ -102,6 +102,7 @@ Tier 1:
 
 - Does not start OpenHands by default.
 - Does not pull 14B+ models by default.
+- Installer does not pull recommended models unless the user confirms or sets `HOME_AI_PULL_RECOMMENDED_MODELS=true`.
 - Does not start n8n/search unless selected.
 
 Tier 2:
@@ -127,6 +128,7 @@ Required before merging installer-adjacent changes:
 
 - `install.sh --help` works.
 - Non-interactive install with skipped model pulls works.
+- Non-interactive install defaults to no model pulls unless explicitly opted in.
 - macOS native Ollama path remains intact.
 - Linux Docker Ollama profile remains intact.
 - `tests/update-upgrade-profile-smoke.sh` confirms update/upgrade stay profile-aware and do not start Docker Ollama on macOS core.

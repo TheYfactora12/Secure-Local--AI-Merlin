@@ -55,6 +55,12 @@ HOME_AI_NON_INTERACTIVE=true HOME_AI_SKIP_MODEL_PULLS=true \
   bash install.sh --profile core --skip-model-pulls --non-interactive
 ```
 
+Model downloads are opt-in. To allow the installer to pull the recommended tier models:
+
+```bash
+HOME_AI_PULL_RECOMMENDED_MODELS=true bash install.sh --profile core
+```
+
 **Or install directly from GitHub (no clone needed):**
 
 ```bash

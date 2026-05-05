@@ -42,6 +42,7 @@ set -euo pipefail
 
 NON_INTERACTIVE="${HOME_AI_NON_INTERACTIVE:-false}"
 SKIP_MODEL_PULLS="${HOME_AI_SKIP_MODEL_PULLS:-false}"
+PULL_RECOMMENDED_MODELS="${HOME_AI_PULL_RECOMMENDED_MODELS:-false}"
 INSTALL_PROFILE="${HOME_AI_INSTALL_PROFILE:-${HOME_AI_PROFILE:-core}}"
 CUSTOM_PROFILES="${HOME_AI_PROFILES:-}"
 
@@ -86,6 +87,7 @@ Options:
 Environment:
   HOME_AI_NON_INTERACTIVE=true
   HOME_AI_SKIP_MODEL_PULLS=true
+  HOME_AI_PULL_RECOMMENDED_MODELS=true
   HOME_AI_INSTALL_PROFILE=core
   HOME_AI_PROFILES=search,automation
 EOF
@@ -315,6 +317,23 @@ log "Model tier selected: ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
 normalize_profile_name "$INSTALL_PROFILE" || err "Invalid install profile"
 INSTALL_CAPABILITIES="$(profile_capabilities_for "$INSTALL_PROFILE" "$CUSTOM_PROFILES")"
 INSTALL_CAPABILITIES_CSV="$(csv_from_words "$INSTALL_CAPABILITIES")"
+
+if [[ "$SKIP_MODEL_PULLS" != true && "$PULL_RECOMMENDED_MODELS" != true ]]; then
+  if [[ "$NON_INTERACTIVE" == true ]]; then
+    SKIP_MODEL_PULLS=true
+    warn "Non-interactive install defaults to no model pulls. Set HOME_AI_PULL_RECOMMENDED_MODELS=true to opt in."
+  else
+    warn "Recommended ${MODEL_TIER} tier models may download several GB."
+    read -rp "Pull recommended Ollama models now? [y/N] " MODEL_PULL_CONFIRM
+    if [[ "$MODEL_PULL_CONFIRM" =~ ^[Yy]$ ]]; then
+      PULL_RECOMMENDED_MODELS=true
+    else
+      SKIP_MODEL_PULLS=true
+      warn "Skipping model pulls. Pull later with: bash scripts/add-model.sh qwen2.5:7b"
+    fi
+  fi
+fi
+
 if [[ "$INSTALL_PROFILE" == "full" && "$NON_INTERACTIVE" != true ]]; then
   warn "Full profile enables every optional service, including OpenHands Docker socket access."
   read -rp "Type full to continue with the full profile: " FULL_CONFIRM
@@ -593,6 +612,7 @@ MODELS_TO_PULL=()
 if [[ "$SKIP_MODEL_PULLS" == true ]]; then
   warn "Skipping Ollama model pulls. Pull models later with: bash scripts/add-model.sh <model>"
 else
+  log "Model pulls explicitly enabled"
   MODELS_TO_PULL+=("nomic-embed-text")
 fi
 
@@ -803,6 +823,7 @@ if [[ ! -f "$FIRST_BOOT_FLAG" ]]; then
     if HOME_AI_STACK_DIR="${SCRIPT_DIR}" \
       HOME_AI_PROFILE="${INSTALL_PROFILE}" \
       HOME_AI_PROFILES="${INSTALL_CAPABILITIES_CSV}" \
+      HOME_AI_SKIP_MODEL_PULLS="${SKIP_MODEL_PULLS}" \
       bash "${SCRIPT_DIR}/scripts/bootstrap.sh"; then
       touch "$FIRST_BOOT_FLAG"
       log "Bootstrap complete"
