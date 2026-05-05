@@ -1,7 +1,8 @@
 # Merlin hardware tiers.
 #
-# This is the target policy for future profile/model selection. It is currently
-# documentation/config only; install.sh remains the protected baseline.
+# This is the target policy for future profile/model selection. Bash scripts
+# source config/merlin/model-tiers.env for runtime checks so the installer does
+# not need a YAML parser dependency. install.sh remains the protected baseline.
 
 tiers:
   low:

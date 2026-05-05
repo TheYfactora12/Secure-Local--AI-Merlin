@@ -98,3 +98,15 @@ Qdrant.
 ```bash
 bash tests/memory-config-smoke.sh
 ```
+
+---
+
+## doctor-model-smoke.sh
+
+This test does not require Docker or real Ollama. It injects a fake `ollama`
+command and verifies that `scripts/doctor.sh` reports installed and missing
+recommended models with exact pull commands.
+
+```bash
+bash tests/doctor-model-smoke.sh
+```

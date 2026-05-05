@@ -167,7 +167,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Check RAM and disk
 - [x] Check localhost binding safety
 - [x] Check `.env` required keys
-- [ ] Check selected models are installed or give exact pull commands
+- [x] Check recommended models are installed or give exact pull commands
 - [x] Print one clear next command
 
 ### 3. Define Merlin/Magic Mode Architecture
@@ -192,6 +192,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 ### 5. Make Tests Match Profiles
 
 - [x] Memory config smoke test: manifest and restore dry-run
+- [x] Doctor model smoke test: installed/missing model reporting
 - [ ] Core test: Ollama, Open WebUI, LiteLLM, Qdrant, dashboard
 - [ ] Search test: Perplexica, SearXNG
 - [ ] Automation test: n8n health and workflow import

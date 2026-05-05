@@ -6,6 +6,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_DIR="${HOME_AI_STACK_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 ENV_FILE="${STACK_DIR}/.env"
+MODEL_TIERS_FILE="${MERLIN_MODEL_TIERS_FILE:-${STACK_DIR}/config/merlin/model-tiers.env}"
 
 GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[1;33m'
 CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'; DIM='\033[2m'
@@ -85,6 +86,11 @@ check_http() {
   fi
 }
 
+http_ok() {
+  local url="$1"
+  curl -fsS --max-time 2 "$url" >/dev/null 2>&1
+}
+
 secret_status() {
   local key="$1"
   local val
@@ -130,6 +136,54 @@ check_bind() {
   fi
 }
 
+recommended_models_for_tier() {
+  local tier="$1"
+  case "$tier" in
+    low) printf '%s\n' "${MERLIN_LOW_MODELS[@]:-qwen2.5:7b}" ;;
+    base) printf '%s\n' "${MERLIN_BASE_MODELS[@]:-qwen2.5:7b}" ;;
+    mid) printf '%s\n' "${MERLIN_MID_MODELS[@]:-qwen2.5:32b}" ;;
+    high) printf '%s\n' "${MERLIN_HIGH_MODELS[@]:-qwen2.5:32b}" ;;
+    *) printf '%s\n' "${MERLIN_UNKNOWN_MODELS[@]:-qwen2.5:7b}" ;;
+  esac
+}
+
+installed_ollama_models() {
+  if command -v ollama >/dev/null 2>&1; then
+    ollama list 2>/dev/null | awk 'NR > 1 {print $1}' || true
+    return 0
+  fi
+
+  if command -v python3 >/dev/null 2>&1 && http_ok "http://localhost:11434/api/tags"; then
+    curl -fsS --max-time 3 "http://localhost:11434/api/tags" 2>/dev/null | \
+      python3 -c 'import json,sys
+try:
+    data=json.load(sys.stdin)
+except Exception:
+    data={}
+for model in data.get("models", []):
+    name=model.get("name")
+    if name:
+        print(name)' || true
+  fi
+}
+
+model_is_installed() {
+  local wanted="$1"
+  local installed="$2"
+  echo "$installed" | grep -Fxq "$wanted"
+}
+
+if [[ -f "$MODEL_TIERS_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$MODEL_TIERS_FILE"
+else
+  MERLIN_LOW_MODELS=("qwen2.5:7b" "nomic-embed-text")
+  MERLIN_BASE_MODELS=("qwen2.5:7b" "qwen2.5-coder:7b" "nomic-embed-text")
+  MERLIN_MID_MODELS=("qwen2.5:32b" "qwen2.5-coder:14b" "nomic-embed-text")
+  MERLIN_HIGH_MODELS=("qwen2.5:32b" "deepseek-r1:32b" "nomic-embed-text")
+  MERLIN_UNKNOWN_MODELS=("qwen2.5:7b" "nomic-embed-text")
+fi
+
 echo -e "\n${CYAN}${BOLD}HOME AI ELITE — Merlin Doctor${NC}"
 echo -e "$(date)\n"
 
@@ -139,6 +193,7 @@ echo -e "${BOLD}Repository${NC}"
 [[ -f "${STACK_DIR}/docker-compose.yml" ]] && pass "docker-compose.yml present" || fail "docker-compose.yml missing"
 [[ -f "${STACK_DIR}/config/merlin/profiles.yaml" ]] && pass "Merlin profiles config present" || warn "Merlin profiles config missing"
 [[ -f "${STACK_DIR}/config/merlin/hardware-tiers.yaml" ]] && pass "Merlin hardware tiers config present" || warn "Merlin hardware tiers config missing"
+[[ -f "${STACK_DIR}/config/merlin/model-tiers.env" ]] && pass "Merlin model tier runtime manifest present" || warn "Merlin model tier runtime manifest missing"
 [[ -f "${STACK_DIR}/config/merlin/memory.yaml" ]] && pass "Merlin memory schema config present" || warn "Merlin memory schema config missing"
 [[ -f "${STACK_DIR}/config/merlin/memory-collections.env" ]] && pass "Merlin memory runtime manifest present" || warn "Merlin memory runtime manifest missing"
 
@@ -206,6 +261,39 @@ else
   fi
 fi
 check_http "Ollama API" "http://localhost:11434/api/tags"
+
+echo -e "\n${BOLD}Models${NC}"
+INSTALLED_MODELS="$(installed_ollama_models)"
+if [[ -z "$INSTALLED_MODELS" ]]; then
+  warn "No installed Ollama models detected"
+  info "Recommended ${TIER} tier pulls:"
+  while IFS= read -r model; do
+    [[ -n "$model" ]] && info "bash scripts/add-model.sh ${model}"
+  done < <(recommended_models_for_tier "$TIER")
+else
+  MODEL_COUNT="$(echo "$INSTALLED_MODELS" | sed '/^$/d' | wc -l | tr -d ' ')"
+  pass "Installed Ollama models detected: ${MODEL_COUNT}"
+  while IFS= read -r model; do
+    [[ -n "$model" ]] && info "Installed: ${model}"
+  done <<< "$INSTALLED_MODELS"
+
+  MISSING_MODELS=()
+  while IFS= read -r model; do
+    [[ -z "$model" ]] && continue
+    if model_is_installed "$model" "$INSTALLED_MODELS"; then
+      pass "Recommended model installed: ${model}"
+    else
+      MISSING_MODELS+=("$model")
+    fi
+  done < <(recommended_models_for_tier "$TIER")
+
+  if [[ "${#MISSING_MODELS[@]}" -gt 0 ]]; then
+    warn "Missing ${TIER} tier recommended model(s): ${MISSING_MODELS[*]}"
+    for model in "${MISSING_MODELS[@]}"; do
+      info "bash scripts/add-model.sh ${model}"
+    done
+  fi
+fi
 
 echo -e "\n${BOLD}Environment${NC}"
 if [[ -f "$ENV_FILE" ]]; then
