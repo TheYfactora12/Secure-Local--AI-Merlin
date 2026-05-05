@@ -1,302 +1,235 @@
-# WIZARD AI Stack — Roadmap
+# Home AI Elite — Roadmap
 
-> **Failure Map:** See [`docs/failure-map.md`](docs/failure-map.md) for the 20 documented patterns
-> from real self-hosted AI projects that failed. Every v1.3 item below closes a specific failure.
+This roadmap tracks what is actually verified, what is only scaffolded, and what must be streamlined before calling the project stable.
 
-> **Research Log:** Session 2026-05-02 — benchmarks, observability, memory architecture, Ollama MLX,
-> and self-hosted failure mapping added as v1.5, v1.6, v1.7 milestones.
+## Current Reality
 
-> **Stress Test Log:** Session 2026-05-02 — rc2 patch closes 8 surfaces found in hard stress test.
-> See commit history for surface-by-surface findings.
+Home AI Elite has a broad prototype stack, but it is not yet a laptop-stable v1.0 product. The main architecture problem is that the "full stack" became the default startup path. On a normal Mac or PC, that creates too much install friction, memory pressure, port usage, and failure surface.
 
----
+The next milestone is not more features. The next milestone is a reliable laptop-first core that can run before optional services are enabled. From there, the same repo should scale up based on hardware tier and install profile.
 
-## ✅ v0.1 — Foundation
-- [x] Repo scaffolding & folder structure
-- [x] `docker-compose.yml` — 8 services wired together
-- [x] `.env.example` — all variables documented
-- [x] `README.md` — architecture, hardware tiers, commands
-- [x] `scripts/` — status, stop, restart, update, backup, add-model
+## Architecture Direction
 
-## ✅ v0.2 — Full Stack Config
-- [x] `install.sh` — RAM-aware, 4 model tiers, health checks, dashboard
-- [x] `configs/litellm/config.yaml` — local-first model router
-- [x] `configs/searxng/settings.yml` — private web search
-- [x] `configs/perplexica/config.toml` — AI-powered search frontend
-- [x] `n8n-workflows/ai-router.json` — starter automation workflow
-- [x] `mcp/install-mcp-servers.sh` — GitHub + Qdrant MCP connectors
+### Install Philosophy
 
-## ✅ v0.3 — First-Boot Automation
-- [x] `scripts/init-qdrant.sh` — auto-create 4 Qdrant collections
-- [x] `scripts/import-n8n-workflows.sh` — auto-import via REST API
-- [x] `scripts/bootstrap.sh` — orchestrates full first-boot init
-- [x] `launchd/` — macOS auto-start on login (Docker + all services)
-- [x] `launchd/install-launchd.sh` — one-command setup + uninstall
+The installer should ask or infer what kind of machine it is running on, then enable the right amount of stack.
 
-## ✅ v0.4 — CI/CD + Safe Upgrades
-- [x] `.github/workflows/ci.yml` — ShellCheck, compose validate, JSON/YAML lint
-- [x] `scripts/upgrade.sh` — backup → pull → restart → health check → auto-rollback
-- [x] `.github/workflows/release.yml` — auto-tag GitHub releases on main
+- [ ] Small laptop install: core services only, lowest memory pressure
+- [ ] Developer laptop install: core + optional coding/search profiles
+- [ ] Desktop/workstation install: full local stack with larger models
+- [ ] Home server install: auto-start, backups, nginx, automation, and monitoring
+- [ ] Advanced/manual install: user-selected profiles and ports
 
-## ✅ v0.5 — macOS PKG Installer
-- [x] `pkg/build-pkg.sh` — sign & notarize a `.pkg` with pkgbuild
-- [x] Pre-install script: preflight checks (macOS version, RAM, disk space)
-- [x] Post-install script: runs install.sh + bootstrap.sh silently
-- [x] LaunchAgent installed by the pkg
-- [x] Uninstaller bundled inside the pkg
-> ⚠️ Real-hardware test on a clean Mac still needed to fully close this out.
+The same project should support all of these without maintaining separate forks.
 
-## ✅ v0.6 — QC Hardening & Test Layer
-- [x] `tests/e2e-test.sh` — service health end-to-end validation
-- [x] `tests/README.md` — how to run tests, expected output, failure guide
-- [x] `.gitleaks.toml` — secret scanning config
-- [x] CI: `tests/` + `pkg/scripts/` syntax check added
-- [x] CI: secret scan job (gitleaks + pattern check)
+### Default Core
 
-## ✅ v0.7 — Security Hardening
-- [x] `configs/nginx/nginx.conf` — Nginx TLS reverse proxy, HTTP→HTTPS redirect, rate limiting
-- [x] `configs/fail2ban/jail.local` — Fail2ban: 5 failures = 1hr ban
-- [x] `configs/fail2ban/filter.d/open-webui.conf` + `n8n.conf`
-- [x] `docker-compose.yml` — Nginx, Fail2ban, Watchtower added
-- [x] `launchd/com.homeai.backup.plist` — daily 2am backup timer
-- [x] `scripts/generate-certs.sh` — self-signed TLS cert generator
-- [x] `scripts/healthcheck.sh` — full stack health + optional webhook ping
+These should be the only services required for the first successful install:
 
-## ✅ v0.8 — Wizard Brain + Model Management
-- [x] Brain renamed to **Wizard** — consistent across all containers, scripts, and workflows
-- [x] `config/models/models.json` — declarative model manifest (required/optional, role, size)
-- [x] `install.sh` reads `models.json` — no script editing needed to add/remove models
-- [x] `dashboard/index.html` — Wizard HQ: live health dots, Ask panel, routing map, model status, activity log
-- [x] `cli/wizard` — full CLI: `wizard ask`, `wizard route`, `wizard pull`, `wizard train`, `wizard backup`, `wizard open`, `wizard status`
-- [x] CLI symlinked system-wide on install (available as `wizard` anywhere in terminal)
-- [x] `backup/backup.sh` + `backup/restore.sh` — Qdrant memory + n8n workflow backup/restore
-- [x] `config/mcp/mcp-claude-desktop.json` — Claude Desktop MCP integration ready to paste
-- [x] `config/mcp/vscode-continue.json` — VS Code Continue extension config
+- [ ] Native Ollama on macOS for Metal acceleration
+- [ ] Open WebUI for the primary chat UI
+- [ ] LiteLLM for model routing
+- [ ] Qdrant for memory/RAG storage
+- [ ] Wizard dashboard/status page
+- [ ] `wizard doctor` or equivalent preflight check
 
-## ✅ v0.9 — Agent + Routing Layer
-- [x] `n8n-workflows/01-smart-task-router.json` — classifies SENSITIVE/CODING/RESEARCH/GENERAL
-- [x] `n8n-workflows/02-daily-briefing.json` — 6AM InfoSec briefing
-- [x] `n8n-workflows/03-wizard-memory-ingestor.json` — RAG: embed docs into Qdrant
-- [x] `n8n-workflows/04-wizard-training-capture.json` — self-scores exchanges, saves quality ≥7
-- [x] `n8n-workflows/05-wizard-health-monitor.json` — 15-min health check
-- [x] SENSITIVE tasks: hardcoded local-only — never reach cloud APIs
-- [x] All workflows use Wizard brain container hostname (`wizard`) for internal routing
+### Optional Profiles
 
----
+These should not be required for first boot:
 
-## 🔲 v1.0 — Signed Release (NEXT — DO NOT DEVIATE)
+- [ ] Search profile: Perplexica + SearXNG
+- [ ] Automation profile: n8n + workflow import
+- [ ] Coding profile: OpenHands
+- [ ] Security/proxy profile: nginx + fail2ban
+- [ ] Ops profile: watchtower + launchd auto-start + scheduled backups
+- [ ] Packaging profile: signed macOS `.pkg`
 
-### Stress Test Patches Applied (rc1 + rc2)
-- [x] **rc1** — `install.sh`: macOS `df -BG` crash fixed (cross-platform `df -k`)
-- [x] **rc1** — `install.sh`: `llama3.3:70b-instruct-q4_K_M` → canonical `llama3.3:70b` tag
-- [x] **rc1** — `install.sh`: explicit `cli/wizard` file check before symlink with actionable error
-- [x] **rc2** — `docker-compose.yml`: removed deprecated `version: '3.8'` key
-- [x] **rc2** — `docker-compose.yml`: Ollama port bound to `127.0.0.1:11434` (was `0.0.0.0` — LAN bypass risk)
-- [x] **rc2** — `docker-compose.yml`: Qdrant gRPC port `6334` removed (unused, zero-auth exposure)
-- [x] **rc2** — `docker-compose.yml`: all secret fallbacks changed from known defaults to `REQUIRED_CHANGE_ME` (loud failure vs. silent insecurity)
-- [x] **rc2** — `docker-compose.yml`: healthcheck blocks added to LiteLLM, Open WebUI, n8n
-- [x] **rc2** — `docker-compose.yml`: `ENABLE_SIGNUP` moved to `.env` variable (lockdown without editing compose)
-- [x] **rc2** — `install.sh`: `nomic-embed-text` pull failure is now `err` (hard stop — was `warn`+continue; silent failure breaks all RAG)
-- [x] **rc2** — `nginx depends_on` upgraded to `service_healthy` conditions on all upstream services
-- [x] **rc2** — `openhands depends_on` upgraded to `service_healthy` on `litellm`
+### Hardware Tiers
 
-### Remaining v1.0 Gate Items
-- [ ] Signed + notarized `.pkg` tested on clean macOS 14+ machine
-- [ ] Full install-to-verify under 30 minutes — documented and timed
-- [ ] GitHub Release with `.pkg` artifact and `WIZARD-AI-Installer-v1.0.zip` attached
-- [ ] One-line install verified: `curl -fsSL https://raw.githubusercontent.com/TheYfactora12/home-ai-elite/main/install.sh | bash`
-- [ ] `CHANGELOG.md` covering v0.1 → v1.0 finalized
-- [ ] Security review: no hardcoded secrets ✔ (rc2), all ports documented ✔ (rc2), firewall rules verified
-- [ ] Clean Mac smoke test: Docker → `wizard start` → `wizard status` → all green
-- [ ] Update `.env.example` with `ENABLE_SIGNUP=true # Set false after admin account created`
+The installer should map machine resources to sane defaults.
 
-## 🔲 v1.1 — Intelligence Upgrades
-- [ ] Wizard voice interface (Whisper STT → Mistral → TTS output)
-- [ ] Wizard scheduled tasks (n8n cron → Wizard executes → result to memory)
-- [ ] Wizard fine-tuning pipeline (export training data from Qdrant → Unsloth/LoRA)
-- [ ] Multi-machine Wizard sync (Qdrant replication across 2+ local machines)
-- [ ] **Wizard mobile companion** — Closes Failure 18 (AI trapped on desktop)
-  - iOS shortcut → n8n webhook → Wizard brain
-
-## 🔲 v1.2 — Hardware Layer + Full “Own Perplexity Computer” Stack
-> Research session 2026-05-02: goal is local AI as capable as paid cloud tools on right hardware.
-
-### Hardware Decision Tree
-- [ ] `docs/hardware-guide.md` — tiered hardware specs:
-  - Tier 1 (Minimum): Apple M2/M3 Mac mini, 16GB RAM — 7B models
-  - Tier 2 (Recommended): Apple M3 Pro/Max, 36–64GB RAM — 32B models
-  - Tier 3 (Power): Mac Studio M2/M3 Ultra, 96–192GB RAM — 70B+ models
-  - Tier 4 (GPU Box): Linux + NVIDIA RTX 4090 (24GB VRAM) — 70B quantized
-- [ ] `install.sh` hardware auto-detect: report tier, warn if under Tier 1
-- [ ] NVMe speed requirement documented (min 2GB/s read for model loading)
-- [ ] Networking baseline: gigabit LAN or better for multi-device access
-
-### Full Free Stack Map
-- [ ] **Search brain**: SearXNG + Perplexica — verify wired end-to-end
-- [ ] **Code brain**: OpenHands — verify wizard routes CODING tasks to OpenHands
-- [ ] **Voice brain**: Whisper (STT) + Kokoro/Piper (TTS) — add to compose
-- [ ] **Image brain**: ComfyUI/AUTOMATIC1111 — optional compose profile
-- [ ] **Document brain**: Docling/Unstructured for PDF/doc ingestion — **Closes Failure 10**
-- [ ] Model quality: verify `mistral-nemo`, `qwen2.5:32b`, `deepseek-r1:14b` as defaults
-- [ ] `docs/free-stack-map.md` — component-to-paid-equivalent mapping table
-
-## 🔲 v1.3 — Competitive Gap Closers
-> Ordered by **abandonment impact** from `docs/failure-map.md` research.
-> Each item closes one or more of the 20 documented failure patterns.
-> Build in this exact sequence — do not reorder.
-
-### Priority 1: `wizard doctor` — Closes Failures 1, 4, 15 (Setup Abandonment)
-> Highest ROI item. Prevents the most common abandonment cause: hours of debugging before first chat.
-- [ ] `scripts/doctor.sh` — preflight check: all 8 ports, hostname resolution, model availability,
-  n8n connectivity, env vars, Docker network, disk space
-- [ ] `wizard doctor` CLI command wraps this — run before first boot and after any change
-- [ ] Add troubleshooting section to README: top 10 failure modes with exact fix commands
-
-### Priority 2: n8n Ollama Retry Logic — Closes Failure 2 (Silent Workflow Failures)
-> Prevents production workflows from failing silently mid-stream.
-- [ ] Add response timeout + retry logic to all n8n workflows using Ollama nodes
-- [ ] `wizard test-workflows` CLI command: validates all 5 n8n workflows against local model
-- [ ] Document "context canceled" workaround in `tests/README.md`
-
-### Priority 3: Structured Qdrant Memory Schema — Closes Failures 6, 7, 8 (Amnesia + Drift)
-> Makes Wizard feel smart across sessions. Fixes the #1 “AI feels dumb” complaint.
-- [ ] Define memory schema: payload fields (type, source, timestamp, ttl, quality_score)
-- [ ] `wizard memory clean` CLI: prune stale/low-score memories from all 4 collections
-- [ ] `n8n-workflows/06-session-memory-bridge.json` — auto-inject top-5 relevant memories
-  into every new Open WebUI session via system prompt enrichment
-- [ ] Memory expiry rules: conversation memories expire 30 days, facts/preferences never expire
-
-### Priority 4: Model Tier Auto-Selection — Closes Failure 11 (7B Perception Gap)
-> Stops users from using the wrong model and concluding local AI is inferior.
-- [ ] `install.sh` auto-detects RAM and sets default model tier:
-  - 16GB → `mistral-nemo` (12B), 32GB+ → `qwen2.5:32b`, 64GB+ → `qwen2.5:72b`
-- [ ] `docs/model-selection-guide.md` — task-to-model mapping: coding, analysis, search, sensitive
-- [ ] `wizard model recommend` CLI: suggests best model for available hardware
-
-### Priority 5: Web Search Quality Upgrades — Closes Failure 14 (Search Gap vs. Perplexity)
-> Brings search answer quality closer to Perplexity Pro.
-- [ ] Add cross-encoder reranking step to Perplexica config (via Ollama reranker model)
-- [ ] Add source freshness filter: prefer results < 30 days for research queries
-- [ ] `wizard search "<query>"` CLI command: test search pipeline quality directly
-- [ ] `docs/search-quality-guide.md` — how Wizard search compares to Perplexity, what to expect
-
-### Priority 6: `scripts/upgrade.sh` Extension — Closes Failure 17 (Stale Stack)
-> Keeps Wizard current without manual intervention.
-- [ ] Extend `scripts/upgrade.sh` to also pull latest models from `models.json`
-- [ ] Extend to pull latest n8n workflows from repo
-- [ ] Add `wizard upgrade` CLI wrapper
-- [ ] Add weekly upgrade reminder to daily briefing workflow (02-daily-briefing.json)
-
----
-
-## 🔲 v1.4 — Full Hardware Research Package (“Own Perplexity Computer”)
-- [ ] `docs/hardware-buying-guide.md` — exact hardware recommendations with current prices
-- [ ] `docs/equipment-checklist.md` — complete shopping list from Mac to NVMe to networking
-- [ ] `install.sh` — single-command installs full stack + all components from scratch
-- [ ] Target: blank Mac → fully working Wizard stack in under 30 minutes
-
----
-
-## 🔲 v1.5 — Memory Benchmark Harness
-> **Source:** 2026-05-02 research — MemoryArena, EpBench, AMA-Bench integration guide.
-> Goal: Wizard memory is not just functional — it is **measurable and improvable**.
-> Every memory feature must pass benchmark gates before merge.
-
-### Benchmark Suites (add in this order)
-| Suite | What it tests | Primary metrics |
+| Tier | Target | Default behavior |
 |---|---|---|
-| EpBench | Episodic recall, event ordering, temporal grounding | Recall@k, F1, Kendall's τ, answer grounding |
-| MemoryArena | Multi-session interdependent task completion | Task success, cross-session dependency success, memory usefulness |
-| AMA-Bench | Long-horizon agent memory under realistic trajectories | Horizon-scaled accuracy, causal retrieval quality |
+| Low | 8-15 GB RAM | Core only, 7B models, no OpenHands by default |
+| Base | 16-23 GB RAM | Core + optional search, 7B coder model |
+| Mid | 24-47 GB RAM | Core + search + automation, 14B/32B models where practical |
+| High | 48+ GB RAM | Full stack available, larger models, background services allowed |
+| Server | Always-on desktop/server | Full stack with launchd/backup/nginx/monitoring profiles |
 
-### Deliverables
-- [ ] `tests/benchmarks/` directory scaffold — one subdir per suite
-- [ ] `tests/benchmarks/schema.py` — canonical case object: `{id, suite, sessions, writes, queries, expected, metadata}`
-- [ ] `tests/benchmarks/epbench/adapter.py` — EpBench adapter: episodic write → recall → ordering
-- [ ] `tests/benchmarks/memoryarena/adapter.py` — MemoryArena adapter: session loop, action-memory tracking
-- [ ] `tests/benchmarks/amabench/adapter.py` — AMA-Bench adapter: long trajectory + causal retrieval hooks
-- [ ] `tests/benchmarks/metrics.py` — shared metrics engine: latency p50/p95, hit@k, contradiction drift rate, latest-truth accuracy
-- [ ] `tests/benchmarks/layer_aware.py` — layer-aware scoring: did router query right layer?
-- [ ] `scripts/run-benchmarks.sh` — unified runner with profile flags
-- [ ] `config/benchmarks/wizard.yaml` — tunable knobs: `top_k`, horizon_length, noise_ratio, contradiction_rate
-- [ ] `wizard benchmark run` CLI command
-- [ ] CI gate: EpBench recall@5 ≥ 0.75 required to merge memory-layer changes
-- [ ] JSONL result output → Langfuse (when v1.6 is live) for trend tracking
+Hardware tier should choose safe defaults, but the user should be able to override profiles explicitly.
 
-### Memory Layer Architecture
-- [ ] Split Qdrant collections explicitly by layer:
-  - `wizard_working` — short-term, session-scoped, TTL 4 hours
-  - `wizard_episodic` — events with timestamps, entities, state changes, TTL 30 days
-  - `wizard_semantic` — facts, preferences, long-term knowledge, no expiry
-  - `wizard_action` — agent action history with outcomes, TTL 90 days
-- [ ] `scripts/init-qdrant.sh` updated to create all 4 collections with correct schemas
-- [ ] Memory router: classify each write and route to correct layer before storing
-- [ ] Retrieval router: query correct layer(s) based on query type
+### Profile Matrix
 
----
+| Profile | Purpose | Should run by default? |
+|---|---|---|
+| `core` | Chat, model routing, memory, dashboard | Yes |
+| `search` | Perplexica + SearXNG | No |
+| `automation` | n8n + workflow import | No |
+| `coding` | OpenHands | No |
+| `security` | nginx + fail2ban | Server installs only |
+| `ops` | watchtower + launchd + scheduled backups | Server installs only |
+| `full` | Everything enabled intentionally | Never by accident |
 
-## 🔲 v1.6 — Observability Layer (Langfuse)
-> Goal: Wizard is not a black box. Every prompt, route decision, memory lookup, and failure is traceable.
+## Milestone Status
 
-- [ ] Add Langfuse to `docker-compose.yml` as a local self-hosted service
-- [ ] `configs/langfuse/` — env config for self-hosted Langfuse instance
-- [ ] Ollama → Langfuse tracing via OpenAI-compatible SDK wrapper
-- [ ] n8n workflows emit trace IDs to Langfuse on every Ollama call
-- [ ] Memory layer emits read/write events to Langfuse
-- [ ] Benchmark results (v1.5) export JSONL to Langfuse for trend dashboards
-- [ ] `wizard trace <session_id>` CLI: inspect full trace for a session
-- [ ] `wizard score` CLI: show last 7-day quality trend from Langfuse
-- [ ] `docs/observability-guide.md`
+### v0.1 — Core Scaffold
 
----
+Status: Mostly done, needs simplification.
 
-## 🔲 v1.7 — Wizard Brain v2 (Self-Improving Agent OS)
-> Goal: Wizard stops being “a model that answers” and becomes “an agent OS that learns.”
+- [x] Repository structure exists
+- [x] Docker Compose stack exists
+- [x] `.env.example` exists
+- [x] Basic scripts exist: status, stop, restart, update, backup, add-model
+- [x] README explains intended architecture
+- [ ] Compose default should be reduced to a laptop-safe core
+- [ ] Ports and service list should match docs consistently
 
-### Model Router v2 — Specialist Routing
-- [ ] Replace single-model routing with specialist model dispatch
-- [ ] Router confidence scoring: if confidence < 0.7, escalate to next model tier
-- [ ] `wizard route "<query>"` CLI: shows routing decision + confidence
-- [ ] Router decisions logged to Langfuse (requires v1.6)
+### v0.2 — Full Stack Prototype
 
-### MoE Gating Layer (Experimental)
-- [ ] `src/router/moe_gate.py` — lightweight MoE gating network in PyTorch
-- [ ] A/B test: MoE gate vs. rule-based router on MemoryArena benchmark
-- [ ] `wizard train-gate` CLI: weekly gate re-training from Langfuse data
+Status: Scaffolded, not yet reliable as a default laptop install.
 
-### Critic + Self-Improvement Loop
-- [ ] `n8n-workflows/07-wizard-critic.json` — Wizard scores its own responses 1–10
-- [ ] Weekly self-improvement report
-- [ ] `wizard improve` CLI: manual critic review on last 100 sessions
-- [ ] Contradiction detection before every memory write
+- [x] Perplexica config exists
+- [x] SearXNG config exists
+- [x] LiteLLM config exists
+- [x] OpenHands service exists
+- [x] RAM-aware installer logic exists
+- [ ] Heavy services must move behind Compose profiles
+- [ ] Image tags using `latest`, `main`, or `main-latest` need pinning or documented upgrade policy
+- [ ] Full stack startup needs clean Mac/PC validation after core mode works
+- [ ] Installer should support profile selection by hardware tier and user choice
 
-### Ollama MLX Optimization (Apple Silicon)
-- [ ] Verify MLX preview enabled (`OLLAMA_USE_MLX=1`)
-- [ ] `docs/apple-silicon-optimization.md`
-- [ ] Benchmark: tokens/sec before/after MLX per specialist model
-- [ ] `install.sh` auto-enable MLX on Apple Silicon
-- [ ] Add MLX status to `wizard status` + `scripts/healthcheck.sh`
+### v0.3 — First-Boot Automation
 
----
+Status: Partial.
 
-## Milestone Summary
+- [x] Qdrant init script exists
+- [x] Bootstrap script exists
+- [x] n8n workflow import script exists
+- [x] launchd scripts exist
+- [ ] n8n workflow import is not truly automatic unless `N8N_API_KEY` exists
+- [ ] Bootstrap should support core-only, search, automation, and coding profiles
+- [ ] launchd should not auto-start the entire heavy stack by default
+- [ ] Bootstrap should be idempotent for each profile independently
 
-| Milestone | Focus | Status | Gate |
-|---|---|---|---|
-| v0.1–v0.9 | Foundation → Agent routing | ✅ Complete | — |
-| v1.0 | Signed release | 🔲 **rc2 — smoke test remaining** | Clean Mac smoke test |
-| v1.1 | Voice + fine-tuning | 🔲 Planned | v1.0 complete |
-| v1.2 | Hardware guide + full stack | 🔲 Planned | v1.0 complete |
-| v1.3 | Competitive gap closers | 🔲 Planned | v1.0 complete |
-| v1.4 | Hardware research package | 🔲 Planned | v1.2 complete |
-| v1.5 | Memory benchmark harness | 🔲 Planned | Memory layer split done |
-| v1.6 | Observability (Langfuse) | 🔲 Planned | v1.5 JSONL output done |
-| v1.7 | Wizard Brain v2 — self-improving | 🔲 Planned | v1.5 + v1.6 complete |
+### v0.4 — macOS Package, Backup, Restore
 
----
+Status: Scaffolded, not release-ready.
 
-> **Rule:** Any new feature, bug found, or variation discovered gets added here before code is written.
-> **Stress Test Rule:** Run full 8-surface stress test before every release candidate tag.
-> **Failure Map:** [`docs/failure-map.md`](docs/failure-map.md) — 20 patterns, update when new ones found.
-> **Research Log:** See session notes in `docs/research/` for source reasoning behind each milestone.
-> Maintained by: TheYfactora12
+- [x] `.pkg` build script exists
+- [x] Package preinstall/postinstall scripts exist
+- [x] Backup and restore scripts exist
+- [ ] `.pkg` is not verified as signed, notarized, and clean-machine tested
+- [ ] Backup/restore scripts need path cleanup and collection alignment with current Qdrant schema
+- [ ] Preflight backup/restore needs a real restore test
+
+### v1.0 — Stable Laptop Release
+
+Status: Not done.
+
+v1.0 means a normal laptop can install, start, stop, update, and recover the system without manual debugging.
+
+- [ ] Core profile installs and starts cleanly on this laptop
+- [ ] Docker Desktop and Ollama prerequisites are detected with clear instructions
+- [ ] `wizard doctor` checks Docker, Ollama, ports, disk, RAM, `.env`, models, and service health
+- [ ] Core install completes within a documented time budget
+- [ ] Installer supports selectable profiles: core, search, automation, coding, security, ops, full
+- [ ] Hardware tier detection chooses conservative defaults without blocking manual override
+- [ ] `scripts/update.sh` and `scripts/upgrade.sh` support macOS native Ollama and do not start Docker Ollama accidentally
+- [ ] Backup and restore are tested against the current running stack
+- [ ] End-to-end test covers core mode first, then optional profiles separately
+- [ ] README shows laptop-first install, not full-stack-first install
+- [ ] Signed/notarized `.pkg` is tested on a clean macOS machine
+- [ ] GitHub release includes tested artifacts and changelog
+
+## Immediate Priority
+
+### 1. Create Laptop Core Mode
+
+- [ ] Add Compose profiles so default startup does not include OpenHands, n8n, Perplexica, SearXNG, nginx, fail2ban, or watchtower
+- [ ] Add `HOME_AI_PROFILE` or equivalent install option
+- [ ] Add installer prompts/options for core, developer, workstation, server, and custom installs
+- [ ] Add `scripts/start-core.sh`
+- [ ] Add `scripts/start-search.sh`
+- [ ] Add `scripts/start-automation.sh`
+- [ ] Add `scripts/start-coding.sh`
+- [ ] Update `wizard start` to start core mode by default
+- [ ] Add `wizard start full` for users who intentionally want everything
+
+### 2. Add `wizard doctor`
+
+- [ ] Check Docker CLI availability
+- [ ] Check Docker Desktop running
+- [ ] Check native Ollama availability on macOS
+- [ ] Check RAM and disk
+- [ ] Check port conflicts
+- [ ] Check `.env` required keys
+- [ ] Check selected models are installed or give exact pull commands
+- [ ] Print one clear next command
+
+### 3. Define Merlin/Magic Mode Architecture
+
+- [ ] Keep agent orchestration optional until core mode is stable
+- [ ] Define Magic Mode task routing: general, search, code, automation, memory
+- [ ] Define approval rules for code execution, shell commands, file writes, and network access
+- [ ] Decide whether orchestration lives in n8n, a Python controller, LangGraph-style graphs, or a hybrid
+- [ ] Add trace/log output for routing decisions
+- [ ] Connect Magic Mode to shared Qdrant memory only after memory schema is stable
+
+### 4. Fix Backup/Restore
+
+- [ ] Remove stale `$HOME/wizard-ai` path
+- [ ] Back up current `.env` from repo root
+- [ ] Back up actual configured Qdrant collections
+- [ ] Back up n8n only when automation profile is enabled
+- [ ] Add restore dry-run mode
+- [ ] Test restore from a real generated backup
+
+### 5. Make Tests Match Profiles
+
+- [ ] Core test: Ollama, Open WebUI, LiteLLM, Qdrant, dashboard
+- [ ] Search test: Perplexica, SearXNG
+- [ ] Automation test: n8n health and workflow import
+- [ ] Coding test: OpenHands startup and LiteLLM connection
+- [ ] Upgrade test: backup, pull, restart, health check, rollback path
+
+## Later Roadmap
+
+### v1.1 — Search and Automation Quality
+
+- [ ] Verify Perplexica + SearXNG end to end
+- [ ] Add search quality test queries
+- [ ] Add n8n retry/timeout patterns for Ollama calls
+- [ ] Add workflow validation command
+- [ ] Document expected limitations vs cloud Perplexity
+
+### v1.2 — Agent and Coding Workflow
+
+- [ ] Verify OpenHands against a local repository
+- [ ] Make GitHub token setup explicit and optional
+- [ ] Add coding profile resource warnings
+- [ ] Add model recommendation for code tasks
+
+### v1.3 — Memory Quality
+
+- [ ] Define Qdrant payload schema
+- [ ] Add memory cleanup command
+- [ ] Add memory ingest and recall tests
+- [ ] Add benchmark harness for recall quality
+
+### v1.4 — Packaging and Release
+
+- [ ] Signed and notarized `.pkg`
+- [ ] Clean Mac smoke test
+- [ ] One-line install verified
+- [ ] Release artifact attached to GitHub release
+- [ ] Changelog finalized
+
+### v1.5 — Expanded Modalities
+
+Only after the laptop core is stable:
+
+- [ ] Voice interface
+- [ ] Document ingestion
+- [ ] Image generation profile
+- [ ] Multi-machine sync
+- [ ] Mobile shortcut/webhook companion

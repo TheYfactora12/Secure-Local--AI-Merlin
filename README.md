@@ -1,8 +1,8 @@
 # 🧠 Home AI Elite
 
-> **Your own Perplexity + Codex running on hardware you own. Zero subscriptions.**
+> **Local AI on hardware you own. Start small, scale by profile. Zero required subscriptions.**
 
-A one-shot installer that sets up a complete local AI stack — private web search, conversational AI, autonomous coding agent, vector memory, and workflow automation — in a single command.
+A local-first AI stack for chat, model routing, vector memory, private search, automation, and autonomous coding. The target architecture is core-first: start with the lightweight local AI core, then enable heavier profiles such as search, automation, coding agents, and server operations when the machine can handle them.
 
 [![Version](https://img.shields.io/badge/version-0.2-blue)]
 [![License](https://img.shields.io/badge/license-MIT-green)]
@@ -61,6 +61,8 @@ Run this from the repo root to pick up the ongoing build context (dashboard, ins
 ---
 
 ## 🗺️ Architecture
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the scalable install plan.
 
 ```
 You
@@ -188,11 +190,11 @@ The stack runs 100% locally out of the box. To add cloud fallback for hard tasks
 
 ## 📍 Roadmap
 
-- [x] v0.1 — Core scaffold: Ollama, Open WebUI, n8n, Qdrant
-- [x] v0.2 — Full stack: Perplexica, SearXNG, LiteLLM, OpenHands, RAM-aware installer
-- [ ] v0.3 — Qdrant collection init, n8n workflow auto-import, launchd auto-start agents
-- [ ] v0.4 — macOS `.pkg` signed installer, preflight backup/restore
-- [ ] v1.0 — Stable release, automated tests, upgrade path
+- [x] v0.1 — Core scaffold exists, but default startup still needs simplification
+- [~] v0.2 — Full stack prototype exists, but heavy services must move behind profiles
+- [~] v0.3 — First-boot automation is partial; n8n import still depends on API key setup
+- [~] v0.4 — macOS `.pkg`, backup, and restore are scaffolded but not release-verified
+- [ ] v1.0 — Stable laptop-first release with profiles, doctor checks, tests, backup/restore, and upgrade path
 
 ---
 

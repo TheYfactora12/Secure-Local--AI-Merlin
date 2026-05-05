@@ -43,8 +43,8 @@ services:
     container_name: nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "${NGINX_HTTP_BIND:-127.0.0.1}:${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_BIND:-127.0.0.1}:${NGINX_HTTPS_PORT:-443}:443"
     volumes:
       - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./certs:/etc/nginx/certs:ro
@@ -122,7 +122,7 @@ services:
     container_name: swarm-dashboard
     restart: unless-stopped
     ports:
-      - "8888:80"
+      - "${DASHBOARD_BIND:-127.0.0.1}:${DASHBOARD_PORT:-8888}:80"
     volumes:
       - ./dashboard:/usr/share/nginx/html:ro
     networks:
@@ -145,7 +145,7 @@ services:
     container_name: ollama
     restart: unless-stopped
     ports:
-      - "127.0.0.1:11434:11434"
+      - "${OLLAMA_BIND:-127.0.0.1}:${OLLAMA_PORT:-11434}:11434"
     volumes:
       - ollama:/root/.ollama
     networks:
@@ -169,7 +169,7 @@ services:
     container_name: litellm
     restart: unless-stopped
     ports:
-      - "4000:4000"
+      - "${LITELLM_BIND:-127.0.0.1}:${LITELLM_PORT:-4000}:4000"
     volumes:
       - ./configs/litellm/config.yaml:/app/config.yaml
     command: ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "1"]
@@ -198,7 +198,7 @@ services:
     container_name: open-webui
     restart: unless-stopped
     ports:
-      - "3000:8080"
+      - "${OPEN_WEBUI_BIND:-127.0.0.1}:${OPEN_WEBUI_PORT:-3000}:8080"
     volumes:
       - open-webui:/app/backend/data
     environment:
@@ -237,7 +237,7 @@ services:
     container_name: searxng
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "${SEARXNG_BIND:-127.0.0.1}:${SEARXNG_PORT:-8080}:8080"
     volumes:
       - ./configs/searxng:/etc/searxng:rw
     environment:
@@ -265,7 +265,7 @@ services:
     container_name: perplexica-backend
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "${PERPLEXICA_BACKEND_BIND:-127.0.0.1}:${PERPLEXICA_BACKEND_PORT:-3001}:3001"
     volumes:
       - ${PERPLEXICA_CONFIG_FILE:-./configs/perplexica/config.toml}:/home/perplexica/config.toml
       - perplexica-data:/home/perplexica/data
@@ -286,7 +286,7 @@ services:
     container_name: perplexica-frontend
     restart: unless-stopped
     ports:
-      - "3002:3000"
+      - "${PERPLEXICA_FRONTEND_BIND:-127.0.0.1}:${PERPLEXICA_FRONTEND_PORT:-3002}:3000"
     environment:
       # NEXT_PUBLIC_* vars are browser-side — localhost is the user's machine, not a container
       - NEXT_PUBLIC_API_URL=http://localhost:3001
@@ -309,7 +309,7 @@ services:
     container_name: openhands
     restart: unless-stopped
     ports:
-      - "3003:3000"
+      - "${OPENHANDS_BIND:-127.0.0.1}:${OPENHANDS_PORT:-3003}:3000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ~/.openhands-state:/.openhands-state
@@ -342,7 +342,7 @@ services:
     container_name: qdrant
     restart: unless-stopped
     ports:
-      - "6333:6333"
+      - "${QDRANT_BIND:-127.0.0.1}:${QDRANT_REST_PORT:-6333}:6333"
     volumes:
       - qdrant-storage:/qdrant/storage
     networks:
@@ -361,7 +361,7 @@ services:
     container_name: n8n
     restart: unless-stopped
     ports:
-      - "5678:5678"
+      - "${N8N_BIND:-127.0.0.1}:${N8N_PORT:-5678}:5678"
     volumes:
       - n8n-data:/home/node/.n8n
       - ./n8n-workflows:/home/node/workflows

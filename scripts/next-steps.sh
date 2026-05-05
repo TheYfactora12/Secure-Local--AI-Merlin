@@ -6,7 +6,7 @@ cat <<'TXT'
 ========================================
 
 1. Open WebUI first account
-   - Go to: http://localhost:3001
+   - Go to: http://localhost:3000
    - Create your admin user
    - Settings > Connections: confirm Ollama URL = http://host.docker.internal:11434
    - Select your default local model

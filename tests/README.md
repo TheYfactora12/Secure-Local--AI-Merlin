@@ -14,10 +14,10 @@ Run these **after** `bootstrap.sh` completes to confirm all services are healthy
 | Docker running | Docker daemon is up | `docker info` exits 0 |
 | Compose services up | All containers in `docker-compose.yml` are running | All = `running` state |
 | Ollama API | `GET /api/tags` on port 11434 | HTTP 200, JSON model list |
-| Open WebUI | Port 3001 responds | HTTP 200 or 302 |
+| Open WebUI | Port 3000 responds | HTTP 200 or 302 |
 | n8n | Port 5678 responds | HTTP 200 or 302 |
 | Qdrant | `GET /collections` on port 6333 | HTTP 200, JSON |
-| Perplexica | Port 3000 responds | HTTP 200 |
+| Perplexica | Port 3002 responds | HTTP 200 |
 | SearXNG | Port 8080 responds | HTTP 200 |
 | LiteLLM | Port 4000 responds | HTTP 200 |
 

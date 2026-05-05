@@ -174,6 +174,7 @@ patch_compose_for_macos() {
   log_to_file "[STEP] patch_compose_for_macos — applying macOS compatibility patches"
 
   local COMPOSE_FILE="${SCRIPT_DIR}/docker-compose.yml"
+  local ENV_FILE="${SCRIPT_DIR}/.env"
 
   # ── Patch 1: Disable fail2ban (network_mode: host breaks Docker Desktop) ──
   # fail2ban needs iptables which Docker Desktop's Linux VM does not expose.
@@ -203,10 +204,12 @@ PYEOF
   fi
 
   # ── Patch 2: Set OLLAMA_BASE_URL in .env for services reading it ─────
-  if grep -q '^OLLAMA_BASE_URL=' .env 2>/dev/null; then
-    sed -i.bak 's|^OLLAMA_BASE_URL=.*|OLLAMA_BASE_URL=http://host.docker.internal:11434|' .env && rm -f .env.bak
+  if [[ ! -f "$ENV_FILE" ]]; then
+    warn ".env not found — skipping OLLAMA_BASE_URL patch until environment setup"
+  elif grep -q '^OLLAMA_BASE_URL=' "$ENV_FILE" 2>/dev/null; then
+    sed -i.bak 's|^OLLAMA_BASE_URL=.*|OLLAMA_BASE_URL=http://host.docker.internal:11434|' "$ENV_FILE" && rm -f "${ENV_FILE}.bak"
   else
-    echo "OLLAMA_BASE_URL=http://host.docker.internal:11434" >> .env
+    echo "OLLAMA_BASE_URL=http://host.docker.internal:11434" >> "$ENV_FILE"
   fi
   log ".env OLLAMA_BASE_URL → http://host.docker.internal:11434"
   log_to_file "[PATCH] .env OLLAMA_BASE_URL set"
@@ -349,9 +352,7 @@ if [[ "$OS" == "Darwin" ]]; then
   fi
 fi
 
-# ── BUG-01 FIX: Patch docker-compose.yml for macOS ───────────────────
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-patch_compose_for_macos
 
 log_to_file "[PASS] STEP 2: Dependencies installed"
 
@@ -372,6 +373,11 @@ fi
 # Restrict .env permissions immediately
 chmod 600 .env
 log ".env permissions set to 600 (owner read/write only)"
+
+# ── BUG-01 FIX: Patch docker-compose.yml for macOS ───────────────────
+# Must run after .env exists so a fresh macOS install does not create a
+# partial .env before copying the template.
+patch_compose_for_macos
 
 # ── 3b: Auto-rotate all insecure default secrets ──────────────────────
 rotate_secret() {

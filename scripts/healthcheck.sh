@@ -18,7 +18,8 @@ FAIL=0
 check_http() {
   local name="$1"
   local url="$2"
-  if curl -sf --max-time 5 "${url}" > /dev/null 2>&1; then
+  shift 2
+  if curl -sf --max-time 5 "$@" "${url}" > /dev/null 2>&1; then
     echo "✅ ${name} healthy"
   else
     echo "❌ ${name} not responding (${url})"

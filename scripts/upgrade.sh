@@ -93,7 +93,7 @@ health_check() {
   local max_wait=60 interval=5 elapsed=0 all_healthy=true
 
   declare -A endpoints=(
-    ["Open WebUI"]="http://localhost:3001"
+    ["Open WebUI"]="http://localhost:3000"
     ["n8n"]="http://localhost:5678/healthz"
     ["Qdrant"]="http://localhost:6333/healthz"
     ["SearXNG"]="http://localhost:8080"
@@ -153,7 +153,7 @@ main() {
   echo "  ╔══════════════════════════════════════════╗"
   echo "  ║   ✅ Upgrade complete!                   ║"
   echo "  ╠══════════════════════════════════════════╣"
-  echo "  ║  Open WebUI  → http://localhost:3001     ║"
+  echo "  ║  Open WebUI  → http://localhost:3000     ║"
   echo "  ║  n8n         → http://localhost:5678     ║"
   echo "  ║  Qdrant      → http://localhost:6333     ║"
   echo "  ╚══════════════════════════════════════════╝"

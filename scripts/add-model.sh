@@ -30,8 +30,21 @@ fi
 cd "$STACK_DIR" || exit 1
 MODEL="$1"
 echo "Pulling: $MODEL"
-docker compose exec -T ollama ollama pull "$MODEL"
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  if ! command -v ollama >/dev/null 2>&1; then
+    echo "Ollama CLI not found. Install it with: brew install ollama" >&2
+    exit 1
+  fi
+  ollama pull "$MODEL"
+else
+  docker compose exec -T ollama ollama pull "$MODEL"
+fi
 echo ""
 echo "Done. Model available at http://localhost:11434"
 echo ""
-docker compose exec -T ollama ollama list
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  ollama list
+else
+  docker compose exec -T ollama ollama list
+fi
