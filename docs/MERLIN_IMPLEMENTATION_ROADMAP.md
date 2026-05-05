@@ -290,6 +290,7 @@ Completed without replacing the working installer:
 - Added `config/merlin/model-tiers.env` as the bash-readable model recommendation manifest.
 - Added `config/merlin/memory.yaml` as the canonical/legacy memory schema reference.
 - Added `config/merlin/memory-collections.env` as the bash-readable Qdrant collection manifest.
+- Added installer profile options for core, developer, workstation, server, full, and custom installs.
 - Updated Qdrant initialization to create current/legacy collections from the manifest.
 - Updated `cli/wizard` memory commands to read collection names from the manifest while keeping `swarm_memory` compatible.
 - Updated backup/restore to use repo-root `.env`, configurable Qdrant collection coverage, and restore dry-run mode.
@@ -300,4 +301,4 @@ Completed without replacing the working installer:
 Next implementation slice:
 
 - Add a disposable live-Qdrant restore test.
-- Add installer/profile selection for core, developer, workstation, server, and custom modes.
+- Add tests that validate installer profile service selection without starting Docker.

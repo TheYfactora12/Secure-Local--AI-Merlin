@@ -34,6 +34,18 @@ cd home-ai-elite
 bash install.sh
 ```
 
+Profile-aware install:
+
+```bash
+bash install.sh --profile core
+bash install.sh --profile developer
+bash install.sh --profile workstation
+bash install.sh --profile server
+bash install.sh --profile custom --profiles search,automation
+```
+
+`core` is the laptop-safe default. Optional profiles can still be started later with `wizard start search`, `wizard start automation`, `wizard start coding`, or `wizard start full`.
+
 **Or install directly from GitHub (no clone needed):**
 
 ```bash

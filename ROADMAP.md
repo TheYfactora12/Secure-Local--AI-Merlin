@@ -15,10 +15,10 @@ The next milestone is not more features. The next milestone is a reliable laptop
 The installer should ask or infer what kind of machine it is running on, then enable the right amount of stack.
 
 - [ ] Small laptop install: core services only, lowest memory pressure
-- [ ] Developer laptop install: core + optional coding/search profiles
-- [ ] Desktop/workstation install: full local stack with larger models
-- [ ] Home server install: auto-start, backups, nginx, automation, and monitoring
-- [ ] Advanced/manual install: user-selected profiles and ports
+- [x] Developer laptop install: core + optional search profile
+- [x] Desktop/workstation install: core + search + automation profile
+- [x] Home server install: core + search + automation + security + ops profile
+- [x] Advanced/manual install: user-selected capability profiles
 
 The same project should support all of these without maintaining separate forks.
 
@@ -150,7 +150,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 
 - [x] Add profile config so default startup intent does not include OpenHands, n8n, Perplexica, SearXNG, nginx, fail2ban, or watchtower
 - [ ] Add `HOME_AI_PROFILE` or equivalent install option
-- [ ] Add installer prompts/options for core, developer, workstation, server, and custom installs
+- [x] Add installer options for core, developer, workstation, server, and custom installs
 - [x] Add `scripts/start-core.sh`
 - [x] Add `scripts/start-search.sh`
 - [x] Add `scripts/start-automation.sh`

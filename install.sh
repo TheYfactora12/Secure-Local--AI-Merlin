@@ -42,14 +42,35 @@ set -euo pipefail
 
 NON_INTERACTIVE="${HOME_AI_NON_INTERACTIVE:-false}"
 SKIP_MODEL_PULLS="${HOME_AI_SKIP_MODEL_PULLS:-false}"
+INSTALL_PROFILE="${HOME_AI_INSTALL_PROFILE:-${HOME_AI_PROFILE:-core}}"
+CUSTOM_PROFILES="${HOME_AI_PROFILES:-}"
 
-for arg in "$@"; do
+while [[ $# -gt 0 ]]; do
+  arg="$1"
   case "$arg" in
     --non-interactive|--yes)
       NON_INTERACTIVE=true
       ;;
     --skip-model-pulls)
       SKIP_MODEL_PULLS=true
+      ;;
+    --profile=*)
+      INSTALL_PROFILE="${arg#--profile=}"
+      ;;
+    --profile)
+      shift
+      [[ -n "${1:-}" ]] || { echo "--profile requires a value" >&2; exit 1; }
+      INSTALL_PROFILE="$1"
+      ;;
+    --profiles=*)
+      CUSTOM_PROFILES="${arg#--profiles=}"
+      INSTALL_PROFILE="custom"
+      ;;
+    --profiles)
+      shift
+      [[ -n "${1:-}" ]] || { echo "--profiles requires a comma-separated value" >&2; exit 1; }
+      CUSTOM_PROFILES="$1"
+      INSTALL_PROFILE="custom"
       ;;
     -h|--help)
       cat <<'EOF'
@@ -58,15 +79,24 @@ Usage: bash install.sh [options]
 Options:
   --non-interactive   Do not prompt for optional API keys or setup choices.
   --skip-model-pulls  Start services without pulling Ollama models.
+  --profile <name>    Install profile: core, developer, workstation, server, full, custom.
+  --profiles <list>   Custom comma-separated capability profiles: search,automation,coding,security,ops.
   -h, --help          Show this help.
 
 Environment:
   HOME_AI_NON_INTERACTIVE=true
   HOME_AI_SKIP_MODEL_PULLS=true
+  HOME_AI_INSTALL_PROFILE=core
+  HOME_AI_PROFILES=search,automation
 EOF
       exit 0
       ;;
+    *)
+      echo "Unknown option: $arg" >&2
+      exit 1
+      ;;
   esac
+  shift
 done
 
 # ── Colors ────────────────────────────────────────────────────────────
@@ -134,6 +164,116 @@ ensure_docker_cli() {
   fi
 
   return 1
+}
+
+normalize_install_profile() {
+  case "$INSTALL_PROFILE" in
+    core|developer|workstation|server|full|custom)
+      ;;
+    *)
+      err "Unknown install profile: ${INSTALL_PROFILE}. Use core, developer, workstation, server, full, or custom."
+      ;;
+  esac
+}
+
+profile_capabilities() {
+  case "$INSTALL_PROFILE" in
+    core)
+      echo ""
+      ;;
+    developer)
+      echo "search"
+      ;;
+    workstation)
+      echo "search automation"
+      ;;
+    server)
+      echo "search automation security ops"
+      ;;
+    full)
+      echo "search automation coding security ops"
+      ;;
+    custom)
+      echo "$CUSTOM_PROFILES" | tr ',' ' '
+      ;;
+  esac
+}
+
+profile_services_for_darwin() {
+  local capabilities="$1"
+  local services=(dashboard qdrant litellm open-webui)
+  for capability in $capabilities; do
+    case "$capability" in
+      search)
+        services+=(searxng perplexica-backend perplexica-frontend)
+        ;;
+      automation)
+        services+=(n8n)
+        ;;
+      coding)
+        services+=(openhands)
+        ;;
+      security)
+        services+=(nginx)
+        ;;
+      ops)
+        services+=(watchtower)
+        ;;
+      "")
+        ;;
+      *)
+        err "Unknown capability in profile list: ${capability}"
+        ;;
+    esac
+  done
+  printf '%s\n' "${services[@]}"
+}
+
+profile_services_for_linux() {
+  local capabilities="$1"
+  local services=(ollama dashboard qdrant litellm open-webui)
+  for capability in $capabilities; do
+    case "$capability" in
+      search)
+        services+=(searxng perplexica-backend perplexica-frontend)
+        ;;
+      automation)
+        services+=(n8n)
+        ;;
+      coding)
+        services+=(openhands)
+        ;;
+      security)
+        services+=(nginx fail2ban)
+        ;;
+      ops)
+        services+=(watchtower)
+        ;;
+      "")
+        ;;
+      *)
+        err "Unknown capability in profile list: ${capability}"
+        ;;
+    esac
+  done
+  printf '%s\n' "${services[@]}"
+}
+
+csv_from_words() {
+  echo "$1" | awk '{$1=$1; gsub(/ /,","); print}'
+}
+
+compose_profiles_for_linux() {
+  local capabilities="$1"
+  local profiles=(docker-ollama)
+  for capability in $capabilities; do
+    case "$capability" in
+      security|server|ops)
+        profiles+=(linux-security)
+        ;;
+    esac
+  done
+  printf '%s\n' "${profiles[@]}" | awk '!seen[$0]++'
 }
 
 wait_for_docker_engine() {
@@ -275,6 +415,22 @@ elif (( TOTAL_RAM_GB >=  8 )); then MODEL_TIER="low";
 else err "Minimum 8 GB RAM required. Detected: ${TOTAL_RAM_GB} GB."
 fi
 log "Model tier selected: ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
+
+normalize_install_profile
+INSTALL_CAPABILITIES="$(profile_capabilities)"
+INSTALL_CAPABILITIES_CSV="$(csv_from_words "$INSTALL_CAPABILITIES")"
+if [[ "$INSTALL_PROFILE" == "full" && "$NON_INTERACTIVE" != true ]]; then
+  warn "Full profile enables every optional service, including OpenHands Docker socket access."
+  read -rp "Type full to continue with the full profile: " FULL_CONFIRM
+  [[ "$FULL_CONFIRM" == "full" ]] || err "Full profile was not confirmed."
+fi
+log "Install profile selected: ${INSTALL_PROFILE:-core}"
+if [[ -n "$INSTALL_CAPABILITIES" ]]; then
+  log "Optional capabilities enabled: ${INSTALL_CAPABILITIES}"
+else
+  log "Optional capabilities enabled: none"
+fi
+log_to_file "[INFO] install_profile=${INSTALL_PROFILE} capabilities=${INSTALL_CAPABILITIES:-none}"
 
 # Disk space check (cross-platform: df -k works on macOS and Linux)
 AVAIL_DISK_KB=$(df -k . | awk 'NR==2 {print $4}')
@@ -568,6 +724,8 @@ esac
 PERPLEXICA_CONFIG_FILE="./configs/perplexica/config.runtime.toml"
 
 for key_val in \
+  "HOME_AI_PROFILE=${INSTALL_PROFILE}" \
+  "HOME_AI_PROFILES=${INSTALL_CAPABILITIES_CSV}" \
   "OPENHANDS_MODEL=${OPENHANDS_MODEL}" \
   "PERPLEXICA_CHAT_MODEL=${PERPLEXICA_CHAT_MODEL}" \
   "PERPLEXICA_CONFIG_FILE=${PERPLEXICA_CONFIG_FILE}"; do
@@ -613,10 +771,26 @@ fi
 log_to_file "[PASS] STEP 4: Models"
 
 # ── STEP 5: Docker Compose Up ─────────────────────────────────────────
-step "Pulling Docker Images & Starting All Services"
+step "Pulling Docker Images & Starting Profile Services"
 log_to_file "[STEP 5] Docker Compose up"
 
-docker compose pull --quiet
+if [[ "$OS" == "Darwin" ]]; then
+  PROFILE_SERVICES=()
+  while IFS= read -r service; do
+    PROFILE_SERVICES+=("$service")
+  done < <(profile_services_for_darwin "$INSTALL_CAPABILITIES")
+  docker compose pull --quiet "${PROFILE_SERVICES[@]}"
+else
+  COMPOSE_PROFILE_FLAGS=()
+  while IFS= read -r compose_profile; do
+    [[ -n "$compose_profile" ]] && COMPOSE_PROFILE_FLAGS+=(--profile "$compose_profile")
+  done < <(compose_profiles_for_linux "$INSTALL_CAPABILITIES")
+  PROFILE_SERVICES=()
+  while IFS= read -r service; do
+    PROFILE_SERVICES+=("$service")
+  done < <(profile_services_for_linux "$INSTALL_CAPABILITIES")
+  docker compose "${COMPOSE_PROFILE_FLAGS[@]}" pull --quiet "${PROFILE_SERVICES[@]}"
+fi
 log "Images pulled"
 
 # ── BUG-09 FIX: Complete KNOWN_CONTAINERS list ────────────────────────
@@ -662,16 +836,11 @@ log "Pre-flight stale container check complete"
 
 log_to_file "[INFO] docker compose up — flags: --remove-orphans --force-recreate"
 
-# BUG-03: Do NOT start Ollama container on macOS — use native instead
 if [[ "$OS" == "Darwin" ]]; then
   log "macOS: Skipping Ollama Docker container — using native Ollama on host"
-  SERVICES=()
-  while IFS= read -r service; do
-    SERVICES+=("$service")
-  done < <(docker compose config --services 2>/dev/null | grep -v '^ollama$')
-  docker compose up -d --remove-orphans --force-recreate "${SERVICES[@]}"
+  docker compose up -d --remove-orphans --force-recreate --no-deps "${PROFILE_SERVICES[@]}"
 else
-  docker compose --profile docker-ollama --profile linux-security up -d --remove-orphans --force-recreate
+  docker compose "${COMPOSE_PROFILE_FLAGS[@]}" up -d --remove-orphans --force-recreate --no-deps "${PROFILE_SERVICES[@]}"
 fi
 
 log_to_file "[PASS] STEP 5: Docker compose up complete"
@@ -713,10 +882,14 @@ wait_for_service "Ollama"        "http://localhost:11434"           60
 # BUG-02 FIX: Use /health/readiness — does NOT make live LLM calls.
 wait_for_service "LiteLLM"       "http://localhost:4000/health/readiness" 120
 wait_for_service "Open WebUI"    "http://localhost:3000"            90
-wait_for_service "SearXNG"       "http://localhost:8080"            60
 wait_for_service "Qdrant"        "http://localhost:6333/healthz"    60
-# BUG-16 FIX: Use /healthz endpoint now that n8n healthcheck is defined in compose.
-wait_for_service "n8n"           "http://localhost:5678/healthz"    90
+if [[ " ${INSTALL_CAPABILITIES} " == *" search "* ]]; then
+  wait_for_service "SearXNG"     "http://localhost:8080"            60
+fi
+if [[ " ${INSTALL_CAPABILITIES} " == *" automation "* ]]; then
+  # BUG-16 FIX: Use /healthz endpoint now that n8n healthcheck is defined in compose.
+  wait_for_service "n8n"         "http://localhost:5678/healthz"    90
+fi
 
 log_to_file "[PASS] STEP 6: All health checks complete"
 
@@ -729,7 +902,10 @@ if [[ ! -f "$FIRST_BOOT_FLAG" ]]; then
   if [[ -f "scripts/bootstrap.sh" ]]; then
     log "Running first-boot bootstrap (Qdrant collections + n8n workflows)..."
     # BUG-18 FIX: Verbose failure messaging so user knows exactly what to do.
-    if HOME_AI_STACK_DIR="${SCRIPT_DIR}" bash "${SCRIPT_DIR}/scripts/bootstrap.sh"; then
+    if HOME_AI_STACK_DIR="${SCRIPT_DIR}" \
+      HOME_AI_PROFILE="${INSTALL_PROFILE}" \
+      HOME_AI_PROFILES="${INSTALL_CAPABILITIES_CSV}" \
+      bash "${SCRIPT_DIR}/scripts/bootstrap.sh"; then
       touch "$FIRST_BOOT_FLAG"
       log "Bootstrap complete"
       log_to_file "[PASS] STEP 7: Bootstrap complete"

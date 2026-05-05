@@ -28,6 +28,8 @@ N8N_URL="${N8N_URL:-http://localhost:5678}"
 N8N_API_KEY="${N8N_API_KEY:-}"
 OLLAMA_DEFAULT_MODEL="${OLLAMA_DEFAULT_MODEL:-llama3.2}"
 SKIP_MODEL_PULLS="${HOME_AI_SKIP_MODEL_PULLS:-false}"
+INSTALL_PROFILE="${HOME_AI_PROFILE:-core}"
+INSTALL_CAPABILITIES="$(echo "${HOME_AI_PROFILES:-}" | tr ',' ' ')"
 
 GREEN="\033[0;32m"; YELLOW="\033[1;33m"; CYAN="\033[0;36m"
 BOLD="\033[1m"; RESET="\033[0m"
@@ -85,6 +87,69 @@ qdrant_create_collection() {
   log "  ✅ Created: $name"
 }
 
+profile_services_for_darwin() {
+  local capabilities="$1"
+  local services=(dashboard qdrant litellm open-webui)
+  for capability in $capabilities; do
+    case "$capability" in
+      search)
+        services+=(searxng perplexica-backend perplexica-frontend)
+        ;;
+      automation)
+        services+=(n8n)
+        ;;
+      coding)
+        services+=(openhands)
+        ;;
+      security)
+        services+=(nginx)
+        ;;
+      ops)
+        services+=(watchtower)
+        ;;
+    esac
+  done
+  printf '%s\n' "${services[@]}"
+}
+
+profile_services_for_linux() {
+  local capabilities="$1"
+  local services=(ollama dashboard qdrant litellm open-webui)
+  for capability in $capabilities; do
+    case "$capability" in
+      search)
+        services+=(searxng perplexica-backend perplexica-frontend)
+        ;;
+      automation)
+        services+=(n8n)
+        ;;
+      coding)
+        services+=(openhands)
+        ;;
+      security)
+        services+=(nginx fail2ban)
+        ;;
+      ops)
+        services+=(watchtower)
+        ;;
+    esac
+  done
+  printf '%s\n' "${services[@]}"
+}
+
+compose_profiles_for_linux() {
+  local capabilities="$1"
+  local profiles=(docker-ollama)
+  for capability in $capabilities; do
+    case "$capability" in
+      security|server|ops)
+        profiles+=(linux-security)
+        ;;
+    esac
+  done
+  printf '%s\n' "${profiles[@]}" | awk '!seen[$0]++'
+}
+
 # ---------------------------------------------------------------------------
 # Banner
 # ---------------------------------------------------------------------------
@@ -116,21 +181,32 @@ set -a
 # shellcheck disable=SC1090
 source "$ENV_FILE" 2>/dev/null || true
 set +a
+INSTALL_PROFILE="${HOME_AI_PROFILE:-$INSTALL_PROFILE}"
+INSTALL_CAPABILITIES="$(echo "${HOME_AI_PROFILES:-$INSTALL_CAPABILITIES}" | tr ',' ' ')"
 
 # ---------------------------------------------------------------------------
 # Step 2: Start stack
 # ---------------------------------------------------------------------------
 banner "Step 2/7: Starting Services"
 cd "$STACK_DIR" || exit 1
+log "Profile: ${INSTALL_PROFILE}; capabilities: ${INSTALL_CAPABILITIES:-none}"
 if [[ "$(uname -s)" == "Darwin" ]]; then
   log "macOS detected — skipping Ollama Docker container; using native Ollama"
   SERVICES=()
   while IFS= read -r service; do
     SERVICES+=("$service")
-  done < <(docker compose config --services 2>/dev/null | grep -v '^ollama$')
-  docker compose up -d "${SERVICES[@]}"
+  done < <(profile_services_for_darwin "$INSTALL_CAPABILITIES")
+  docker compose up -d --no-deps "${SERVICES[@]}"
 else
-  docker compose --profile docker-ollama --profile linux-security up -d
+  COMPOSE_PROFILE_FLAGS=()
+  while IFS= read -r compose_profile; do
+    [[ -n "$compose_profile" ]] && COMPOSE_PROFILE_FLAGS+=(--profile "$compose_profile")
+  done < <(compose_profiles_for_linux "$INSTALL_CAPABILITIES")
+  SERVICES=()
+  while IFS= read -r service; do
+    SERVICES+=("$service")
+  done < <(profile_services_for_linux "$INSTALL_CAPABILITIES")
+  docker compose "${COMPOSE_PROFILE_FLAGS[@]}" up -d --no-deps "${SERVICES[@]}"
 fi
 log "  ✅ docker compose up -d complete"
 

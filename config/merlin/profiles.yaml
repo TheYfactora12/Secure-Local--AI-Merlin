@@ -1,7 +1,8 @@
 # Merlin install profiles.
 #
-# This file documents the intended service groups. It is not yet consumed by
-# install.sh; keep installer behavior protected until profile startup tests exist.
+# This file documents the intended service groups. Runtime shell scripts use
+# matching bash helpers rather than parsing this YAML, so the installer does not
+# need a YAML parser dependency.
 
 profiles:
   core:
@@ -18,6 +19,31 @@ profiles:
         - docker-ollama
     default: true
     starts_by_default: true
+
+  developer:
+    description: "Developer laptop profile: core plus search; coding can be started separately."
+    includes:
+      - core
+      - search
+    starts_by_default: false
+
+  workstation:
+    description: "Workstation profile: core plus search and automation."
+    includes:
+      - core
+      - search
+      - automation
+    starts_by_default: false
+
+  server:
+    description: "Always-on server profile: core, search, automation, security, and ops."
+    includes:
+      - core
+      - search
+      - automation
+      - security
+      - ops
+    starts_by_default: false
 
   search:
     description: "Private web search and Perplexica search UI."
