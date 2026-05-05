@@ -10,15 +10,71 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PROFILE_LIB="${ROOT_DIR}/scripts/profile-lib.sh"
+
+# shellcheck disable=SC1090
+source "$PROFILE_LIB"
 
 [[ -f "${ROOT_DIR}/.env" ]] && set -a && source "${ROOT_DIR}/.env" && set +a
 
 SKIP_BACKUP=false
 DRY_RUN=false
-for arg in "$@"; do
-  [[ "$arg" == "--skip-backup" ]] && SKIP_BACKUP=true
-  [[ "$arg" == "--dry-run" ]] && DRY_RUN=true
+INSTALL_PROFILE="${HOME_AI_INSTALL_PROFILE:-core}"
+CUSTOM_PROFILES="${HOME_AI_PROFILES:-}"
+
+usage() {
+  cat <<'USAGE'
+Usage: bash scripts/upgrade.sh [options]
+
+Options:
+  --skip-backup       Skip local compose/env backup before upgrade.
+  --dry-run           Show commands without changing services.
+  --profile <name>    Upgrade profile: core, developer, workstation, server, full, custom.
+  --profiles <list>   Custom comma-separated capabilities: search,automation,coding,security,ops.
+  -h, --help          Show this help.
+USAGE
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --skip-backup)
+      SKIP_BACKUP=true
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      shift
+      ;;
+    --profile=*)
+      INSTALL_PROFILE="${1#*=}"
+      shift
+      ;;
+    --profiles=*)
+      CUSTOM_PROFILES="${1#*=}"
+      shift
+      ;;
+    --profile)
+      INSTALL_PROFILE="${2:-}"
+      shift 2
+      ;;
+    --profiles)
+      CUSTOM_PROFILES="${2:-}"
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      usage
+      exit 1
+      ;;
+  esac
 done
+
+normalize_profile_name "$INSTALL_PROFILE" >/dev/null
+CAPABILITIES="$(profile_capabilities_for "$INSTALL_PROFILE" "$CUSTOM_PROFILES")"
 
 GREEN="\033[0;32m"; YELLOW="\033[1;33m"; RED="\033[0;31m"
 CYAN="\033[0;36m"; BOLD="\033[1m"; RESET="\033[0m"
@@ -47,6 +103,7 @@ preflight() {
     exit 1
   fi
   log "  ✅ Docker is running"
+  log "  Profile: ${INSTALL_PROFILE}${CAPABILITIES:+ (${CAPABILITIES})}"
   log "  Current SHA: ${GIT_SHA_BEFORE:0:8}"
 }
 
@@ -78,29 +135,58 @@ git_pull() {
 
 docker_pull() {
   banner "Pulling New Docker Images"
-  run "docker compose -f '${ROOT_DIR}/docker-compose.yml' pull --quiet"
+  local compose_args services pull_cmd
+  compose_args="$(compose_profile_args)"
+  services="$(compose_services)"
+  pull_cmd="docker compose -f '${ROOT_DIR}/docker-compose.yml' ${compose_args} pull --quiet ${services}"
+  run "$pull_cmd"
   log "  ✅ Images updated"
 }
 
 compose_up() {
   banner "Restarting Services"
-  run "docker compose -f '${ROOT_DIR}/docker-compose.yml' up -d --remove-orphans"
+  local compose_args services up_cmd
+  compose_args="$(compose_profile_args)"
+  services="$(compose_services)"
+  up_cmd="docker compose -f '${ROOT_DIR}/docker-compose.yml' ${compose_args} up -d --remove-orphans ${services}"
+  run "$up_cmd"
   log "  ✅ Services restarted"
+}
+
+compose_services() {
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    profile_services_for_darwin "$CAPABILITIES" | xargs
+  else
+    profile_services_for_linux "$CAPABILITIES" | xargs
+  fi
+}
+
+compose_profile_args() {
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    return 0
+  fi
+  compose_profiles_for_linux "$CAPABILITIES" | awk '{printf "--profile %s ", $0}'
 }
 
 health_check() {
   banner "Post-Upgrade Health Check"
   local max_wait=60 interval=5 elapsed=0 all_healthy=true
+  local labels=("Open WebUI" "Qdrant")
+  local urls=("http://localhost:3000" "http://localhost:6333/healthz")
 
-  declare -A endpoints=(
-    ["Open WebUI"]="http://localhost:3000"
-    ["n8n"]="http://localhost:5678/healthz"
-    ["Qdrant"]="http://localhost:6333/healthz"
-    ["SearXNG"]="http://localhost:8080"
-  )
+  if [[ " ${CAPABILITIES} " == *" search "* ]]; then
+    labels+=("SearXNG")
+    urls+=("http://localhost:8080")
+  fi
+  if [[ " ${CAPABILITIES} " == *" automation "* ]]; then
+    labels+=("n8n")
+    urls+=("http://localhost:5678/healthz")
+  fi
 
-  for svc in "${!endpoints[@]}"; do
-    local url="${endpoints[$svc]}"
+  local i svc url
+  for i in "${!labels[@]}"; do
+    svc="${labels[$i]}"
+    url="${urls[$i]}"
     elapsed=0
     until curl -sf "$url" >/dev/null 2>&1; do
       sleep "$interval"
@@ -128,7 +214,11 @@ rollback() {
 
   git -C "$ROOT_DIR" reset --hard "$GIT_SHA_BEFORE"
   cp "${BACKUP_DIR}/docker-compose.yml" "${ROOT_DIR}/docker-compose.yml"
-  docker compose -f "${ROOT_DIR}/docker-compose.yml" up -d --remove-orphans
+  local compose_args services
+  compose_args="$(compose_profile_args)"
+  services="$(compose_services)"
+  # shellcheck disable=SC2086
+  docker compose -f "${ROOT_DIR}/docker-compose.yml" ${compose_args} up -d --remove-orphans ${services}
 
   fail "Rollback complete. Check logs: docker compose logs --tail=50"
   fail "Backup preserved at: $BACKUP_DIR"
@@ -144,7 +234,11 @@ main() {
   if [[ "$UP_TO_DATE" == false ]]; then
     docker_pull
     compose_up
-    health_check || rollback
+    if [[ "$DRY_RUN" == true ]]; then
+      log "Dry-run complete — skipping live health check and rollback."
+    else
+      health_check || rollback
+    fi
   else
     log "Already up to date — nothing to do."
   fi

@@ -137,7 +137,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [ ] Core install completes within a documented time budget
 - [x] Installer supports selectable profiles: core, search, automation, coding, security, ops, full
 - [ ] Hardware tier detection chooses conservative defaults without blocking manual override
-- [ ] `scripts/update.sh` and `scripts/upgrade.sh` support macOS native Ollama and do not start Docker Ollama accidentally
+- [x] `scripts/update.sh` and `scripts/upgrade.sh` support macOS native Ollama and do not start Docker Ollama accidentally
 - [x] Backup and restore are tested against the current running Qdrant stack
 - [x] End-to-end live validation covers core mode on this 8 GB Mac
 - [x] README shows laptop-first install, not full-stack-first install
@@ -198,6 +198,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Installer profile mapping smoke test
 - [x] Core live smoke test: Ollama, Open WebUI, LiteLLM, Qdrant, dashboard
 - [x] Qdrant live restore smoke test with a disposable collection
+- [x] Update/upgrade profile smoke test
 - [ ] Search test: Perplexica, SearXNG
 - [ ] Automation test: n8n health and workflow import
 - [ ] Coding test: OpenHands startup and LiteLLM connection

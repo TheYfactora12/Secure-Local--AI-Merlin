@@ -129,6 +129,7 @@ Required before merging installer-adjacent changes:
 - Non-interactive install with skipped model pulls works.
 - macOS native Ollama path remains intact.
 - Linux Docker Ollama profile remains intact.
+- `tests/update-upgrade-profile-smoke.sh` confirms update/upgrade stay profile-aware and do not start Docker Ollama on macOS core.
 - `.env` creation and secret rotation work.
 - `N8N_SECURE_COOKIE=false` remains set for local HTTP unless user changes it.
 - `PERPLEXICA_CONFIG_FILE` runtime config behavior remains intact.
