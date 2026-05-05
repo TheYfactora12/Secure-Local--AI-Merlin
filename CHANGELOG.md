@@ -15,6 +15,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.3] — 2026-05-05
+
+### Launchd
+- Changed macOS stack auto-start to run `scripts/start-core.sh` with `HOME_AI_PROFILE=core`.
+- Added `tests/launchd-core-smoke.sh` to guard against launchd starting the raw full Compose stack.
+
+---
+
 ## [0.8.2] — 2026-05-05
 
 ### Uninstall
@@ -23,10 +31,6 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - `.env` is backed up before install directories are removed.
 - Docker Desktop, Homebrew, Ollama, and Ollama models are never removed by the Home AI Elite uninstaller.
 - Added `tests/uninstall-smoke.sh` and CI coverage for uninstaller behavior.
-
-### Launchd
-- Changed macOS stack auto-start to run `scripts/start-core.sh` with `HOME_AI_PROFILE=core`.
-- Added `tests/launchd-core-smoke.sh` to guard against launchd starting the raw full Compose stack.
 
 ---
 
