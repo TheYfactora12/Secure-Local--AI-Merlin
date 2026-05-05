@@ -151,7 +151,8 @@ remove_launchd_agents() {
 
 backup_env() {
   [[ -f "${INSTALL_DIR}/.env" ]] || return 0
-  local backup_path="${HOME}/home-ai-elite-env-backup-$(date +%Y%m%d_%H%M%S).env"
+  local backup_path
+  backup_path="${HOME}/home-ai-elite-env-backup-$(date +%Y%m%d_%H%M%S).env"
   log "Backing up .env to ${backup_path}"
   run cp "${INSTALL_DIR}/.env" "$backup_path"
   run chmod 600 "$backup_path" 2>/dev/null || true
