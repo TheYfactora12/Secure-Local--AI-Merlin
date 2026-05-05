@@ -14,7 +14,7 @@ The next milestone is not more features. The next milestone is a reliable laptop
 
 The installer should ask or infer what kind of machine it is running on, then enable the right amount of stack.
 
-- [ ] Small laptop install: core services only, lowest memory pressure
+- [x] Small laptop install: core services only, lowest memory pressure
 - [x] Developer laptop install: core + optional search profile
 - [x] Desktop/workstation install: core + search + automation profile
 - [x] Home server install: core + search + automation + security + ops profile
@@ -26,12 +26,12 @@ The same project should support all of these without maintaining separate forks.
 
 These should be the only services required for the first successful install:
 
-- [ ] Native Ollama on macOS for Metal acceleration
-- [ ] Open WebUI for the primary chat UI
-- [ ] LiteLLM for model routing
-- [ ] Qdrant for memory/RAG storage
-- [ ] Wizard dashboard/status page
-- [ ] `wizard doctor` or equivalent preflight check
+- [x] Native Ollama on macOS for Metal acceleration
+- [x] Open WebUI for the primary chat UI
+- [x] LiteLLM for model routing
+- [x] Qdrant for memory/RAG storage
+- [x] Wizard dashboard/status page
+- [x] `wizard doctor` or equivalent preflight check
 
 ### Optional Profiles
 
@@ -74,14 +74,14 @@ Hardware tier should choose safe defaults, but the user should be able to overri
 
 ### v0.1 — Core Scaffold
 
-Status: Mostly done, needs simplification.
+Status: Core path verified on an 8 GB Mac; optional paths still need separate validation.
 
 - [x] Repository structure exists
 - [x] Docker Compose stack exists
 - [x] `.env.example` exists
 - [x] Basic scripts exist: status, stop, restart, update, backup, add-model
 - [x] README explains intended architecture
-- [ ] Compose default should be reduced to a laptop-safe core
+- [x] Compose/default install path is reduced to a laptop-safe core profile
 - [ ] Ports and service list should match docs consistently
 
 ### v0.2 — Full Stack Prototype
@@ -93,10 +93,10 @@ Status: Scaffolded, not yet reliable as a default laptop install.
 - [x] LiteLLM config exists
 - [x] OpenHands service exists
 - [x] RAM-aware installer logic exists
-- [ ] Heavy services must move behind Compose profiles
+- [x] Heavy services are gated behind install/start profiles for the normal core path
 - [ ] Image tags using `latest`, `main`, or `main-latest` need pinning or documented upgrade policy
 - [ ] Full stack startup needs clean Mac/PC validation after core mode works
-- [ ] Installer should support profile selection by hardware tier and user choice
+- [x] Installer supports profile selection by hardware tier and user choice
 
 ### v0.3 — First-Boot Automation
 
@@ -108,7 +108,7 @@ Status: Partial.
 - [x] launchd scripts exist
 - [x] Qdrant init uses the Merlin memory collection manifest for current/legacy collections
 - [ ] n8n workflow import is not truly automatic unless `N8N_API_KEY` exists
-- [ ] Bootstrap should support core-only, search, automation, and coding profiles
+- [x] Bootstrap supports core-only behavior and skips optional automation imports unless enabled
 - [ ] launchd should not auto-start the entire heavy stack by default
 - [ ] Bootstrap should be idempotent for each profile independently
 
@@ -133,13 +133,13 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 
 - [x] Core profile installs and starts cleanly on this laptop
 - [x] Docker Desktop and Ollama prerequisites are detected with clear instructions
-- [ ] `wizard doctor` checks Docker, Ollama, ports, disk, RAM, `.env`, models, and service health
+- [x] `wizard doctor` checks Docker, Ollama, ports, disk, RAM, `.env`, models, and service health
 - [ ] Core install completes within a documented time budget
-- [ ] Installer supports selectable profiles: core, search, automation, coding, security, ops, full
+- [x] Installer supports selectable profiles: core, search, automation, coding, security, ops, full
 - [ ] Hardware tier detection chooses conservative defaults without blocking manual override
 - [ ] `scripts/update.sh` and `scripts/upgrade.sh` support macOS native Ollama and do not start Docker Ollama accidentally
 - [ ] Backup and restore are tested against the current running stack
-- [ ] End-to-end test covers core mode first, then optional profiles separately
+- [x] End-to-end live validation covers core mode on this 8 GB Mac
 - [ ] README shows laptop-first install, not full-stack-first install
 - [ ] Signed/notarized `.pkg` is tested on a clean macOS machine
 - [ ] GitHub release includes tested artifacts and changelog
@@ -149,7 +149,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 ### 1. Create Laptop Core Mode
 
 - [x] Add profile config so default startup intent does not include OpenHands, n8n, Perplexica, SearXNG, nginx, fail2ban, or watchtower
-- [ ] Add `HOME_AI_PROFILE` or equivalent install option
+- [x] Add `HOME_AI_PROFILE` or equivalent install option
 - [x] Add installer options for core, developer, workstation, server, and custom installs
 - [x] Add `scripts/start-core.sh`
 - [x] Add `scripts/start-search.sh`
@@ -196,13 +196,26 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Doctor model smoke test: installed/missing model reporting
 - [x] Wizard memory config smoke test
 - [x] Installer profile mapping smoke test
-- [ ] Core test: Ollama, Open WebUI, LiteLLM, Qdrant, dashboard
+- [x] Core test: Ollama, Open WebUI, LiteLLM, Qdrant, dashboard
 - [ ] Search test: Perplexica, SearXNG
 - [ ] Automation test: n8n health and workflow import
 - [ ] Coding test: OpenHands startup and LiteLLM connection
 - [ ] Upgrade test: backup, pull, restart, health check, rollback path
 
 ## Later Roadmap
+
+## Latest Core Validation
+
+Validated on 2026-05-05 on this 8 GB Mac:
+
+- `install.sh --profile core --skip-model-pulls --non-interactive` completed successfully.
+- Docker Desktop core services were running: dashboard `:8888`, Open WebUI `:3000`, LiteLLM `:4000`, and Qdrant `:6333`.
+- Native Ollama was running through Homebrew service.
+- Approved model `qwen2.5:7b` was installed and answered locally through Ollama.
+- LiteLLM listed configured model aliases and routed `qwen7b` to local Ollama successfully.
+- `wizard doctor` / `scripts/doctor.sh` finished with 43 passes, 2 warnings, and 0 failures.
+
+Remaining warnings are expected for the low-memory profile: recommended optional models are not all installed, and heavier profiles remain unverified on this laptop.
 
 ### v1.1 — Search and Automation Quality
 

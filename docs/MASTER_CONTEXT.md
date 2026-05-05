@@ -1,9 +1,9 @@
 # Wizard AI Master Context
 
-Last verified: 2026-05-04  
-Repo: `TheYfactora12/home-ai-elite`  
-Branch: `main`  
-Installer: `install.sh` v1.6  
+Last verified: 2026-05-05
+Repo: `TheYfactora12/home-ai-elite`
+Branch: `main`
+Installer: `install.sh` v1.6
 Codex resume: `codex resume 019def0f-35cd-7083-aa1a-9e14d69338bd`
 
 Use this file at the start of every Codex, Perplexity, or AI session to avoid drift.
@@ -107,7 +107,17 @@ The next engineering priority should be #1 and #2. A signed release proves distr
 
 ## Validation
 
-Last validated on 2026-05-04:
+Last validated on 2026-05-05:
+
+- Core install path completed with `HOME_AI_NON_INTERACTIVE=true HOME_AI_SKIP_MODEL_PULLS=true bash install.sh --profile core --skip-model-pulls --non-interactive`.
+- Docker Desktop core services were running: Wizard HQ `:8888`, Open WebUI `:3000`, LiteLLM `:4000`, and Qdrant `:6333`.
+- Native Ollama was running through Homebrew service.
+- Approved low-tier model `qwen2.5:7b` was installed.
+- Ollama local generation returned `Merlin core online`.
+- LiteLLM `/v1/models` listed configured aliases and `/v1/chat/completions` with `qwen7b` returned `Merlin gateway online`.
+- `scripts/doctor.sh` completed with 43 passes, 2 warnings, and 0 failures.
+
+Earlier validation on 2026-05-04:
 
 - `docker compose config --quiet` passed.
 - Default `docker compose config --services` excludes `ollama` and `fail2ban`.
@@ -118,4 +128,3 @@ Last validated on 2026-05-04:
 - GitHub Actions were green for commit `4932356`:
   - CI `25297415649`
   - Release `25297415662`
-

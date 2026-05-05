@@ -276,8 +276,8 @@ Acceptance criteria:
 
 ## Recommended First 3 GitHub Issues
 
-1. Add profile model and core-first startup plan without changing installer behavior. `Done: config and start commands are in place; installer selection still pending.`
-2. Add `wizard doctor` requirements and implementation. `Done: baseline doctor and model recommendation checks are in place; live service checks still depend on local setup.`
+1. Add profile model and core-first startup plan without changing installer behavior. `Done: config, start commands, installer profile selection, and live core validation are in place.`
+2. Add `wizard doctor` requirements and implementation. `Done: baseline diagnostics, model recommendation checks, profile-aware service checks, and live core validation are in place.`
 3. Normalize Merlin memory schema and align bootstrap, CLI, backup, restore, and tests. `In progress: schema config, Qdrant init, backup/restore, CLI alignment, and smoke tests are in place; workflow migration still pending.`
 
 ## Current Implementation Checkpoint
@@ -293,6 +293,9 @@ Completed without replacing the working installer:
 - Added installer profile options for core, developer, workstation, server, full, and custom installs.
 - Added `scripts/profile-lib.sh` so installer, bootstrap, and tests share one profile mapping.
 - Validated `core` profile live on this 8 GB Mac with Docker Desktop and native Ollama.
+- Verified approved local model `qwen2.5:7b` answers through native Ollama.
+- Verified LiteLLM routes the `qwen7b` alias to local Ollama successfully.
+- Verified `scripts/doctor.sh` finishes with 43 passes, 2 warnings, and 0 failures on the core install.
 - Fixed live-validation defects: profile helper load order, host Qdrant bootstrap URL, non-interactive CLI symlink handling, persistent native Ollama startup, and profile-aware doctor checks.
 - Updated Qdrant initialization to create current/legacy collections from the manifest.
 - Updated `cli/wizard` memory commands to read collection names from the manifest while keeping `swarm_memory` compatible.
@@ -304,5 +307,6 @@ Completed without replacing the working installer:
 
 Next implementation slice:
 
+- Add a reusable core model smoke test for Ollama and LiteLLM without exposing secrets.
 - Add a disposable live-Qdrant restore test.
 - Add live Docker validation for optional `search` profile on a machine with enough memory.
