@@ -326,4 +326,5 @@ Next implementation slice:
 - Gate GitHub release creation on tags/manual dispatch and package artifact checks. `Done: .github/workflows/release.yml, tests/release-workflow-smoke.sh`
 - Run static smoke tests in CI. `Done: .github/workflows/ci.yml`
 - Document floating container image tags and gate new ones with a static smoke test. `Done: docs/CONTAINER_IMAGE_POLICY.md, tests/container-image-policy-smoke.sh`
+- Update GitHub checkout actions to the Node 24-compatible major version. `Done: .github/workflows/ci.yml, .github/workflows/release.yml`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

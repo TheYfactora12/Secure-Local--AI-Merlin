@@ -11,7 +11,7 @@ jobs:
     name: ShellCheck — Lint all .sh files
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install ShellCheck
         run: sudo apt-get install -y shellcheck
       - name: Run ShellCheck on all scripts
@@ -26,7 +26,7 @@ jobs:
     name: Docker Compose — Validate config
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Create .env from example
         run: cp .env.example .env
       - name: Validate docker-compose.yml
@@ -42,7 +42,7 @@ jobs:
     name: install.sh — Syntax & dry-run
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check install.sh syntax
         run: |
           bash -n install.sh
@@ -66,7 +66,7 @@ jobs:
     name: n8n Workflows — Validate JSON
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Validate workflow JSON
         run: |
           if [ -z "$(find n8n-workflows -name '*.json' 2>/dev/null)" ]; then
@@ -82,7 +82,7 @@ jobs:
     name: Configs — Validate YAML & PLIST
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install yamllint
         run: pip install yamllint
       - name: Install XML tools
@@ -105,7 +105,7 @@ jobs:
     name: Static smoke tests — profiles, memory, release safety
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Run static smoke tests
         run: |
           bash tests/profile-selection-smoke.sh
@@ -124,7 +124,7 @@ jobs:
     name: Security — Secret pattern scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Check for hardcoded secret patterns
