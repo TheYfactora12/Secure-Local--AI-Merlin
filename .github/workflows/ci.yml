@@ -47,12 +47,13 @@ jobs:
         run: |
           bash -n install.sh
           echo "✅ install.sh syntax OK"
-      - name: Check all scripts syntax (scripts/ + launchd/ + pkg/scripts/ + tests/)
+      - name: Check all scripts syntax (scripts/ + launchd/ + pkg/scripts/ + tests/ + cli)
         run: |
           for f in scripts/*.sh launchd/*.sh pkg/scripts/*.sh tests/*.sh; do
             [ -f "$f" ] || continue
             bash -n "$f" && echo "  ✅ $f" || (echo "  ❌ $f FAILED" && exit 1)
           done
+          bash -n cli/wizard && echo "  ✅ cli/wizard"
       - name: Verify .env.example required keys
         run: |
           for key in OLLAMA_BASE_URL WEBUI_SECRET_KEY N8N_ENCRYPTION_KEY N8N_API_KEY QDRANT_URL; do

@@ -121,6 +121,7 @@ The installer detects your RAM and pulls the right models automatically.
 
 ```bash
 bash scripts/status.sh              # Live health dashboard
+bash scripts/doctor.sh              # Read-only install/profile diagnostic
 bash scripts/stop.sh                # Stop all services
 bash scripts/restart.sh             # Restart all services
 bash scripts/update.sh              # Pull latest images + restart
@@ -134,6 +135,7 @@ Native Ollama brain control:
 wizard brain status                 # Show API, loaded models, installed models
 wizard brain stop                   # Cool down local model runners
 wizard brain start                  # Start native Ollama again
+wizard doctor                       # Diagnose install, Docker, Ollama, ports, and profile safety
 ```
 
 See `docs/MODEL_OPERATIONS.md` for model efficiency and cooldown notes.

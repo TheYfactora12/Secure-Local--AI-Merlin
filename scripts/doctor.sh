@@ -13,11 +13,18 @@ CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'; DIM='\033[2m'
 PASS=0
 WARN=0
 FAIL=0
+NEXT_COMMAND=""
 
 pass() { echo -e "  ${GREEN}✓${NC} $*"; PASS=$((PASS + 1)); }
 warn() { echo -e "  ${YELLOW}!${NC} $*"; WARN=$((WARN + 1)); }
 fail() { echo -e "  ${RED}✗${NC} $*"; FAIL=$((FAIL + 1)); }
 info() { echo -e "  ${DIM}-${NC} $*"; }
+
+set_next_command() {
+  if [[ -z "$NEXT_COMMAND" ]]; then
+    NEXT_COMMAND="$*"
+  fi
+}
 
 ensure_docker_cli() {
   if command -v docker >/dev/null 2>&1; then
@@ -81,6 +88,10 @@ check_http() {
 secret_status() {
   local key="$1"
   local val
+  if [[ ! -f "$ENV_FILE" ]]; then
+    info "$key skipped because .env does not exist yet"
+    return
+  fi
   val="$(env_value "$key")"
   case "$val" in
     "" )
@@ -172,9 +183,15 @@ if ensure_docker_cli; then
     fi
   else
     warn "Docker engine not running"
+    set_next_command "Open Docker Desktop, then run: wizard doctor"
   fi
 else
-  fail "Docker CLI not found"
+  if [[ "$OS" == "Darwin" && -d "/Applications/Docker.app" ]]; then
+    fail "Docker Desktop is installed but Docker CLI was not found at /Applications/Docker.app/Contents/Resources/bin/docker"
+  else
+    fail "Docker CLI not found"
+  fi
+  set_next_command "Install Docker Desktop, then run: wizard doctor"
 fi
 
 echo -e "\n${BOLD}Ollama${NC}"
@@ -182,6 +199,9 @@ if command -v ollama >/dev/null 2>&1; then
   pass "Ollama CLI found"
 else
   warn "Ollama CLI not found"
+  if [[ "$OS" == "Darwin" ]]; then
+    set_next_command "Run: brew install ollama"
+  fi
 fi
 check_http "Ollama API" "http://localhost:11434/api/tags"
 
@@ -195,7 +215,8 @@ if [[ -f "$ENV_FILE" ]]; then
   fi
   [[ "$PERMS" == "600" ]] && pass ".env permissions are 600" || warn ".env permissions are $PERMS; expected 600"
 else
-  fail ".env missing; run bash install.sh"
+  warn ".env missing; installer has not been run in this checkout"
+  set_next_command "Run: bash install.sh --skip-model-pulls"
 fi
 
 for key in WEBUI_SECRET_KEY LITELLM_MASTER_KEY N8N_PASSWORD N8N_ENCRYPTION_KEY SEARXNG_SECRET_KEY; do
@@ -224,6 +245,9 @@ check_http "OpenHands" "http://localhost:3003"
 echo -e "\n${BOLD}Profile Safety${NC}"
 if ensure_docker_cli && docker info >/dev/null 2>&1; then
   RUNNING_SERVICES="$(cd "$STACK_DIR" && docker compose ps --services --filter status=running 2>/dev/null || true)"
+  if [[ -z "$RUNNING_SERVICES" ]]; then
+    info "No Compose services are currently running"
+  fi
   for svc in openhands n8n perplexica-backend perplexica-frontend searxng watchtower nginx; do
     if echo "$RUNNING_SERVICES" | grep -qx "$svc"; then
       if [[ "$TIER" == "low" && "$svc" != "nginx" ]]; then
@@ -239,6 +263,19 @@ fi
 
 echo -e "\n${BOLD}Summary${NC}"
 echo -e "  Passed: ${GREEN}${PASS}${NC}  Warnings: ${YELLOW}${WARN}${NC}  Failures: ${RED}${FAIL}${NC}"
+
+echo -e "\n${BOLD}Next Command${NC}"
+if [[ -n "$NEXT_COMMAND" ]]; then
+  echo "  $NEXT_COMMAND"
+elif [[ ! -f "$ENV_FILE" ]]; then
+  echo "  bash install.sh --skip-model-pulls"
+elif (( FAIL > 0 )); then
+  echo "  Fix the required items above, then run: wizard doctor"
+elif (( WARN > 0 )); then
+  echo "  Review warnings, then run: bash scripts/status.sh"
+else
+  echo "  bash scripts/status.sh"
+fi
 
 if (( FAIL > 0 )); then
   echo -e "\n${RED}${BOLD}Doctor found required fixes.${NC}"
