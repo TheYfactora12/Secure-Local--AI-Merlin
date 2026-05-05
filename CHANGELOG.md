@@ -15,6 +15,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.6] — 2026-05-05
+
+### Packaging
+- Replaced package postinstall login `su -` calls with non-login `sudo -u` user execution.
+- Removed package `DOCKER_CONFIG` override so Docker Desktop keeps its working context/plugin configuration.
+
+---
+
 ## [0.8.5] — 2026-05-05
 
 ### Packaging

@@ -30,10 +30,14 @@ grep -q 'bash install.sh --profile core --skip-model-pulls --non-interactive' "$
   || fail "postinstall does not run the core installer path"
 grep -q 'Install log writable by' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall does not hand log ownership to the installing user"
-grep -q "DOCKER_CONFIG='" "${STACK_DIR}/pkg/scripts/postinstall" \
-  || fail "postinstall does not set non-interactive Docker config"
-grep -q '.docker-noauth' "${STACK_DIR}/pkg/scripts/postinstall" \
-  || fail "postinstall does not prepare no-auth Docker config"
+grep -q 'run_as_user' "${STACK_DIR}/pkg/scripts/postinstall" \
+  || fail "postinstall does not use a dedicated user command runner"
+if grep -q 'su -' "${STACK_DIR}/pkg/scripts/postinstall"; then
+  fail "postinstall still uses login su for user commands"
+fi
+if grep -q 'DOCKER_CONFIG=' "${STACK_DIR}/pkg/scripts/postinstall"; then
+  fail "postinstall should not override Docker Desktop config"
+fi
 grep -q 'tests/core-live-smoke.sh' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall next steps do not point to core live smoke"
 
