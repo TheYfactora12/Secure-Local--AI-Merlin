@@ -309,6 +309,7 @@ Completed without replacing the working installer:
 - Added `tests/update-upgrade-profile-smoke.sh`.
 - Added `tests/installer-model-pull-policy-smoke.sh`.
 - Added `tests/core-install-budget-smoke.sh`.
+- Added `tests/pkg-readiness-smoke.sh`.
 
 Next implementation slice:
 
@@ -317,4 +318,5 @@ Next implementation slice:
 - Make update/upgrade profile-aware and macOS native-Ollama safe. `Done: scripts/update.sh, scripts/upgrade.sh, tests/update-upgrade-profile-smoke.sh`
 - Make hardware-tier model pulls opt-in while preserving explicit override. `Done: install.sh, tests/installer-model-pull-policy-smoke.sh`
 - Document and enforce core install time budget. `Done: tests/core-install-budget-smoke.sh`
+- Align package postinstall with laptop-safe core install. `Done: pkg/scripts/postinstall, tests/pkg-readiness-smoke.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

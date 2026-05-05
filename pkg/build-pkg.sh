@@ -88,6 +88,7 @@ stage_payload() {
   rsync -a \
     --exclude='.git' \
     --exclude='.env' \
+    --exclude='certs/' \
     --exclude='backups/' \
     --exclude='pkg/build/' \
     --exclude='*.pkg' \

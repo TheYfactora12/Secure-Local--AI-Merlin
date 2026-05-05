@@ -117,6 +117,7 @@ Last validated on 2026-05-05:
 - Ollama local generation returned `Merlin core online`.
 - LiteLLM `/v1/models` listed configured aliases and `/v1/chat/completions` with `qwen7b` returned `Merlin gateway online`.
 - `scripts/doctor.sh` completed with 43 passes, 2 warnings, and 0 failures.
+- Unsigned local package build produced `home-ai-elite-0.6.1.pkg`; payload check found no `.env` or generated certs. Package is not signed/notarized.
 
 Earlier validation on 2026-05-04:
 

@@ -10,7 +10,6 @@
 #   4. Docker Desktop installed and launchable
 #   5. Git installed
 # =============================================================================
-#!/usr/bin/env bash
 set -euo pipefail
 
 log()  { echo "[preinstall] $*"; }

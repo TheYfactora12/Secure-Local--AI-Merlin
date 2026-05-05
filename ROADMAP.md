@@ -119,6 +119,7 @@ Status: Scaffolded, not release-ready.
 - [x] `.pkg` build script exists
 - [x] Package preinstall/postinstall scripts exist
 - [x] Backup and restore scripts exist
+- [x] Unsigned local `.pkg` builds successfully and excludes local secrets/generated certs
 - [ ] `.pkg` is not verified as signed, notarized, and clean-machine tested
 - [x] Backup/restore scripts no longer use the stale `$HOME/wizard-ai` path
 - [x] Backup covers the current configured/legacy Qdrant collections without renaming live data
@@ -201,6 +202,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Update/upgrade profile smoke test
 - [x] Installer model-pull policy smoke test
 - [x] Core install budget smoke test
+- [x] Package readiness smoke test
 - [ ] Search test: Perplexica, SearXNG
 - [ ] Automation test: n8n health and workflow import
 - [ ] Coding test: OpenHands startup and LiteLLM connection
