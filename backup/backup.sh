@@ -4,12 +4,19 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_DIR="${HOME_AI_STACK_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
+MEMORY_COLLECTIONS_FILE="${MERLIN_MEMORY_COLLECTIONS_FILE:-${STACK_DIR}/config/merlin/memory-collections.env}"
 BACKUP_DIR="${HOME_AI_BACKUP_DIR:-$HOME/wizard-backups}"
 TIMESTAMP="$(date +"%Y%m%d_%H%M%S")"
 OUT="${BACKUP_DIR}/wizard_backup_${TIMESTAMP}"
 QDRANT_URL="${QDRANT_URL:-http://localhost:6333}"
 N8N_URL="${N8N_URL:-http://localhost:5678}"
-COLLECTIONS="${MERLIN_BACKUP_COLLECTIONS:-home_ai_memory swarm_memory documents openwebui perplexica n8n_memory conversations}"
+
+if [[ -f "$MEMORY_COLLECTIONS_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$MEMORY_COLLECTIONS_FILE"
+fi
+
+COLLECTIONS="${MERLIN_BACKUP_COLLECTIONS:-${MERLIN_QDRANT_BACKUP_COLLECTIONS:-home_ai_memory swarm_memory documents openwebui perplexica n8n_memory conversations}}"
 
 log() { echo "[backup] $*"; }
 warn() { echo "[backup] WARN: $*" >&2; }

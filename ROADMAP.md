@@ -106,6 +106,7 @@ Status: Partial.
 - [x] Bootstrap script exists
 - [x] n8n workflow import script exists
 - [x] launchd scripts exist
+- [x] Qdrant init uses the Merlin memory collection manifest for current/legacy collections
 - [ ] n8n workflow import is not truly automatic unless `N8N_API_KEY` exists
 - [ ] Bootstrap should support core-only, search, automation, and coding profiles
 - [ ] launchd should not auto-start the entire heavy stack by default
@@ -176,7 +177,8 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [ ] Define approval rules for code execution, shell commands, file writes, and network access
 - [ ] Decide whether orchestration lives in n8n, a Python controller, LangGraph-style graphs, or a hybrid
 - [ ] Add trace/log output for routing decisions
-- [ ] Connect Magic Mode to shared Qdrant memory only after memory schema is stable
+- [x] Add canonical/legacy memory schema and runtime Qdrant collection manifest
+- [ ] Connect Magic Mode to shared Qdrant memory only after memory approval/audit is implemented
 
 ### 4. Fix Backup/Restore
 
@@ -189,6 +191,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 
 ### 5. Make Tests Match Profiles
 
+- [x] Memory config smoke test: manifest and restore dry-run
 - [ ] Core test: Ollama, Open WebUI, LiteLLM, Qdrant, dashboard
 - [ ] Search test: Perplexica, SearXNG
 - [ ] Automation test: n8n health and workflow import

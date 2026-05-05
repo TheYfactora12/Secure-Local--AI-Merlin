@@ -140,6 +140,7 @@ echo -e "${BOLD}Repository${NC}"
 [[ -f "${STACK_DIR}/config/merlin/profiles.yaml" ]] && pass "Merlin profiles config present" || warn "Merlin profiles config missing"
 [[ -f "${STACK_DIR}/config/merlin/hardware-tiers.yaml" ]] && pass "Merlin hardware tiers config present" || warn "Merlin hardware tiers config missing"
 [[ -f "${STACK_DIR}/config/merlin/memory.yaml" ]] && pass "Merlin memory schema config present" || warn "Merlin memory schema config missing"
+[[ -f "${STACK_DIR}/config/merlin/memory-collections.env" ]] && pass "Merlin memory runtime manifest present" || warn "Merlin memory runtime manifest missing"
 
 echo -e "\n${BOLD}System${NC}"
 OS="$(uname -s)"

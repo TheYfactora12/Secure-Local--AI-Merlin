@@ -140,26 +140,21 @@ log "  ✅ docker compose up -d complete"
 banner "Step 3/7: Qdrant Initialization"
 wait_for_http "${QDRANT_URL}/collections" "Qdrant"
 
-# Create the default memory collection
-if qdrant_collection_exists "$QDRANT_COLLECTION"; then
-  log "  Collection '$QDRANT_COLLECTION' already exists — skipping"
+if [[ -x "${STACK_DIR}/scripts/init-qdrant.sh" || -f "${STACK_DIR}/scripts/init-qdrant.sh" ]]; then
+  log "Initializing Qdrant from Merlin memory manifest"
+  HOME_AI_STACK_DIR="$STACK_DIR" \
+    QDRANT_URL="$QDRANT_URL" \
+    QDRANT_COLLECTION="$QDRANT_COLLECTION" \
+    QDRANT_VECTOR_SIZE="$QDRANT_VECTOR_SIZE" \
+    EXTRA_QDRANT_COLLECTIONS="${EXTRA_QDRANT_COLLECTIONS:-}" \
+    bash "${STACK_DIR}/scripts/init-qdrant.sh"
 else
-  qdrant_create_collection "$QDRANT_COLLECTION" "$QDRANT_VECTOR_SIZE"
-fi
-
-# Create additional collections if defined in .env
-# Format: EXTRA_QDRANT_COLLECTIONS="collection1:512,collection2:1536"
-if [[ -n "${EXTRA_QDRANT_COLLECTIONS:-}" ]]; then
-  IFS=',' read -ra EXTRA_COLS <<< "$EXTRA_QDRANT_COLLECTIONS"
-  for col_def in "${EXTRA_COLS[@]}"; do
-    col_name="$(echo "$col_def" | cut -d: -f1)"
-    col_size="$(echo "$col_def" | cut -d: -f2)"
-    if qdrant_collection_exists "$col_name"; then
-      log "  Collection '$col_name' already exists — skipping"
-    else
-      qdrant_create_collection "$col_name" "${col_size:-768}"
-    fi
-  done
+  warn "scripts/init-qdrant.sh missing; creating only ${QDRANT_COLLECTION}"
+  if qdrant_collection_exists "$QDRANT_COLLECTION"; then
+    log "  Collection '$QDRANT_COLLECTION' already exists — skipping"
+  else
+    qdrant_create_collection "$QDRANT_COLLECTION" "$QDRANT_VECTOR_SIZE"
+  fi
 fi
 
 # ---------------------------------------------------------------------------

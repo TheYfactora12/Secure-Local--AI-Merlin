@@ -85,3 +85,16 @@ bash ~/home-ai-elite/tests/e2e-test.sh
 The CI pipeline (`ci.yml`) checks all `tests/*.sh` files for syntax errors using `bash -n`.  
 Full service-level tests require a running Docker environment and are run **locally** only.  
 Full integration testing in CI (via Docker Compose) is planned for v0.9.
+
+---
+
+## memory-config-smoke.sh
+
+This test does not require Docker. It validates that the Merlin memory runtime
+manifest includes the expected legacy/current Qdrant collections and that
+`backup/restore.sh --dry-run` can parse a backup archive without contacting
+Qdrant.
+
+```bash
+bash tests/memory-config-smoke.sh
+```

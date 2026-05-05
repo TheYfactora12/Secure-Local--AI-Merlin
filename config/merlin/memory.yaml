@@ -2,6 +2,8 @@
 #
 # This file documents the canonical memory model while preserving current
 # collection names used by bootstrap, n8n workflows, Open WebUI, and CLI tools.
+# Runtime bash scripts source config/merlin/memory-collections.env so the
+# installer does not need a YAML parser dependency.
 # Do not rename live collections until migration scripts and restore tests exist.
 
 schema_version: 1

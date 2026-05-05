@@ -7,7 +7,14 @@
 # =============================================================================
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+STACK_DIR="${HOME_AI_STACK_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
+MEMORY_COLLECTIONS_FILE="${MERLIN_MEMORY_COLLECTIONS_FILE:-${STACK_DIR}/config/merlin/memory-collections.env}"
 QDRANT_URL="${QDRANT_URL:-http://localhost:6333}"
+QDRANT_COLLECTION="${QDRANT_COLLECTION:-}"
+QDRANT_VECTOR_SIZE="${QDRANT_VECTOR_SIZE:-768}"
+EXTRA_QDRANT_COLLECTIONS="${EXTRA_QDRANT_COLLECTIONS:-}"
+MERLIN_CREATE_CANONICAL_COLLECTIONS="${MERLIN_CREATE_CANONICAL_COLLECTIONS:-false}"
 MAX_WAIT=60
 INTERVAL=3
 
@@ -19,6 +26,34 @@ COLOR_RESET="\033[0m"
 log()  { echo -e "${COLOR_GREEN}[qdrant-init]${COLOR_RESET} $*"; }
 warn() { echo -e "${COLOR_YELLOW}[qdrant-init]${COLOR_RESET} $*"; }
 fail() { echo -e "${COLOR_RED}[qdrant-init]${COLOR_RESET} $*" >&2; exit 1; }
+
+if [[ -f "$MEMORY_COLLECTIONS_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$MEMORY_COLLECTIONS_FILE"
+else
+  warn "Memory collection manifest missing: ${MEMORY_COLLECTIONS_FILE}; using built-in fallback"
+  MERLIN_QDRANT_LEGACY_COLLECTIONS=(
+    "home_ai_memory:768:Cosine"
+    "swarm_memory:768:Cosine"
+    "documents:1536:Cosine"
+    "openwebui:768:Cosine"
+    "perplexica:768:Cosine"
+    "n8n_memory:768:Cosine"
+    "conversations:768:Cosine"
+  )
+  MERLIN_QDRANT_LEGACY_INDEXES=(
+    "documents:source:keyword"
+    "documents:doc_type:keyword"
+    "openwebui:user_id:keyword"
+    "openwebui:file_id:keyword"
+    "perplexica:url:keyword"
+    "perplexica:session_id:keyword"
+    "n8n_memory:workflow_id:keyword"
+    "n8n_memory:session_id:keyword"
+  )
+  MERLIN_QDRANT_CANONICAL_COLLECTIONS=()
+  MERLIN_QDRANT_CANONICAL_INDEXES=()
+fi
 
 # ---------------------------------------------------------------------------
 # Wait for Qdrant to be ready
@@ -91,6 +126,51 @@ create_payload_index() {
     -d "{\"field_name\": \"${field}\", \"field_schema\": \"${type}\"}" 2>/dev/null || true
 }
 
+create_collection_from_spec() {
+  local spec="$1"
+  local name size distance
+  IFS=':' read -r name size distance <<< "$spec"
+  [[ -n "$name" ]] || return 0
+  create_collection "$name" "${size:-768}" "${distance:-Cosine}"
+}
+
+create_index_from_spec() {
+  local spec="$1"
+  local name field type
+  IFS=':' read -r name field type <<< "$spec"
+  [[ -n "$name" && -n "$field" ]] || return 0
+  create_payload_index "$name" "$field" "${type:-keyword}"
+}
+
+collection_in_specs() {
+  local wanted="$1"
+  shift
+  local spec name
+  for spec in "$@"; do
+    IFS=':' read -r name _ <<< "$spec"
+    [[ "$name" == "$wanted" ]] && return 0
+  done
+  return 1
+}
+
+create_extra_collections() {
+  local spec name size
+
+  if [[ -n "$QDRANT_COLLECTION" ]] && ! collection_in_specs "$QDRANT_COLLECTION" "${MERLIN_QDRANT_LEGACY_COLLECTIONS[@]}"; then
+    create_collection "$QDRANT_COLLECTION" "$QDRANT_VECTOR_SIZE" "Cosine"
+  fi
+
+  if [[ -n "$EXTRA_QDRANT_COLLECTIONS" ]]; then
+    IFS=',' read -ra extra_specs <<< "$EXTRA_QDRANT_COLLECTIONS"
+    for spec in "${extra_specs[@]}"; do
+      name="$(echo "$spec" | cut -d: -f1)"
+      size="$(echo "$spec" | cut -d: -f2)"
+      [[ -n "$name" ]] || continue
+      create_collection "$name" "${size:-768}" "Cosine"
+    done
+  fi
+}
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -99,29 +179,32 @@ main() {
 
   log "Initializing Qdrant collections..."
 
-  # Open WebUI RAG — nomic-embed-text produces 768-dim vectors
-  create_collection "openwebui"            768  "Cosine"
-  create_payload_index "openwebui"         "user_id"   "keyword"
-  create_payload_index "openwebui"         "file_id"   "keyword"
+  log "Creating legacy/current collections from memory manifest..."
+  for spec in "${MERLIN_QDRANT_LEGACY_COLLECTIONS[@]}"; do
+    create_collection_from_spec "$spec"
+  done
 
-  # Perplexica web-search memory — nomic-embed-text 768-dim
-  create_collection "perplexica"           768  "Cosine"
-  create_payload_index "perplexica"        "url"       "keyword"
-  create_payload_index "perplexica"        "session_id" "keyword"
+  for spec in "${MERLIN_QDRANT_LEGACY_INDEXES[@]}"; do
+    create_index_from_spec "$spec"
+  done
 
-  # n8n long-term memory (AI Agent Memory nodes) — 768-dim
-  create_collection "n8n_memory"           768  "Cosine"
-  create_payload_index "n8n_memory"        "workflow_id" "keyword"
-  create_payload_index "n8n_memory"        "session_id"  "keyword"
+  if [[ "$MERLIN_CREATE_CANONICAL_COLLECTIONS" == "true" ]]; then
+    log "Creating canonical Merlin collections because MERLIN_CREATE_CANONICAL_COLLECTIONS=true..."
+    for spec in "${MERLIN_QDRANT_CANONICAL_COLLECTIONS[@]}"; do
+      create_collection_from_spec "$spec"
+    done
+    for spec in "${MERLIN_QDRANT_CANONICAL_INDEXES[@]}"; do
+      create_index_from_spec "$spec"
+    done
+  else
+    warn "Canonical Merlin collections are not created by default yet"
+  fi
 
-  # General-purpose document store for custom scripts / API
-  create_collection "documents"            1536 "Cosine"   # OpenAI ada-002 compatible
-  create_payload_index "documents"         "source"    "keyword"
-  create_payload_index "documents"         "doc_type"  "keyword"
+  create_extra_collections
 
   log ""
   log "✅ Qdrant initialization complete."
-  log "   Collections: openwebui | perplexica | n8n_memory | documents"
+  log "   Legacy/current collections initialized from: ${MEMORY_COLLECTIONS_FILE}"
   log "   Dashboard: ${QDRANT_URL}/dashboard"
 }
 

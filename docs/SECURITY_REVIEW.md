@@ -129,8 +129,9 @@ Required before Merlin v1: Recommended.
 Evidence:
 
 - `bootstrap.sh` uses `home_ai_memory`.
-- `init-qdrant.sh` creates `openwebui`, `perplexica`, `n8n_memory`, `documents`.
 - `config/merlin/memory.yaml` now documents canonical and legacy collections.
+- `config/merlin/memory-collections.env` now provides the runtime collection manifest for bash scripts.
+- `init-qdrant.sh` now creates current/legacy collections from the runtime manifest.
 - `backup/backup.sh` now backs up the current legacy/default collection set and supports `MERLIN_BACKUP_COLLECTIONS`.
 - `cli/wizard` uses `swarm_memory`, `conversations`, and `documents`.
 
@@ -142,7 +143,7 @@ Recommended fix:
 
 - Keep legacy collections readable through Merlin v1.
 - Add tests for backup dry-run and restore against a live Qdrant instance.
-- Migrate bootstrap, CLI, and workflows only after restore coverage exists.
+- Migrate CLI and workflows only after restore coverage exists.
 
 Required before Merlin v1: Yes.
 

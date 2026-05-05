@@ -62,11 +62,6 @@ restore_collection_file() {
   collection="${collection%.json}"
   points_file="${TMP}/points_${collection}.json"
 
-  if ! collection_exists "$collection"; then
-    warn "Skipping ${collection}; collection does not exist. Create it before restore."
-    return 0
-  fi
-
   if ! extract_points < "$json_file" > "$points_file"; then
     warn "Skipping ${collection}; backup JSON could not be parsed"
     return 0
@@ -80,6 +75,11 @@ restore_collection_file() {
 
   if [[ "$DRY_RUN" == true ]]; then
     log "Would restore ${count} point(s) into Qdrant collection: ${collection}"
+    return 0
+  fi
+
+  if ! collection_exists "$collection"; then
+    warn "Skipping ${collection}; collection does not exist. Create it before restore."
     return 0
   fi
 
