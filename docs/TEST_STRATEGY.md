@@ -192,6 +192,7 @@ Memory:
 - Merlin memory backup.
 - Merlin memory restore dry-run.
 - Merlin memory restore against a disposable Qdrant collection.
+- `tests/qdrant-restore-live-smoke.sh` verifies a disposable Qdrant collection can be backed up and restored without touching production memory.
 - Upgrade.
 - Rollback.
 - Core profile.

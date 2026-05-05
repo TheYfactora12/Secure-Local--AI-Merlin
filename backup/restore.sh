@@ -90,6 +90,7 @@ restore_collection_file() {
     log "Restored ${count} point(s): ${collection}"
   else
     warn "Failed to restore collection: ${collection}"
+    return 1
   fi
 }
 
@@ -119,12 +120,20 @@ main() {
     fi
   fi
 
+  restore_failures=0
   for json_file in "${qdrant_files[@]}"; do
-    restore_collection_file "$json_file"
+    if ! restore_collection_file "$json_file"; then
+      restore_failures=$((restore_failures + 1))
+    fi
   done
 
   if [[ -f "${SRC}/.env.bak" ]]; then
     warn ".env.bak is included for manual recovery only; restore does not overwrite .env"
+  fi
+
+  if [[ "$restore_failures" -gt 0 ]]; then
+    echo "[restore] ERROR: ${restore_failures} collection restore(s) failed" >&2
+    exit 1
   fi
 
   log "Restore ${DRY_RUN:+dry-run }complete."

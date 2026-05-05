@@ -123,7 +123,7 @@ Status: Scaffolded, not release-ready.
 - [x] Backup/restore scripts no longer use the stale `$HOME/wizard-ai` path
 - [x] Backup covers the current configured/legacy Qdrant collections without renaming live data
 - [x] Restore supports dry-run before writing Qdrant points
-- [ ] Preflight backup/restore needs a real restore test against a running stack
+- [x] Preflight backup/restore has a real disposable restore test against a running Qdrant stack
 
 ### v1.0 — Stable Laptop Release
 
@@ -138,7 +138,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Installer supports selectable profiles: core, search, automation, coding, security, ops, full
 - [ ] Hardware tier detection chooses conservative defaults without blocking manual override
 - [ ] `scripts/update.sh` and `scripts/upgrade.sh` support macOS native Ollama and do not start Docker Ollama accidentally
-- [ ] Backup and restore are tested against the current running stack
+- [x] Backup and restore are tested against the current running Qdrant stack
 - [x] End-to-end live validation covers core mode on this 8 GB Mac
 - [ ] README shows laptop-first install, not full-stack-first install
 - [ ] Signed/notarized `.pkg` is tested on a clean macOS machine
@@ -188,7 +188,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Back up actual configured Qdrant collections
 - [ ] Back up n8n only when automation profile is enabled
 - [x] Add restore dry-run mode
-- [ ] Test restore from a real generated backup
+- [x] Test restore from a real generated backup
 
 ### 5. Make Tests Match Profiles
 
@@ -197,6 +197,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Wizard memory config smoke test
 - [x] Installer profile mapping smoke test
 - [x] Core live smoke test: Ollama, Open WebUI, LiteLLM, Qdrant, dashboard
+- [x] Qdrant live restore smoke test with a disposable collection
 - [ ] Search test: Perplexica, SearXNG
 - [ ] Automation test: n8n health and workflow import
 - [ ] Coding test: OpenHands startup and LiteLLM connection

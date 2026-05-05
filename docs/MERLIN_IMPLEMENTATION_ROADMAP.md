@@ -299,14 +299,16 @@ Completed without replacing the working installer:
 - Fixed live-validation defects: profile helper load order, host Qdrant bootstrap URL, non-interactive CLI symlink handling, persistent native Ollama startup, and profile-aware doctor checks.
 - Updated Qdrant initialization to create current/legacy collections from the manifest.
 - Updated `cli/wizard` memory commands to read collection names from the manifest while keeping `swarm_memory` compatible.
-- Updated backup/restore to use repo-root `.env`, configurable Qdrant collection coverage, and restore dry-run mode.
+- Updated backup/restore to use repo-root `.env`, configurable Qdrant collection coverage, vector-inclusive backups, restore dry-run mode, and failing exit status on restore write failures.
 - Added `tests/memory-config-smoke.sh`.
 - Added `tests/doctor-model-smoke.sh`.
 - Added `tests/wizard-memory-config-smoke.sh`.
 - Added `tests/profile-selection-smoke.sh`.
+- Added `tests/core-live-smoke.sh`.
+- Added `tests/qdrant-restore-live-smoke.sh`.
 
 Next implementation slice:
 
 - Add a reusable core model smoke test for Ollama and LiteLLM without exposing secrets. `Done: tests/core-live-smoke.sh`
-- Add a disposable live-Qdrant restore test.
+- Add a disposable live-Qdrant restore test. `Done: tests/qdrant-restore-live-smoke.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

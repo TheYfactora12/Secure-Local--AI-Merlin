@@ -48,7 +48,7 @@ backup_collection() {
   if curl -fsS --max-time 60 \
     -X POST "${QDRANT_URL}/collections/${collection}/points/scroll" \
     -H "Content-Type: application/json" \
-    -d '{"limit":10000,"with_payload":true,"with_vector":false}' \
+    -d '{"limit":10000,"with_payload":true,"with_vector":true}' \
     > "$target" 2>/dev/null; then
     log "Qdrant collection backed up: ${collection}"
   else

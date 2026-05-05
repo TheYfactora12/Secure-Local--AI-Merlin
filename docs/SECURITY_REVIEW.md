@@ -132,7 +132,9 @@ Evidence:
 - `config/merlin/memory.yaml` now documents canonical and legacy collections.
 - `config/merlin/memory-collections.env` now provides the runtime collection manifest for bash scripts.
 - `init-qdrant.sh` now creates current/legacy collections from the runtime manifest.
-- `backup/backup.sh` now backs up the current legacy/default collection set and supports `MERLIN_BACKUP_COLLECTIONS`.
+- `backup/backup.sh` now backs up the current legacy/default collection set, includes vectors needed for restore, and supports `MERLIN_BACKUP_COLLECTIONS`.
+- `backup/restore.sh` now exits non-zero when a Qdrant restore write fails.
+- `tests/qdrant-restore-live-smoke.sh` verifies backup and restore against a disposable live Qdrant collection.
 - `cli/wizard` uses `swarm_memory`, `conversations`, and `documents`.
 
 Risk:
@@ -142,7 +144,7 @@ Risk:
 Recommended fix:
 
 - Keep legacy collections readable through Merlin v1.
-- Add tests for backup dry-run and restore against a live Qdrant instance.
+- Keep the live disposable Qdrant restore test in the pre-release validation suite.
 - Migrate CLI and workflows only after restore coverage exists.
 
 Required before Merlin v1: Yes.
