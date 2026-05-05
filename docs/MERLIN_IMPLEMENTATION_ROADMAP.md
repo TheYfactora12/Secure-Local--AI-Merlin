@@ -278,7 +278,7 @@ Acceptance criteria:
 
 1. Add profile model and core-first startup plan without changing installer behavior. `Done: config and start commands are in place; installer selection still pending.`
 2. Add `wizard doctor` requirements and implementation. `Done: baseline doctor and model recommendation checks are in place; live service checks still depend on local setup.`
-3. Normalize Merlin memory schema and align bootstrap, CLI, backup, restore, and tests. `In progress: schema config, Qdrant init, backup/restore, and a smoke test are in place; CLI/workflow migration still pending.`
+3. Normalize Merlin memory schema and align bootstrap, CLI, backup, restore, and tests. `In progress: schema config, Qdrant init, backup/restore, CLI alignment, and smoke tests are in place; workflow migration still pending.`
 
 ## Current Implementation Checkpoint
 
@@ -291,12 +291,13 @@ Completed without replacing the working installer:
 - Added `config/merlin/memory.yaml` as the canonical/legacy memory schema reference.
 - Added `config/merlin/memory-collections.env` as the bash-readable Qdrant collection manifest.
 - Updated Qdrant initialization to create current/legacy collections from the manifest.
+- Updated `cli/wizard` memory commands to read collection names from the manifest while keeping `swarm_memory` compatible.
 - Updated backup/restore to use repo-root `.env`, configurable Qdrant collection coverage, and restore dry-run mode.
 - Added `tests/memory-config-smoke.sh`.
 - Added `tests/doctor-model-smoke.sh`.
+- Added `tests/wizard-memory-config-smoke.sh`.
 
 Next implementation slice:
 
-- Align `cli/wizard` memory commands with the manifest without breaking `swarm_memory`.
 - Add a disposable live-Qdrant restore test.
 - Add installer/profile selection for core, developer, workstation, server, and custom modes.

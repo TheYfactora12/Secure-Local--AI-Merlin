@@ -110,3 +110,15 @@ recommended models with exact pull commands.
 ```bash
 bash tests/doctor-model-smoke.sh
 ```
+
+---
+
+## wizard-memory-config-smoke.sh
+
+This test does not require Docker. It loads `cli/wizard` with a temporary memory
+manifest to verify the CLI can source configurable collection names without
+breaking basic command loading.
+
+```bash
+bash tests/wizard-memory-config-smoke.sh
+```

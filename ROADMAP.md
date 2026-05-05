@@ -178,6 +178,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [ ] Decide whether orchestration lives in n8n, a Python controller, LangGraph-style graphs, or a hybrid
 - [ ] Add trace/log output for routing decisions
 - [x] Add canonical/legacy memory schema and runtime Qdrant collection manifest
+- [x] Align `cli/wizard` memory commands with the runtime collection manifest
 - [ ] Connect Magic Mode to shared Qdrant memory only after memory approval/audit is implemented
 
 ### 4. Fix Backup/Restore
@@ -193,6 +194,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 
 - [x] Memory config smoke test: manifest and restore dry-run
 - [x] Doctor model smoke test: installed/missing model reporting
+- [x] Wizard memory config smoke test
 - [ ] Core test: Ollama, Open WebUI, LiteLLM, Qdrant, dashboard
 - [ ] Search test: Perplexica, SearXNG
 - [ ] Automation test: n8n health and workflow import

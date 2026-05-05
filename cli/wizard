@@ -5,6 +5,7 @@
 # ============================================================
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WIZARD_DIR="${WIZARD_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
+MEMORY_COLLECTIONS_FILE="${MERLIN_MEMORY_COLLECTIONS_FILE:-${WIZARD_DIR}/config/merlin/memory-collections.env}"
 CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 RED='\033[0;31m'; NC='\033[0m'; BOLD='\033[1m'; DIM='\033[2m'
 
@@ -12,6 +13,16 @@ n8n_url="http://localhost:5678"
 brain_url="http://localhost:11434"
 memory_url="http://localhost:6333"
 litellm_url="http://localhost:4000"
+
+if [[ -f "$MEMORY_COLLECTIONS_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$MEMORY_COLLECTIONS_FILE"
+fi
+
+SWARM_MEMORY_COLLECTION="${MERLIN_SWARM_MEMORY_COLLECTION:-swarm_memory}"
+DOCUMENT_MEMORY_COLLECTION="${MERLIN_DOCUMENT_MEMORY_COLLECTION:-documents}"
+CONVERSATION_MEMORY_COLLECTION="${MERLIN_CONVERSATION_MEMORY_COLLECTION:-conversations}"
+MEMORY_STATS_COLLECTIONS="${MERLIN_MEMORY_STATS_COLLECTIONS:-${MERLIN_QDRANT_BACKUP_COLLECTIONS:-$CONVERSATION_MEMORY_COLLECTION $DOCUMENT_MEMORY_COLLECTION $SWARM_MEMORY_COLLECTION}}"
 
 # ── helpers ─────────────────────────────────────────────────
 require_running() {
@@ -172,13 +183,13 @@ cat << 'EOF'
                                → recalls relevant memory (RAG)
                                → injects context
                                → dispatches to best agent
-                               → stores result in swarm_memory
+                               → stores result in configured swarm memory
 
     wizard recall "query"     Semantic search over past swarm results
                                Returns top-5 ranked memories with scores
 
     wizard swarm-status       Show swarm memory health + last 5 tasks
-    wizard swarm-flush        Reset swarm_memory (clears all context)
+    wizard swarm-flush        Reset configured swarm memory
 
   Memory:
     wizard ingest "title" "content"   Teach Wizard a document
@@ -350,12 +361,12 @@ case "$1" in
     echo ""
     ;;
 
-  # ── recall: semantic search over swarm_memory ──────────────
+  # ── recall: semantic search over swarm memory ──────────────
   recall)
     require_running
     [[ -z "$2" ]] && { echo "Usage: wizard recall \"your query\""; exit 1; }
     echo ""
-    echo -e "${CYAN}  🔍 Searching swarm memory...${NC}"
+    echo -e "${CYAN}  🔍 Searching ${SWARM_MEMORY_COLLECTION}...${NC}"
     echo ""
     RAW=$(curl -s -X POST "$n8n_url/webhook/swarm/recall" \
       -H "Content-Type: application/json" \
@@ -395,7 +406,7 @@ for m in d.get('memories', []):
     echo "  ─────────────────────────────────────────"
 
     # Point count
-    COUNT=$(curl -s "$memory_url/collections/swarm_memory" \
+    COUNT=$(curl -s "$memory_url/collections/$SWARM_MEMORY_COLLECTION" \
       | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('result',{}).get('points_count','?'))" 2>/dev/null || echo "?")
     echo -e "  Total memories stored:  ${GREEN}$COUNT${NC}"
 
@@ -411,7 +422,7 @@ for m in d.get('memories', []):
     # Last 5 tasks via Qdrant scroll
     echo ""
     echo -e "  ${BOLD}Last 5 swarm tasks:${NC}"
-    curl -s -X POST "$memory_url/collections/swarm_memory/points/scroll" \
+    curl -s -X POST "$memory_url/collections/$SWARM_MEMORY_COLLECTION/points/scroll" \
       -H "Content-Type: application/json" \
       -d '{"limit":5,"with_payload":true,"with_vectors":false}' \
       | python3 -c "
@@ -429,19 +440,19 @@ else:
     echo ""
     ;;
 
-  # ── swarm-flush: reset swarm_memory collection ─────────────
+  # ── swarm-flush: reset swarm memory collection ─────────────
   swarm-flush)
     require_running
-    echo -e "${YELLOW}  ⚠ This will delete all swarm memory. Are you sure? [y/N]${NC}"
+    echo -e "${YELLOW}  ⚠ This will delete all memory in ${SWARM_MEMORY_COLLECTION}. Are you sure? [y/N]${NC}"
     read -r CONFIRM
     [[ "$CONFIRM" =~ ^[Yy]$ ]] || { echo "Cancelled."; exit 0; }
     # Delete
-    curl -s -X DELETE "$memory_url/collections/swarm_memory" > /dev/null
+    curl -s -X DELETE "$memory_url/collections/$SWARM_MEMORY_COLLECTION" > /dev/null
     # Recreate with correct vector size
-    curl -s -X PUT "$memory_url/collections/swarm_memory" \
+    curl -s -X PUT "$memory_url/collections/$SWARM_MEMORY_COLLECTION" \
       -H "Content-Type: application/json" \
       -d '{"vectors":{"size":768,"distance":"Cosine"}}' > /dev/null
-    echo -e "${GREEN}  ✓ swarm_memory reset. Fresh start.${NC}"
+    echo -e "${GREEN}  ✓ ${SWARM_MEMORY_COLLECTION} reset. Fresh start.${NC}"
     echo ""
     ;;
 
@@ -466,7 +477,7 @@ for m in d.get('models',[]): print(f\"  {m['name']:40} {m.get('size',0)//1024//1
     [[ -z "$3" ]] && { echo "Usage: wizard ingest \"title\" \"content\""; exit 1; }
     curl -s -X POST "$n8n_url/webhook/ingest-doc" \
       -H "Content-Type: application/json" \
-      -d "{\"title\":\"$2\",\"content\":\"$3\",\"collection\":\"documents\"}" | pretty_json
+      -d "{\"title\":\"$2\",\"content\":\"$3\",\"collection\":\"$DOCUMENT_MEMORY_COLLECTION\"}" | pretty_json
     ;;
 
   collections)
@@ -477,7 +488,7 @@ for m in d.get('models',[]): print(f\"  {m['name']:40} {m.get('size',0)//1024//1
   memory-stats)
     require_running
     echo -e "${BOLD}  Wizard Memory Collections:${NC}"
-    for col in conversations documents swarm_memory; do
+    for col in $MEMORY_STATS_COLLECTIONS; do
       COUNT=$(curl -s "$memory_url/collections/$col" 2>/dev/null \
         | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('result',{}).get('points_count','?'))" 2>/dev/null || echo "?")
       echo "  $col: $COUNT points"
@@ -550,7 +561,7 @@ for m in d.get('models',[]): print(f\"  {m['name']:40} {m.get('size',0)//1024//1
       fi
       echo ""
       echo "── SWARM MEMORY ────────────────────────"
-      curl -s "$memory_url/collections/swarm_memory" \
+      curl -s "$memory_url/collections/$SWARM_MEMORY_COLLECTION" \
         | python3 -c "import sys,json; d=json.load(sys.stdin); r=d.get('result',{}); print(f\"  points: {r.get('points_count','?')}  status: {r.get('status','?')}\")" 2>/dev/null || echo "  qdrant unreachable"
       echo ""
       echo "── n8n LAST 5 EXECUTIONS ───────────────"
