@@ -37,7 +37,7 @@ grep -q 'actions/upload-artifact@v7' "$WORKFLOW" \
   || fail "release workflow does not upload package artifacts"
 grep -q 'actions/download-artifact@v7' "$WORKFLOW" \
   || fail "release workflow does not download package artifacts"
-grep -q 'softprops/action-gh-release@v2' "$WORKFLOW" \
+grep -q 'softprops/action-gh-release@v3' "$WORKFLOW" \
   || fail "release workflow does not create GitHub releases"
 grep -q 'Package is currently unsigned in CI' "$WORKFLOW" \
   || fail "release workflow does not disclose unsigned CI package status"
