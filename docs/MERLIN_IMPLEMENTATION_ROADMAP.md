@@ -307,6 +307,6 @@ Completed without replacing the working installer:
 
 Next implementation slice:
 
-- Add a reusable core model smoke test for Ollama and LiteLLM without exposing secrets.
+- Add a reusable core model smoke test for Ollama and LiteLLM without exposing secrets. `Done: tests/core-live-smoke.sh`
 - Add a disposable live-Qdrant restore test.
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

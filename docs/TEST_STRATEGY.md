@@ -62,6 +62,8 @@ Core:
 - LiteLLM reachable.
 - Qdrant reachable.
 - Dashboard reachable.
+- `tests/core-live-smoke.sh` verifies the laptop-safe core path end to end without model pulls, cloud calls, or secret output.
+- If a local model is installed, core smoke verifies both direct Ollama generation and LiteLLM routing.
 - `wizard start` starts the same profile as `bash scripts/start-core.sh`.
 
 Search:
