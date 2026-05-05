@@ -276,6 +276,22 @@ Acceptance criteria:
 
 ## Recommended First 3 GitHub Issues
 
-1. Add profile model and core-first startup plan without changing installer behavior.
-2. Add `wizard doctor` requirements and implementation.
-3. Normalize Merlin memory schema and align bootstrap, CLI, backup, restore, and tests.
+1. Add profile model and core-first startup plan without changing installer behavior. `Done: config and start commands are in place; installer selection still pending.`
+2. Add `wizard doctor` requirements and implementation. `Done: baseline doctor is in place; model-specific checks still pending.`
+3. Normalize Merlin memory schema and align bootstrap, CLI, backup, restore, and tests. `In progress: schema config and backup/restore alignment are in place; bootstrap/CLI/test migration still pending.`
+
+## Current Implementation Checkpoint
+
+Completed without replacing the working installer:
+
+- Added profile-aware startup scripts and `wizard start` profile routing.
+- Added `wizard doctor` baseline diagnostics.
+- Added `config/merlin/profiles.yaml` and `config/merlin/hardware-tiers.yaml`.
+- Added `config/merlin/memory.yaml` as the canonical/legacy memory schema reference.
+- Updated backup/restore to use repo-root `.env`, configurable Qdrant collection coverage, and restore dry-run mode.
+
+Next implementation slice:
+
+- Teach bootstrap and Qdrant initialization to read the memory schema safely.
+- Add memory smoke tests that verify backup dry-run and collection handling.
+- Add model-installed checks to `wizard doctor`.

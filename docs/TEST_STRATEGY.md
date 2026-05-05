@@ -186,8 +186,10 @@ Memory:
 - Clean Linux install.
 - Package install.
 - Package uninstall.
-- Backup.
-- Restore.
+- Volume backup.
+- Merlin memory backup.
+- Merlin memory restore dry-run.
+- Merlin memory restore against a disposable Qdrant collection.
 - Upgrade.
 - Rollback.
 - Core profile.

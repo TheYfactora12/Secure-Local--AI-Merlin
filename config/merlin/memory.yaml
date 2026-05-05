@@ -1,0 +1,114 @@
+# Merlin memory schema.
+#
+# This file documents the canonical memory model while preserving current
+# collection names used by bootstrap, n8n workflows, Open WebUI, and CLI tools.
+# Do not rename live collections until migration scripts and restore tests exist.
+
+schema_version: 1
+
+defaults:
+  qdrant_url: "http://localhost:6333"
+  distance: "Cosine"
+  embedding_model: "nomic-embed-text"
+  embedding_dimensions: 768
+  writes_require_user_approval: true
+  delete_requires_confirmation: true
+  audit_required: true
+
+canonical:
+  merlin_session:
+    purpose: "Short-lived chat/session recall controlled by Merlin."
+    vector_size: 768
+    payload_indexes:
+      - session_id
+      - user_id
+      - created_at
+      - privacy_level
+  merlin_user:
+    purpose: "User-approved long-term facts, preferences, and profile memory."
+    vector_size: 768
+    payload_indexes:
+      - user_id
+      - memory_type
+      - approval_id
+      - created_at
+      - expires_at
+  merlin_documents:
+    purpose: "Document chunks approved for local RAG."
+    vector_size: 768
+    payload_indexes:
+      - source
+      - doc_id
+      - doc_type
+      - owner
+      - created_at
+  merlin_tools:
+    purpose: "Approved tool results that can be reused by agents."
+    vector_size: 768
+    payload_indexes:
+      - tool_name
+      - task_id
+      - approval_id
+      - created_at
+  merlin_audit:
+    purpose: "Pointer/index collection for memory and tool audit events."
+    vector_size: 768
+    payload_indexes:
+      - event_type
+      - approval_id
+      - actor
+      - created_at
+
+legacy:
+  home_ai_memory:
+    status: "active"
+    owner: "scripts/bootstrap.sh"
+    vector_size: 768
+    migration_target: "merlin_session"
+  swarm_memory:
+    status: "active"
+    owner: "cli/wizard and n8n swarm workflows"
+    vector_size: 768
+    migration_target: "merlin_tools"
+  documents:
+    status: "active"
+    owner: "scripts/init-qdrant.sh and cli/wizard ingest"
+    vector_size: 1536
+    migration_target: "merlin_documents"
+  openwebui:
+    status: "external"
+    owner: "Open WebUI"
+    vector_size: 768
+    migration_target: "none"
+  perplexica:
+    status: "external"
+    owner: "Perplexica"
+    vector_size: 768
+    migration_target: "none"
+  n8n_memory:
+    status: "external"
+    owner: "n8n workflow memory nodes"
+    vector_size: 768
+    migration_target: "merlin_tools"
+  conversations:
+    status: "legacy"
+    owner: "backup/restore compatibility"
+    vector_size: 768
+    migration_target: "merlin_session"
+
+backup:
+  # Environment override: MERLIN_BACKUP_COLLECTIONS="collection_a collection_b"
+  default_collections:
+    - home_ai_memory
+    - swarm_memory
+    - documents
+    - openwebui
+    - perplexica
+    - n8n_memory
+    - conversations
+
+migration_policy:
+  - "Create canonical collections only after router, memory approval, and restore tests exist."
+  - "Keep legacy collections readable through Merlin v1."
+  - "Do not silently copy external tool memory into user memory."
+  - "Every long-term memory write must include approval metadata."

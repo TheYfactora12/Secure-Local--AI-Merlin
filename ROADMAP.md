@@ -119,8 +119,10 @@ Status: Scaffolded, not release-ready.
 - [x] Package preinstall/postinstall scripts exist
 - [x] Backup and restore scripts exist
 - [ ] `.pkg` is not verified as signed, notarized, and clean-machine tested
-- [ ] Backup/restore scripts need path cleanup and collection alignment with current Qdrant schema
-- [ ] Preflight backup/restore needs a real restore test
+- [x] Backup/restore scripts no longer use the stale `$HOME/wizard-ai` path
+- [x] Backup covers the current configured/legacy Qdrant collections without renaming live data
+- [x] Restore supports dry-run before writing Qdrant points
+- [ ] Preflight backup/restore needs a real restore test against a running stack
 
 ### v1.0 — Stable Laptop Release
 
@@ -178,11 +180,11 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 
 ### 4. Fix Backup/Restore
 
-- [ ] Remove stale `$HOME/wizard-ai` path
-- [ ] Back up current `.env` from repo root
-- [ ] Back up actual configured Qdrant collections
+- [x] Remove stale `$HOME/wizard-ai` path
+- [x] Back up current `.env` from repo root
+- [x] Back up actual configured Qdrant collections
 - [ ] Back up n8n only when automation profile is enabled
-- [ ] Add restore dry-run mode
+- [x] Add restore dry-run mode
 - [ ] Test restore from a real generated backup
 
 ### 5. Make Tests Match Profiles
@@ -212,7 +214,8 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 
 ### v1.3 — Memory Quality
 
-- [ ] Define Qdrant payload schema
+- [x] Define canonical/legacy Merlin memory collection schema
+- [ ] Define final Qdrant payload schema for canonical collections
 - [ ] Add memory cleanup command
 - [ ] Add memory ingest and recall tests
 - [ ] Add benchmark harness for recall quality

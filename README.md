@@ -130,6 +130,8 @@ bash scripts/stop.sh                # Stop all services
 bash scripts/restart.sh             # Restart all services
 bash scripts/update.sh              # Pull latest images + restart
 bash scripts/backup.sh              # Backup all data volumes
+bash backup/backup.sh               # Backup Merlin memory/config snapshot
+bash backup/restore.sh --dry-run <backup.tar.gz>
 bash scripts/add-model.sh qwen2.5:32b  # Pull a new model
 ```
 

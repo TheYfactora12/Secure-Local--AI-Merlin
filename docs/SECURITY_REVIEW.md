@@ -124,23 +124,25 @@ Recommended fix:
 
 Required before Merlin v1: Recommended.
 
-### Medium: Memory collections and backup targets are inconsistent
+### Medium: Memory collections and backup targets are partially aligned
 
 Evidence:
 
 - `bootstrap.sh` uses `home_ai_memory`.
 - `init-qdrant.sh` creates `openwebui`, `perplexica`, `n8n_memory`, `documents`.
-- `backup/backup.sh` uses `conversations` and `documents`.
+- `config/merlin/memory.yaml` now documents canonical and legacy collections.
+- `backup/backup.sh` now backs up the current legacy/default collection set and supports `MERLIN_BACKUP_COLLECTIONS`.
 - `cli/wizard` uses `swarm_memory`, `conversations`, and `documents`.
 
 Risk:
 
-- Memory deletion, backup, restore, and audit cannot be trusted if collection names are inconsistent.
+- Memory deletion and audit still cannot be trusted until bootstrap, CLI, workflows, and tests use a stable schema.
 
 Recommended fix:
 
-- Define canonical Merlin memory schema.
-- Update backup/restore only after schema is approved.
+- Keep legacy collections readable through Merlin v1.
+- Add tests for backup dry-run and restore against a live Qdrant instance.
+- Migrate bootstrap, CLI, and workflows only after restore coverage exists.
 
 Required before Merlin v1: Yes.
 
