@@ -143,7 +143,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] End-to-end live validation covers core mode on this 8 GB Mac
 - [x] README shows laptop-first install, not full-stack-first install
 - [ ] Signed/notarized `.pkg` is tested on a clean macOS machine
-- [ ] GitHub release includes tested artifacts and changelog
+- [x] GitHub release includes tested artifacts and changelog
 
 ## Immediate Priority
 

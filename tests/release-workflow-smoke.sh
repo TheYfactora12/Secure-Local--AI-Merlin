@@ -33,8 +33,10 @@ grep -q 'pkgutil --payload-files' "$WORKFLOW" \
   || fail "release workflow does not inspect package payload"
 grep -q 'shasum -a 256' "$WORKFLOW" \
   || fail "release workflow does not generate checksums"
-grep -q 'actions/upload-artifact@v4' "$WORKFLOW" \
+grep -q 'actions/upload-artifact@v7' "$WORKFLOW" \
   || fail "release workflow does not upload package artifacts"
+grep -q 'actions/download-artifact@v7' "$WORKFLOW" \
+  || fail "release workflow does not download package artifacts"
 grep -q 'softprops/action-gh-release@v2' "$WORKFLOW" \
   || fail "release workflow does not create GitHub releases"
 grep -q 'Package is currently unsigned in CI' "$WORKFLOW" \

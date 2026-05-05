@@ -327,4 +327,6 @@ Next implementation slice:
 - Run static smoke tests in CI. `Done: .github/workflows/ci.yml`
 - Document floating container image tags and gate new ones with a static smoke test. `Done: docs/CONTAINER_IMAGE_POLICY.md, tests/container-image-policy-smoke.sh`
 - Update GitHub checkout actions to the Node 24-compatible major version. `Done: .github/workflows/ci.yml, .github/workflows/release.yml`
+- Publish unsigned `v0.8.1` prerelease with tested package artifacts and changelog. `Done: GitHub release v0.8.1`
+- Update release artifact actions to the Node 24-compatible major version. `Done: .github/workflows/release.yml, tests/release-workflow-smoke.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.
