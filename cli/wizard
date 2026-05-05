@@ -150,6 +150,7 @@ cat << 'EOF'
     wizard stop               Stop Wizard stack
     wizard restart            Restart Wizard stack
     wizard status             Show health of all services
+    wizard doctor             Run read-only install/profile diagnostic
 
   Brain:
     wizard brain status      Show Ollama API, loaded models, installed models
@@ -243,6 +244,10 @@ case "$1" in
     echo "  n8n:          http://localhost:5678"
     echo "  Qdrant:       http://localhost:6333/dashboard"
     echo ""
+    ;;
+
+  doctor)
+    bash "$WIZARD_DIR/scripts/doctor.sh"
     ;;
 
   brain)

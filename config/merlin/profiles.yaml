@@ -1,0 +1,66 @@
+# Merlin install profiles.
+#
+# This file documents the intended service groups. It is not yet consumed by
+# install.sh; keep installer behavior protected until profile startup tests exist.
+
+profiles:
+  core:
+    description: "Laptop-safe default: chat, model routing, memory, dashboard."
+    services:
+      - dashboard
+      - open-webui
+      - litellm
+      - qdrant
+    host_services:
+      darwin:
+        - ollama-native
+      linux:
+        - docker-ollama
+    default: true
+    starts_by_default: true
+
+  search:
+    description: "Private web search and Perplexica search UI."
+    services:
+      - searxng
+      - perplexica-backend
+      - perplexica-frontend
+    starts_by_default: false
+
+  automation:
+    description: "n8n workflows and webhook automation."
+    services:
+      - n8n
+    starts_by_default: false
+
+  coding:
+    description: "OpenHands autonomous coding agent. High-risk because it uses Docker socket access."
+    services:
+      - openhands
+    starts_by_default: false
+    risk: high
+
+  security:
+    description: "Local TLS proxy and Linux-only fail2ban."
+    services:
+      - nginx
+      - fail2ban
+    starts_by_default: false
+
+  ops:
+    description: "Operational helpers such as automatic container updates and scheduled agents."
+    services:
+      - watchtower
+    starts_by_default: false
+
+  full:
+    description: "Everything enabled intentionally. Never start this by accident."
+    includes:
+      - core
+      - search
+      - automation
+      - coding
+      - security
+      - ops
+    starts_by_default: false
+    requires_confirmation: true

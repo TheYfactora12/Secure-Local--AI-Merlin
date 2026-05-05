@@ -1,0 +1,71 @@
+# Merlin hardware tiers.
+#
+# This is the target policy for future profile/model selection. It is currently
+# documentation/config only; install.sh remains the protected baseline.
+
+tiers:
+  low:
+    ram_gb_min: 8
+    ram_gb_max: 15
+    default_profile: core
+    max_model_class: "7b"
+    quantization: "q4"
+    recommended_models:
+      - mistral:7b
+      - qwen2.5:7b
+      - nomic-embed-text
+    disabled_by_default:
+      - search
+      - automation
+      - coding
+      - security
+      - ops
+    warning: "Low-memory mode: avoid OpenHands, full search stack, and large models."
+
+  base:
+    ram_gb_min: 16
+    ram_gb_max: 23
+    default_profile: core
+    suggested_profiles:
+      - search
+    max_model_class: "14b"
+    quantization: "q4/q5"
+    recommended_models:
+      - qwen2.5:7b
+      - qwen2.5-coder:7b
+      - deepseek-r1:7b
+      - nomic-embed-text
+    warning: "Developer laptop tier: run one heavy model or agent task at a time."
+
+  mid:
+    ram_gb_min: 24
+    ram_gb_max: 47
+    default_profile: core
+    suggested_profiles:
+      - search
+      - automation
+    max_model_class: "32b"
+    quantization: "q4/q5/q6"
+    recommended_models:
+      - qwen2.5:32b
+      - qwen2.5-coder:14b
+      - deepseek-r1:14b
+      - nomic-embed-text
+    warning: "Workstation tier: Magic Mode can run with approval gates."
+
+  high:
+    ram_gb_min: 48
+    default_profile: core
+    suggested_profiles:
+      - search
+      - automation
+      - coding
+      - ops
+    max_model_class: "70b"
+    quantization: "q4/q5 or better when practical"
+    recommended_models:
+      - llama3.3:70b
+      - qwen2.5:32b
+      - deepseek-r1:32b
+      - nomic-embed-text
+    warning: "High-memory tier: full stack is available, but risky actions still require approval."
