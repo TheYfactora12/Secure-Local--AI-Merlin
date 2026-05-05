@@ -62,7 +62,18 @@ if [[ ! -f "${USER_INSTALL_DIR}/.env" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# 4. Make Docker Desktop CLI available even when cask binary linking was skipped
+# 4. Create non-interactive Docker config for package-run pulls
+# ---------------------------------------------------------------------------
+DOCKER_CONFIG_DIR="${USER_INSTALL_DIR}/.docker-noauth"
+mkdir -p "$DOCKER_CONFIG_DIR"
+printf '{}\n' > "${DOCKER_CONFIG_DIR}/config.json"
+chown -R "${INSTALLING_USER}:staff" "$DOCKER_CONFIG_DIR" 2>/dev/null || true
+chmod 700 "$DOCKER_CONFIG_DIR" 2>/dev/null || true
+chmod 600 "${DOCKER_CONFIG_DIR}/config.json" 2>/dev/null || true
+log "  ✅ Non-interactive Docker config prepared"
+
+# ---------------------------------------------------------------------------
+# 5. Make Docker Desktop CLI available even when cask binary linking was skipped
 # ---------------------------------------------------------------------------
 DOCKER_APP_CLI="/Applications/Docker.app/Contents/Resources/bin"
 if [[ -x "${DOCKER_APP_CLI}/docker" ]]; then
@@ -72,7 +83,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 5. Launch Docker Desktop for first-run setup
+# 6. Launch Docker Desktop for first-run setup
 # ---------------------------------------------------------------------------
 if [[ -d "/Applications/Docker.app" ]]; then
   log "  Opening Docker Desktop for first-run setup..."
@@ -80,21 +91,21 @@ if [[ -d "/Applications/Docker.app" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# 6. Run install.sh as the user (background, logged)
+# 7. Run install.sh as the user (background, logged)
 # ---------------------------------------------------------------------------
 log "  Launching non-interactive install.sh as $INSTALLING_USER (background)..."
 su - "$INSTALLING_USER" -c \
-  "cd '${USER_INSTALL_DIR}' && PATH='${DOCKER_APP_CLI}':\$PATH HOME_AI_NON_INTERACTIVE=true HOME_AI_SKIP_MODEL_PULLS=true bash install.sh --profile core --skip-model-pulls --non-interactive >> '${LOG_FILE}' 2>&1" &
+  "cd '${USER_INSTALL_DIR}' && PATH='${DOCKER_APP_CLI}':\$PATH DOCKER_CONFIG='${DOCKER_CONFIG_DIR}' HOME_AI_NON_INTERACTIVE=true HOME_AI_SKIP_MODEL_PULLS=true bash install.sh --profile core --skip-model-pulls --non-interactive >> '${LOG_FILE}' 2>&1" &
 
 # ---------------------------------------------------------------------------
-# 7. Install launchd agents for auto-start
+# 8. Install launchd agents for auto-start
 # ---------------------------------------------------------------------------
 log "  Installing launchd auto-start agents..."
 su - "$INSTALLING_USER" -c \
   "bash '${USER_INSTALL_DIR}/launchd/install-launchd.sh' >> '${LOG_FILE}' 2>&1" || true
 
 # ---------------------------------------------------------------------------
-# 8. Write post-install instructions
+# 9. Write post-install instructions
 # ---------------------------------------------------------------------------
 cat > "${INSTALLING_HOME}/Desktop/home-ai-elite-next-steps.txt" << 'INSTRUCTIONS'
 ┌────────────────────────────────────────────────┐

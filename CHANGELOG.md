@@ -15,6 +15,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.5] — 2026-05-05
+
+### Packaging
+- Added a package-local `.docker-noauth` config for non-interactive Docker pulls during package postinstall.
+- Avoids Docker Desktop credential-helper keychain failures from background package sessions.
+
+---
+
 ## [0.8.4] — 2026-05-05
 
 ### Packaging
