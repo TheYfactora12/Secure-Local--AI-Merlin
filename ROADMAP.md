@@ -140,7 +140,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [ ] `scripts/update.sh` and `scripts/upgrade.sh` support macOS native Ollama and do not start Docker Ollama accidentally
 - [x] Backup and restore are tested against the current running Qdrant stack
 - [x] End-to-end live validation covers core mode on this 8 GB Mac
-- [ ] README shows laptop-first install, not full-stack-first install
+- [x] README shows laptop-first install, not full-stack-first install
 - [ ] Signed/notarized `.pkg` is tested on a clean macOS machine
 - [ ] GitHub release includes tested artifacts and changelog
 

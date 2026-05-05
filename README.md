@@ -20,13 +20,15 @@ A local-first AI stack for chat, model routing, vector memory, private search, a
 > - Disables `fail2ban` (incompatible with Docker Desktop networking)
 >
 > Running `docker compose up` directly skips installer steps such as secret
-> rotation, RAM-tier model pulls, Qdrant bootstrap, and n8n workflow import.
+> rotation, optional RAM-tier model pulls, Qdrant bootstrap, and n8n workflow import.
 >
 > **Linux Docker-Ollama users:** run
 > `docker compose --profile docker-ollama --profile linux-security up -d` or use
 > `bash install.sh`.
 
 ## ⚡ Install
+
+Laptop-safe default:
 
 ```bash
 git clone https://github.com/TheYfactora12/home-ai-elite.git
@@ -45,6 +47,13 @@ bash install.sh --profile custom --profiles search,automation
 ```
 
 `core` is the laptop-safe default. Optional profiles can still be started later with `wizard start search`, `wizard start automation`, `wizard start coding`, or `wizard start full`.
+
+Non-interactive core validation path:
+
+```bash
+HOME_AI_NON_INTERACTIVE=true HOME_AI_SKIP_MODEL_PULLS=true \
+  bash install.sh --profile core --skip-model-pulls --non-interactive
+```
 
 **Or install directly from GitHub (no clone needed):**
 
@@ -75,6 +84,22 @@ Run this from the repo root to pick up the ongoing build context (dashboard, ins
 ## 🗺️ Architecture
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the scalable install plan.
+
+Core profile:
+
+```
+You
+ │
+ ├──► Dashboard    :8888   ← Wizard HQ service dashboard
+ ├──► Open WebUI   :3000   ← Chat UI
+ ├──► LiteLLM      :4000   ← Local-first model gateway
+ │         │
+ │         └──► Ollama  :11434  ← Native local model runtime on macOS
+ │
+ └──► Qdrant       :6333   ← Vector memory (RAG)
+```
+
+Optional expanded profiles:
 
 ```
 You
@@ -116,16 +141,20 @@ You
 
 ## 💻 Hardware Tiers
 
-The installer detects your RAM and pulls the right models automatically.
+The installer detects RAM and recommends safe model tiers. Model pulls are optional and should be confirmed on low-memory machines.
 
-| RAM | Tier | Models Installed | Recommended Hardware |
+| RAM | Tier | Recommended models | Default behavior |
 |-----|------|-----------------|----------------------|
-| 8–15 GB | Low | mistral:7b, qwen2.5:7b | Any Mac/PC |
-| 16–23 GB | Base | qwen2.5:7b, qwen2.5-coder:7b, deepseek-r1:7b | Mac Mini M2/M3 16GB |
-| 24–47 GB | Mid ⭐ | qwen2.5:32b, qwen2.5-coder:14b, deepseek-r1:14b | Mac Mini M4 Pro 24GB |
-| 48+ GB | High | llama3.3:70b, qwen2.5:32b, deepseek-r1:32b | Mac Studio / Mac Pro |
+| 8-15 GB | Low | qwen2.5:7b, mistral:7b, nomic-embed-text | Core only; avoid OpenHands, n8n, full search stack, and 14B+ models |
+| 16-23 GB | Base | qwen2.5:7b, qwen2.5-coder:7b, deepseek-r1:7b | Core + optional search |
+| 24-47 GB | Mid | qwen2.5:32b, qwen2.5-coder:14b, deepseek-r1:14b | Core + search + automation where practical |
+| 48+ GB | High | llama3.3:70b, qwen2.5:32b, deepseek-r1:32b | Full stack available intentionally |
 
-**Best value:** Mac Mini M4 Pro 24 GB (~$1,399) — silent, 10W idle, runs 32B models at full speed.
+Pull models explicitly:
+
+```bash
+bash scripts/add-model.sh qwen2.5:7b
+```
 
 ---
 
@@ -204,18 +233,26 @@ The stack runs 100% locally out of the box. To add cloud fallback for hard tasks
 
 ## 📦 After Install
 
-1. **http://localhost:3000** → Open WebUI → create admin account → start chatting
-2. **http://localhost:3002** → Perplexica → try a web search with citations
-3. **http://localhost:3003** → OpenHands → give it a coding task (point at a GitHub repo)
-4. **http://localhost:5678** → n8n → import `n8n-workflows/ai-router.json`
-5. **`bash scripts/add-model.sh`** → pull more models anytime
+Core:
+
+1. `bash scripts/doctor.sh` → verify Docker, Ollama, ports, models, `.env`, and service health.
+2. `bash tests/core-live-smoke.sh` → verify the running core path end to end.
+3. **http://localhost:3000** → Open WebUI → create admin account → start chatting.
+4. **http://localhost:8888** → Dashboard → review local stack status.
+5. `bash scripts/add-model.sh qwen2.5:7b` → pull a small local model if none is installed.
+
+Optional profiles:
+
+- `wizard start search` → enables Perplexica `:3002` and SearXNG `:8080`.
+- `wizard start automation` → enables n8n `:5678`.
+- `wizard start coding` → enables OpenHands `:3003`; avoid this on 8 GB machines.
 
 ---
 
 ## 📍 Roadmap
 
-- [x] v0.1 — Core scaffold exists, but default startup still needs simplification
-- [~] v0.2 — Full stack prototype exists, but heavy services must move behind profiles
+- [x] v0.1 — Core scaffold exists and the laptop-safe core path is verified
+- [~] v0.2 — Full stack prototype exists, but optional profiles still need separate validation
 - [~] v0.3 — First-boot automation is partial; n8n import still depends on API key setup
 - [~] v0.4 — macOS `.pkg`, backup, and restore are scaffolded but not release-verified
 - [ ] v1.0 — Stable laptop-first release with profiles, doctor checks, tests, backup/restore, and upgrade path
