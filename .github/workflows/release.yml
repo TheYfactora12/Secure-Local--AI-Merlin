@@ -1,12 +1,90 @@
-name: Release — Auto-tag on main
+name: Release
 
 on:
   push:
-    branches: [ main ]
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag, for example v1.0.0-rc1"
+        required: true
+        type: string
 
 jobs:
+  package:
+    name: Build macOS package artifact
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      pkg_name: ${{ steps.pkg.outputs.pkg_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release tag
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          case "$TAG" in
+            v*) ;;
+            *) echo "Release tag must start with v: $TAG" >&2; exit 1 ;;
+          esac
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Run package readiness checks
+        run: bash tests/pkg-readiness-smoke.sh
+
+      - name: Build unsigned package
+        run: bash pkg/build-pkg.sh
+
+      - name: Locate package
+        id: pkg
+        run: |
+          PKG="$(ls -1 home-ai-elite-*.pkg | head -n 1)"
+          [ -n "$PKG" ] || { echo "Package artifact missing" >&2; exit 1; }
+          echo "pkg_name=$PKG" >> "$GITHUB_OUTPUT"
+
+      - name: Verify package payload
+        run: |
+          PKG="${{ steps.pkg.outputs.pkg_name }}"
+          pkgutil --payload-files "$PKG" > package-payload.txt
+          if rg '(^|/)\.env$|certs/|pkg/build/|home-ai-elite-.*\.pkg' package-payload.txt; then
+            echo "Package payload contains forbidden local/build artifacts" >&2
+            exit 1
+          fi
+          pkgutil --check-signature "$PKG" > package-signature.txt 2>&1 || true
+          if ! grep -q "Status: no signature" package-signature.txt; then
+            echo "Unsigned package smoke expected no signature. Use signed/notarized release process for v1.0 distribution." >&2
+            cat package-signature.txt >&2
+            exit 1
+          fi
+
+      - name: Generate checksums
+        run: |
+          shasum -a 256 "${{ steps.pkg.outputs.pkg_name }}" > "${{ steps.pkg.outputs.pkg_name }}.sha256"
+
+      - name: Upload release package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-package
+          path: |
+            ${{ steps.pkg.outputs.pkg_name }}
+            ${{ steps.pkg.outputs.pkg_name }}.sha256
+            package-payload.txt
+            package-signature.txt
+          if-no-files-found: error
+
   release:
-    name: Create Release
+    name: Create GitHub release
+    needs: package
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -15,39 +93,61 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get version from commit count
-        id: version
-        run: |
-          COUNT=$(git rev-list --count HEAD)
-          echo "tag=v0.$(( COUNT / 10 )).$(( COUNT % 10 ))" >> $GITHUB_OUTPUT
+      - name: Download package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-package
 
-      - name: Build changelog
-        id: changelog
+      - name: Build release notes
+        id: notes
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -z "$PREV_TAG" ]; then
-            LOG=$(git log --oneline -20)
+          RELEASE_TAG="${{ needs.package.outputs.tag }}"
+          if git rev-parse -q --verify "refs/tags/${RELEASE_TAG}" >/dev/null; then
+            PREV_TAG="$(git describe --tags --abbrev=0 "${RELEASE_TAG}^" 2>/dev/null || true)"
+            LOG_RANGE="${PREV_TAG:+${PREV_TAG}..${RELEASE_TAG}}"
           else
-            LOG=$(git log "${PREV_TAG}..HEAD" --oneline)
+            PREV_TAG=""
+            LOG_RANGE=""
           fi
-          echo "log<<EOF" >> $GITHUB_OUTPUT
-          echo "$LOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          {
+            echo "body<<EOF"
+            echo "## Home AI Elite ${{ needs.package.outputs.tag }}"
+            echo ""
+            echo "### Tested Artifact"
+            echo "- macOS package: \`${{ needs.package.outputs.pkg_name }}\`"
+            echo "- SHA-256 checksum attached."
+            echo "- Package payload was checked for local secrets and generated certs."
+            echo "- Package is currently unsigned in CI. Signed/notarized distribution remains a separate v1.0 gate."
+            echo ""
+            echo "### Install"
+            echo '```bash'
+            echo "git clone https://github.com/TheYfactora12/home-ai-elite.git"
+            echo "cd home-ai-elite"
+            echo "bash install.sh --profile core"
+            echo '```'
+            echo ""
+            echo "### Changes"
+            if [ -n "$LOG_RANGE" ]; then
+              git log "$LOG_RANGE" --oneline
+            else
+              git log --oneline -30
+            fi
+            echo ""
+            echo "### Changelog"
+            sed -n '1,80p' CHANGELOG.md
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
-      - name: Create GitHub Release
+      - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: "home-ai-elite ${{ steps.version.outputs.tag }}"
-          body: |
-            ## What's Changed
-            ${{ steps.changelog.outputs.log }}
-
-            ## Install
-            ```bash
-            git clone https://github.com/TheYfactora12/home-ai-elite.git
-            cd home-ai-elite
-            bash install.sh
-            ```
+          tag_name: ${{ needs.package.outputs.tag }}
+          name: "Home AI Elite ${{ needs.package.outputs.tag }}"
+          body: ${{ steps.notes.outputs.body }}
+          files: |
+            ${{ needs.package.outputs.pkg_name }}
+            ${{ needs.package.outputs.pkg_name }}.sha256
+            package-payload.txt
+            package-signature.txt
           draft: false
-          prerelease: false
+          prerelease: true

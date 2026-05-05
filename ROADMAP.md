@@ -203,6 +203,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Installer model-pull policy smoke test
 - [x] Core install budget smoke test
 - [x] Package readiness smoke test
+- [x] Release workflow smoke test
 - [ ] Search test: Perplexica, SearXNG
 - [ ] Automation test: n8n health and workflow import
 - [ ] Coding test: OpenHands startup and LiteLLM connection
