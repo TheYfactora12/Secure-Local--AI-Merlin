@@ -291,14 +291,16 @@ Completed without replacing the working installer:
 - Added `config/merlin/memory.yaml` as the canonical/legacy memory schema reference.
 - Added `config/merlin/memory-collections.env` as the bash-readable Qdrant collection manifest.
 - Added installer profile options for core, developer, workstation, server, full, and custom installs.
+- Added `scripts/profile-lib.sh` so installer, bootstrap, and tests share one profile mapping.
 - Updated Qdrant initialization to create current/legacy collections from the manifest.
 - Updated `cli/wizard` memory commands to read collection names from the manifest while keeping `swarm_memory` compatible.
 - Updated backup/restore to use repo-root `.env`, configurable Qdrant collection coverage, and restore dry-run mode.
 - Added `tests/memory-config-smoke.sh`.
 - Added `tests/doctor-model-smoke.sh`.
 - Added `tests/wizard-memory-config-smoke.sh`.
+- Added `tests/profile-selection-smoke.sh`.
 
 Next implementation slice:
 
 - Add a disposable live-Qdrant restore test.
-- Add tests that validate installer profile service selection without starting Docker.
+- Add live Docker validation for `core` profile on this laptop.

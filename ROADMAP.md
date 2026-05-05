@@ -195,6 +195,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Memory config smoke test: manifest and restore dry-run
 - [x] Doctor model smoke test: installed/missing model reporting
 - [x] Wizard memory config smoke test
+- [x] Installer profile mapping smoke test
 - [ ] Core test: Ollama, Open WebUI, LiteLLM, Qdrant, dashboard
 - [ ] Search test: Perplexica, SearXNG
 - [ ] Automation test: n8n health and workflow import

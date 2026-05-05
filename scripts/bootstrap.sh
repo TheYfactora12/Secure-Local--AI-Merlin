@@ -87,69 +87,6 @@ qdrant_create_collection() {
   log "  ✅ Created: $name"
 }
 
-profile_services_for_darwin() {
-  local capabilities="$1"
-  local services=(dashboard qdrant litellm open-webui)
-  for capability in $capabilities; do
-    case "$capability" in
-      search)
-        services+=(searxng perplexica-backend perplexica-frontend)
-        ;;
-      automation)
-        services+=(n8n)
-        ;;
-      coding)
-        services+=(openhands)
-        ;;
-      security)
-        services+=(nginx)
-        ;;
-      ops)
-        services+=(watchtower)
-        ;;
-    esac
-  done
-  printf '%s\n' "${services[@]}"
-}
-
-profile_services_for_linux() {
-  local capabilities="$1"
-  local services=(ollama dashboard qdrant litellm open-webui)
-  for capability in $capabilities; do
-    case "$capability" in
-      search)
-        services+=(searxng perplexica-backend perplexica-frontend)
-        ;;
-      automation)
-        services+=(n8n)
-        ;;
-      coding)
-        services+=(openhands)
-        ;;
-      security)
-        services+=(nginx fail2ban)
-        ;;
-      ops)
-        services+=(watchtower)
-        ;;
-    esac
-  done
-  printf '%s\n' "${services[@]}"
-}
-
-compose_profiles_for_linux() {
-  local capabilities="$1"
-  local profiles=(docker-ollama)
-  for capability in $capabilities; do
-    case "$capability" in
-      security|server|ops)
-        profiles+=(linux-security)
-        ;;
-    esac
-  done
-  printf '%s\n' "${profiles[@]}" | awk '!seen[$0]++'
-}
-
 # ---------------------------------------------------------------------------
 # Banner
 # ---------------------------------------------------------------------------
@@ -165,6 +102,10 @@ echo -e "${RESET}"
 banner "Step 1/7: Preflight"
 [[ -d "$STACK_DIR" ]] || fail "Missing $STACK_DIR — re-run the installer"
 [[ -f "$COMPOSE_FILE" ]] || fail "Missing docker-compose.yml"
+PROFILE_LIB="${STACK_DIR}/scripts/profile-lib.sh"
+[[ -f "$PROFILE_LIB" ]] || fail "Missing profile helper library: ${PROFILE_LIB}"
+# shellcheck disable=SC1090
+source "$PROFILE_LIB"
 ensure_docker_cli || fail "Docker CLI not found — install Docker Desktop first"
 docker info >/dev/null 2>&1 || fail "Docker engine not running — open Docker Desktop first"
 log "  ✅ Preflight passed"

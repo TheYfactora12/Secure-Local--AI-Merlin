@@ -166,116 +166,6 @@ ensure_docker_cli() {
   return 1
 }
 
-normalize_install_profile() {
-  case "$INSTALL_PROFILE" in
-    core|developer|workstation|server|full|custom)
-      ;;
-    *)
-      err "Unknown install profile: ${INSTALL_PROFILE}. Use core, developer, workstation, server, full, or custom."
-      ;;
-  esac
-}
-
-profile_capabilities() {
-  case "$INSTALL_PROFILE" in
-    core)
-      echo ""
-      ;;
-    developer)
-      echo "search"
-      ;;
-    workstation)
-      echo "search automation"
-      ;;
-    server)
-      echo "search automation security ops"
-      ;;
-    full)
-      echo "search automation coding security ops"
-      ;;
-    custom)
-      echo "$CUSTOM_PROFILES" | tr ',' ' '
-      ;;
-  esac
-}
-
-profile_services_for_darwin() {
-  local capabilities="$1"
-  local services=(dashboard qdrant litellm open-webui)
-  for capability in $capabilities; do
-    case "$capability" in
-      search)
-        services+=(searxng perplexica-backend perplexica-frontend)
-        ;;
-      automation)
-        services+=(n8n)
-        ;;
-      coding)
-        services+=(openhands)
-        ;;
-      security)
-        services+=(nginx)
-        ;;
-      ops)
-        services+=(watchtower)
-        ;;
-      "")
-        ;;
-      *)
-        err "Unknown capability in profile list: ${capability}"
-        ;;
-    esac
-  done
-  printf '%s\n' "${services[@]}"
-}
-
-profile_services_for_linux() {
-  local capabilities="$1"
-  local services=(ollama dashboard qdrant litellm open-webui)
-  for capability in $capabilities; do
-    case "$capability" in
-      search)
-        services+=(searxng perplexica-backend perplexica-frontend)
-        ;;
-      automation)
-        services+=(n8n)
-        ;;
-      coding)
-        services+=(openhands)
-        ;;
-      security)
-        services+=(nginx fail2ban)
-        ;;
-      ops)
-        services+=(watchtower)
-        ;;
-      "")
-        ;;
-      *)
-        err "Unknown capability in profile list: ${capability}"
-        ;;
-    esac
-  done
-  printf '%s\n' "${services[@]}"
-}
-
-csv_from_words() {
-  echo "$1" | awk '{$1=$1; gsub(/ /,","); print}'
-}
-
-compose_profiles_for_linux() {
-  local capabilities="$1"
-  local profiles=(docker-ollama)
-  for capability in $capabilities; do
-    case "$capability" in
-      security|server|ops)
-        profiles+=(linux-security)
-        ;;
-    esac
-  done
-  printf '%s\n' "${profiles[@]}" | awk '!seen[$0]++'
-}
-
 wait_for_docker_engine() {
   if docker info &>/dev/null; then
     return 0
@@ -416,8 +306,8 @@ else err "Minimum 8 GB RAM required. Detected: ${TOTAL_RAM_GB} GB."
 fi
 log "Model tier selected: ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
 
-normalize_install_profile
-INSTALL_CAPABILITIES="$(profile_capabilities)"
+normalize_profile_name "$INSTALL_PROFILE" || err "Invalid install profile"
+INSTALL_CAPABILITIES="$(profile_capabilities_for "$INSTALL_PROFILE" "$CUSTOM_PROFILES")"
 INSTALL_CAPABILITIES_CSV="$(csv_from_words "$INSTALL_CAPABILITIES")"
 if [[ "$INSTALL_PROFILE" == "full" && "$NON_INTERACTIVE" != true ]]; then
   warn "Full profile enables every optional service, including OpenHands Docker socket access."
@@ -509,6 +399,10 @@ if [[ "$OS" == "Darwin" ]]; then
 fi
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROFILE_LIB="${SCRIPT_DIR}/scripts/profile-lib.sh"
+[[ -f "$PROFILE_LIB" ]] || err "Missing profile helper library: ${PROFILE_LIB}"
+# shellcheck disable=SC1090
+source "$PROFILE_LIB"
 
 log_to_file "[PASS] STEP 2: Dependencies installed"
 

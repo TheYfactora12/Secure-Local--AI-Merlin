@@ -122,3 +122,15 @@ breaking basic command loading.
 ```bash
 bash tests/wizard-memory-config-smoke.sh
 ```
+
+---
+
+## profile-selection-smoke.sh
+
+This test does not require Docker. It validates the shared installer profile
+mapping used by `install.sh` and `scripts/bootstrap.sh`, including macOS/Linux
+service lists and Linux Compose profiles.
+
+```bash
+bash tests/profile-selection-smoke.sh
+```
