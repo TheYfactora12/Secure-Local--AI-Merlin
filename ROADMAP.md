@@ -134,7 +134,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Core profile installs and starts cleanly on this laptop
 - [x] Docker Desktop and Ollama prerequisites are detected with clear instructions
 - [x] `wizard doctor` checks Docker, Ollama, ports, disk, RAM, `.env`, models, and service health
-- [ ] Core install completes within a documented time budget
+- [x] Core install completes within a documented time budget
 - [x] Installer supports selectable profiles: core, search, automation, coding, security, ops, full
 - [x] Hardware tier detection chooses conservative defaults without blocking manual override
 - [x] `scripts/update.sh` and `scripts/upgrade.sh` support macOS native Ollama and do not start Docker Ollama accidentally
@@ -200,6 +200,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Qdrant live restore smoke test with a disposable collection
 - [x] Update/upgrade profile smoke test
 - [x] Installer model-pull policy smoke test
+- [x] Core install budget smoke test
 - [ ] Search test: Perplexica, SearXNG
 - [ ] Automation test: n8n health and workflow import
 - [ ] Coding test: OpenHands startup and LiteLLM connection
@@ -212,6 +213,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 Validated on 2026-05-05 on this 8 GB Mac:
 
 - `install.sh --profile core --skip-model-pulls --non-interactive` completed successfully.
+- `tests/core-install-budget-smoke.sh` completed the core installer in 95 seconds against a 600 second budget, then passed live core smoke.
 - Docker Desktop core services were running: dashboard `:8888`, Open WebUI `:3000`, LiteLLM `:4000`, and Qdrant `:6333`.
 - Native Ollama was running through Homebrew service.
 - Approved model `qwen2.5:7b` was installed and answered locally through Ollama.

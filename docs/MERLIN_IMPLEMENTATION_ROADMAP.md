@@ -308,6 +308,7 @@ Completed without replacing the working installer:
 - Added `tests/qdrant-restore-live-smoke.sh`.
 - Added `tests/update-upgrade-profile-smoke.sh`.
 - Added `tests/installer-model-pull-policy-smoke.sh`.
+- Added `tests/core-install-budget-smoke.sh`.
 
 Next implementation slice:
 
@@ -315,4 +316,5 @@ Next implementation slice:
 - Add a disposable live-Qdrant restore test. `Done: tests/qdrant-restore-live-smoke.sh`
 - Make update/upgrade profile-aware and macOS native-Ollama safe. `Done: scripts/update.sh, scripts/upgrade.sh, tests/update-upgrade-profile-smoke.sh`
 - Make hardware-tier model pulls opt-in while preserving explicit override. `Done: install.sh, tests/installer-model-pull-policy-smoke.sh`
+- Document and enforce core install time budget. `Done: tests/core-install-budget-smoke.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

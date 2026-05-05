@@ -110,6 +110,7 @@ The next engineering priority should be #1 and #2. A signed release proves distr
 Last validated on 2026-05-05:
 
 - Core install path completed with `HOME_AI_NON_INTERACTIVE=true HOME_AI_SKIP_MODEL_PULLS=true bash install.sh --profile core --skip-model-pulls --non-interactive`.
+- `tests/core-install-budget-smoke.sh` completed the core installer in 95 seconds against a 600 second budget, then passed live core smoke.
 - Docker Desktop core services were running: Wizard HQ `:8888`, Open WebUI `:3000`, LiteLLM `:4000`, and Qdrant `:6333`.
 - Native Ollama was running through Homebrew service.
 - Approved low-tier model `qwen2.5:7b` was installed.

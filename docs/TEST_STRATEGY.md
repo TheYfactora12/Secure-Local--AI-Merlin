@@ -11,6 +11,7 @@ Testing must protect the working installer while Merlin evolves. Tests should pr
 - Fresh clone.
 - `bash install.sh --help`.
 - `HOME_AI_NON_INTERACTIVE=true HOME_AI_SKIP_MODEL_PULLS=true bash install.sh --non-interactive --skip-model-pulls`.
+- `bash tests/core-install-budget-smoke.sh` completes inside the current 10 minute budget when Docker Desktop is already installed and running.
 - Confirm `.env` exists and permissions are `600`.
 - Confirm secrets are not default values.
 - Confirm service URLs print.
@@ -63,6 +64,7 @@ Core:
 - Qdrant reachable.
 - Dashboard reachable.
 - `tests/core-live-smoke.sh` verifies the laptop-safe core path end to end without model pulls, cloud calls, or secret output.
+- `tests/core-install-budget-smoke.sh` reruns the laptop-safe installer path and then calls the live core smoke test.
 - If a local model is installed, core smoke verifies both direct Ollama generation and LiteLLM routing.
 - `wizard start` starts the same profile as `bash scripts/start-core.sh`.
 

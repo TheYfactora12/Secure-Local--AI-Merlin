@@ -243,9 +243,12 @@ Core:
 
 1. `bash scripts/doctor.sh` → verify Docker, Ollama, ports, models, `.env`, and service health.
 2. `bash tests/core-live-smoke.sh` → verify the running core path end to end.
-3. **http://localhost:3000** → Open WebUI → create admin account → start chatting.
-4. **http://localhost:8888** → Dashboard → review local stack status.
-5. `bash scripts/add-model.sh qwen2.5:7b` → pull a small local model if none is installed.
+3. `bash tests/core-install-budget-smoke.sh` → re-run the core installer path and enforce the documented time budget.
+4. **http://localhost:3000** → Open WebUI → create admin account → start chatting.
+5. **http://localhost:8888** → Dashboard → review local stack status.
+6. `bash scripts/add-model.sh qwen2.5:7b` → pull a small local model if none is installed.
+
+The current core install budget is 10 minutes for `--profile core --skip-model-pulls --non-interactive` on a machine with Docker Desktop already installed and running.
 
 Optional profiles:
 
