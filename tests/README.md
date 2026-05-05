@@ -159,3 +159,15 @@ preserved.
 ```bash
 bash tests/uninstall-smoke.sh
 ```
+
+---
+
+## launchd-core-smoke.sh
+
+This test does not install launchd agents. It verifies that macOS auto-start
+uses the laptop-safe core profile script and does not start the raw full Compose
+stack.
+
+```bash
+bash tests/launchd-core-smoke.sh
+```

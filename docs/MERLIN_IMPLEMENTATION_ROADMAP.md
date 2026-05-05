@@ -331,4 +331,5 @@ Next implementation slice:
 - Update release artifact actions to the Node 24-compatible major version. `Done: .github/workflows/release.yml, tests/release-workflow-smoke.sh`
 - Make package uninstall guarded, dry-runnable, and covered by smoke tests. `Done: pkg/scripts/uninstall.sh, scripts/uninstall.sh, tests/uninstall-smoke.sh`
 - Update GitHub release action to the Node 24-compatible major version. `Done: .github/workflows/release.yml, tests/release-workflow-smoke.sh`
+- Make launchd auto-start use the laptop-safe core profile instead of raw full-stack Compose. `Done: launchd/com.homeai.stack.plist, tests/launchd-core-smoke.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

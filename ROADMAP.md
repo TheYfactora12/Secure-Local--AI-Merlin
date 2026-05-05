@@ -109,7 +109,7 @@ Status: Partial.
 - [x] Qdrant init uses the Merlin memory collection manifest for current/legacy collections
 - [ ] n8n workflow import is not truly automatic unless `N8N_API_KEY` exists
 - [x] Bootstrap supports core-only behavior and skips optional automation imports unless enabled
-- [ ] launchd should not auto-start the entire heavy stack by default
+- [x] launchd should not auto-start the entire heavy stack by default
 - [ ] Bootstrap should be idempotent for each profile independently
 
 ### v0.4 — macOS Package, Backup, Restore
@@ -206,6 +206,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Package readiness smoke test
 - [x] Package signing preflight smoke test
 - [x] Uninstaller smoke test
+- [x] launchd core-profile auto-start smoke test
 - [x] Release workflow smoke test
 - [x] Static smoke tests run in CI
 - [ ] Search test: Perplexica, SearXNG

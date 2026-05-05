@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   com.homeai.stack.plist
-  Starts all AI services (docker compose up) 30 seconds after login.
+  Starts the laptop-safe core profile 30 seconds after login.
   The 30s delay gives Docker Desktop time to fully initialize.
 
   Install:
@@ -17,8 +17,8 @@
   <array>
     <string>/bin/bash</string>
     <string>-c</string>
-    <!-- Wait 30s for Docker to be ready, then start all services -->
-    <string>sleep 30 &amp;&amp; cd "$HOME/home-ai-elite" &amp;&amp; /usr/local/bin/docker compose up -d --remove-orphans &gt;&gt; /tmp/homeai-stack.log 2&gt;&amp;1</string>
+    <!-- Wait 30s for Docker to be ready, then start only the core profile -->
+    <string>sleep 30 &amp;&amp; cd "$HOME/home-ai-elite" &amp;&amp; HOME_AI_PROFILE=core /bin/bash scripts/start-core.sh &gt;&gt; /tmp/homeai-stack.log 2&gt;&amp;1</string>
   </array>
 
   <key>RunAtLoad</key>

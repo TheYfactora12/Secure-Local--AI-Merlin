@@ -24,6 +24,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Docker Desktop, Homebrew, Ollama, and Ollama models are never removed by the Home AI Elite uninstaller.
 - Added `tests/uninstall-smoke.sh` and CI coverage for uninstaller behavior.
 
+### Launchd
+- Changed macOS stack auto-start to run `scripts/start-core.sh` with `HOME_AI_PROFILE=core`.
+- Added `tests/launchd-core-smoke.sh` to guard against launchd starting the raw full Compose stack.
+
 ---
 
 ## [0.8.1] — 2026-05-05

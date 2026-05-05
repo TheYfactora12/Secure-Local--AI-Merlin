@@ -115,6 +115,7 @@ jobs:
           bash tests/installer-model-pull-policy-smoke.sh
           bash tests/update-upgrade-profile-smoke.sh
           bash tests/uninstall-smoke.sh
+          bash tests/launchd-core-smoke.sh
           bash tests/container-image-policy-smoke.sh
           bash tests/pkg-readiness-smoke.sh
           bash tests/pkg-signing-preflight-smoke.sh

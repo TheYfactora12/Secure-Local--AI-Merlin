@@ -12,6 +12,9 @@
 #   3. Bootstraps each agent into the current login session
 #   4. Verifies agents appear in launchctl list
 #
+# The stack agent intentionally starts only the laptop-safe core profile.
+# Optional profiles must be started explicitly.
+#
 # Reference:
 #   https://gist.github.com/johndturn/09a5c055e6a56ab61212204607940fa0
 # =============================================================================
@@ -141,7 +144,7 @@ main() {
   log "✅ Auto-start agents installed."
   log "   On your next macOS login:"
   log "   1. Docker Desktop will open automatically (5s after login)"
-  log "   2. All AI services will start automatically (30s after login)"
+  log "   2. The laptop-safe core profile will start automatically (30s after login)"
   log ""
   log "Verify:"
   log "   launchctl list | grep homeai"

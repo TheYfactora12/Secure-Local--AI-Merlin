@@ -14,13 +14,17 @@ These `.plist` files make your home-ai-elite stack **start automatically on macO
 | File | What it starts | Delay |
 |------|---------------|-------|
 | `com.homeai.docker.plist` | Docker Desktop | 5s after login |
-| `com.homeai.stack.plist` | All AI services (docker compose up) | 30s after login (waits for Docker) |
+| `com.homeai.stack.plist` | Laptop-safe core profile (`scripts/start-core.sh`) | 30s after login (waits for Docker) |
 
 ## Install (run once)
 
 ```bash
 bash ~/home-ai-elite/launchd/install-launchd.sh
 ```
+
+This installs only the Docker Desktop opener and the core-profile stack starter.
+Search, automation, coding, security, and ops profiles still require explicit
+manual start commands.
 
 ## Uninstall
 
