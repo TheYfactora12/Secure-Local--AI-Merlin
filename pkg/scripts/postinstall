@@ -26,6 +26,14 @@ INSTALLING_HOME=$(dscl . -read "/Users/${INSTALLING_USER}" NFSHomeDirectory 2>/d
 
 log "Installing for user: $INSTALLING_USER ($INSTALLING_HOME)"
 
+# The user-level install and launchd setup append to this log through `su`.
+# The package script creates it as root first, so hand ownership to the user
+# before those commands run.
+touch "$LOG_FILE"
+chown "${INSTALLING_USER}:staff" "$LOG_FILE" 2>/dev/null || true
+chmod 664 "$LOG_FILE" 2>/dev/null || true
+log "  ✅ Install log writable by $INSTALLING_USER"
+
 # ---------------------------------------------------------------------------
 # 1. Fix ownership: installer runs as root, files should belong to user
 # ---------------------------------------------------------------------------

@@ -15,6 +15,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.4] — 2026-05-05
+
+### Packaging
+- Fixed package postinstall log ownership so the user-level background core installer can write to `/tmp/homeai-install.log`.
+- Added package readiness coverage for postinstall log ownership handoff.
+
+---
+
 ## [0.8.3] — 2026-05-05
 
 ### Launchd
