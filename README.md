@@ -120,8 +120,12 @@ The installer detects your RAM and pulls the right models automatically.
 ## 🛠️ Management Commands
 
 ```bash
-bash scripts/status.sh              # Live health dashboard
 bash scripts/doctor.sh              # Read-only install/profile diagnostic
+bash scripts/status.sh              # Live health dashboard
+bash scripts/start-core.sh          # Start laptop-safe core profile
+bash scripts/start-search.sh        # Start core + search profile
+bash scripts/start-automation.sh    # Start core + n8n automation profile
+bash scripts/start-coding.sh        # Start core + OpenHands coding profile
 bash scripts/stop.sh                # Stop all services
 bash scripts/restart.sh             # Restart all services
 bash scripts/update.sh              # Pull latest images + restart
@@ -132,6 +136,10 @@ bash scripts/add-model.sh qwen2.5:32b  # Pull a new model
 Native Ollama brain control:
 
 ```bash
+wizard start                        # Start core profile
+wizard start search                 # Start core + search profile
+wizard start automation             # Start core + n8n profile
+wizard start coding                 # Start core + OpenHands profile
 wizard brain status                 # Show API, loaded models, installed models
 wizard brain stop                   # Cool down local model runners
 wizard brain start                  # Start native Ollama again

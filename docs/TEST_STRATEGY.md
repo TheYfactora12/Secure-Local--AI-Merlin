@@ -47,6 +47,7 @@ Testing must protect the working installer while Merlin evolves. Tests should pr
 - `bash -n scripts/*.sh`
 - `bash -n launchd/*.sh`
 - `bash -n pkg/scripts/*`
+- `bash -n cli/wizard`
 - `docker compose config --quiet`
 - JSON validation for `n8n-workflows/*.json`
 - YAML validation for configs
@@ -61,6 +62,7 @@ Core:
 - LiteLLM reachable.
 - Qdrant reachable.
 - Dashboard reachable.
+- `wizard start` starts the same profile as `bash scripts/start-core.sh`.
 
 Search:
 

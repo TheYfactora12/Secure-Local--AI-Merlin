@@ -41,10 +41,12 @@ Acceptance criteria:
 
 Tasks:
 
-- Define profiles: `core`, `search`, `automation`, `coding`, `security`, `ops`, `full`.
-- Define hardware tiers.
+- [x] Define profiles: `core`, `search`, `automation`, `coding`, `security`, `ops`, `full`.
+- [x] Define hardware tiers.
 - Draft future `config/merlin/*.yaml` structure.
-- Add `wizard doctor` design.
+- [x] Add `wizard doctor` baseline diagnostic.
+- [x] Add profile-aware start scripts for core, search, automation, coding, and full.
+- [x] Wire `wizard start [core|search|automation|coding|full]`.
 - Split test plan by profile.
 
 Risks:

@@ -146,7 +146,11 @@ cat << 'EOF'
   WIZARD CLI v5
 
   Stack control:
-    wizard start              Start Wizard stack
+    wizard start              Start core profile
+    wizard start search       Start core + search profile
+    wizard start automation   Start core + automation profile
+    wizard start coding       Start core + coding profile
+    wizard start full         Start everything with confirmation
     wizard stop               Stop Wizard stack
     wizard restart            Restart Wizard stack
     wizard status             Show health of all services
@@ -204,9 +208,27 @@ EOF
 case "$1" in
 
   start)
-    ensure_docker_cli || { echo -e "${RED}Docker CLI not found${NC}"; exit 1; }
-    cd "$WIZARD_DIR" && docker compose up -d
-    echo -e "${GREEN}✓ Wizard is awake${NC}"
+    case "${2:-core}" in
+      core)
+        bash "$WIZARD_DIR/scripts/start-core.sh"
+        ;;
+      search)
+        bash "$WIZARD_DIR/scripts/start-search.sh"
+        ;;
+      automation)
+        bash "$WIZARD_DIR/scripts/start-automation.sh"
+        ;;
+      coding)
+        bash "$WIZARD_DIR/scripts/start-coding.sh"
+        ;;
+      full)
+        bash "$WIZARD_DIR/scripts/start-full.sh"
+        ;;
+      *)
+        echo "Usage: wizard start [core|search|automation|coding|full]"
+        exit 1
+        ;;
+    esac
     ;;
 
   stop)

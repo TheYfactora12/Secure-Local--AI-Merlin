@@ -145,26 +145,27 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 
 ### 1. Create Laptop Core Mode
 
-- [ ] Add Compose profiles so default startup does not include OpenHands, n8n, Perplexica, SearXNG, nginx, fail2ban, or watchtower
+- [x] Add profile config so default startup intent does not include OpenHands, n8n, Perplexica, SearXNG, nginx, fail2ban, or watchtower
 - [ ] Add `HOME_AI_PROFILE` or equivalent install option
 - [ ] Add installer prompts/options for core, developer, workstation, server, and custom installs
-- [ ] Add `scripts/start-core.sh`
-- [ ] Add `scripts/start-search.sh`
-- [ ] Add `scripts/start-automation.sh`
-- [ ] Add `scripts/start-coding.sh`
-- [ ] Update `wizard start` to start core mode by default
-- [ ] Add `wizard start full` for users who intentionally want everything
+- [x] Add `scripts/start-core.sh`
+- [x] Add `scripts/start-search.sh`
+- [x] Add `scripts/start-automation.sh`
+- [x] Add `scripts/start-coding.sh`
+- [x] Add `scripts/start-full.sh`
+- [x] Update `wizard start` to start core mode by default
+- [x] Add `wizard start full` for users who intentionally want everything
 
 ### 2. Add `wizard doctor`
 
-- [ ] Check Docker CLI availability
-- [ ] Check Docker Desktop running
-- [ ] Check native Ollama availability on macOS
-- [ ] Check RAM and disk
-- [ ] Check port conflicts
-- [ ] Check `.env` required keys
+- [x] Check Docker CLI availability
+- [x] Check Docker Desktop/running state
+- [x] Check native Ollama availability on macOS
+- [x] Check RAM and disk
+- [x] Check localhost binding safety
+- [x] Check `.env` required keys
 - [ ] Check selected models are installed or give exact pull commands
-- [ ] Print one clear next command
+- [x] Print one clear next command
 
 ### 3. Define Merlin/Magic Mode Architecture
 
