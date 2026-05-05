@@ -134,3 +134,15 @@ service lists and Linux Compose profiles.
 ```bash
 bash tests/profile-selection-smoke.sh
 ```
+
+---
+
+## container-image-policy-smoke.sh
+
+This test does not require Docker. It verifies that every floating container
+image tag used by Compose files is documented in
+`docs/CONTAINER_IMAGE_POLICY.md` with an explicit upgrade policy.
+
+```bash
+bash tests/container-image-policy-smoke.sh
+```

@@ -94,7 +94,7 @@ Status: Scaffolded, not yet reliable as a default laptop install.
 - [x] OpenHands service exists
 - [x] RAM-aware installer logic exists
 - [x] Heavy services are gated behind install/start profiles for the normal core path
-- [ ] Image tags using `latest`, `main`, or `main-latest` need pinning or documented upgrade policy
+- [x] Image tags using `latest`, `main`, or `main-latest` need pinning or documented upgrade policy
 - [ ] Full stack startup needs clean Mac/PC validation after core mode works
 - [x] Installer supports profile selection by hardware tier and user choice
 

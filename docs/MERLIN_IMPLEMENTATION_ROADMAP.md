@@ -325,4 +325,5 @@ Next implementation slice:
 - Add signed/notarized release preflight checks. `Done: pkg/release-preflight.sh, tests/pkg-signing-preflight-smoke.sh`
 - Gate GitHub release creation on tags/manual dispatch and package artifact checks. `Done: .github/workflows/release.yml, tests/release-workflow-smoke.sh`
 - Run static smoke tests in CI. `Done: .github/workflows/ci.yml`
+- Document floating container image tags and gate new ones with a static smoke test. `Done: docs/CONTAINER_IMAGE_POLICY.md, tests/container-image-policy-smoke.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.
