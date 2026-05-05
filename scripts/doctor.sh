@@ -136,6 +136,12 @@ check_bind() {
   fi
 }
 
+has_capability() {
+  local wanted="$1"
+  local capabilities="$2"
+  [[ " ${capabilities//,/ } " == *" ${wanted} "* ]]
+}
+
 recommended_models_for_tier() {
   local tier="$1"
   case "$tier" in
@@ -323,14 +329,30 @@ for key in DASHBOARD_BIND OPEN_WEBUI_BIND PERPLEXICA_BACKEND_BIND PERPLEXICA_FRO
 done
 
 echo -e "\n${BOLD}Service Health${NC}"
+ACTIVE_PROFILE="$(env_value HOME_AI_PROFILE)"
+ACTIVE_PROFILE="${ACTIVE_PROFILE:-core}"
+ACTIVE_CAPABILITIES="$(env_value HOME_AI_PROFILES)"
+info "Active profile: ${ACTIVE_PROFILE}; capabilities: ${ACTIVE_CAPABILITIES:-none}"
 check_http "Dashboard" "http://localhost:8888"
 check_http "Open WebUI" "http://localhost:3000"
 check_http "LiteLLM" "http://localhost:4000/health/readiness"
 check_http "Qdrant" "http://localhost:6333/healthz"
-check_http "SearXNG" "http://localhost:8080"
-check_http "Perplexica" "http://localhost:3002"
-check_http "n8n" "http://localhost:5678/healthz"
-check_http "OpenHands" "http://localhost:3003"
+if has_capability "search" "$ACTIVE_CAPABILITIES"; then
+  check_http "SearXNG" "http://localhost:8080"
+  check_http "Perplexica" "http://localhost:3002"
+else
+  info "Search profile disabled; skipping SearXNG/Perplexica health checks"
+fi
+if has_capability "automation" "$ACTIVE_CAPABILITIES"; then
+  check_http "n8n" "http://localhost:5678/healthz"
+else
+  info "Automation profile disabled; skipping n8n health check"
+fi
+if has_capability "coding" "$ACTIVE_CAPABILITIES"; then
+  check_http "OpenHands" "http://localhost:3003"
+else
+  info "Coding profile disabled; skipping OpenHands health check"
+fi
 
 echo -e "\n${BOLD}Profile Safety${NC}"
 if ensure_docker_cli && docker info >/dev/null 2>&1; then

@@ -131,8 +131,8 @@ Status: Not done.
 
 v1.0 means a normal laptop can install, start, stop, update, and recover the system without manual debugging.
 
-- [ ] Core profile installs and starts cleanly on this laptop
-- [ ] Docker Desktop and Ollama prerequisites are detected with clear instructions
+- [x] Core profile installs and starts cleanly on this laptop
+- [x] Docker Desktop and Ollama prerequisites are detected with clear instructions
 - [ ] `wizard doctor` checks Docker, Ollama, ports, disk, RAM, `.env`, models, and service health
 - [ ] Core install completes within a documented time budget
 - [ ] Installer supports selectable profiles: core, search, automation, coding, security, ops, full

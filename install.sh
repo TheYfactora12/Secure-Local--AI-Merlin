@@ -109,6 +109,12 @@ err()    { echo -e "${RED}[✗]${NC} $1"; exit 1; }
 step()   { echo -e "\n${BLUE}${BOLD}━━━ $1 ━━━${NC}"; }
 info()   { echo -e "${CYAN}[i]${NC} $1"; }
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROFILE_LIB="${SCRIPT_DIR}/scripts/profile-lib.sh"
+[[ -f "$PROFILE_LIB" ]] || err "Missing profile helper library: ${PROFILE_LIB}"
+# shellcheck disable=SC1090
+source "$PROFILE_LIB"
+
 # ── BUG-06 FIX: Structured logging + trap ERR + failure report ────────
 LOGFILE="${HOME}/.wizard/install.log"
 mkdir -p "$(dirname "$LOGFILE")"
@@ -383,26 +389,24 @@ if [[ "$OS" == "Darwin" ]]; then
     log "Ollama already installed natively ✔"
   fi
 
-  # Ensure native Ollama is running (not Docker)
-  brew services stop ollama 2>/dev/null || true
-  sleep 1
-
-  if ! pgrep -x "ollama" > /dev/null; then
-    log "Starting native Ollama (Metal GPU)..."
-    OLLAMA_HOST=127.0.0.1:11434 ollama serve &>/dev/null &
-    OLLAMA_PID=$!
-    log_to_file "[INFO] Ollama native PID=${OLLAMA_PID}"
-    sleep 4
-  else
+  # Ensure native Ollama is running persistently (not Docker).
+  if curl -fsS --max-time 2 http://localhost:11434/api/tags >/dev/null 2>&1; then
     log "Native Ollama already running ✔"
+  elif command -v brew >/dev/null 2>&1; then
+    log "Starting native Ollama with Homebrew service..."
+    brew services start ollama >/dev/null 2>&1 || true
+    sleep 5
+  fi
+
+  if ! curl -fsS --max-time 2 http://localhost:11434/api/tags >/dev/null 2>&1; then
+    log "Starting native Ollama fallback process..."
+    mkdir -p "$HOME/.wizard"
+    OLLAMA_HOST=127.0.0.1:11434 nohup ollama serve >> "$HOME/.wizard/ollama.log" 2>&1 &
+    OLLAMA_PID=$!
+    log_to_file "[INFO] Ollama native fallback PID=${OLLAMA_PID}"
+    sleep 4
   fi
 fi
-
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PROFILE_LIB="${SCRIPT_DIR}/scripts/profile-lib.sh"
-[[ -f "$PROFILE_LIB" ]] || err "Missing profile helper library: ${PROFILE_LIB}"
-# shellcheck disable=SC1090
-source "$PROFILE_LIB"
 
 log_to_file "[PASS] STEP 2: Dependencies installed"
 
@@ -828,6 +832,10 @@ if [[ -f "$CLI_PATH" ]]; then
   if [[ -w "/usr/local/bin" ]]; then
     ln -sf "$CLI_PATH" /usr/local/bin/wizard
     log "wizard CLI installed → /usr/local/bin/wizard"
+  elif [[ "$NON_INTERACTIVE" == true || ! -t 0 ]]; then
+    warn "/usr/local/bin is not writable; skipping system-wide wizard symlink in non-interactive mode"
+    warn "Use directly for now: ${CLI_PATH}"
+    log_to_file "[WARN] STEP 8: CLI symlink skipped; /usr/local/bin not writable"
   else
     sudo ln -sf "$CLI_PATH" /usr/local/bin/wizard
     log "wizard CLI installed → /usr/local/bin/wizard (via sudo)"
@@ -929,15 +937,22 @@ echo -e "${GREEN}${BOLD}╔═════════════════�
 echo -e "${GREEN}${BOLD}║     WIZARD AI IS READY  ✓  v1.6                         ║${NC}"
 echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "  ${BOLD}Your Services:${NC}"
+echo -e "  ${BOLD}Install Profile:${NC} ${INSTALL_PROFILE} (${INSTALL_CAPABILITIES:-core only})"
+echo -e "  ${BOLD}Running Services:${NC}"
 echo -e "  ${CYAN}🧠 Chat (Open WebUI):${NC}       http://localhost:3000"
-echo -e "  ${CYAN}🔍 Search AI (Perplexica):${NC}  http://localhost:3002"
-echo -e "  ${CYAN}💻 Codex Agent (OpenHands):${NC} http://localhost:3003"
-echo -e "  ${CYAN}🔎 Private Search (SearXNG):${NC} http://localhost:8080"
-echo -e "  ${CYAN}⚙️  Automation (n8n):${NC}         http://localhost:5678"
 echo -e "  ${CYAN}📦 Vector Memory (Qdrant):${NC}  http://localhost:6333"
 echo -e "  ${CYAN}🔀 Model Router (LiteLLM):${NC}  http://localhost:4000"
 echo -e "  ${CYAN}📊 Dashboard (Wizard HQ):${NC}   http://localhost:8888"
+if [[ " ${INSTALL_CAPABILITIES} " == *" search "* ]]; then
+  echo -e "  ${CYAN}🔍 Search AI (Perplexica):${NC}  http://localhost:3002"
+  echo -e "  ${CYAN}🔎 Private Search (SearXNG):${NC} http://localhost:8080"
+fi
+if [[ " ${INSTALL_CAPABILITIES} " == *" automation "* ]]; then
+  echo -e "  ${CYAN}⚙️  Automation (n8n):${NC}         http://localhost:5678"
+fi
+if [[ " ${INSTALL_CAPABILITIES} " == *" coding "* ]]; then
+  echo -e "  ${CYAN}💻 Codex Agent (OpenHands):${NC} http://localhost:3003"
+fi
 echo ""
 echo -e "  ${BOLD}Hardware Tier:${NC} ${MODEL_TIER} (${TOTAL_RAM_GB} GB RAM)"
 echo -e "  ${BOLD}Coding Model:${NC}  ${OPENHANDS_MODEL}"
@@ -957,9 +972,16 @@ echo ""
 echo -e "  ${BOLD}First-time setup steps:${NC}"
 echo -e "  1. http://localhost:3000  → create your admin account"
 echo -e "     ${YELLOW}⚠ Settings → Admin → disable Sign Up (lock it down)${NC}"
-echo -e "  2. http://localhost:3002  → test Perplexica web search"
-echo -e "  3. http://localhost:3003  → give OpenHands a coding task"
-echo -e "  4. http://localhost:5678  → n8n workflows already imported by bootstrap"
+echo -e "  2. Pull a low-tier model when ready: bash scripts/add-model.sh qwen2.5:7b"
+if [[ " ${INSTALL_CAPABILITIES} " == *" search "* ]]; then
+  echo -e "  3. http://localhost:3002  → test Perplexica web search"
+fi
+if [[ " ${INSTALL_CAPABILITIES} " == *" coding "* ]]; then
+  echo -e "  4. http://localhost:3003  → give OpenHands a coding task"
+fi
+if [[ " ${INSTALL_CAPABILITIES} " == *" automation "* ]]; then
+  echo -e "  5. http://localhost:5678  → n8n workflows already imported by bootstrap"
+fi
 echo ""
 echo -e "  ${BOLD}Useful commands:${NC}"
 echo -e "  bash scripts/status.sh         → service health dashboard"

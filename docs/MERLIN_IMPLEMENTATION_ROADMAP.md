@@ -292,6 +292,8 @@ Completed without replacing the working installer:
 - Added `config/merlin/memory-collections.env` as the bash-readable Qdrant collection manifest.
 - Added installer profile options for core, developer, workstation, server, full, and custom installs.
 - Added `scripts/profile-lib.sh` so installer, bootstrap, and tests share one profile mapping.
+- Validated `core` profile live on this 8 GB Mac with Docker Desktop and native Ollama.
+- Fixed live-validation defects: profile helper load order, host Qdrant bootstrap URL, non-interactive CLI symlink handling, persistent native Ollama startup, and profile-aware doctor checks.
 - Updated Qdrant initialization to create current/legacy collections from the manifest.
 - Updated `cli/wizard` memory commands to read collection names from the manifest while keeping `swarm_memory` compatible.
 - Updated backup/restore to use repo-root `.env`, configurable Qdrant collection coverage, and restore dry-run mode.
@@ -303,4 +305,4 @@ Completed without replacing the working installer:
 Next implementation slice:
 
 - Add a disposable live-Qdrant restore test.
-- Add live Docker validation for `core` profile on this laptop.
+- Add live Docker validation for optional `search` profile on a machine with enough memory.

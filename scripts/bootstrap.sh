@@ -124,6 +124,14 @@ source "$ENV_FILE" 2>/dev/null || true
 set +a
 INSTALL_PROFILE="${HOME_AI_PROFILE:-$INSTALL_PROFILE}"
 INSTALL_CAPABILITIES="$(echo "${HOME_AI_PROFILES:-$INSTALL_CAPABILITIES}" | tr ',' ' ')"
+if [[ "$QDRANT_URL" == http://qdrant:* || "$QDRANT_URL" == "http://qdrant" ]]; then
+  QDRANT_URL="${HOME_AI_HOST_QDRANT_URL:-http://localhost:6333}"
+  warn "Using host Qdrant URL for bootstrap: ${QDRANT_URL}"
+fi
+if [[ "$N8N_URL" == http://n8n:* || "$N8N_URL" == "http://n8n" ]]; then
+  N8N_URL="${HOME_AI_HOST_N8N_URL:-http://localhost:5678}"
+  warn "Using host n8n URL for bootstrap: ${N8N_URL}"
+fi
 
 # ---------------------------------------------------------------------------
 # Step 2: Start stack
@@ -178,14 +186,20 @@ fi
 # Step 4: Wait for n8n
 # ---------------------------------------------------------------------------
 banner "Step 4/7: n8n Initialization"
-wait_for_http "${N8N_URL}/healthz" "n8n" 60 || \
-  wait_for_http "${N8N_URL}" "n8n (root)" 30 || true
+if [[ " ${INSTALL_CAPABILITIES} " == *" automation "* ]]; then
+  wait_for_http "${N8N_URL}/healthz" "n8n" 60 || \
+    wait_for_http "${N8N_URL}" "n8n (root)" 30 || true
+else
+  warn "Automation profile not enabled — skipping n8n readiness check"
+fi
 
 # ---------------------------------------------------------------------------
 # Step 5: Import n8n workflows
 # ---------------------------------------------------------------------------
 banner "Step 5/7: n8n Workflow Import"
-if [[ -z "$N8N_API_KEY" ]]; then
+if [[ " ${INSTALL_CAPABILITIES} " != *" automation "* ]]; then
+  warn "Automation profile not enabled — skipping workflow import"
+elif [[ -z "$N8N_API_KEY" ]]; then
   warn "N8N_API_KEY not set in .env — skipping workflow import"
   warn "To import: set N8N_API_KEY in .env and re-run bootstrap.sh"
 elif [[ ! -d "$WORKFLOW_DIR" ]]; then
@@ -250,13 +264,19 @@ echo "  ║  SERVICE               URL                 ║"
 echo "  ╠══════════════════════════════════════════╣"
 echo "  ║  Dashboard             http://localhost:8888 ║"
 echo "  ║  Open WebUI            http://localhost:3000 ║"
-echo "  ║  Perplexica Search     http://localhost:3002 ║"
-echo "  ║  OpenHands Agent       http://localhost:3003 ║"
-echo "  ║  n8n Automation        http://localhost:5678 ║"
 echo "  ║  Qdrant Dashboard      http://localhost:6333 ║"
-echo "  ║  SearXNG               http://localhost:8080 ║"
 echo "  ║  LiteLLM Router        http://localhost:4000 ║"
 echo "  ║  Ollama API            http://localhost:11434 ║"
+if [[ " ${INSTALL_CAPABILITIES} " == *" search "* ]]; then
+  echo "  ║  Perplexica Search     http://localhost:3002 ║"
+  echo "  ║  SearXNG               http://localhost:8080 ║"
+fi
+if [[ " ${INSTALL_CAPABILITIES} " == *" automation "* ]]; then
+  echo "  ║  n8n Automation        http://localhost:5678 ║"
+fi
+if [[ " ${INSTALL_CAPABILITIES} " == *" coding "* ]]; then
+  echo "  ║  OpenHands Agent       http://localhost:3003 ║"
+fi
 echo "  ╚══════════════════════════════════════════╝"
 echo -e "${RESET}"
 log "Bootstrap complete. Run: bash tests/e2e-test.sh to verify."
