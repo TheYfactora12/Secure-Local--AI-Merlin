@@ -15,6 +15,28 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.1] — 2026-05-05
+
+### Release Candidate
+- Core profile verified on an 8 GB Mac with Docker Desktop and native Ollama.
+- `wizard doctor` reports 43 passed, 2 expected low-memory warnings, and 0 failures.
+- Core live smoke verifies Dashboard, Open WebUI, LiteLLM, Qdrant, Ollama generation, and LiteLLM routing to local Ollama.
+- GitHub CI runs static smoke tests for profiles, memory config, model-pull policy, update/upgrade profile safety, package readiness, signing preflight, release workflow safety, and container image policy.
+
+### Packaging
+- Release workflow now builds package artifacts only from tags or manual dispatch.
+- Package build is aligned to the laptop-safe core profile and skips model pulls by default.
+- Package payload checks reject local secrets, generated certs, package build output, and nested package artifacts.
+- Signed/notarized distribution remains held until Developer ID Installer credentials and clean-machine signing tests are available.
+
+### Safety
+- Recommended model pulls are opt-in for non-interactive installs.
+- Update and upgrade scripts remain profile-aware and avoid starting Docker Ollama accidentally on macOS.
+- Floating container image tags are documented in `docs/CONTAINER_IMAGE_POLICY.md` and guarded by CI.
+- GitHub workflows now use `actions/checkout@v6`.
+
+---
+
 ## [1.6.0] — 2026-05-03 🎉 First Clean macOS Smoke Test
 
 > **Milestone:** First end-to-end clean install on macOS with native Ollama.
