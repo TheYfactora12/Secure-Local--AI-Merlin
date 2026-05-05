@@ -134,6 +134,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 
 - [x] Core profile installs and starts cleanly on this laptop
 - [x] Same-machine clean reset works with guarded uninstaller + fresh core reinstall
+- [x] Same-machine unsigned `.pkg` install works with `v0.8.6` package artifact
 - [x] Docker Desktop and Ollama prerequisites are detected with clear instructions
 - [x] `wizard doctor` checks Docker, Ollama, ports, disk, RAM, `.env`, models, and service health
 - [x] Core install completes within a documented time budget
@@ -223,6 +224,7 @@ Validated on 2026-05-05 on this 8 GB Mac:
 - `install.sh --profile core --skip-model-pulls --non-interactive` completed successfully.
 - `pkg/scripts/uninstall.sh --yes --keep-files --remove-data --keep-receipt` reset core containers and Docker volumes without deleting the repo.
 - Fresh reinstall regenerated `.env`, reran bootstrap, and recreated Qdrant memory collections.
+- Unsigned `v0.8.6` package installed locally through macOS Installer, ran postinstall, started the core profile, installed core-only launchd agents, and passed live validation.
 - `tests/core-install-budget-smoke.sh` completed the core installer in 95 seconds against a 600 second budget, then passed live core smoke.
 - Docker Desktop core services were running: dashboard `:8888`, Open WebUI `:3000`, LiteLLM `:4000`, and Qdrant `:6333`.
 - Native Ollama was running through Homebrew service.
