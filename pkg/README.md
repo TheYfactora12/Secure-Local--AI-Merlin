@@ -20,6 +20,9 @@ pkg/
 ## Build
 
 ```bash
+# Preflight local release prerequisites
+bash pkg/release-preflight.sh
+
 # Unsigned (local testing)
 bash pkg/build-pkg.sh
 
@@ -41,7 +44,7 @@ Output: `home-ai-elite-<version>.pkg` in the repo root.
    - Copies stack to `~/home-ai-elite`
    - Creates `.env` from `.env.example`
    - Opens Docker Desktop so the user can finish first-run setup
-   - Launches `install.sh --non-interactive` in background (pulls Docker images, starts services)
+   - Launches `install.sh --profile core --skip-model-pulls --non-interactive` in background
    - Installs launchd auto-start agents
    - Drops a **Next Steps** file on the Desktop
 5. Done — services start automatically after Docker Desktop is running, user opens `http://localhost:3000`
@@ -66,8 +69,13 @@ export APPLE_ID="your@email.com"
 export APPLE_TEAM_ID="YOURTEAMID"
 export APPLE_APP_PASSWORD="xxxx-xxxx-xxxx-xxxx"  # App-specific password
 
+bash pkg/release-preflight.sh --require-signing
 bash pkg/build-pkg.sh --sign --notarize
 ```
+
+The preflight does not print secret values. It checks local package tools,
+Developer ID Installer identity availability, and required notarization
+environment variables.
 
 ## Uninstall
 

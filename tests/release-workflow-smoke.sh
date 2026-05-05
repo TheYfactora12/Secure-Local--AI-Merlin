@@ -25,6 +25,8 @@ grep -q 'runs-on: macos-latest' "$WORKFLOW" \
   || fail "release workflow does not build package on macOS"
 grep -q 'bash tests/pkg-readiness-smoke.sh' "$WORKFLOW" \
   || fail "release workflow does not run package readiness checks"
+grep -q 'bash pkg/release-preflight.sh' "$WORKFLOW" \
+  || fail "release workflow does not run package release preflight"
 grep -q 'bash pkg/build-pkg.sh' "$WORKFLOW" \
   || fail "release workflow does not build the package"
 grep -q 'pkgutil --payload-files' "$WORKFLOW" \

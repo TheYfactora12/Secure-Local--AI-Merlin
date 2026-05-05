@@ -310,6 +310,7 @@ Completed without replacing the working installer:
 - Added `tests/installer-model-pull-policy-smoke.sh`.
 - Added `tests/core-install-budget-smoke.sh`.
 - Added `tests/pkg-readiness-smoke.sh`.
+- Added `tests/pkg-signing-preflight-smoke.sh`.
 - Added `tests/release-workflow-smoke.sh`.
 - Added static smoke tests to `.github/workflows/ci.yml`.
 
@@ -321,6 +322,7 @@ Next implementation slice:
 - Make hardware-tier model pulls opt-in while preserving explicit override. `Done: install.sh, tests/installer-model-pull-policy-smoke.sh`
 - Document and enforce core install time budget. `Done: tests/core-install-budget-smoke.sh`
 - Align package postinstall with laptop-safe core install. `Done: pkg/scripts/postinstall, tests/pkg-readiness-smoke.sh`
+- Add signed/notarized release preflight checks. `Done: pkg/release-preflight.sh, tests/pkg-signing-preflight-smoke.sh`
 - Gate GitHub release creation on tags/manual dispatch and package artifact checks. `Done: .github/workflows/release.yml, tests/release-workflow-smoke.sh`
 - Run static smoke tests in CI. `Done: .github/workflows/ci.yml`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

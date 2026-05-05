@@ -40,7 +40,9 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Run package readiness checks
-        run: bash tests/pkg-readiness-smoke.sh
+        run: |
+          bash tests/pkg-readiness-smoke.sh
+          bash pkg/release-preflight.sh
 
       - name: Build unsigned package
         run: bash pkg/build-pkg.sh

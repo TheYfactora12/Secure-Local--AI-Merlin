@@ -34,9 +34,44 @@ APPLE_ID="${APPLE_ID:-your@email.com}"
 APPLE_TEAM_ID="${APPLE_TEAM_ID:-YOURTEAMID}"
 APPLE_APP_PASSWORD="${APPLE_APP_PASSWORD:-}"
 
-for arg in "$@"; do
-  [[ "$arg" == "--sign" ]]      && SIGN=true
-  [[ "$arg" == "--notarize" ]]  && NOTARIZE=true
+usage() {
+  cat <<'USAGE'
+Usage: bash pkg/build-pkg.sh [options]
+
+Options:
+  --sign       Sign with DEVELOPER_ID_INSTALLER.
+  --notarize   Submit signed package to Apple notary service and staple ticket.
+  -h, --help   Show this help.
+
+Environment for signed/notarized release:
+  DEVELOPER_ID_INSTALLER="Developer ID Installer: Name (TEAMID)"
+  APPLE_ID="apple-id@example.com"
+  APPLE_TEAM_ID="TEAMID"
+  APPLE_APP_PASSWORD="<app-specific-password>"
+USAGE
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --sign)
+      SIGN=true
+      shift
+      ;;
+    --notarize)
+      NOTARIZE=true
+      SIGN=true
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "ERROR: Unknown option: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
 done
 
 # Colors
@@ -67,6 +102,17 @@ preflight() {
     echo "ERROR: APPLE_APP_PASSWORD must be set for notarization" >&2
     echo "  Get one at: https://appleid.apple.com > App-Specific Passwords" >&2
     exit 1
+  fi
+
+  if [[ "$SIGN" == true ]]; then
+    if [[ "$DEVELOPER_ID_INSTALLER" == "Developer ID Installer: Your Name (TEAMID)" ]]; then
+      echo "ERROR: DEVELOPER_ID_INSTALLER is still the placeholder value" >&2
+      exit 1
+    fi
+    if ! security find-identity -v -p basic | grep -Fq "$DEVELOPER_ID_INSTALLER"; then
+      echo "ERROR: Developer ID Installer identity not found in keychain: $DEVELOPER_ID_INSTALLER" >&2
+      exit 1
+    fi
   fi
 
   rm -rf "$BUILD_DIR"

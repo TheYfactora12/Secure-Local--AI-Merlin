@@ -49,6 +49,7 @@ Testing must protect the working installer while Merlin evolves. Tests should pr
 - `bash -n launchd/*.sh`
 - `bash -n pkg/scripts/*`
 - `bash tests/pkg-readiness-smoke.sh`
+- `bash tests/pkg-signing-preflight-smoke.sh`
 - `bash tests/release-workflow-smoke.sh`
 - CI runs the static smoke suite on every push and pull request.
 - Unsigned local package build with `bash pkg/build-pkg.sh`.
