@@ -316,3 +316,88 @@ Only after the laptop core is stable:
 - [ ] Image generation profile
 - [ ] Multi-machine sync
 - [ ] Mobile shortcut/webhook companion
+
+### v1.6 — Pi Emotional Intelligence Layer
+
+**Goal:** Make Merlin feel like a personal relationship, not a query/response loop. Steal what Pi (Inflection AI) got right — 33-minute average sessions, 1M daily users — and out-execute it with local memory, zero cloud, and full autonomy Pi never had.
+
+**Why Pi won emotionally:**
+- Pi asked follow-up questions instead of just answering. The conversation kept moving.
+- Pi remembered within a session — context carried forward, making the session feel like talking to someone who was actually listening.
+- Pi never had persistent memory across sessions, never ran code locally, and never did automation. That is the gap Merlin closes completely.
+
+**Implementation path (all config and workflow, no new infrastructure required):**
+
+- [ ] **Step 1 — Issue 4 first:** Build `n8n-workflows/06-session-memory-bridge.json`. This n8n workflow reads from and writes to the `merlin-session` Qdrant collection at session start and end. Without this, Merlin forgets every conversation. With this, Merlin deepens every session. This is the single highest-ROI build in the repo.
+- [ ] **Step 2 — Conversational loop via system prompt injection:** Add a follow-up question behavior block to Merlin's system prompt in `config/merlin/persona.yaml`. Merlin asks one clarifying or deepening question per response when the context warrants it — not every response, not robotically, but naturally. Inject this block into n8n workflows that route chat completions through LiteLLM.
+- [ ] **Step 3 — Within-session recall:** Wire the `merlin-session` Qdrant collection into the LiteLLM context window injection so Merlin references earlier conversation points naturally during the same session.
+- [ ] **Step 4 — Emotional tone calibration:** Update `config/merlin/persona.yaml` guardian ethos block to include warmth and engagement directives: listen actively, acknowledge the human state, ask before advising. Already architected in the ethos contract — needs activation language.
+- [ ] **Step 5 — Session depth scoring:** Add a lightweight n8n metric that logs session length, question depth, and memory references per session to `logs/merlin-session-metrics.jsonl`. Used later in v1.7 benchmark harness.
+- [ ] Add smoke test: `tests/merlin-session-bridge-smoke.sh` — verifies session collection exists, write succeeds, read returns the written point.
+- [ ] Add smoke test: `tests/merlin-followup-prompt-smoke.sh` — verifies follow-up behavior block is present in persona.yaml and injected into active workflow system prompts.
+
+**Competitive outcome:** Merlin will be warmer AND smarter AND local AND free. Everything Pi promised and never delivered.
+
+---
+
+### v1.7 — Security Hardening: Pentest Rejection Scanning and Auto-Protection
+
+**Goal:** Make Merlin and the full stack defensible — not just documented-as-secure. Address OWASP LLM Top 10 attack vectors, add automated SAST scanning to CI, and wire n8n auto-protection workflows that quarantine, rate-limit, and alert on detected attacks in real time.
+
+**Why this matters now:** `config/merlin/policy.yaml` currently declares all security controls — default deny, approval gates, secret redaction — but none of those controls execute at runtime. `merlin-core.py` (Phase 2) is the missing enforcement layer. This milestone closes the gap between declared and enforced, then adds active defense on top.
+
+**Threat model for a local AI stack (OWASP LLM Top 10 2025 + Agentic Top 10 2026):**
+- **LLM01 — Prompt Injection:** Malicious instructions embedded in user input or documents that hijack Merlin's actions. Highest risk for an agentic system with shell/file/git approval gates.
+- **LLM02 — Sensitive Information Disclosure:** Model outputs that leak `.env` contents, API keys, or system context. Merlin's `redact_secrets: true` is declared but not runtime-enforced.
+- **LLM06 — Excessive Agency:** Merlin executing actions beyond what was approved. Direct consequence of policy.yaml not being parsed at runtime.
+- **LLM08 — Vector/Embedding Weaknesses:** Poisoned documents injected into Qdrant RAG collections that manipulate future responses.
+- **LLM09 — Misinformation:** Merlin confidently asserting false outputs. Addressed by truthfulness contract, needs automated red-team probing.
+- **Agentic: Privilege Escalation:** n8n workflow with shell access being manipulated to execute unapproved commands via crafted inputs.
+
+**Layer 1 — SAST: Static Application Security Testing (shift-left, runs in CI)**
+
+Tools: SonarQube Community (Docker-native, integrates with GitHub Actions), gitleaks (already configured via `.gitleaks.toml`).
+
+- [ ] Add `sonarqube` service to `docker-compose.yml` under the `security` profile (not default). Port `9000`, volume `sonarqube_data`. Runs only when `wizard start security` is invoked.
+- [ ] Add `scripts/sast-scan.sh` — runs SonarQube scanner against `scripts/`, `config/merlin/`, `cli/`, `dashboard/` directories. Outputs SARIF report to `logs/sast-report.json`.
+- [ ] Wire gitleaks to pre-commit hook and CI: `gitleaks detect --source . --config .gitleaks.toml --exit-code 1`. Blocks any commit that contains a detected secret pattern.
+- [ ] Add GitHub Actions CI step: `gitleaks detect` on every push to `main` and every PR. Fails CI if secrets detected. Uses existing `.gitleaks.toml`.
+- [ ] Add `wizard doctor` check: verify gitleaks is installed and pre-commit hook is wired. Warn (not fail) if missing.
+- [ ] Add smoke test: `tests/sast-gitleaks-smoke.sh` — creates a temp file with a fake API key pattern, runs gitleaks, asserts detection, cleans up.
+
+**Layer 2 — LLM Red Teaming: Prompt Injection and Jailbreak Rejection Scanning**
+
+Tools: `garak` (LLM vulnerability scanner, open source, Python, local), `promptfoo` (LLM eval framework, supports adversarial test cases, runs against local Ollama endpoints).
+
+- [ ] Add `scripts/red-team-scan.sh` — runs `garak` against the local Ollama/LiteLLM endpoint using the `dan`, `continuation`, `encoding`, and `knownbadsignatures` probe sets. Outputs results to `logs/red-team-report.json`.
+- [ ] Add `promptfoo` config at `config/security/promptfoo-adversarial.yaml` — defines adversarial test cases for: prompt injection via user input, system prompt extraction attempts, secret leakage probes (ask Merlin to repeat its system prompt), jailbreak via role-play framing.
+- [ ] Wire `scripts/red-team-scan.sh` to `wizard doctor --security` output: report pass/fail counts, flag any probe that succeeded as a HIGH finding.
+- [ ] Add `wizard security scan` CLI command that runs both garak and promptfoo scans and prints a structured summary.
+- [ ] Add smoke test: `tests/red-team-config-smoke.sh` — verifies `promptfoo-adversarial.yaml` exists, is valid YAML, and contains at minimum the four required adversarial probe categories.
+
+**Layer 3 — Auto-Protection: Runtime Rejection and Quarantine**
+
+Tools: n8n (already in stack), nginx (security profile), policy.yaml enforcement via `merlin-core.py` (Phase 2 dependency).
+
+- [ ] **Prompt injection blocker:** Add `n8n-workflows/07-prompt-injection-guard.json`. This workflow intercepts all chat completions routed through n8n before they reach LiteLLM. It pattern-matches against a blocklist of known injection phrases (`ignore previous instructions`, `system prompt:`, `DAN mode`, `act as`, encoded variants). On match: reject the request, log to `logs/security-rejections.jsonl`, increment a rate counter in Qdrant `merlin-security` collection.
+- [ ] **Rate limiting:** Add `nginx/conf.d/rate-limit.conf` to the security profile nginx config. Limit: 30 requests/minute per source IP to Open WebUI (`:3000`) and LiteLLM (`:4000`). Return `429 Too Many Requests` with a `Retry-After` header. Protects against automated prompt flooding.
+- [ ] **Auto-quarantine on threshold breach:** Add logic to `07-prompt-injection-guard.json` — if a source session triggers 5+ rejections within 10 minutes, write a quarantine record to Qdrant `merlin-security` collection and return a soft block message to the user. Auto-expires after 30 minutes.
+- [ ] **Secret leakage filter:** Wire `redact_secrets: true` from `policy.yaml` into `merlin-core.py` (Phase 2) so all LiteLLM responses are post-processed through a regex redactor before reaching the UI. Redact patterns: API key formats, JWT tokens, `.env` key=value pairs, AWS/GCP/Azure credential patterns.
+- [ ] **Security alert n8n workflow:** Add `n8n-workflows/08-security-alert.json`. On any HIGH security event (prompt injection detected, quarantine triggered, gitleaks CI failure), this workflow sends a local desktop notification via macOS `osascript` and appends a structured record to `logs/security-alerts.jsonl`.
+- [ ] Add `wizard security status` CLI command — reads `logs/security-rejections.jsonl` and `logs/security-alerts.jsonl`, prints a summary: total rejections (24h), active quarantines, last alert timestamp.
+- [ ] Add `wizard doctor` security check: verify `07-prompt-injection-guard.json` exists in n8n, `rate-limit.conf` exists if security profile is active, and `merlin-security` Qdrant collection is initialized.
+- [ ] Add smoke tests:
+  - `tests/prompt-injection-guard-smoke.sh` — verifies workflow JSON exists and contains the required blocklist and quarantine logic blocks.
+  - `tests/security-alert-workflow-smoke.sh` — verifies workflow JSON exists and contains osascript and JSONL append nodes.
+  - `tests/rate-limit-config-smoke.sh` — verifies nginx rate-limit config exists and contains the correct limit directives.
+  - `tests/merlin-security-collection-smoke.sh` — verifies `merlin-security` Qdrant collection is in the memory manifest and initialized by bootstrap.
+
+**Dependency note:** Layer 3 auto-protection (secret leakage filter, policy enforcement) requires `scripts/merlin-core.py` (Phase 2) to be built first. Layer 1 (SAST) and Layer 2 (red teaming) are independent and can be built immediately.
+
+**Build order:**
+1. Layer 1 SAST — gitleaks CI wire-up and `sast-scan.sh` (no dependencies, highest leverage, 2-hour build)
+2. Layer 2 Red teaming — `red-team-scan.sh` and `promptfoo-adversarial.yaml` (independent, runs against running Ollama, 3-hour build)
+3. Phase 2 `merlin-core.py` — prerequisite for Layer 3
+4. Layer 3 Auto-protection — `07-prompt-injection-guard.json`, nginx rate limiting, secret redaction filter
+
+**Compliance note (for regulated environment context):** This milestone directly addresses FFIEC CAT cybersecurity maturity controls for application security testing and GLBA Safeguards Rule § 314.4(f) requirements for testing and monitoring information security programs. The red-team scan output (`logs/red-team-report.json`) and SAST report (`logs/sast-report.json`) are suitable artifacts for audit evidence packages.
