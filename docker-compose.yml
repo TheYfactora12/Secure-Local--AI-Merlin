@@ -211,6 +211,14 @@ services:
       # Set ENABLE_SIGNUP=false in .env after creating your admin account
       - ENABLE_SIGNUP=${ENABLE_SIGNUP:-true}
       - ENABLE_COMMUNITY_SHARING=false
+      # Local-first release defaults: prevent first-boot external downloads/checks.
+      - OFFLINE_MODE=${OPEN_WEBUI_OFFLINE_MODE:-true}
+      - HF_HUB_OFFLINE=${OPEN_WEBUI_HF_HUB_OFFLINE:-1}
+      - ENABLE_VERSION_UPDATE_CHECK=${OPEN_WEBUI_ENABLE_VERSION_UPDATE_CHECK:-false}
+      - RAG_EMBEDDING_MODEL_AUTO_UPDATE=${OPEN_WEBUI_RAG_EMBEDDING_MODEL_AUTO_UPDATE:-false}
+      - RAG_RERANKING_MODEL_AUTO_UPDATE=${OPEN_WEBUI_RAG_RERANKING_MODEL_AUTO_UPDATE:-false}
+      - WHISPER_MODEL_AUTO_UPDATE=${OPEN_WEBUI_WHISPER_MODEL_AUTO_UPDATE:-false}
+      - CORS_ALLOW_ORIGIN=${OPEN_WEBUI_CORS_ALLOW_ORIGIN:-http://localhost:3000}
       - SEARXNG_QUERY_URL=http://searxng:8080/search?q=<query>&format=json
     extra_hosts:
       - "host.docker.internal:host-gateway"

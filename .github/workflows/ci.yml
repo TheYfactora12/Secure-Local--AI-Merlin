@@ -121,6 +121,7 @@ jobs:
           bash tests/search-profile-smoke.sh
           bash tests/automation-profile-smoke.sh
           bash tests/coding-profile-smoke.sh
+          bash tests/openwebui-local-first-smoke.sh
           bash tests/merlin-persona-smoke.sh
           bash tests/master-prompt-smoke.sh
           bash tests/merlin-policy-smoke.sh
