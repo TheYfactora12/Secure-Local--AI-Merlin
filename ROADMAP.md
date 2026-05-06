@@ -178,7 +178,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [ ] Keep agent orchestration optional until core mode is stable
 - [x] Add Merlin persona seed for local-first AI engineering team behavior
 - [ ] Define Magic Mode task routing: general, search, code, automation, memory
-- [ ] Define approval rules for code execution, shell commands, file writes, and network access
+- [x] Define approval rules for code execution, shell commands, file writes, and network access
 - [ ] Decide whether orchestration lives in n8n, a Python controller, LangGraph-style graphs, or a hybrid
 - [ ] Add trace/log output for routing decisions
 - [x] Add canonical/legacy memory schema and runtime Qdrant collection manifest
@@ -217,6 +217,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [ ] Search live test: Perplexica, SearXNG
 - [x] Automation static test: n8n and workflow import safety
 - [x] Merlin persona smoke test
+- [x] Merlin policy approval-gate smoke test
 - [ ] Automation live test: n8n health and workflow import
 - [x] Coding static test: OpenHands profile safety and LiteLLM wiring
 - [ ] Coding live test: OpenHands startup and LiteLLM connection

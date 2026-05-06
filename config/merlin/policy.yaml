@@ -1,0 +1,138 @@
+# Merlin policy and approval gates.
+#
+# Declarative policy for future Merlin/Magic Mode orchestration. Runtime scripts
+# do not parse this file yet. It is intentionally local-first and conservative.
+
+version: 1
+
+defaults:
+  magic_mode_enabled: false
+  online_mode_enabled: false
+  cloud_fallback_enabled: false
+  local_network_only: true
+  memory_auto_write: false
+  shell_enabled_for_agents: false
+  file_write_enabled_for_agents: false
+  heavy_profiles_auto_start: false
+
+task_routing:
+  general:
+    default_agent: planner
+    preferred_backend: local
+    allowed_profiles:
+      - core
+  search:
+    default_agent: researcher
+    preferred_backend: local
+    requires_profile: search
+    requires_approval: true
+  code:
+    default_agent: coding
+    preferred_backend: local
+    requires_profile: coding
+    requires_approval: true
+  automation:
+    default_agent: operator
+    preferred_backend: local
+    requires_profile: automation
+    requires_approval: true
+  memory:
+    default_agent: memory
+    preferred_backend: local
+    requires_approval: true
+
+approval_gates:
+  shell_command:
+    risk: high
+    default: deny
+    requires_approval: true
+    reason: "Shell commands can modify the host, repo, services, or user data."
+  file_read:
+    risk: medium
+    default: deny_outside_allowed_scope
+    requires_approval: true
+    reason: "File reads may expose private data."
+  file_write:
+    risk: high
+    default: deny
+    requires_approval: true
+    reason: "File writes can modify user data or repository behavior."
+  file_delete:
+    risk: critical
+    default: deny
+    requires_approval: true
+    reason: "Deletes are destructive and may be irreversible."
+  git_operation:
+    risk: high
+    default: deny
+    requires_approval: true
+    reason: "Git operations can publish, rewrite, or discard work."
+  external_network:
+    risk: high
+    default: deny
+    requires_approval: true
+    reason: "External network calls can leak private data."
+  cloud_model_call:
+    risk: high
+    default: deny
+    requires_approval: true
+    reason: "Cloud model calls send prompts outside the local machine."
+  api_key_use:
+    risk: high
+    default: deny
+    requires_approval: true
+    reason: "API keys may incur cost or expose account access."
+  memory_write:
+    risk: medium
+    default: deny
+    requires_approval: true
+    reason: "Persistent memory should only store user-approved facts or tool results."
+  service_start:
+    risk: medium
+    default: deny_for_optional_profiles
+    requires_approval: true
+    reason: "Optional services can consume memory, expose ports, or run risky tools."
+  service_stop:
+    risk: medium
+    default: deny
+    requires_approval: true
+    reason: "Stopping services can interrupt active work."
+  model_download:
+    risk: medium
+    default: deny
+    requires_approval: true
+    reason: "Models are large downloads and can consume disk and memory."
+  openhands_task:
+    risk: critical
+    default: deny
+    requires_approval: true
+    reason: "OpenHands has Docker socket access and can affect the host."
+
+allowed_scopes:
+  localhost:
+    - "127.0.0.1"
+    - "localhost"
+    - "host.docker.internal"
+  repo_read:
+    - "."
+  repo_write:
+    - "config/merlin"
+    - "docs"
+    - "scripts"
+    - "tests"
+
+audit:
+  log_route_decisions: true
+  log_policy_decisions: true
+  log_approvals: true
+  log_memory_writes: true
+  redact_secrets: true
+
+low_memory_tier:
+  disable_magic_mode_by_default: true
+  warn_before_profiles:
+    - search
+    - automation
+    - coding
+    - ops
+  deny_parallel_agents_by_default: true

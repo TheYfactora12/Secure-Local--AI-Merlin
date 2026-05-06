@@ -224,6 +224,17 @@ requires_approval: true
 reason: "Modifies repository files"
 ```
 
+The declarative v1 policy seed lives in `config/merlin/policy.yaml`. It is non-executable until the Merlin control plane exists, but it establishes conservative defaults for Magic Mode, route classes, approval gates, allowed local scopes, audit logging, and low-memory behavior.
+
+The policy must keep these defaults until runtime approval handling is implemented:
+
+- Magic Mode disabled by default.
+- Online/cloud fallback disabled by default.
+- Shell and file writes disabled for agents by default.
+- Memory auto-write disabled by default.
+- OpenHands tasks treated as critical risk.
+- External network, cloud model calls, API key use, model downloads, git operations, file writes/deletes, shell commands, memory writes, and optional service control require approval.
+
 ## API/Provider Abstraction Design
 
 Provider config should support:
