@@ -17,8 +17,8 @@
   <array>
     <string>/bin/bash</string>
     <string>-c</string>
-    <!-- Wait 30s for Docker to be ready, then start only the core profile -->
-    <string>sleep 30 &amp;&amp; cd "$HOME/home-ai-elite" &amp;&amp; HOME_AI_PROFILE=core /bin/bash scripts/start-core.sh &gt;&gt; /tmp/homeai-stack.log 2&gt;&amp;1</string>
+    <!-- Wait 30s for Docker to be ready, then start only the core profile through wizard -->
+    <string>sleep 30 &amp;&amp; cd "$HOME/home-ai-elite" &amp;&amp; HOME_AI_PROFILE=core /bin/bash cli/wizard start core &gt;&gt; /tmp/homeai-stack.log 2&gt;&amp;1</string>
   </array>
 
   <key>RunAtLoad</key>

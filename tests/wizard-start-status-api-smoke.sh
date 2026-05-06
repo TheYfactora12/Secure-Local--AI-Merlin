@@ -23,9 +23,7 @@ grep -A5 '^  stop)' "$WIZARD_FILE" | grep -q 'stop_merlin_status_api' \
 grep -A6 '^  restart)' "$WIZARD_FILE" | grep -q 'start_merlin_status_api' \
   || { echo "wizard restart should restart read-only status API" >&2; exit 1; }
 
-if grep -q 'merlin-status-api' "$LAUNCHD_STACK_FILE"; then
-  echo "launchd should not auto-start the Merlin status API yet" >&2
-  exit 1
-fi
+grep -q 'cli/wizard start core' "$LAUNCHD_STACK_FILE" \
+  || { echo "launchd should use wizard start core so status API lifecycle is included" >&2; exit 1; }
 
 echo "PASS: wizard start/stop status API lifecycle wiring is conservative"

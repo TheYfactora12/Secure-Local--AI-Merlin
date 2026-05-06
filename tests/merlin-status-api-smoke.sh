@@ -31,6 +31,11 @@ TRACE_LOG="${TMP}/trace.jsonl"
 APPROVAL_LOG="${TMP}/approvals.jsonl"
 PORT_FILE="${TMP}/port"
 
+grep -q 'nohup python3' "${STACK_DIR}/scripts/merlin-status-api.sh" \
+  || fail "status API lifecycle manager should detach the server with nohup"
+grep -q 'disown "\$pid"' "${STACK_DIR}/scripts/merlin-status-api.sh" \
+  || fail "status API lifecycle manager should disown the server process when supported"
+
 HOME_AI_PROFILE=core bash "${STACK_DIR}/scripts/merlin-dry-run.sh" \
   --write-trace \
   --trace-log "$TRACE_LOG" \

@@ -104,7 +104,7 @@ The next engineering priority is a real local `wizard start` verification of the
 - Native macOS Ollama availability depends on the host service staying up.
 - `host.docker.internal` plus `host-gateway` must be retested on future Docker Desktop and Linux Docker engine changes.
 - The status API is intentionally read-only and must not become a privileged control plane without a separate policy-gated execution layer.
-- launchd does not auto-start the status API yet.
+- launchd starts the core profile through `wizard start core`, so the read-only status API starts on login with the laptop-safe core profile.
 - Optional live profile tests still need hardware/time validation.
 - Memory quality and regression safety still need stronger test coverage before Magic Mode writes memory.
 
@@ -112,7 +112,7 @@ The next engineering priority is a real local `wizard start` verification of the
 
 1. Run `wizard start` and confirm `wizard merlin status-api status` reports running.
 2. Open the dashboard and confirm Merlin Control Status shows the API online.
-3. If clean, decide whether to add launchd support for the status API.
+3. If clean, run or reinstall launchd agents and verify login auto-start behavior.
 
 ## Validation
 

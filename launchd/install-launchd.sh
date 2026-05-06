@@ -12,7 +12,8 @@
 #   3. Bootstraps each agent into the current login session
 #   4. Verifies agents appear in launchctl list
 #
-# The stack agent intentionally starts only the laptop-safe core profile.
+# The stack agent intentionally starts only the laptop-safe core profile through
+# `wizard start core`, which also starts the read-only Merlin status API.
 # Optional profiles must be started explicitly.
 #
 # Reference:
@@ -144,11 +145,12 @@ main() {
   log "✅ Auto-start agents installed."
   log "   On your next macOS login:"
   log "   1. Docker Desktop will open automatically (5s after login)"
-  log "   2. The laptop-safe core profile will start automatically (30s after login)"
+  log "   2. The laptop-safe core profile and read-only Merlin status API will start automatically (30s after login)"
   log ""
   log "Verify:"
   log "   launchctl list | grep homeai"
   log "   tail -f /tmp/homeai-stack.log"
+  log "   wizard merlin status-api status"
   log ""
   log "To uninstall:"
   log "   bash ${SCRIPT_DIR}/install-launchd.sh --uninstall"

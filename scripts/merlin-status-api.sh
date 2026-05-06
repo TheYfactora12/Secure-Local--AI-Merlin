@@ -160,13 +160,14 @@ start_api() {
   fi
 
   rm -f "$PID_FILE" "$PORT_FILE"
-  python3 "${STACK_DIR}/scripts/merlin-status-api.py" \
+  nohup python3 "${STACK_DIR}/scripts/merlin-status-api.py" \
     --host "$HOST" \
     --port "$PORT" \
     --port-file "$PORT_FILE" \
     --trace-log "$TRACE_LOG" \
     --approval-log "$APPROVAL_LOG" >>"$LOG_FILE" 2>&1 &
   local pid="$!"
+  disown "$pid" >/dev/null 2>&1 || true
   echo "$pid" > "$PID_FILE"
 
   for _ in {1..50}; do
