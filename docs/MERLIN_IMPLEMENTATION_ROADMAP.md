@@ -357,4 +357,5 @@ Next implementation slice:
 - Wire `wizard start|stop|restart` to the read-only Merlin status API while leaving launchd auto-start unchanged. `Done: cli/wizard, tests/wizard-start-status-api-smoke.sh`
 - Wire launchd core auto-start through `wizard start core` while keeping optional profiles explicit. `Done: launchd/com.homeai.stack.plist, tests/launchd-core-smoke.sh`
 - Run the read-only Merlin status API as a dedicated foreground launchd job so launchd owns restart/lifecycle behavior. `Done: launchd/com.homeai.merlin-status-api.plist, launchd/install-launchd.sh, tests/launchd-core-smoke.sh`
+- Add v0 policy-gated execution boundary with only read-only `merlin_status` allowed and risky actions denied even after approval. `Done: scripts/merlin-execute.sh, cli/wizard, tests/merlin-execute-smoke.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

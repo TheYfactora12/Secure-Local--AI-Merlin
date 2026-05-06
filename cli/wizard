@@ -194,6 +194,10 @@ cat << 'EOF'
                               Append approval decision without execution
     wizard merlin approvals deny <id>
                               Append denial decision without execution
+    wizard merlin execute plan --action merlin_status
+                              Preview policy-gated execution boundary
+    wizard merlin execute execute --action merlin_status
+                              Execute v0 read-only Merlin status action
     wizard ask "question"     Ask a quick question (swarm-tiny, fastest)
     wizard route "task"       Alias for wizard swarm (full coordinator)
     wizard models             List loaded Ollama models
@@ -326,8 +330,12 @@ case "$1" in
         shift 2
         bash "$WIZARD_DIR/scripts/merlin-approvals.sh" "$@"
         ;;
+      execute)
+        shift 2
+        bash "$WIZARD_DIR/scripts/merlin-execute.sh" "$@"
+        ;;
       *)
-        echo "Usage: wizard merlin [status|status-api|dry-run|approvals] ..."
+        echo "Usage: wizard merlin [status|status-api|dry-run|approvals|execute] ..."
         exit 1
         ;;
     esac

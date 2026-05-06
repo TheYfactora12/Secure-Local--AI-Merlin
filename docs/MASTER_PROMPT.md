@@ -38,6 +38,7 @@ Current Merlin control-plane state:
 - `wizard merlin dry-run "goal"` previews route/model/profile/approval decisions without side effects.
 - `wizard merlin approvals list|approve|deny` records/read approval audit state but still does not execute actions.
 - `wizard merlin status` reports profile, hardware tier, privacy mode, approval counts, and service state.
+- `wizard merlin execute plan|execute --action merlin_status` is the v0 policy-gated execution boundary; it only allows read-only status and audits execute calls.
 - `wizard merlin status-api start|status|stop` manages a localhost-only read-only status API.
 - `wizard start` starts the selected profile and then starts the read-only status API if profile startup succeeds.
 - `wizard stop` stops the status API before stopping Docker services.
@@ -45,7 +46,7 @@ Current Merlin control-plane state:
 - launchd starts the laptop-safe core profile through `wizard start core`.
 - launchd runs the read-only status API as its own foreground job: `com.homeai.merlin-status-api`.
 - The dashboard reads `http://localhost:8765/status` when the status API is running.
-- No Merlin endpoint may execute approvals, shell commands, file writes, model downloads, memory writes, service controls, or cloud calls until a separate policy-gated execution layer exists.
+- No Merlin endpoint may execute approvals, shell commands, file writes, model downloads, memory writes, service controls, or cloud calls. The only current execution path is the CLI-only `merlin_status` allowlist action.
 
 Current status API contract:
 - `GET /healthz` and `GET /status` only.
@@ -115,4 +116,4 @@ Before final response:
 
 ## Current Next Recommendation
 
-Begin the first policy-gated Merlin execution milestone. Keep the dashboard read-only, keep cloud disabled by default, and preserve the installer while adding the smallest testable execution boundary.
+Add the next Merlin execution adapter only after defining its action allowlist, approval behavior, audit log, and denial tests. Keep the dashboard read-only, cloud disabled by default, and the installer protected.

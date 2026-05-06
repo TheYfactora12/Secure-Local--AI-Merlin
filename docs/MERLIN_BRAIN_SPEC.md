@@ -191,9 +191,11 @@ When dry-run tracing is enabled, pending approval requests are also appended to 
 
 Pending approval requests can be reviewed with `wizard merlin approvals list`. The command is read-only and displays approval id, status, execution flag, route, task type, gates, policy decision, and hashed user goal. It does not approve, deny, execute, start services, call models, or expose raw prompt text.
 
-Approval decisions can be recorded with `wizard merlin approvals approve <id>` and `wizard merlin approvals deny <id>`. These commands append a decision record to the local approval JSONL log and update the latest-state list view. They still set `execution_allowed: false` and must not execute actions, start services, call models, write memory, or expose raw prompt text. Runtime execution requires a later, separate execution layer with its own policy checks.
+Approval decisions can be recorded with `wizard merlin approvals approve <id>` and `wizard merlin approvals deny <id>`. These commands append a decision record to the local approval JSONL log and update the latest-state list view. They still set `execution_allowed: false` and must not execute actions, start services, call models, write memory, or expose raw prompt text. Approval records are evidence for a later execution boundary, not authority by themselves.
 
 `wizard merlin status` provides a read-only control-plane summary for the active profile, hardware tier, local/cloud mode, trace log path/count, approval log counts, and core service reachability. It is intentionally observational: it does not start missing services, approve requests, call models, write memory, or execute tools.
+
+`wizard merlin execute plan|execute --action merlin_status` is the v0 execution boundary. It supports only the harmless read-only `merlin_status` action, separates plan mode from execute mode, and appends a redacted local JSONL execution audit record on execute. It refuses shell, file, git, network, cloud, API key, memory write, service control, model download, and OpenHands actions even if an approval id is already approved. Future adapters must be added one at a time with allowlists, approval checks, audit logging, and denial tests.
 
 ## Memory Design
 

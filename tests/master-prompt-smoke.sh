@@ -11,6 +11,7 @@ grep -q "Protect the working installer" "$PROMPT_FILE"
 grep -q "Do not enable cloud/API calls by default" "$PROMPT_FILE"
 grep -q "Merlin ethos" "$PROMPT_FILE"
 grep -q "wizard merlin status-api start|status|stop" "$PROMPT_FILE"
+grep -q "wizard merlin execute plan|execute --action merlin_status" "$PROMPT_FILE"
 grep -q "execution_allowed.*false" "$PROMPT_FILE"
 grep -q "Before final response" "$PROMPT_FILE"
 

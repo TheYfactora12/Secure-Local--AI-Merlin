@@ -128,6 +128,7 @@ jobs:
           bash tests/merlin-dry-run-smoke.sh
           bash tests/merlin-approvals-smoke.sh
           bash tests/merlin-status-smoke.sh
+          bash tests/merlin-execute-smoke.sh
           bash tests/merlin-status-api-smoke.sh
           bash tests/wizard-start-status-api-smoke.sh
           bash tests/dashboard-merlin-status-smoke.sh

@@ -85,11 +85,18 @@ already fixed on `main` in commit `12de379`. Do NOT revert.
 - `scripts/merlin-dry-run.sh` — reads routes/policy, prints decisions, NO execution
 - `scripts/merlin-status.sh` — read-only status summary
 - `scripts/merlin-approvals.sh` — read-only approval review + audit log writes
+- `scripts/merlin-execute.sh` — v0 policy execution boundary; only read-only `merlin_status` is executable
 - `scripts/merlin-status-api.py` — localhost:8765 read-only HTTP status JSON
 - `dashboard/index.html` — status panel wired to API
 
-### 🔴 Phase 2 — Policy Executor: THE MISSING LINK (NOT STARTED)
-This is the gap between "Merlin declared" and "Merlin alive".
+### 🔴 Phase 2 — Policy Executor: STARTED, STILL LIMITED
+The first boundary exists, but Merlin is not yet autonomous.
+
+Current v0 boundary:
+- `wizard merlin execute plan --action merlin_status`
+- `wizard merlin execute execute --action merlin_status`
+- Writes redacted local execution audit records to `logs/merlin-executions.jsonl`
+- Refuses shell, file, git, network, cloud, API key, memory write, service control, model download, and OpenHands actions even after approval
 
 Needed: `scripts/merlin-core.py`
 - Reads `config/merlin/policy.yaml` and `config/merlin/routes.yaml` at runtime
