@@ -204,6 +204,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Qdrant live restore smoke test with a disposable collection
 - [x] Update/upgrade profile smoke test
 - [x] Backup profile selection smoke test
+- [x] Upgrade rollback smoke test
 - [x] Installer model-pull policy smoke test
 - [x] Core install budget smoke test
 - [x] Package readiness smoke test
@@ -219,7 +220,8 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [ ] Automation live test: n8n health and workflow import
 - [x] Coding static test: OpenHands profile safety and LiteLLM wiring
 - [ ] Coding live test: OpenHands startup and LiteLLM connection
-- [ ] Upgrade test: backup, pull, restart, health check, rollback path
+- [x] Upgrade static test: backup, pull, restart, health check, rollback path
+- [ ] Upgrade live test: backup, pull, restart, health check, rollback path
 
 ## Later Roadmap
 

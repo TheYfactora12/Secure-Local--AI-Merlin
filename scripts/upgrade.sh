@@ -92,7 +92,8 @@ run() {
   fi
 }
 
-BACKUP_DIR="${ROOT_DIR}/backups/$(date +%Y%m%d_%H%M%S)"
+BACKUP_ROOT="${HOME_AI_UPGRADE_BACKUP_ROOT:-${ROOT_DIR}/backups}"
+BACKUP_DIR="${BACKUP_ROOT}/$(date +%Y%m%d_%H%M%S)"
 GIT_SHA_BEFORE=$(git -C "$ROOT_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
 UP_TO_DATE=false
 
@@ -170,7 +171,9 @@ compose_profile_args() {
 
 health_check() {
   banner "Post-Upgrade Health Check"
-  local max_wait=60 interval=5 elapsed=0 all_healthy=true
+  local max_wait="${HOME_AI_UPGRADE_HEALTH_MAX_WAIT:-60}"
+  local interval="${HOME_AI_UPGRADE_HEALTH_INTERVAL:-5}"
+  local elapsed=0 all_healthy=true
   local labels=("Open WebUI" "Qdrant")
   local urls=("http://localhost:3000" "http://localhost:6333/healthz")
 
