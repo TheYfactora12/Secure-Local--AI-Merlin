@@ -46,6 +46,7 @@ def test_onboarding_routes_to_product_designer() -> None:
 
 def test_unknown_input_routes_to_default() -> None:
     decision = route_task("what is the weather")
+    assert decision.route_id == "general"
     assert decision.staff_mode == "operator"
     assert decision.agent_target == "litellm"
     assert decision.confidence == 0.0
@@ -80,3 +81,41 @@ def test_route_logging_hashes_input_without_raw_text(caplog) -> None:
     messages = "\n".join(record.getMessage() for record in caplog.records)
     assert "input_hash=" in messages
     assert raw_input not in messages
+
+
+def test_all_config_route_ids_classify_correctly() -> None:
+    cases = [
+        ("write a python function", "code"),
+        ("search for recent FFIEC guidance", "search"),
+        ("set up an n8n webhook", "automation"),
+        ("remember that I prefer qwen7b", "memory"),
+        ("explain how RAG works", "general"),
+    ]
+
+    for text, expected in cases:
+        assert route_task(text).route_id == expected
+
+
+def test_code_route_carries_all_approval_gates() -> None:
+    decision = classify_task("write a python function")
+    assert decision.approval_gates == [
+        "service_start",
+        "file_read",
+        "file_write",
+        "shell_command",
+        "git_operation",
+        "openhands_task",
+    ]
+
+
+def test_trace_fields_are_present_on_every_decision() -> None:
+    decision = route_task("explain how Qdrant works")
+    for field_name in [
+        "route_id",
+        "task_type",
+        "selected_agent",
+        "required_profile",
+        "approval_gates",
+        "decision_reason",
+    ]:
+        assert getattr(decision, field_name) is not None
