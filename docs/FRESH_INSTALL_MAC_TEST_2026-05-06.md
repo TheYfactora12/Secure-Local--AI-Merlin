@@ -49,8 +49,8 @@ Status update after fixes:
 - #42 and #44 fixed in `c496614`.
 - #43 and #45 fixed in `1055522`.
 - #46 fixed in `71e2bf3`.
-- #48 found during rerun from `bb04e1a`; fix pending in the next commit.
-- A full fresh-install rerun is still required before marking the v1.0 stable installer milestone complete.
+- #48 found during rerun from `bb04e1a`; fixed in `73e56f2`.
+- A full fresh-install rerun from `73e56f2` completed successfully for the `core` profile on the 8GB Mac.
 
 ### 1. Uninstaller Fails In Non-Interactive Shell On Sudo Cleanup
 
@@ -176,6 +176,13 @@ Follow-up #48 fix direction:
 - Print `bash launchd/install-launchd.sh` for persistent login startup.
 - Keep the execution-aware Task API on port 8766 manual and separate.
 
+Rerun result from `73e56f2`:
+
+- Installer no longer prints unavailable bare `wizard` commands when `/usr/local/bin` is not writable.
+- Installer no longer claims the read-only Merlin Status API is persistently running in non-interactive mode.
+- Installer prints the manual status API start command and the launchd persistent startup command.
+- `wizard doctor` exits with zero failures; status/task API warnings are expected because both are manual in this non-interactive test path.
+
 ### 5. `wizard` CLI Is Not On PATH After Non-Interactive Install
 
 Severity: Medium for user onboarding.
@@ -233,13 +240,14 @@ The installer is close but not yet a stable v1.0 release.
 
 Release blockers from this test, after fixes:
 
-1. Full fresh uninstall/install rerun required to verify #41 through #46 together.
+1. Core fresh uninstall/install on this 8GB Mac is green after #41 through #48.
 2. Signed/notarized package release gate remains separate.
 3. Upgrade/backup/restore release verification remains required before v1.0.
+4. Optional launchd persistence should be tested separately from non-interactive core install.
 
 ## Recommended Next Fix Order
 
-1. Rerun fresh uninstall/install on this Mac from current `main`.
-2. Run `wizard doctor`, endpoint checks, Open WebUI, LiteLLM, Qdrant, Ollama checks.
-3. Run package/release smoke and decide whether to test the unsigned `.pkg`.
-4. Move to signed/notarized package release gate once fresh install is green.
+1. Run package/release smoke and decide whether to test the unsigned `.pkg`.
+2. Run backup/restore and upgrade verification against the fresh install.
+3. Test optional launchd persistence for the read-only status API.
+4. Move to signed/notarized package release gate once package and recovery checks are green.
