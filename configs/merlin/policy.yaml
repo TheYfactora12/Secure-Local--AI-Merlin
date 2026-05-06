@@ -82,6 +82,11 @@ approval_gates:
     default: deny
     requires_approval: true
     reason: "API keys may incur cost or expose account access."
+  secret_access:
+    risk: critical
+    default: deny
+    requires_approval: true
+    reason: "Secrets, tokens, credentials, and private keys require explicit user approval before access."
   memory_write:
     risk: medium
     default: deny
