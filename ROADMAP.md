@@ -217,7 +217,8 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Automation static test: n8n and workflow import safety
 - [x] Merlin persona smoke test
 - [ ] Automation live test: n8n health and workflow import
-- [ ] Coding test: OpenHands startup and LiteLLM connection
+- [x] Coding static test: OpenHands profile safety and LiteLLM wiring
+- [ ] Coding live test: OpenHands startup and LiteLLM connection
 - [ ] Upgrade test: backup, pull, restart, health check, rollback path
 
 ## Later Roadmap

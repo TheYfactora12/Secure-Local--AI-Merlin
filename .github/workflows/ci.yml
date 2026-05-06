@@ -117,6 +117,7 @@ jobs:
           bash tests/backup-profile-smoke.sh
           bash tests/search-profile-smoke.sh
           bash tests/automation-profile-smoke.sh
+          bash tests/coding-profile-smoke.sh
           bash tests/merlin-persona-smoke.sh
           bash tests/uninstall-smoke.sh
           bash tests/launchd-core-smoke.sh

@@ -337,4 +337,5 @@ Next implementation slice:
 - Add search profile static safety coverage and a guarded live smoke test. `Done: scripts/start-search.sh, tests/search-profile-smoke.sh, tests/search-profile-live-smoke.sh`
 - Add automation profile static safety coverage and a guarded live smoke test. `Done: scripts/start-automation.sh, scripts/import-n8n-workflows.sh, tests/automation-profile-smoke.sh, tests/automation-profile-live-smoke.sh`
 - Add a declarative Merlin persona seed for local-first AI engineering team behavior. `Done: config/merlin/persona.yaml, tests/merlin-persona-smoke.sh`
+- Add coding profile static safety coverage and a guarded live smoke test. `Done: scripts/start-coding.sh, tests/coding-profile-smoke.sh, tests/coding-profile-live-smoke.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.
