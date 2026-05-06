@@ -187,14 +187,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 - **Brain renamed to Wizard** — consistent naming across all containers, scripts, workflows
-- `config/models/models.json` — declarative model manifest (required/optional, role, RAM size)
+- `configs/models/models.json` — declarative model manifest (required/optional, role, RAM size)
 - `install.sh` reads `models.json` — no script editing needed to add/remove models
 - `dashboard/index.html` — Wizard HQ: live health dots, Ask panel, routing map, model status, activity log
 - `cli/wizard` — full CLI: `wizard ask`, `wizard route`, `wizard pull`, `wizard train`, `wizard backup`, `wizard open`, `wizard status`
 - CLI symlinked system-wide on install (`wizard` available anywhere in terminal)
 - `backup/backup.sh` + `backup/restore.sh` — Qdrant memory + n8n workflow backup/restore
-- `config/mcp/mcp-claude-desktop.json` — Claude Desktop MCP integration
-- `config/mcp/vscode-continue.json` — VS Code Continue extension config
+- `configs/mcp/mcp-claude-desktop.json` — Claude Desktop MCP integration
+- `configs/mcp/vscode-continue.json` — VS Code Continue extension config
 
 ---
 

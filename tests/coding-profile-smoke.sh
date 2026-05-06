@@ -20,9 +20,9 @@ require_grep() {
 require_grep 'coding\)' "${STACK_DIR}/scripts/profile-lib.sh" "profile-lib missing coding capability"
 require_grep 'services\+=\(openhands\)' "${STACK_DIR}/scripts/profile-lib.sh" "profile-lib missing OpenHands service mapping"
 
-require_grep 'risk: high' "${STACK_DIR}/config/merlin/profiles.yaml" "coding profile is not marked high risk"
-require_grep 'Docker socket access' "${STACK_DIR}/config/merlin/profiles.yaml" "coding profile risk reason missing"
-require_grep 'starts_by_default: false' "${STACK_DIR}/config/merlin/profiles.yaml" "coding profile should not start by default"
+require_grep 'risk: high' "${STACK_DIR}/configs/merlin/profiles.yaml" "coding profile is not marked high risk"
+require_grep 'Docker socket access' "${STACK_DIR}/configs/merlin/profiles.yaml" "coding profile risk reason missing"
+require_grep 'starts_by_default: false' "${STACK_DIR}/configs/merlin/profiles.yaml" "coding profile should not start by default"
 
 require_grep 'bash "\$\{SCRIPT_DIR\}/start-core\.sh"' "${STACK_DIR}/scripts/start-coding.sh" "start-coding does not start core first"
 require_grep 'ensure_docker_cli' "${STACK_DIR}/scripts/start-coding.sh" "start-coding does not verify Docker CLI"

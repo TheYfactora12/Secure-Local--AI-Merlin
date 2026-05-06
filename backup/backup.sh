@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_DIR="${HOME_AI_STACK_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
-MEMORY_COLLECTIONS_FILE="${MERLIN_MEMORY_COLLECTIONS_FILE:-${STACK_DIR}/config/merlin/memory-collections.env}"
+MEMORY_COLLECTIONS_FILE="${MERLIN_MEMORY_COLLECTIONS_FILE:-${STACK_DIR}/configs/merlin/memory-collections.env}"
 BACKUP_DIR="${HOME_AI_BACKUP_DIR:-$HOME/wizard-backups}"
 TIMESTAMP="$(date +"%Y%m%d_%H%M%S")"
 OUT="${BACKUP_DIR}/wizard_backup_${TIMESTAMP}"

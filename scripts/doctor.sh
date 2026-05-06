@@ -6,7 +6,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_DIR="${HOME_AI_STACK_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 ENV_FILE="${STACK_DIR}/.env"
-MODEL_TIERS_FILE="${MERLIN_MODEL_TIERS_FILE:-${STACK_DIR}/config/merlin/model-tiers.env}"
+MODEL_TIERS_FILE="${MERLIN_MODEL_TIERS_FILE:-${STACK_DIR}/configs/merlin/model-tiers.env}"
 
 GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[1;33m'
 CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'; DIM='\033[2m'
@@ -176,7 +176,10 @@ for model in data.get("models", []):
 model_is_installed() {
   local wanted="$1"
   local installed="$2"
-  echo "$installed" | grep -Fxq "$wanted"
+  awk -v wanted="$wanted" '
+    $0 == wanted || $0 == wanted ":latest" { found = 1 }
+    END { exit found ? 0 : 1 }
+  ' <<< "$installed"
 }
 
 if [[ -f "$MODEL_TIERS_FILE" ]]; then
@@ -197,11 +200,11 @@ echo -e "${BOLD}Repository${NC}"
 [[ -d "$STACK_DIR" ]] && pass "Stack directory exists: $STACK_DIR" || fail "Stack directory missing: $STACK_DIR"
 [[ -f "${STACK_DIR}/install.sh" ]] && pass "install.sh present" || fail "install.sh missing"
 [[ -f "${STACK_DIR}/docker-compose.yml" ]] && pass "docker-compose.yml present" || fail "docker-compose.yml missing"
-[[ -f "${STACK_DIR}/config/merlin/profiles.yaml" ]] && pass "Merlin profiles config present" || warn "Merlin profiles config missing"
-[[ -f "${STACK_DIR}/config/merlin/hardware-tiers.yaml" ]] && pass "Merlin hardware tiers config present" || warn "Merlin hardware tiers config missing"
-[[ -f "${STACK_DIR}/config/merlin/model-tiers.env" ]] && pass "Merlin model tier runtime manifest present" || warn "Merlin model tier runtime manifest missing"
-[[ -f "${STACK_DIR}/config/merlin/memory.yaml" ]] && pass "Merlin memory schema config present" || warn "Merlin memory schema config missing"
-[[ -f "${STACK_DIR}/config/merlin/memory-collections.env" ]] && pass "Merlin memory runtime manifest present" || warn "Merlin memory runtime manifest missing"
+[[ -f "${STACK_DIR}/configs/merlin/profiles.yaml" ]] && pass "Merlin profiles config present" || warn "Merlin profiles config missing"
+[[ -f "${STACK_DIR}/configs/merlin/hardware-tiers.yaml" ]] && pass "Merlin hardware tiers config present" || warn "Merlin hardware tiers config missing"
+[[ -f "${STACK_DIR}/configs/merlin/model-tiers.env" ]] && pass "Merlin model tier runtime manifest present" || warn "Merlin model tier runtime manifest missing"
+[[ -f "${STACK_DIR}/configs/merlin/memory.yaml" ]] && pass "Merlin memory schema config present" || warn "Merlin memory schema config missing"
+[[ -f "${STACK_DIR}/configs/merlin/memory-collections.env" ]] && pass "Merlin memory runtime manifest present" || warn "Merlin memory runtime manifest missing"
 
 echo -e "\n${BOLD}System${NC}"
 OS="$(uname -s)"

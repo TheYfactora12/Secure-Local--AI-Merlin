@@ -50,12 +50,15 @@ python3 "${STACK_DIR}/scripts/merlin-status-api.py" \
   --approval-log "$APPROVAL_LOG" >"${TMP}/api.log" 2>&1 &
 API_PID="$!"
 
-for _ in {1..30}; do
+for _ in {1..100}; do
   [[ -s "$PORT_FILE" ]] && break
   sleep 0.1
 done
 
-[[ -s "$PORT_FILE" ]] || fail "status API did not write bound port"
+if [[ ! -s "$PORT_FILE" ]]; then
+  sed -n '1,120p' "${TMP}/api.log" >&2 || true
+  fail "status API did not write bound port"
+fi
 PORT="$(cat "$PORT_FILE")"
 
 HEALTH="$(curl -fsS --max-time 3 "http://127.0.0.1:${PORT}/healthz")"

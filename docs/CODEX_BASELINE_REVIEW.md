@@ -138,7 +138,7 @@ Installer RAM-tier models:
 
 Other model manifest:
 
-- `config/models/models.json` lists older/different model names such as `llama3.2`, `mistral`, `deepseek-coder:6.7b`, `llama3.1:8b`, `llava`, `codellama:13b`, and `llama3.1:32b`.
+- `configs/models/models.json` lists older/different model names such as `llama3.2`, `mistral`, `deepseek-coder:6.7b`, `llama3.1:8b`, `llava`, `codellama:13b`, and `llama3.1:32b`.
 - This manifest is not currently the source of truth for `install.sh`.
 
 ## Current Architecture Diagram
@@ -203,7 +203,7 @@ flowchart TD
   - bootstrap: `home_ai_memory`
   - init script: `openwebui`, `perplexica`, `n8n_memory`, `documents`
   - CLI/backup: `conversations`, `documents`, `swarm_memory`
-- `config/models/models.json` does not match installer model tiers.
+- `configs/models/models.json` does not match installer model tiers.
 - `wizard start` uses raw `docker compose up -d`, not a profile-aware/core-first start.
 - OpenHands mounts `/var/run/docker.sock`, which is high-risk and should be optional.
 - Watchtower can change running images; this conflicts with strict release reproducibility.

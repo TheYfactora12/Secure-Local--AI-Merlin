@@ -64,6 +64,7 @@ Merlin control-plane status:
 - launchd runs the read-only Merlin status API as its own foreground job: `com.homeai.merlin-status-api`.
 - Dashboard reads `http://localhost:8765/status` when the status API is running.
 - The status API is read-only: `GET /healthz`, `GET /status`, mutation methods rejected, `execution_allowed=false`.
+- Canonical config root is `configs/`; root `config/` is forbidden. Merlin config lives in `configs/merlin/`.
 
 ## RAM Tiers
 
@@ -112,6 +113,7 @@ The next engineering priority is live-safe memory persistence design: define the
 - Magic Mode is plan-only: steps can be drafted and audited, but no step adapter can execute until separately implemented and tested.
 - Memory write simulation is not persistence. It stores only redacted audit metadata and must not be treated as learned memory.
 - launchd starts the core profile through `wizard start core` and runs the read-only status API as a separate foreground LaunchAgent. Do not rely on a short-lived launchd shell to daemonize the API.
+- n8n is still a Phase 1 workflow/execution surface and must be treated as a single point of failure until the Python Merlin control plane owns routing, policy, and memory recall.
 - Optional live profile tests still need hardware/time validation.
 - Memory quality and regression safety still need stronger test coverage before Magic Mode writes memory.
 
@@ -154,6 +156,7 @@ Last verified: 2026-05-06.
 - `tests/merlin-memory-read-smoke.sh` verifies local embedding search, Qdrant read behavior, CLI routing, no memory writes, and no raw query or raw memory text in read audit logs.
 - Live memory validation on 2026-05-06 initialized canonical Qdrant collections with `MERLIN_CREATE_CANONICAL_COLLECTIONS=true bash scripts/init-qdrant.sh`, explicitly installed local `nomic-embed-text`, approved `approval_dryrun_20260506_040756_17686`, wrote point `640cc4bb-5dc9-3c68-8a44-5d2560a15ab5` into `merlin_user`, and verified the JSONL audit record `mem_20260506_040805_654553` stayed redacted.
 - Live memory search validation on 2026-05-06 ran `wizard merlin memory search --query "local-first profile-aware" --memory-type preference --limit 3`, retrieved point `640cc4bb-5dc9-3c68-8a44-5d2560a15ab5`, and verified read audit record `mread_20260506_041535_472003` stored hashes only.
+- PR #10 / `installer-hardening` is closed and `origin/installer-hardening` is an ancestor of `origin/main`; it is not an active blocker.
 
 Earlier live validation on 2026-05-05:
 

@@ -43,7 +43,7 @@ Tasks:
 
 - [x] Define profiles: `core`, `search`, `automation`, `coding`, `security`, `ops`, `full`.
 - [x] Define hardware tiers.
-- Draft future `config/merlin/*.yaml` structure.
+- Draft future `configs/merlin/*.yaml` structure.
 - [x] Add `wizard doctor` baseline diagnostic.
 - [x] Add profile-aware start scripts for core, search, automation, coding, and full.
 - [x] Wire `wizard start [core|search|automation|coding|full]`.
@@ -286,10 +286,10 @@ Completed without replacing the working installer:
 
 - Added profile-aware startup scripts and `wizard start` profile routing.
 - Added `wizard doctor` baseline diagnostics.
-- Added `config/merlin/profiles.yaml` and `config/merlin/hardware-tiers.yaml`.
-- Added `config/merlin/model-tiers.env` as the bash-readable model recommendation manifest.
-- Added `config/merlin/memory.yaml` as the canonical/legacy memory schema reference.
-- Added `config/merlin/memory-collections.env` as the bash-readable Qdrant collection manifest.
+- Added `configs/merlin/profiles.yaml` and `configs/merlin/hardware-tiers.yaml`.
+- Added `configs/merlin/model-tiers.env` as the bash-readable model recommendation manifest.
+- Added `configs/merlin/memory.yaml` as the canonical/legacy memory schema reference.
+- Added `configs/merlin/memory-collections.env` as the bash-readable Qdrant collection manifest.
 - Added installer profile options for core, developer, workstation, server, full, and custom installs.
 - Added `scripts/profile-lib.sh` so installer, bootstrap, and tests share one profile mapping.
 - Validated `core` profile live on this 8 GB Mac with Docker Desktop and native Ollama.
@@ -336,14 +336,14 @@ Next implementation slice:
 - Make Docker-volume backup profile-aware so core backups stay lightweight and optional n8n/search data is included only when selected. `Done: scripts/backup.sh, tests/backup-profile-smoke.sh`
 - Add search profile static safety coverage and a guarded live smoke test. `Done: scripts/start-search.sh, tests/search-profile-smoke.sh, tests/search-profile-live-smoke.sh`
 - Add automation profile static safety coverage and a guarded live smoke test. `Done: scripts/start-automation.sh, scripts/import-n8n-workflows.sh, tests/automation-profile-smoke.sh, tests/automation-profile-live-smoke.sh`
-- Add a declarative Merlin persona seed for local-first AI engineering team behavior. `Done: config/merlin/persona.yaml, tests/merlin-persona-smoke.sh`
-- Add Merlin guardian ethos with explicit consent, humility, and safety boundaries. `Done: config/merlin/persona.yaml, tests/merlin-persona-smoke.sh`
+- Add a declarative Merlin persona seed for local-first AI engineering team behavior. `Done: configs/merlin/persona.yaml, tests/merlin-persona-smoke.sh`
+- Add Merlin guardian ethos with explicit consent, humility, and safety boundaries. `Done: configs/merlin/persona.yaml, tests/merlin-persona-smoke.sh`
 - Add coding profile static safety coverage and a guarded live smoke test. `Done: scripts/start-coding.sh, tests/coding-profile-smoke.sh, tests/coding-profile-live-smoke.sh`
 - Add upgrade rollback smoke coverage with fake Docker/Git/Curl and test-controlled backup/health timing. `Done: scripts/upgrade.sh, tests/upgrade-rollback-smoke.sh`
-- Add declarative Merlin policy and approval-gate coverage before Magic Mode execution. `Done: config/merlin/policy.yaml, tests/merlin-policy-smoke.sh`
-- Add declarative Magic Mode task routing before runtime orchestration. `Done: config/merlin/routes.yaml, tests/merlin-routing-smoke.sh`
-- Add declarative hybrid orchestration decision before runtime control-plane work. `Done: config/merlin/orchestration.yaml, tests/merlin-orchestration-smoke.sh`
-- Add declarative route trace schema before runtime logging. `Done: config/merlin/trace.yaml, tests/merlin-trace-smoke.sh`
+- Add declarative Merlin policy and approval-gate coverage before Magic Mode execution. `Done: configs/merlin/policy.yaml, tests/merlin-policy-smoke.sh`
+- Add declarative Magic Mode task routing before runtime orchestration. `Done: configs/merlin/routes.yaml, tests/merlin-routing-smoke.sh`
+- Add declarative hybrid orchestration decision before runtime control-plane work. `Done: configs/merlin/orchestration.yaml, tests/merlin-orchestration-smoke.sh`
+- Add declarative route trace schema before runtime logging. `Done: configs/merlin/trace.yaml, tests/merlin-trace-smoke.sh`
 - Add read-only Merlin route decision dry-run before side-effecting runtime actions. `Done: scripts/merlin-dry-run.sh, cli/wizard, tests/merlin-dry-run-smoke.sh`
 - Add opt-in redacted JSONL route trace writes to dry-run decisions. `Done: scripts/merlin-dry-run.sh, tests/merlin-dry-run-smoke.sh`
 - Add non-executing approval request objects for risky routes before approval persistence/execution. `Done: scripts/merlin-dry-run.sh, tests/merlin-dry-run-smoke.sh`
@@ -360,7 +360,9 @@ Next implementation slice:
 - Add v0 policy-gated execution boundary with only read-only `merlin_status` allowed and risky actions denied even after approval. `Done: scripts/merlin-execute.sh, cli/wizard, tests/merlin-execute-smoke.sh`
 - Add plan-only Magic Mode runner that turns route dry-runs into auditable steps without executing any step. `Done: scripts/merlin-magic-plan.sh, cli/wizard, tests/merlin-magic-plan-smoke.sh`
 - Add approved memory-write simulator before real Qdrant writes so consent/audit behavior is stable first. `Done: scripts/merlin-memory-write.sh, cli/wizard, tests/merlin-memory-write-smoke.sh`
-- Add approved local Qdrant memory write adapter behind the simulator contract, with canonical collection checks, local Ollama embeddings only, redacted audit records, backup manifest coverage, and fake-adapter denial tests. `Done: scripts/merlin-memory-write.sh, config/merlin/memory-collections.env, tests/merlin-memory-write-smoke.sh, tests/memory-config-smoke.sh`
+- Add approved local Qdrant memory write adapter behind the simulator contract, with canonical collection checks, local Ollama embeddings only, redacted audit records, backup manifest coverage, and fake-adapter denial tests. `Done: scripts/merlin-memory-write.sh, configs/merlin/memory-collections.env, tests/merlin-memory-write-smoke.sh, tests/memory-config-smoke.sh`
 - Live-validate approved local Qdrant memory write on the low-memory core profile after explicit canonical collection initialization and explicit `nomic-embed-text` install. `Done: merlin_user point 640cc4bb-5dc9-3c68-8a44-5d2560a15ab5, redacted audit mem_20260506_040805_654553`
 - Add local-only Qdrant memory search adapter with local Ollama embeddings, raw results only in user output, redacted read audit logs, no memory writes, and CLI routing. `Done: scripts/merlin-memory-read.sh, cli/wizard, tests/merlin-memory-read-smoke.sh`
+- Consolidate the repo to one canonical `configs/` root before Phase 2 config loader work. `Done: configs/merlin, configs/models, configs/mcp, tests/config-root-smoke.sh`
+- Add Qdrant vector dimension validation before local memory search/upsert so 768-dimensional Merlin memory cannot accidentally target the legacy 1536-dimensional `documents` collection. `Done: DimensionMismatchError guard in scripts/merlin-memory-read.sh and scripts/merlin-memory-write.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

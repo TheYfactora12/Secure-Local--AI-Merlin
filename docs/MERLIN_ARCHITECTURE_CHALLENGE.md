@@ -69,7 +69,11 @@ Recommendation: choose the hybrid.
 
 Use the working installer as the baseline. Add profile-aware startup and a small Merlin core interface. Keep Open WebUI/LiteLLM/Qdrant/Ollama as the core. Treat n8n, OpenHands, Perplexica, SearXNG, nginx, watchtower, MCP, and launchd as optional capability profiles. Introduce a Merlin orchestration layer only after health checks and profile selection are reliable.
 
-Final orchestration decision: Merlin should use a hybrid architecture. The Merlin control plane should be a lightweight local controller or CLI facade responsible for status, policy evaluation, route decisions, approval requests, route traces, LiteLLM calls, and approved Qdrant memory access. n8n remains an optional workflow engine, OpenHands remains an optional high-risk coding executor, Perplexica/SearXNG remain optional search tools, and LangGraph/OpenAI Agents SDK-style frameworks remain optional future references rather than v1 dependencies. This decision is captured in `config/merlin/orchestration.yaml`.
+Final orchestration decision: Merlin should use a hybrid architecture. The Merlin control plane should be a lightweight local controller or CLI facade responsible for status, policy evaluation, route decisions, approval requests, route traces, LiteLLM calls, and approved Qdrant memory access. n8n remains an optional workflow engine, OpenHands remains an optional high-risk coding executor, Perplexica/SearXNG remain optional search tools, and LangGraph/OpenAI Agents SDK-style frameworks remain optional future references rather than v1 dependencies. This decision is captured in `configs/merlin/orchestration.yaml`.
+
+Current risk note: n8n must not remain Merlin's primary brain. It is acceptable as a Phase 1 workflow/execution surface, but it is a single point of failure if routing, policy, memory access, and agent coordination all depend on it. Phase 2 must make the Python Merlin control plane the primary policy/routing/memory brain and keep n8n as an optional execution/workflow adapter.
+
+Configuration root decision: the repo has one canonical root configuration tree, `configs/`. Merlin product configs live in `configs/merlin/`, model manifests live in `configs/models/`, MCP templates live in `configs/mcp/`, and service/container configs live beside them under `configs/litellm/`, `configs/perplexica/`, `configs/searxng/`, `configs/nginx/`, and `configs/fail2ban/`. A root `config/` directory is intentionally forbidden before Phase 2 loader work.
 
 ## Architecture References
 

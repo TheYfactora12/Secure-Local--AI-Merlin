@@ -4,8 +4,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-ROUTES_FILE="${STACK_DIR}/config/merlin/routes.yaml"
-POLICY_FILE="${STACK_DIR}/config/merlin/policy.yaml"
+ROUTES_FILE="${STACK_DIR}/configs/merlin/routes.yaml"
+POLICY_FILE="${STACK_DIR}/configs/merlin/policy.yaml"
 
 fail() {
   echo "FAIL: $*" >&2

@@ -181,7 +181,7 @@ Required:
 - Recommend profile and models.
 - Ask before pulling large models.
 - Ask before enabling heavy profiles.
-- Write chosen tier/profile to `.env` or future `config/merlin/profiles.yaml`.
+- Write chosen tier/profile to `.env` or future `configs/merlin/profiles.yaml`.
 
 Do not:
 

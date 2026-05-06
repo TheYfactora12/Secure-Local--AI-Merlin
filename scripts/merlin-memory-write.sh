@@ -14,7 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 APPROVAL_LOG="${MERLIN_APPROVAL_LOG:-${STACK_DIR}/logs/merlin-approvals.jsonl}"
 MEMORY_LOG="${MERLIN_MEMORY_WRITE_LOG:-${STACK_DIR}/logs/merlin-memory-writes.jsonl}"
-MEMORY_COLLECTIONS_FILE="${MERLIN_MEMORY_COLLECTIONS_FILE:-${STACK_DIR}/config/merlin/memory-collections.env}"
+MEMORY_COLLECTIONS_FILE="${MERLIN_MEMORY_COLLECTIONS_FILE:-${STACK_DIR}/configs/merlin/memory-collections.env}"
 QDRANT_URL="${QDRANT_URL:-http://localhost:6333}"
 OLLAMA_URL="${OLLAMA_URL:-http://localhost:11434}"
 EMBEDDING_MODEL="${MERLIN_EMBEDDING_MODEL:-nomic-embed-text}"
@@ -220,6 +220,7 @@ QDRANT_WRITE="none"
 EMBEDDING_CALLS="none"
 MEMORY_WRITES="none"
 RAW_MEMORY_STORED=false
+VECTOR_DIMENSION_GUARD="not_checked"
 DECISION_REASON="Memory writes require an approved approval id with the memory_write gate."
 
 if [[ "$MODE" =~ ^(simulate|write)$ ]]; then
@@ -243,8 +244,8 @@ if [[ "$MODE" =~ ^(simulate|write)$ ]]; then
   fi
 fi
 
-collection_exists() {
-  curl -fsS --max-time 5 "${QDRANT_URL}/collections/${TARGET_COLLECTION}" >/dev/null 2>&1
+collection_info_json() {
+  curl -fsS --max-time 5 "${QDRANT_URL}/collections/${TARGET_COLLECTION}"
 }
 
 embedding_json() {
@@ -285,6 +286,41 @@ print(json.dumps({"points": [{"id": os.environ["POINT_ID"], "vector": vector, "p
 PY
 }
 
+collection_vector_size() {
+  local collection_response="$1"
+  COLLECTION_RESPONSE="$collection_response" python3 - <<'PY'
+import json
+import os
+
+response = json.loads(os.environ["COLLECTION_RESPONSE"])
+vectors = (
+    response.get("result", {})
+    .get("config", {})
+    .get("params", {})
+    .get("vectors", {})
+)
+size = None
+if isinstance(vectors, dict):
+    if isinstance(vectors.get("size"), int):
+        size = vectors["size"]
+    elif isinstance(vectors.get("default"), dict) and isinstance(vectors["default"].get("size"), int):
+        size = vectors["default"]["size"]
+print(size or "")
+PY
+}
+
+embedding_vector_size() {
+  local embedding_response="$1"
+  EMBEDDING_RESPONSE="$embedding_response" python3 - <<'PY'
+import json
+import os
+
+response = json.loads(os.environ["EMBEDDING_RESPONSE"])
+vector = response.get("embedding")
+print(len(vector) if isinstance(vector, list) else "")
+PY
+}
+
 write_audit_record() {
   mkdir -p "$(dirname "$MEMORY_LOG")"
   MODE="$MODE" MEMORY_TYPE="$MEMORY_TYPE" MEMORY_HASH="$MEMORY_HASH" MEMORY_PREVIEW="$MEMORY_PREVIEW" \
@@ -292,7 +328,8 @@ write_audit_record() {
     TARGET_COLLECTION="$TARGET_COLLECTION" ADAPTER="$ADAPTER" POLICY_DECISION="$POLICY_DECISION" \
     RESULT_STATUS="$RESULT_STATUS" DECISION_REASON="$DECISION_REASON" MEMORY_LOG="$MEMORY_LOG" \
     RAW_MEMORY_STORED="$RAW_MEMORY_STORED" QDRANT_WRITE="$QDRANT_WRITE" EMBEDDING_CALLS="$EMBEDDING_CALLS" \
-    MEMORY_WRITES="$MEMORY_WRITES" POINT_ID="$POINT_ID" EMBEDDING_MODEL="$EMBEDDING_MODEL" python3 - <<'PY'
+    MEMORY_WRITES="$MEMORY_WRITES" POINT_ID="$POINT_ID" EMBEDDING_MODEL="$EMBEDDING_MODEL" \
+    VECTOR_DIMENSION_GUARD="$VECTOR_DIMENSION_GUARD" python3 - <<'PY'
 import json
 import os
 from datetime import datetime, timezone
@@ -322,6 +359,7 @@ record = {
     "redaction_applied": True,
     "qdrant_write": os.environ["QDRANT_WRITE"],
     "embedding_calls": os.environ["EMBEDDING_CALLS"],
+    "vector_dimension_guard": os.environ["VECTOR_DIMENSION_GUARD"],
     "model_calls": "none",
     "service_starts": "none",
     "tool_execution": "none",
@@ -341,7 +379,7 @@ if [[ "$MODE" == "simulate" && "$ACTION_ALLOWED" == true ]]; then
 fi
 
 if [[ "$MODE" == "write" && "$ACTION_ALLOWED" == true ]]; then
-  if ! collection_exists; then
+  if ! COLLECTION_INFO="$(collection_info_json)"; then
     ACTION_ALLOWED=false
     POLICY_DECISION="deny"
     RESULT_STATUS="denied"
@@ -354,12 +392,27 @@ if [[ "$MODE" == "write" && "$ACTION_ALLOWED" == true ]]; then
       DECISION_REASON="Local Ollama embedding call failed for '${EMBEDDING_MODEL}'. Pull the model explicitly before enabling memory writes."
     }
     if [[ "$ACTION_ALLOWED" == true ]]; then
-      if upsert_qdrant_point "$EMBEDDING_RESPONSE"; then
+      EMBEDDING_CALLS="local_ollama"
+      COLLECTION_VECTOR_SIZE="$(collection_vector_size "$COLLECTION_INFO")"
+      EMBEDDING_VECTOR_SIZE="$(embedding_vector_size "$EMBEDDING_RESPONSE")"
+      if [[ -z "$COLLECTION_VECTOR_SIZE" || -z "$EMBEDDING_VECTOR_SIZE" ]]; then
+        ACTION_ALLOWED=false
+        POLICY_DECISION="deny"
+        RESULT_STATUS="denied"
+        VECTOR_DIMENSION_GUARD="failed"
+        DECISION_REASON="DimensionMismatchError: could not verify vector dimensions for collection '${TARGET_COLLECTION}' and embedding model '${EMBEDDING_MODEL}'."
+      elif [[ "$COLLECTION_VECTOR_SIZE" != "$EMBEDDING_VECTOR_SIZE" ]]; then
+        ACTION_ALLOWED=false
+        POLICY_DECISION="deny"
+        RESULT_STATUS="denied"
+        VECTOR_DIMENSION_GUARD="failed"
+        DECISION_REASON="DimensionMismatchError: collection '${TARGET_COLLECTION}' expects ${COLLECTION_VECTOR_SIZE} dimensions but embedding model '${EMBEDDING_MODEL}' returned ${EMBEDDING_VECTOR_SIZE}."
+      elif upsert_qdrant_point "$EMBEDDING_RESPONSE"; then
         RESULT_STATUS="written"
         QDRANT_WRITE="upsert"
-        EMBEDDING_CALLS="local_ollama"
         MEMORY_WRITES="qdrant"
         RAW_MEMORY_STORED=true
+        VECTOR_DIMENSION_GUARD="passed"
       else
         ACTION_ALLOWED=false
         POLICY_DECISION="deny"
@@ -393,6 +446,7 @@ result_status: ${RESULT_STATUS}
 memory_log: ${MEMORY_LOG}
 qdrant_write: ${QDRANT_WRITE}
 embedding_calls: ${EMBEDDING_CALLS}
+vector_dimension_guard: ${VECTOR_DIMENSION_GUARD}
 model_calls: none
 memory_writes: ${MEMORY_WRITES}
 service_starts: none

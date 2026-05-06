@@ -56,7 +56,7 @@ case "$args" in
 JSON
     ;;
   *"/collections/merlin_user"*)
-    printf '{"result":{"status":"green"}}\n'
+    printf '{"result":{"status":"green","config":{"params":{"vectors":{"size":%s,"distance":"Cosine"}}}}}\n' "${MERLIN_FAKE_VECTOR_SIZE:-4}"
     ;;
   *"/api/embeddings"*)
     if [[ "$payload_file" == "@-" ]]; then
@@ -94,6 +94,7 @@ require_output "$SEARCH_OUTPUT" '^result_status: searched$' "search should repor
 require_output "$SEARCH_OUTPUT" '^result_count: 1$' "search should return one result"
 require_output "$SEARCH_OUTPUT" '^qdrant_read: search$' "search should read Qdrant"
 require_output "$SEARCH_OUTPUT" '^embedding_calls: local_ollama$' "search should call local embeddings"
+require_output "$SEARCH_OUTPUT" '^vector_dimension_guard: passed$' "search should verify vector dimensions"
 require_output "$SEARCH_OUTPUT" '^memory_writes: none$' "search must not write memory"
 require_output "$SEARCH_OUTPUT" '^cloud_calls: none$' "search must not call cloud"
 require_output "$SEARCH_OUTPUT" '^external_network: none$' "search must not call external network"
@@ -111,6 +112,7 @@ grep -q '"with_vector": false' "${TMP}/qdrant-search.json" || fail "Qdrant searc
 grep -q '"adapter":"qdrant_local"' "$READ_LOG" || fail "read log should record Qdrant adapter"
 grep -q '"qdrant_read":"search"' "$READ_LOG" || fail "read log should record Qdrant search"
 grep -q '"embedding_calls":"local_ollama"' "$READ_LOG" || fail "read log should record local embedding call"
+grep -q '"vector_dimension_guard":"passed"' "$READ_LOG" || fail "read log should record vector dimension guard"
 grep -q '"result_count":1' "$READ_LOG" || fail "read log should record result count"
 grep -q '"memory_writes":"none"' "$READ_LOG" || fail "read log should record no memory writes"
 if grep -q "$QUERY_TEXT" "$READ_LOG"; then
@@ -130,5 +132,26 @@ WIZARD_OUTPUT="$(MERLIN_FAKE_CURL_LOG="$CURL_LOG" \
     --memory-type preference \
     --memory-read-log "$READ_LOG")"
 require_output "$WIZARD_OUTPUT" '^Merlin memory read boundary$' "wizard should route memory search"
+
+MISMATCH_LOG="${TMP}/mismatch-curl-calls.log"
+if MERLIN_FAKE_CURL_LOG="$MISMATCH_LOG" \
+  MERLIN_FAKE_EMBEDDING_REQUEST="${TMP}/mismatch-embedding-request.json" \
+  MERLIN_FAKE_QDRANT_SEARCH="${TMP}/mismatch-qdrant-search.json" \
+  MERLIN_FAKE_MEMORY_TEXT="$MEMORY_TEXT" \
+  MERLIN_FAKE_VECTOR_SIZE=3 \
+  PATH="${TMP}/bin:$PATH" \
+  bash "${STACK_DIR}/scripts/merlin-memory-read.sh" search \
+    --query "$QUERY_TEXT" \
+    --memory-type preference \
+    --memory-read-log "$READ_LOG" >"${TMP}/mismatch.out" 2>&1; then
+  fail "dimension mismatch should fail closed"
+fi
+MISMATCH_OUTPUT="$(cat "${TMP}/mismatch.out")"
+require_output "$MISMATCH_OUTPUT" '^policy_decision: deny$' "dimension mismatch should deny"
+require_output "$MISMATCH_OUTPUT" '^vector_dimension_guard: failed$' "dimension mismatch guard should fail"
+require_output "$MISMATCH_OUTPUT" 'DimensionMismatchError' "dimension mismatch should name the guard error"
+if grep -q '/collections/merlin_user/points/search' "$MISMATCH_LOG"; then
+  fail "dimension mismatch must not call Qdrant search"
+fi
 
 echo "PASS: Merlin memory-read boundary is local-only and redacted"

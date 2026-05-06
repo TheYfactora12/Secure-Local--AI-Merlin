@@ -21,11 +21,11 @@ Merlin should use a hybrid orchestration model. The core control plane should be
 
 n8n is an optional workflow engine, not the mandatory Merlin brain. OpenHands is an optional high-risk coding executor. SearXNG/Perplexica are optional search tools. LangGraph, OpenAI Agents SDK-style patterns, and MCP are future integration options after approval gates and route traces exist.
 
-The decision is captured in `config/merlin/orchestration.yaml`.
+The decision is captured in `configs/merlin/orchestration.yaml`.
 
 ## Persona And Operating Principles
 
-Merlin should feel like a local AI engineering team, not a single locked-in chatbot. The declarative seed for that behavior lives in `config/merlin/persona.yaml`.
+Merlin should feel like a local AI engineering team, not a single locked-in chatbot. The declarative seed for that behavior lives in `configs/merlin/persona.yaml`.
 
 The persona is intentionally non-executable in v1 infrastructure work. It defines the product stance for future Merlin/Magic Mode routing:
 
@@ -122,7 +122,7 @@ Recommended v1 implementation:
 - Add a Merlin route decision object before LiteLLM calls.
 - Store route metadata in logs.
 - Keep cloud providers disabled unless `.env` has keys and user enables online mode.
-- Use `config/merlin/routes.yaml` as the declarative route map for Magic Mode task classes.
+- Use `configs/merlin/routes.yaml` as the declarative route map for Magic Mode task classes.
 
 Example route decision:
 
@@ -152,7 +152,7 @@ Routes must emit trace fields for route id, task type, selected agent, required 
 
 ## Route Trace Design
 
-The trace schema lives in `config/merlin/trace.yaml`. Future Merlin runtime code must write route decisions as local append-only JSONL before any tool/model side effect. Trace records must redact secrets before writing and include approval state.
+The trace schema lives in `configs/merlin/trace.yaml`. Future Merlin runtime code must write route decisions as local append-only JSONL before any tool/model side effect. Trace records must redact secrets before writing and include approval state.
 
 Minimum route trace fields:
 
@@ -183,7 +183,7 @@ Dry-run behavior:
 
 This keeps the product path aligned with the installer: Merlin can reason about the existing stack before it is allowed to operate the stack.
 
-Dry-run can also append an audit record with `--write-trace`. This writes one redacted JSONL route decision to the trace log from `config/merlin/trace.yaml`, or to `--trace-log <path>` for tests. Trace writes store the hashed user goal and route metadata only; they must not store raw prompts, documents, API keys, auth headers, or tool outputs. Trace writing is intentionally separate from model calls and tool execution.
+Dry-run can also append an audit record with `--write-trace`. This writes one redacted JSONL route decision to the trace log from `configs/merlin/trace.yaml`, or to `--trace-log <path>` for tests. Trace writes store the hashed user goal and route metadata only; they must not store raw prompts, documents, API keys, auth headers, or tool outputs. Trace writing is intentionally separate from model calls and tool execution.
 
 Risky dry-run routes also produce a non-executing approval request object. The request includes an approval id, route id, pending status, required gates, and an explicit `execution_allowed: false` field. This is the approval foundation for Magic Mode: Merlin can now explain what approval would be needed before any service start, shell command, file write, network call, memory write, model download, or OpenHands task is implemented.
 
@@ -303,7 +303,7 @@ requires_approval: true
 reason: "Modifies repository files"
 ```
 
-The declarative v1 policy seed lives in `config/merlin/policy.yaml`. It is non-executable until the Merlin control plane exists, but it establishes conservative defaults for Magic Mode, route classes, approval gates, allowed local scopes, audit logging, and low-memory behavior.
+The declarative v1 policy seed lives in `configs/merlin/policy.yaml`. It is non-executable until the Merlin control plane exists, but it establishes conservative defaults for Magic Mode, route classes, approval gates, allowed local scopes, audit logging, and low-memory behavior.
 
 The policy must keep these defaults until runtime approval handling is implemented:
 
@@ -348,7 +348,7 @@ providers:
 Recommended future files:
 
 ```text
-config/merlin/
+configs/merlin/
   profiles.yaml
   hardware-tiers.yaml
   providers.yaml

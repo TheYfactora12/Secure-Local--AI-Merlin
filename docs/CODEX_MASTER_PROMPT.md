@@ -36,7 +36,7 @@ You are a builder with a specific codebase, a specific roadmap, and specific ope
 | CLI | `cli/wizard` |
 | Dashboard | `dashboard/index.html` (static, localhost:8888) |
 | Status API | `scripts/merlin-status-api.py` (localhost:8765, read-only) |
-| Config | `config/merlin/*.yaml` — declarative, not yet all runtime-parsed |
+| Config | `configs/merlin/*.yaml` — declarative, not yet all runtime-parsed |
 | Tests | `tests/*.sh` — static smoke tests, run in CI |
 | CI | `.github/workflows/ci.yml` |
 
@@ -78,10 +78,10 @@ already fixed on `main` in commit `12de379`. Do NOT revert.
 - Hardware tiers: `low`(≤8 GB), `base`(16 GB), `mid`(24 GB), `high`(48 GB+)
 - `wizard doctor` — 43 checks, 0 failures on core install (Issue #2 CLOSED)
 - `wizard start [profile]` — profile-aware launch
-- `config/merlin/policy.yaml` — declarative gates, NOT yet runtime-parsed
-- `config/merlin/routes.yaml` — route map, NOT yet runtime-parsed
-- `config/merlin/trace.yaml` — trace schema, NOT yet runtime-parsed
-- `config/merlin/persona.yaml` — identity + guardian ethos
+- `configs/merlin/policy.yaml` — declarative gates, NOT yet runtime-parsed
+- `configs/merlin/routes.yaml` — route map, NOT yet runtime-parsed
+- `configs/merlin/trace.yaml` — trace schema, NOT yet runtime-parsed
+- `configs/merlin/persona.yaml` — identity + guardian ethos
 - `scripts/merlin-dry-run.sh` — reads routes/policy, prints decisions, NO execution
 - `scripts/merlin-status.sh` — read-only status summary
 - `scripts/merlin-approvals.sh` — read-only approval review + audit log writes
@@ -110,7 +110,7 @@ Current v0 boundary:
 - Refuses shell, file, git, network, cloud, API key, service control, model download, and OpenHands actions even after approval
 
 Needed: `scripts/merlin-core.py`
-- Reads `config/merlin/policy.yaml` and `config/merlin/routes.yaml` at runtime
+- Reads `configs/merlin/policy.yaml` and `configs/merlin/routes.yaml` at runtime
 - Evaluates task input → selects route → checks approval gates
 - If gates clear: calls LiteLLM (`http://localhost:4000`) with correct model alias
 - Writes redacted JSONL trace to `logs/merlin-route-decisions.jsonl`
@@ -175,7 +175,7 @@ Branch: `installer-hardening`
 
 ---
 
-## Merlin Identity Contracts (from `config/merlin/persona.yaml`)
+## Merlin Identity Contracts (from `configs/merlin/persona.yaml`)
 
 These are non-negotiable. Any code you write must honor them:
 
@@ -208,7 +208,7 @@ These are non-negotiable. Any code you write must honor them:
 │   ├── merlin-approvals.sh           # ✅ Approval review + audit
 │   ├── merlin-status-api.py          # ✅ localhost:8765 read-only HTTP API
 │   └── merlin-core.py                # ❌ DOES NOT EXIST — Phase 2 target
-├── config/merlin/
+├── configs/merlin/
 │   ├── policy.yaml                   # ✅ Declared, NOT runtime-parsed
 │   ├── routes.yaml                   # ✅ Declared, NOT runtime-parsed
 │   ├── trace.yaml                    # ✅ Declared, NOT runtime-parsed
@@ -295,8 +295,8 @@ Input:  --goal "user goal text" [--task-type TYPE] [--dry-run] [--profile PROFIL
 Output: JSON response from LiteLLM OR approval request object (no execution)
 
 Flow:
-  1. Load config/merlin/policy.yaml  (PyYAML or manual parse)
-  2. Load config/merlin/routes.yaml
+  1. Load configs/merlin/policy.yaml  (PyYAML or manual parse)
+  2. Load configs/merlin/routes.yaml
   3. Classify task type from --goal (same logic as merlin-dry-run.sh)
   4. Select route from routes.yaml
   5. Check approval_gates for selected route

@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-MANIFEST="${STACK_DIR}/config/merlin/memory-collections.env"
+MANIFEST="${STACK_DIR}/configs/merlin/memory-collections.env"
 RESTORE="${STACK_DIR}/backup/restore.sh"
 TMP="$(mktemp -d)"
 

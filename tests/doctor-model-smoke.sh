@@ -23,6 +23,7 @@ if [[ "${1:-}" == "list" ]]; then
   cat <<'MODELS'
 NAME           ID       SIZE      MODIFIED
 qwen2.5:7b     fake     4.7 GB    now
+nomic-embed-text:latest fake 274 MB now
 MODELS
   exit 0
 fi
@@ -46,11 +47,11 @@ OUTPUT="$(
 )"
 set -e
 
-echo "$OUTPUT" | grep -q "Installed Ollama models detected: 1" \
+echo "$OUTPUT" | grep -q "Installed Ollama models detected: 2" \
   || fail "Doctor did not detect fake installed model"
 echo "$OUTPUT" | grep -q "Recommended model installed: qwen2.5:7b" \
   || fail "Doctor did not mark installed recommended model"
-echo "$OUTPUT" | grep -q "bash scripts/add-model.sh nomic-embed-text" \
-  || fail "Doctor did not print missing model pull command"
+echo "$OUTPUT" | grep -q "Recommended model installed: nomic-embed-text" \
+  || fail "Doctor did not treat :latest as installed model"
 
 echo "PASS: Doctor model reporting is valid"

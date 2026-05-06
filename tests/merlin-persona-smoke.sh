@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-PERSONA_FILE="${STACK_DIR}/config/merlin/persona.yaml"
+PERSONA_FILE="${STACK_DIR}/configs/merlin/persona.yaml"
 
 fail() {
   echo "FAIL: $*" >&2

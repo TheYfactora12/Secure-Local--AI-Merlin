@@ -202,6 +202,8 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Add approved local Qdrant memory write adapter with fail-closed consent, collection, and embedding checks
 - [x] Live-validate approved local Qdrant memory writes on the low-memory core profile
 - [x] Add local-only Merlin memory search adapter with redacted read audit logs
+- [x] Consolidate all root configuration into canonical `configs/` tree before Phase 2 loader work
+- [x] Add Qdrant vector dimension guard before local memory search/upsert
 - [x] Add canonical/legacy memory schema and runtime Qdrant collection manifest
 - [x] Align `cli/wizard` memory commands with the runtime collection manifest
 - [ ] Connect Magic Mode to shared Qdrant memory only after memory approval/audit is implemented
@@ -333,9 +335,9 @@ Only after the laptop core is stable:
 **Implementation path (all config and workflow, no new infrastructure required):**
 
 - [ ] **Step 1 — Issue 4 first:** Build `n8n-workflows/06-session-memory-bridge.json`. This n8n workflow reads from and writes to the `merlin-session` Qdrant collection at session start and end. Without this, Merlin forgets every conversation. With this, Merlin deepens every session. This is the single highest-ROI build in the repo.
-- [ ] **Step 2 — Conversational loop via system prompt injection:** Add a follow-up question behavior block to Merlin's system prompt in `config/merlin/persona.yaml`. Merlin asks one clarifying or deepening question per response when the context warrants it — not every response, not robotically, but naturally. Inject this block into n8n workflows that route chat completions through LiteLLM.
+- [ ] **Step 2 — Conversational loop via system prompt injection:** Add a follow-up question behavior block to Merlin's system prompt in `configs/merlin/persona.yaml`. Merlin asks one clarifying or deepening question per response when the context warrants it — not every response, not robotically, but naturally. Inject this block into n8n workflows that route chat completions through LiteLLM.
 - [ ] **Step 3 — Within-session recall:** Wire the `merlin-session` Qdrant collection into the LiteLLM context window injection so Merlin references earlier conversation points naturally during the same session.
-- [ ] **Step 4 — Emotional tone calibration:** Update `config/merlin/persona.yaml` guardian ethos block to include warmth and engagement directives: listen actively, acknowledge the human state, ask before advising. Already architected in the ethos contract — needs activation language.
+- [ ] **Step 4 — Emotional tone calibration:** Update `configs/merlin/persona.yaml` guardian ethos block to include warmth and engagement directives: listen actively, acknowledge the human state, ask before advising. Already architected in the ethos contract — needs activation language.
 - [ ] **Step 5 — Session depth scoring:** Add a lightweight n8n metric that logs session length, question depth, and memory references per session to `logs/merlin-session-metrics.jsonl`. Used later in v1.7 benchmark harness.
 - [ ] Add smoke test: `tests/merlin-session-bridge-smoke.sh` — verifies session collection exists, write succeeds, read returns the written point.
 - [ ] Add smoke test: `tests/merlin-followup-prompt-smoke.sh` — verifies follow-up behavior block is present in persona.yaml and injected into active workflow system prompts.
@@ -348,7 +350,7 @@ Only after the laptop core is stable:
 
 **Goal:** Make Merlin and the full stack defensible — not just documented-as-secure. Address OWASP LLM Top 10 attack vectors, add automated SAST scanning to CI, and wire n8n auto-protection workflows that quarantine, rate-limit, and alert on detected attacks in real time.
 
-**Why this matters now:** `config/merlin/policy.yaml` currently declares all security controls — default deny, approval gates, secret redaction — but none of those controls execute at runtime. `merlin-core.py` (Phase 2) is the missing enforcement layer. This milestone closes the gap between declared and enforced, then adds active defense on top.
+**Why this matters now:** `configs/merlin/policy.yaml` currently declares all security controls — default deny, approval gates, secret redaction — but none of those controls execute at runtime. `merlin-core.py` (Phase 2) is the missing enforcement layer. This milestone closes the gap between declared and enforced, then adds active defense on top.
 
 **Threat model for a local AI stack (OWASP LLM Top 10 2025 + Agentic Top 10 2026):**
 - **LLM01 — Prompt Injection:** Malicious instructions embedded in user input or documents that hijack Merlin's actions. Highest risk for an agentic system with shell/file/git approval gates.
@@ -363,7 +365,7 @@ Only after the laptop core is stable:
 Tools: SonarQube Community (Docker-native, integrates with GitHub Actions), gitleaks (already configured via `.gitleaks.toml`).
 
 - [ ] Add `sonarqube` service to `docker-compose.yml` under the `security` profile (not default). Port `9000`, volume `sonarqube_data`. Runs only when `wizard start security` is invoked.
-- [ ] Add `scripts/sast-scan.sh` — runs SonarQube scanner against `scripts/`, `config/merlin/`, `cli/`, `dashboard/` directories. Outputs SARIF report to `logs/sast-report.json`.
+- [ ] Add `scripts/sast-scan.sh` — runs SonarQube scanner against `scripts/`, `configs/merlin/`, `cli/`, `dashboard/` directories. Outputs SARIF report to `logs/sast-report.json`.
 - [ ] Wire gitleaks to pre-commit hook and CI: `gitleaks detect --source . --config .gitleaks.toml --exit-code 1`. Blocks any commit that contains a detected secret pattern.
 - [ ] Add GitHub Actions CI step: `gitleaks detect` on every push to `main` and every PR. Fails CI if secrets detected. Uses existing `.gitleaks.toml`.
 - [ ] Add `wizard doctor` check: verify gitleaks is installed and pre-commit hook is wired. Warn (not fail) if missing.
@@ -374,7 +376,7 @@ Tools: SonarQube Community (Docker-native, integrates with GitHub Actions), gitl
 Tools: `garak` (LLM vulnerability scanner, open source, Python, local), `promptfoo` (LLM eval framework, supports adversarial test cases, runs against local Ollama endpoints).
 
 - [ ] Add `scripts/red-team-scan.sh` — runs `garak` against the local Ollama/LiteLLM endpoint using the `dan`, `continuation`, `encoding`, and `knownbadsignatures` probe sets. Outputs results to `logs/red-team-report.json`.
-- [ ] Add `promptfoo` config at `config/security/promptfoo-adversarial.yaml` — defines adversarial test cases for: prompt injection via user input, system prompt extraction attempts, secret leakage probes (ask Merlin to repeat its system prompt), jailbreak via role-play framing.
+- [ ] Add `promptfoo` config at `configs/security/promptfoo-adversarial.yaml` — defines adversarial test cases for: prompt injection via user input, system prompt extraction attempts, secret leakage probes (ask Merlin to repeat its system prompt), jailbreak via role-play framing.
 - [ ] Wire `scripts/red-team-scan.sh` to `wizard doctor --security` output: report pass/fail counts, flag any probe that succeeded as a HIGH finding.
 - [ ] Add `wizard security scan` CLI command that runs both garak and promptfoo scans and prints a structured summary.
 - [ ] Add smoke test: `tests/red-team-config-smoke.sh` — verifies `promptfoo-adversarial.yaml` exists, is valid YAML, and contains at minimum the four required adversarial probe categories.

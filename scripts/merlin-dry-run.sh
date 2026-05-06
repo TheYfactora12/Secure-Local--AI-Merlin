@@ -8,9 +8,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-ROUTES_FILE="${MERLIN_ROUTES_FILE:-${STACK_DIR}/config/merlin/routes.yaml}"
-POLICY_FILE="${MERLIN_POLICY_FILE:-${STACK_DIR}/config/merlin/policy.yaml}"
-TRACE_FILE="${MERLIN_TRACE_FILE:-${STACK_DIR}/config/merlin/trace.yaml}"
+ROUTES_FILE="${MERLIN_ROUTES_FILE:-${STACK_DIR}/configs/merlin/routes.yaml}"
+POLICY_FILE="${MERLIN_POLICY_FILE:-${STACK_DIR}/configs/merlin/policy.yaml}"
+TRACE_FILE="${MERLIN_TRACE_FILE:-${STACK_DIR}/configs/merlin/trace.yaml}"
 PROFILE_LIB="${STACK_DIR}/scripts/profile-lib.sh"
 
 usage() {

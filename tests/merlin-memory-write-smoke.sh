@@ -55,7 +55,7 @@ case "$args" in
     printf '{"result":{"operation_id":1,"status":"completed"}}\n'
     ;;
   *"/collections/merlin_user"*)
-    printf '{"result":{"status":"green"}}\n'
+    printf '{"result":{"status":"green","config":{"params":{"vectors":{"size":4,"distance":"Cosine"}}}}}\n'
     ;;
   *"/api/embeddings"*)
     if [[ "$payload_file" == "@-" ]]; then
@@ -170,6 +170,7 @@ require_output "$WRITE_OUTPUT" '^result_status: written$' "approved write should
 require_output "$WRITE_OUTPUT" '^adapter: qdrant_local$' "write should use Qdrant adapter"
 require_output "$WRITE_OUTPUT" '^qdrant_write: upsert$' "write should upsert Qdrant"
 require_output "$WRITE_OUTPUT" '^embedding_calls: local_ollama$' "write should call local Ollama embeddings"
+require_output "$WRITE_OUTPUT" '^vector_dimension_guard: passed$' "write should verify vector dimensions"
 require_output "$WRITE_OUTPUT" '^memory_writes: qdrant$' "write should report Qdrant memory write"
 require_output "$WRITE_OUTPUT" '^raw_memory_stored: true$' "approved write stores raw memory in local Qdrant payload"
 
@@ -181,6 +182,7 @@ grep -q "$MEMORY_TEXT" "${TMP}/qdrant-upsert.json" || fail "Qdrant payload shoul
 grep -q '"adapter":"qdrant_local"' "$MEMORY_LOG" || fail "memory log should record Qdrant adapter"
 grep -q '"qdrant_write":"upsert"' "$MEMORY_LOG" || fail "memory log should record Qdrant upsert"
 grep -q '"embedding_calls":"local_ollama"' "$MEMORY_LOG" || fail "memory log should record local embedding call"
+grep -q '"vector_dimension_guard":"passed"' "$MEMORY_LOG" || fail "memory log should record vector dimension guard"
 grep -q '"raw_memory_stored":true' "$MEMORY_LOG" || fail "memory log should flag raw local Qdrant storage"
 if grep -q "$MEMORY_TEXT" "$MEMORY_LOG"; then
   fail "memory log must still not store raw memory text after write"

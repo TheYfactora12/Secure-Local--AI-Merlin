@@ -71,8 +71,13 @@ env_value() {
   ' "$file"
 }
 
-first_ollama_model() {
-  ollama list 2>/dev/null | awk 'NR > 1 && $1 != "" { print $1; exit }'
+first_ollama_generation_model() {
+  ollama list 2>/dev/null | awk '
+    NR <= 1 || $1 == "" { next }
+    $1 ~ /(^|:)nomic-embed-text(:|$)/ { next }
+    $1 ~ /embed/ { next }
+    { print $1; exit }
+  '
 }
 
 echo "Home AI Elite core live smoke test"
@@ -120,7 +125,7 @@ check_http "${OLLAMA_URL}/api/tags" "Ollama API"
 
 if have_cmd ollama; then
   pass "Ollama CLI available"
-  OLLAMA_MODEL="${OLLAMA_SMOKE_MODEL:-$(first_ollama_model)}"
+  OLLAMA_MODEL="${OLLAMA_SMOKE_MODEL:-$(first_ollama_generation_model)}"
   if [[ -n "${OLLAMA_MODEL:-}" ]]; then
     pass "Ollama model available: ${OLLAMA_MODEL}"
     ollama_payload="{\"model\":\"${OLLAMA_MODEL}\",\"prompt\":\"${PROMPT_OLLAMA}\",\"stream\":false}"
@@ -130,7 +135,7 @@ if have_cmd ollama; then
       fail "Ollama local generation failed for ${OLLAMA_MODEL}"
     fi
   else
-    warn "No Ollama models installed; skipping local generation check"
+    warn "No Ollama generation-capable models installed; skipping local generation check"
   fi
 else
   fail "Ollama CLI not found"

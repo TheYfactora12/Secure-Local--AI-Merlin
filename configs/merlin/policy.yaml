@@ -116,7 +116,7 @@ allowed_scopes:
   repo_read:
     - "."
   repo_write:
-    - "config/merlin"
+    - "configs/merlin"
     - "docs"
     - "scripts"
     - "tests"

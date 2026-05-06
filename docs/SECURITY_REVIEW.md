@@ -129,8 +129,8 @@ Required before Merlin v1: Recommended.
 Evidence:
 
 - `bootstrap.sh` uses `home_ai_memory`.
-- `config/merlin/memory.yaml` now documents canonical and legacy collections.
-- `config/merlin/memory-collections.env` now provides the runtime collection manifest for bash scripts.
+- `configs/merlin/memory.yaml` now documents canonical and legacy collections.
+- `configs/merlin/memory-collections.env` now provides the runtime collection manifest for bash scripts.
 - `init-qdrant.sh` now creates current/legacy collections from the runtime manifest.
 - `backup/backup.sh` now backs up the current legacy/default collection set, includes vectors needed for restore, and supports `MERLIN_BACKUP_COLLECTIONS`.
 - `backup/restore.sh` now exits non-zero when a Qdrant restore write fails.

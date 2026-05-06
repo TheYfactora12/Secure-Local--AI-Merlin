@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-ORCH_FILE="${STACK_DIR}/config/merlin/orchestration.yaml"
+ORCH_FILE="${STACK_DIR}/configs/merlin/orchestration.yaml"
 
 fail() {
   echo "FAIL: $*" >&2
