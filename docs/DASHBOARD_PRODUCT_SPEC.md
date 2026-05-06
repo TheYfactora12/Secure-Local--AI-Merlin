@@ -6,7 +6,7 @@ The Home AI Elite dashboard should become Merlin's local control center for non-
 
 The current dashboard is a useful static status page. It should not become a privileged control plane until a Merlin backend/policy layer exists.
 
-Current implementation note: the dashboard now includes a read-only Merlin Control Status panel. It shows conservative local-only defaults, browser-observed service health, and CLI commands for authoritative status, approval review, status API startup, and dry-run route previews. When `wizard merlin status-api start` is running, the panel reads live local status from `http://localhost:8765/status`. It does not execute approvals, shell commands, model downloads, memory writes, or service changes.
+Current implementation note: the dashboard now includes a read-only Merlin Control Status panel. It shows conservative local-only defaults, browser-observed service health, and CLI commands for authoritative status, approval review, status API startup, and dry-run route previews. `wizard start` starts the read-only status API by default, and `wizard stop` stops it. When the API is running, the panel reads live local status from `http://localhost:8765/status`. It does not execute approvals, shell commands, model downloads, memory writes, or service changes.
 
 ## Information Architecture
 

@@ -41,6 +41,18 @@ pretty_json() {
   python3 -m json.tool 2>/dev/null || cat
 }
 
+start_merlin_status_api() {
+  if [[ "${HOME_AI_START_MERLIN_STATUS_API:-true}" != "true" ]]; then
+    return 0
+  fi
+  bash "$WIZARD_DIR/scripts/merlin-status-api.sh" start >/dev/null || \
+    echo -e "${YELLOW}Merlin status API did not start. Run: wizard merlin status-api status${NC}"
+}
+
+stop_merlin_status_api() {
+  bash "$WIZARD_DIR/scripts/merlin-status-api.sh" stop >/dev/null 2>&1 || true
+}
+
 ensure_docker_cli() {
   if command -v docker >/dev/null 2>&1; then
     return 0
@@ -231,19 +243,19 @@ case "$1" in
   start)
     case "${2:-core}" in
       core)
-        bash "$WIZARD_DIR/scripts/start-core.sh"
+        bash "$WIZARD_DIR/scripts/start-core.sh" && start_merlin_status_api
         ;;
       search)
-        bash "$WIZARD_DIR/scripts/start-search.sh"
+        bash "$WIZARD_DIR/scripts/start-search.sh" && start_merlin_status_api
         ;;
       automation)
-        bash "$WIZARD_DIR/scripts/start-automation.sh"
+        bash "$WIZARD_DIR/scripts/start-automation.sh" && start_merlin_status_api
         ;;
       coding)
-        bash "$WIZARD_DIR/scripts/start-coding.sh"
+        bash "$WIZARD_DIR/scripts/start-coding.sh" && start_merlin_status_api
         ;;
       full)
-        bash "$WIZARD_DIR/scripts/start-full.sh"
+        bash "$WIZARD_DIR/scripts/start-full.sh" && start_merlin_status_api
         ;;
       *)
         echo "Usage: wizard start [core|search|automation|coding|full]"
@@ -253,14 +265,17 @@ case "$1" in
     ;;
 
   stop)
+    stop_merlin_status_api
     ensure_docker_cli || { echo -e "${RED}Docker CLI not found${NC}"; exit 1; }
     cd "$WIZARD_DIR" && docker compose down
     echo -e "${YELLOW}Wizard is asleep.${NC}"
     ;;
 
   restart)
+    stop_merlin_status_api
     ensure_docker_cli || { echo -e "${RED}Docker CLI not found${NC}"; exit 1; }
     cd "$WIZARD_DIR" && docker compose restart
+    start_merlin_status_api
     echo -e "${GREEN}✓ Wizard restarted${NC}"
     ;;
 

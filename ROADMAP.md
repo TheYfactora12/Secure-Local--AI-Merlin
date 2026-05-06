@@ -192,6 +192,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Add read-only Merlin dashboard status panel with CLI-backed commands
 - [x] Add read-only Merlin status API for dashboard-backed status visibility
 - [x] Add guarded Merlin status API start/stop/status lifecycle commands
+- [x] Wire `wizard start|stop|restart` to the guarded read-only Merlin status API lifecycle
 - [x] Add canonical/legacy memory schema and runtime Qdrant collection manifest
 - [x] Align `cli/wizard` memory commands with the runtime collection manifest
 - [ ] Connect Magic Mode to shared Qdrant memory only after memory approval/audit is implemented
@@ -241,6 +242,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Merlin status smoke test
 - [x] Merlin status API smoke test
 - [x] Merlin status API lifecycle smoke test
+- [x] Wizard start/stop Merlin status API wiring smoke test
 - [x] Dashboard Merlin status smoke test
 - [ ] Automation live test: n8n health and workflow import
 - [x] Coding static test: OpenHands profile safety and LiteLLM wiring
