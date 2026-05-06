@@ -66,13 +66,15 @@ Status: implemented locally; ready for review once tests pass.
 
 ## Issue 6: Add Provider Registry Skeleton
 
+Status: implemented in Issue #28.
+
 - Goal: Track local and optional providers safely.
 - User value: User knows whether cloud is disabled.
-- Files likely touched: `configs/merlin/models.yaml`, docs, tests.
+- Files touched: `merlin/provider_registry.py`, `merlin/status_extension.py`, `tests/test_status_extension.py`.
 - Implementation notes: Do not call cloud. Only expose enabled/disabled/present-key status.
-- Acceptance criteria: Cloud disabled by default; no key values shown.
-- Manual tests: doctor/dashboard provider state.
-- Automated tests: no-cloud default tests.
+- Acceptance criteria: Cloud disabled by default; no key values shown; `/status/providers` returns local-first registry.
+- Manual tests: `curl http://localhost:8766/status/providers` with the task API running.
+- Automated tests: status provider tests assert local-first defaults and no secret value exposure.
 - Risk: Medium.
 - Rollback: Revert registry additions.
 

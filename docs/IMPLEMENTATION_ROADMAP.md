@@ -61,17 +61,21 @@ Acceptance:
 
 Goal: Track local and optional cloud providers without enabling cloud.
 
+Status: implemented as a read-only registry and `/status/providers` endpoint.
+
 Tasks:
 
-- Document provider states.
-- Identify local provider health.
+- Maintain provider states in `merlin/provider_registry.py`.
+- Identify configured local providers from Merlin and LiteLLM config.
 - Show external provider disabled/present-key state without values.
+- Keep provider status read-only: no provider calls, no cloud enablement, no `.env` value exposure.
 
 Acceptance:
 
 - Local providers visible.
 - External providers disabled by default.
 - No cloud calls in tests.
+- `/status/providers` reports local-first mode and redacts all key values.
 
 ## Milestone 4: Model Router Skeleton
 

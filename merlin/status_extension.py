@@ -11,6 +11,7 @@ from urllib import error, request
 from fastapi import APIRouter
 
 from merlin.config_loader import load_all_configs
+from merlin.provider_registry import build_provider_registry
 from merlin.router import STAFF_ROUTE_RULES
 from merlin.task_endpoint import TASK_TRACE_BUFFER, app
 
@@ -130,6 +131,20 @@ def status_memory() -> dict[str, Any]:
             collection["status"] = "degraded"
 
     return {"collections": collections, "total_vectors": total_vectors, "degraded": degraded}
+
+
+@router.get("/providers")
+def status_providers() -> dict[str, Any]:
+    registry = build_provider_registry()
+    providers = [provider.model_dump() for provider in registry.providers]
+    return {
+        "mode": registry.mode,
+        "local_first": registry.local_first,
+        "cloud_enabled": registry.cloud_enabled,
+        "external_providers_enabled": registry.external_providers_enabled,
+        "providers": providers,
+        "total": len(providers),
+    }
 
 
 app.include_router(router)

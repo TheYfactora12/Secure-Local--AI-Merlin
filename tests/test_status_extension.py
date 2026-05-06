@@ -120,6 +120,58 @@ def test_status_memory_returns_correct_collection_names_from_memory_yaml(monkeyp
     assert names == expected
 
 
+def test_status_providers_returns_local_first_registry() -> None:
+    response = client.get("/status/providers")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["mode"] == "local_only"
+    assert body["local_first"] is True
+    assert body["cloud_enabled"] is False
+    assert body["external_providers_enabled"] is False
+    assert body["total"] >= 5
+
+
+def test_status_providers_reports_local_ollama_and_litellm() -> None:
+    response = client.get("/status/providers")
+    providers = {provider["provider_id"]: provider for provider in response.json()["providers"]}
+    assert providers["ollama"]["enabled"] is True
+    assert providers["ollama"]["local"] is True
+    assert providers["ollama"]["api_key_required"] is False
+    assert "qwen7b" in providers["ollama"]["model_aliases"]
+    assert providers["litellm"]["enabled"] is True
+    assert providers["litellm"]["local"] is True
+
+
+def test_status_providers_external_cloud_disabled_even_when_key_present(monkeypatch) -> None:
+    fake_key = "test-openai-key-value-that-must-never-be-returned"
+    monkeypatch.setenv("OPENAI_API_KEY", fake_key)
+
+    response = client.get("/status/providers")
+    body_text = response.text
+    providers = {provider["provider_id"]: provider for provider in response.json()["providers"]}
+
+    assert providers["openai"]["enabled"] is False
+    assert providers["openai"]["local"] is False
+    assert providers["openai"]["api_key_present"] is True
+    assert providers["openai"]["requires_approval"] is True
+    assert fake_key not in body_text
+
+
+def test_status_providers_never_exposes_known_cloud_key_values(monkeypatch) -> None:
+    secret_values = {
+        "OPENAI_API_KEY": "openai-secret-value",
+        "ANTHROPIC_API_KEY": "anthropic-secret-value",
+        "PERPLEXITY_API_KEY": "perplexity-secret-value",
+    }
+    for key, value in secret_values.items():
+        monkeypatch.setenv(key, value)
+
+    response_text = client.get("/status/providers").text
+
+    for value in secret_values.values():
+        assert value not in response_text
+
+
 def test_task_endpoint_main_uses_8766_not_legacy_8765() -> None:
     source = task_endpoint.__loader__.get_source(task_endpoint.__name__)
     assert 'port=8766' in source
