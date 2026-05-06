@@ -36,7 +36,8 @@ Fresh Mac installer validation:
 - Follow-up fixes landed for uninstall sudo behavior, Open WebUI local-first startup, Merlin API startup policy, CLI fallback messaging, and low-tier model recommendations.
 - A second full fresh uninstall/install rerun is green after #48.
 - Unsigned `.pkg` install validation is green after #49.
-- Backup/restore, upgrade, launchd persistence, and signing/notarization readiness remain before marking v1.0 stable installer complete.
+- Live Qdrant backup/restore verification is green on the package-installed stack.
+- Upgrade, launchd persistence, and signing/notarization readiness remain before marking v1.0 stable installer complete.
 
 Tasks:
 
@@ -223,9 +224,9 @@ Acceptance:
 
 Current next implementation slice:
 
-**Run backup/restore verification against the package-installed stack.**
+**Run upgrade verification from the current package/main state.**
 
-Reason: the fresh install and unsigned package paths are now green after #48 and #49. v1.0 cannot be treated as stable until restore safety is proven against live Qdrant data and the package-installed runtime.
+Reason: the fresh install, unsigned package install, and live Qdrant backup/restore paths are now green. v1.0 cannot be treated as stable until upgrade behavior is proven and rollback remains safe.
 
 Previous recommended first PR:
 

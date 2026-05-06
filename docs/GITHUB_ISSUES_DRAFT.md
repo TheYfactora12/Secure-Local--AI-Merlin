@@ -33,11 +33,10 @@ Recent normalization:
 
 Current next queue:
 
-1. Run backup/restore verification against the package-installed stack.
-2. Run upgrade verification.
-3. Validate launchd persistence and read-only status API behavior.
-4. Finish #1 only after fresh install, package, upgrade, backup, restore, launchd, and uninstall checks pass.
-5. Then take #47 or #5 as docs/planning work, not runtime behavior.
+1. Run upgrade verification.
+2. Validate launchd persistence and read-only status API behavior.
+3. Finish #1 only after fresh install, package, upgrade, backup, restore, launchd, and uninstall checks pass.
+4. Then take #47 or #5 as docs/planning work, not runtime behavior.
 
 ## Issue 1: Document Current Installer Baseline And Do-Not-Break List
 

@@ -278,12 +278,36 @@ Release blockers from this test, after fixes:
 1. Core fresh uninstall/install on this 8GB Mac is green after #41 through #48.
 2. Unsigned `.pkg` install path is green after #49.
 3. Signed/notarized package release gate remains separate.
-4. Upgrade/backup/restore release verification remains required before v1.0.
-5. Optional launchd persistence should be tested separately from non-interactive core install.
+4. Live Qdrant backup/restore verification is green on the package-installed stack.
+5. Upgrade release verification remains required before v1.0.
+6. Optional launchd persistence should be tested separately from non-interactive core install.
+
+## Backup / Restore Validation
+
+Command:
+
+```bash
+bash tests/qdrant-restore-live-smoke.sh
+```
+
+Result:
+
+- Qdrant was reachable.
+- Disposable collection `merlin_restore_smoke_1778111918_16032` was created.
+- A seed point with vector and payload was inserted.
+- Backup archive was created.
+- The disposable collection was deleted and recreated empty before restore.
+- Restore completed.
+- Restored payload and vector were verified.
+- Summary: 8 passed, 0 failures.
+
+Warnings observed:
+
+- n8n workflow export was skipped because n8n may be disabled or require an API key.
+- `.env.bak` was included for manual recovery only; restore did not overwrite `.env`.
 
 ## Recommended Next Fix Order
 
-1. Run backup/restore verification against the package-installed stack.
-2. Run upgrade verification.
-3. Test optional launchd persistence for the read-only status API.
-4. Move to signed/notarized package release gate once recovery and upgrade checks are green.
+1. Run upgrade verification.
+2. Test optional launchd persistence for the read-only status API.
+3. Move to signed/notarized package release gate once upgrade and launchd checks are green.
