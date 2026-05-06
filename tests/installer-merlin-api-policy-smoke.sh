@@ -10,9 +10,13 @@ fail() {
 }
 
 grep -q 'scripts/merlin-status-api.sh" start' "$INSTALLER" \
-  || fail "installer should start the read-only Merlin status API"
+  || fail "installer should support starting the read-only Merlin status API"
 grep -q 'Merlin Status API running' "$INSTALLER" \
-  || fail "installer should report Merlin Status API running state"
+  || fail "installer should report Merlin Status API running state in interactive mode"
+grep -q 'Merlin status API start skipped in non-interactive mode' "$INSTALLER" \
+  || fail "installer should not claim background status API persistence in non-interactive mode"
+grep -q 'launchd/install-launchd.sh' "$INSTALLER" \
+  || fail "installer should point users to launchd for persistent status API startup"
 grep -q 'Read-only Merlin status is separated from task execution' "$INSTALLER" \
   || fail "installer should explain status/task API separation"
 grep -q 'Merlin Task API.*not auto-started' "$INSTALLER" \

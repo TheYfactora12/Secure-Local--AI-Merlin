@@ -861,7 +861,11 @@ if [[ -f "$CLI_PATH" ]]; then
     sudo ln -sf "$CLI_PATH" /usr/local/bin/wizard
     log "wizard CLI installed → /usr/local/bin/wizard (via sudo)"
   fi
-  log "Run: wizard status  |  wizard ask \"<question>\"  |  wizard help"
+  if command -v wizard >/dev/null 2>&1; then
+    log "Run: wizard status  |  wizard ask \"<question>\"  |  wizard help"
+  else
+    log "Run: ${CLI_PATH} status  |  ${CLI_PATH} ask \"<question>\"  |  ${CLI_PATH} help"
+  fi
   log_to_file "[PASS] STEP 8: CLI installed"
 else
   warn "cli/wizard not found at ${CLI_PATH}"
@@ -876,7 +880,12 @@ log_to_file "[STEP 8B] Merlin status API"
 
 MERLIN_STATUS_API_STARTED=false
 if [[ -f "${SCRIPT_DIR}/scripts/merlin-status-api.sh" ]]; then
-  if bash "${SCRIPT_DIR}/scripts/merlin-status-api.sh" start >/dev/null 2>&1; then
+  if [[ "$NON_INTERACTIVE" == true || ! -t 0 ]]; then
+    warn "Skipped direct Merlin Status API background start in non-interactive mode"
+    warn "Run manually: bash scripts/merlin-status-api.sh start"
+    warn "For persistent login startup: bash launchd/install-launchd.sh"
+    log_to_file "[WARN] STEP 8B: Merlin status API start skipped in non-interactive mode"
+  elif bash "${SCRIPT_DIR}/scripts/merlin-status-api.sh" start >/dev/null 2>&1; then
     MERLIN_STATUS_API_STARTED=true
     log "Merlin Status API running → http://localhost:8765/status"
     log_to_file "[PASS] STEP 8B: Merlin status API running"
@@ -987,6 +996,7 @@ if [[ "$MERLIN_STATUS_API_STARTED" == true ]]; then
   echo -e "  ${CYAN}🩺 Merlin Status API:${NC}       http://localhost:8765/status"
 else
   echo -e "  ${YELLOW}! Merlin Status API:${NC}       not started; run: bash scripts/merlin-status-api.sh start"
+  echo -e "  ${YELLOW}! Persistent Status API:${NC}   optional launchd setup: bash launchd/install-launchd.sh"
 fi
 echo -e "  ${YELLOW}! Merlin Task API:${NC}         not auto-started; supervised task execution stays manual"
 if [[ " ${INSTALL_CAPABILITIES} " == *" search "* ]]; then
@@ -1006,7 +1016,11 @@ echo -e "  ${BOLD}Chat Model:${NC}    ${PERPLEXICA_CHAT_MODEL}"
 echo ""
 echo -e "  ${GREEN}✓  All internal secrets auto-generated${NC}"
 echo -e "  ${GREEN}✓  .env locked to 600 (owner only)${NC}"
-echo -e "  ${GREEN}✓  Cloud API keys entered in hidden mode${NC}"
+if [[ "$NON_INTERACTIVE" == true ]]; then
+  echo -e "  ${GREEN}✓  Optional cloud API keys skipped (local-first default)${NC}"
+else
+  echo -e "  ${GREEN}✓  Optional cloud API keys handled in hidden mode${NC}"
+fi
 echo -e "  ${GREEN}✓  Security review complete${NC}"
 echo -e "  ${GREEN}✓  Install log: ${LOGFILE}${NC}"
 echo -e "  ${GREEN}✓  Read-only Merlin status is separated from task execution${NC}"

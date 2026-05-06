@@ -49,6 +49,7 @@ Status update after fixes:
 - #42 and #44 fixed in `c496614`.
 - #43 and #45 fixed in `1055522`.
 - #46 fixed in `71e2bf3`.
+- #48 found during rerun from `bb04e1a`; fix pending in the next commit.
 - A full fresh-install rerun is still required before marking the v1.0 stable installer milestone complete.
 
 ### 1. Uninstaller Fails In Non-Interactive Shell On Sudo Cleanup
@@ -142,7 +143,7 @@ Recommended fix:
 
 Severity: Medium for Merlin v1.
 GitHub issue: #43.
-Status: fixed in `1055522`; installer starts read-only port 8765 status API when available and explicitly keeps port 8766 task API manual.
+Status: partially fixed in `1055522`; rerun from `bb04e1a` found follow-up #48. The installer starts the read-only status API during the installer session, but the direct background process is not a reliable persistent service in non-interactive execution. Port 8766 task API remains manual by design.
 
 Evidence:
 
@@ -167,6 +168,13 @@ Recommended fix:
 - Add a guarded, explicit start path for Merlin APIs that does not require launchd.
 - Update installer final output to say whether Merlin APIs are installed, started, skipped, or require manual start.
 - Add a `wizard merlin start` or documented command before making this a v1 stable gate.
+
+Follow-up #48 fix direction:
+
+- In non-interactive mode, do not claim the direct background status API is persistent.
+- Print `bash scripts/merlin-status-api.sh start` for manual current-session startup.
+- Print `bash launchd/install-launchd.sh` for persistent login startup.
+- Keep the execution-aware Task API on port 8766 manual and separate.
 
 ### 5. `wizard` CLI Is Not On PATH After Non-Interactive Install
 
