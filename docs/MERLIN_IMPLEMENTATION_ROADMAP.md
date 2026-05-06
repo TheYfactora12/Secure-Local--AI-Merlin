@@ -348,4 +348,5 @@ Next implementation slice:
 - Add opt-in redacted JSONL route trace writes to dry-run decisions. `Done: scripts/merlin-dry-run.sh, tests/merlin-dry-run-smoke.sh`
 - Add non-executing approval request objects for risky routes before approval persistence/execution. `Done: scripts/merlin-dry-run.sh, tests/merlin-dry-run-smoke.sh`
 - Persist pending approval requests to a redacted local JSONL audit log without enabling execution. `Done: scripts/merlin-dry-run.sh, tests/merlin-dry-run-smoke.sh`
+- Add read-only approval review command before approve/deny behavior. `Done: scripts/merlin-approvals.sh, cli/wizard, tests/merlin-approvals-smoke.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

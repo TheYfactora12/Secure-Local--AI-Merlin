@@ -186,6 +186,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Add opt-in redacted JSONL trace writes for Merlin dry-run decisions
 - [x] Add non-executing approval request object for risky Merlin routes
 - [x] Persist pending Merlin approval requests to redacted local JSONL audit log
+- [x] Add read-only Merlin approval list command
 - [x] Add canonical/legacy memory schema and runtime Qdrant collection manifest
 - [x] Align `cli/wizard` memory commands with the runtime collection manifest
 - [ ] Connect Magic Mode to shared Qdrant memory only after memory approval/audit is implemented
@@ -230,6 +231,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Merlin dry-run trace-write smoke test
 - [x] Merlin approval request smoke test
 - [x] Merlin approval persistence smoke test
+- [x] Merlin approval list smoke test
 - [ ] Automation live test: n8n health and workflow import
 - [x] Coding static test: OpenHands profile safety and LiteLLM wiring
 - [ ] Coding live test: OpenHands startup and LiteLLM connection

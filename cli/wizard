@@ -174,6 +174,8 @@ cat << 'EOF'
     wizard brain cooldown    Alias for brain stop when CPU is running hot
     wizard merlin dry-run "goal"
                               Preview Merlin route, model, profile, and approvals
+    wizard merlin approvals list
+                              Review pending Merlin approval requests
     wizard ask "question"     Ask a quick question (swarm-tiny, fastest)
     wizard route "task"       Alias for wizard swarm (full coordinator)
     wizard models             List loaded Ollama models
@@ -291,8 +293,12 @@ case "$1" in
         shift 2
         bash "$WIZARD_DIR/scripts/merlin-dry-run.sh" "$@"
         ;;
+      approvals)
+        shift 2
+        bash "$WIZARD_DIR/scripts/merlin-approvals.sh" "$@"
+        ;;
       *)
-        echo "Usage: wizard merlin dry-run \"goal\""
+        echo "Usage: wizard merlin [dry-run|approvals] ..."
         exit 1
         ;;
     esac

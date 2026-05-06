@@ -189,6 +189,8 @@ Risky dry-run routes also produce a non-executing approval request object. The r
 
 When dry-run tracing is enabled, pending approval requests are also appended to `logs/merlin-approvals.jsonl`. Approval records are redacted local JSONL audit entries. They include approval id, timestamp, hashed user goal, route id, task type, gates, policy decision, pending status, and `execution_allowed: false`. They must not include raw prompts, secrets, document bodies, tool outputs, or approval message bodies. Approval persistence does not approve, deny, or execute the action; it only records the request for later review.
 
+Pending approval requests can be reviewed with `wizard merlin approvals list`. The command is read-only and displays approval id, status, execution flag, route, task type, gates, policy decision, and hashed user goal. It does not approve, deny, execute, start services, call models, or expose raw prompt text.
+
 ## Memory Design
 
 Merlin memory must be explicit and auditable. It should not silently learn every prompt.
