@@ -53,23 +53,17 @@ classify_task_type() {
   local goal_lc
   goal_lc="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
 
-  case "$goal_lc" in
-    *remember*|*memory*|*recall*|*document*|*forget*)
-      echo "memory"
-      ;;
-    *code*|*debug*|*refactor*|*test*|*repo*|*script*|*github*|*git\ *)
-      echo "code"
-      ;;
-    *search*|*research*|*latest*|*current*|*citation*|*cite*|*web*)
-      echo "search"
-      ;;
-    *automation*|*workflow*|*webhook*|*schedule*|*n8n*)
-      echo "automation"
-      ;;
-    *)
-      echo "general"
-      ;;
-  esac
+  if [[ "$goal_lc" =~ remember|memory|recall|document|forget ]]; then
+    echo "memory"
+  elif [[ "$goal_lc" =~ automation|workflow|webhook|schedule|n8n ]]; then
+    echo "automation"
+  elif [[ "$goal_lc" =~ search|research|latest|current|citation|cite|web ]]; then
+    echo "search"
+  elif [[ "$goal_lc" =~ code|debug|refactor|test|repo|script|github|git ]]; then
+    echo "code"
+  else
+    echo "general"
+  fi
 }
 
 route_for_task_type() {
