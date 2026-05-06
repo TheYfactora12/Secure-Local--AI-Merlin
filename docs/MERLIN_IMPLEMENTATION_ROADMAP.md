@@ -351,4 +351,5 @@ Next implementation slice:
 - Add read-only approval review command before approve/deny behavior. `Done: scripts/merlin-approvals.sh, cli/wizard, tests/merlin-approvals-smoke.sh`
 - Add non-executing approve/deny audit decisions before action execution exists. `Done: scripts/merlin-approvals.sh, cli/wizard, tests/merlin-approvals-smoke.sh`
 - Add read-only Merlin status summary before runtime action execution. `Done: scripts/merlin-status.sh, cli/wizard, tests/merlin-status-smoke.sh`
+- Add read-only Merlin dashboard status visibility without turning the static dashboard into a privileged control plane. `Done: dashboard/index.html, tests/dashboard-merlin-status-smoke.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

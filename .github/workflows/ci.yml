@@ -127,6 +127,7 @@ jobs:
           bash tests/merlin-dry-run-smoke.sh
           bash tests/merlin-approvals-smoke.sh
           bash tests/merlin-status-smoke.sh
+          bash tests/dashboard-merlin-status-smoke.sh
           bash tests/uninstall-smoke.sh
           bash tests/launchd-core-smoke.sh
           bash tests/container-image-policy-smoke.sh
