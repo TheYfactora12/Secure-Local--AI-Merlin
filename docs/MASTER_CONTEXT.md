@@ -125,10 +125,10 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Review and commit Issue #22 local support tooling: additive `wizard doctor` Merlin Core checks plus sanitized `wizard report-bug`.
-2. Keep signed package/notarization work deferred until installer, Phase 2 API, and support tooling remain green.
-3. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
-4. Add dashboard-side polling polish only after both status contracts are stable: 8765 read-only, 8766 execution-aware.
+1. Finish Issue #24: add the Merlin Staff Core Python pytest gate to CI without disturbing existing installer/static jobs.
+2. Start Issue #25 Layer 1 secrets audit after CI is green.
+3. Keep signed package/notarization work deferred until installer, Phase 2 API, support tooling, and CI gates remain green.
+4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 
 ## Reasoning Summary
 
@@ -152,8 +152,8 @@ The next engineering priority is supportability: diagnostics, sanitized bug repo
 
 ## Next Actions
 
-1. Commit Issue #22 support tooling after review, then push only with explicit approval.
-2. Keep validating the read-only Merlin status API and the port 8766 FastAPI status panels during each startup/API change.
+1. Commit and push Issue #24 CI gate only after local validation passes.
+2. Watch GitHub Actions and verify `ci-success` requires the new Merlin Staff Core Python job.
 3. Continue updating roadmap/docs/tests with every milestone before signing/notarization work.
 
 ## Validation
@@ -162,7 +162,8 @@ Last verified: 2026-05-06.
 
 - Phase 2F merged at `b4f35c8`; local Phase 2 Python suite reported 58 passing tests.
 - CI was green for the Phase 2F merge run.
-- Issue #22 support tooling is implemented locally and smoke-tested: additive doctor checks, redaction helper, sanitized report generator, wizard wiring, and doctor/report-bug/redaction smokes.
+- Issue #22 support tooling is merged and pushed at `47f30df`: additive doctor checks, redaction helper, sanitized report generator, wizard wiring, and doctor/report-bug/redaction smokes.
+- Issue #24 CI gate is in local review: add `merlin-staff-core-pytest` to `.github/workflows/ci.yml` and require it in `ci-success`.
 
 - Current local validation for the Qdrant memory adapter work:
   - `bash tests/merlin-memory-write-smoke.sh`

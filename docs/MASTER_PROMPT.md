@@ -59,6 +59,12 @@ Current status API contract:
 - Status output must be redacted and must not expose raw prompts or secret-like strings.
 - The API is localhost-only and should not become a privileged control plane yet.
 
+Current task API contract:
+- `merlin/task_endpoint.py` serves the FastAPI task API on `127.0.0.1:8766`.
+- It owns `POST /task` plus `/status/routes`, `/status/approvals`, `/status/traces`, and `/status/memory`.
+- Do not merge port 8766 behavior into `scripts/merlin-status-api.py` on port 8765.
+- Routes that require approval must return 403 and never auto-approve.
+
 Testing expectations:
 - Run focused tests for the change.
 - Run the static smoke suite when CI or shared behavior changes.
@@ -120,4 +126,4 @@ Before final response:
 
 ## Current Next Recommendation
 
-Design policy-controlled memory recall for Magic Mode planning. Run `wizard merlin config validate` first. Memory recall may read approved local Qdrant memory through the search adapter, but it must not execute steps, write memory, start services, call cloud APIs, or bypass approval gates.
+Finish Issue #24 by adding the `merlin-staff-core-pytest` GitHub Actions job and requiring it in `ci-success`. After CI is green, move to Issue #25 Layer 1 secrets audit.

@@ -134,22 +134,21 @@ Current Phase 2 API:
 - `wizard trace <session_id>` — inspect full trace
 - `wizard score` — 7-day quality trend
 
-### 🔴 PR #10 — Installer Hardening (OPEN, MERGE CONFLICT)
-Branch: `installer-hardening`
-10 critical fixes NOT yet on `main`:
-1. Perplexica image: `itzcrazykns` → `itzcrazykns1337`
-2. LiteLLM `model_group_alias` block removal (startup crash)
-3. Container healthchecks → `service_started` (stack refuses to start without curl)
-4. `install.sh --non-interactive` flag
-5. Docker CLI discovery (`ensure_docker_cli()`)
-6. `N8N_ENCRYPTION_KEY` rotation
-7. Watchtower `DOCKER_API_VERSION=1.44`
-8. nginx certs path fix
-9. Bootstrap/status/add-model → `docker compose exec ollama`
-10. `STACK_DIR` discovery (no hardcoded `$HOME/home-ai-elite`)
+### ✅ Issue #22 — Supportability Tooling (DONE)
+- Commit `47f30df` added additive `wizard doctor` Merlin Core checks, `scripts/redact.sh`,
+  `scripts/report-bug.sh`, `wizard report-bug`, and support smoke tests.
+- Keep `scripts/doctor.sh` additive only. Preserve the existing 30GB disk check; the Merlin
+  Core 10GB check is separate.
 
-**To fix:** Rebase `installer-hardening` onto current `main`, resolve conflicts in
-`install.sh` and `docker-compose.yml`, then squash-merge.
+### 🔄 Issue #24 — CI Python Gate (CURRENT)
+- Add one CI job: `merlin-staff-core-pytest`.
+- Do not disturb the existing installer/static CI jobs.
+- The new job validates `configs/merlin/persona.yaml` against the real nested schema and runs
+  the offline Merlin Staff Core pytest suite.
+- `ci-success` must require the new Python job.
+
+### ✅ PR #10 — Installer Hardening (CLOSED)
+- `origin/installer-hardening` is an ancestor of `origin/main`; it is not an active blocker.
 
 ---
 
@@ -163,7 +162,8 @@ Branch: `installer-hardening`
 | #6 | ModelRouter n8n workflow | 4 | OPEN | All tasks go local regardless of complexity |
 | #7 | Memory benchmark harness | 5 | OPEN | No proof memory is improving |
 | #8 | Langfuse observability | 5 | OPEN | Zero trace visibility |
-| #22 | sanitized failure reporting | hardening | LOCAL REVIEW | Additive doctor checks and `wizard report-bug` implemented locally; commit/push requires approval |
+| #22 | sanitized failure reporting | hardening | DONE | Merged and pushed at `47f30df` |
+| #24 | CI pipeline for Python tests | hardening | LOCAL REVIEW | Add `merlin-staff-core-pytest` without changing existing CI jobs |
 | #5 | Hardware guide docs | docs | OPEN | Low urgency |
 
 ---
@@ -196,8 +196,8 @@ These are non-negotiable. Any code you write must honor them:
 ├── dashboard/index.html              # ✅ Static dashboard
 ├── scripts/
 │   ├── doctor.sh                     # ✅ 43-check preflight
-│   ├── report-bug.sh                 # 🔄 Issue #22 sanitized report helper
-│   ├── redact.sh                     # 🔄 Issue #22 shared redaction helper
+│   ├── report-bug.sh                 # ✅ Issue #22 sanitized report helper
+│   ├── redact.sh                     # ✅ Issue #22 shared redaction helper
 │   ├── merlin-dry-run.sh             # ✅ Route decision dry-run (no execution)
 │   ├── merlin-status.sh              # ✅ Read-only status
 │   ├── merlin-approvals.sh           # ✅ Approval review + audit
@@ -288,56 +288,25 @@ Do not list every file — describe the behavior change.
 
 ---
 
-## Phase 2 Build Spec: `scripts/merlin-core.py`
+## Current Build Spec: Issue #24 CI Python Gate
 
-This is the highest-priority next build target. Here is the exact spec:
+Add exactly one workflow job to `.github/workflows/ci.yml`:
 
-```
-Input:  --goal "user goal text" [--task-type TYPE] [--dry-run] [--profile PROFILE]
-Output: JSON response from LiteLLM OR approval request object (no execution)
+- Job id: `merlin-staff-core-pytest`
+- Runner: `ubuntu-latest`
+- Dependency install: `pytest`, `pytest-mock`, `pydantic`, `pyyaml`, `httpx`, `starlette`,
+  `fastapi`, `uvicorn`
+- Validate `configs/merlin/persona.yaml` with Python against the real schema:
+  `persona.name`, `persona.voice`, `persona.guardian_ethos`, and the 6 keyed team modes
+  `architect`, `ai_engineer`, `software_engineer`, `security_reviewer`, `product_designer`,
+  and `operator`
+- Run the offline Python unit tests:
+  `test_config_loader.py`, `test_memory_manager.py`, `test_policy_engine.py`, `test_router.py`,
+  `test_status_extension.py`, and `test_task_endpoint.py`
+- Ignore `tests/test_memory_manager_integration.py`
+- Add `merlin-staff-core-pytest` to `ci-success.needs`
 
-Flow:
-  1. Load configs/merlin/policy.yaml  (PyYAML or manual parse)
-  2. Load configs/merlin/routes.yaml
-  3. Classify task type from --goal (same logic as merlin-dry-run.sh)
-  4. Select route from routes.yaml
-  5. Check approval_gates for selected route
-  6. If gates non-empty:
-     a. Write pending approval to logs/merlin-approvals.jsonl
-     b. Print approval request JSON
-     c. EXIT — do not call model
-  7. If --dry-run: print route decision, EXIT — do not call model
-  8. Check LiteLLM health: GET http://localhost:4000/health/readiness
-     If unhealthy: print human-readable error + fix command, EXIT non-zero
-  9. POST http://localhost:4000/v1/chat/completions
-     Authorization: Bearer $LITELLM_MASTER_KEY
-     model: <preferred_model_alias from route>
-     messages: [{"role":"user","content":"<goal>"}]
-  10. Write redacted trace to logs/merlin-route-decisions.jsonl
-  11. Print response content to stdout
-
-Never:
-  - Execute shell commands
-  - Write files outside logs/
-  - Call external APIs (non-localhost)
-  - Start or stop services
-  - Read or write Qdrant directly
-  - Download models
-  - Use API keys for cloud providers
-```
-
-Test file: `tests/merlin-core-smoke.sh`
-```bash
-# Must pass with no LiteLLM running:
-./scripts/merlin-core.py --goal "explain my codebase" --dry-run
-# Must exit 0 and print route_id: general
-
-./scripts/merlin-core.py --goal "debug install.sh" --task-type code --dry-run
-# Must exit 0 and print approval_required: true
-
-./scripts/merlin-core.py --goal "remember I prefer local models" --task-type memory --dry-run
-# Must exit 0 and print approval_required: true
-```
+Do not rewrite the existing CI jobs while doing Issue #24.
 
 ---
 
@@ -345,8 +314,8 @@ Test file: `tests/merlin-core-smoke.sh`
 
 ### Session start
 1. Paste this entire file into the Codex system prompt
-2. Tell Codex: *"Build the next item in the Phase 2 build spec above. Write the code,
-   the test, and the CI entry. Do not change any other files. Show me the diff before committing."*
+2. Tell Codex: *"Build the current item in the build spec above. Keep the installer protected,
+   run focused validation, and show me the diff before committing."*
 
 ### When Codex drifts
 If Codex starts changing `install.sh`, `docker-compose.yml`, or `.env.example` without
@@ -370,5 +339,5 @@ When the watch partner flags an issue, treat it as a blocking review comment.
 
 ## Daily Edge
 
-> The gap between Merlin declared and Merlin alive is one file: `scripts/merlin-core.py`.
-> Everything else is scaffolding. Build that file next.
+> The current delivery gap is CI confidence. The Merlin Staff Core exists; now every merge must
+> prove the Python core still passes offline.

@@ -28,13 +28,20 @@ Phase 2 is complete on `main` through `b4f35c8`.
 | 2E Persona + Task Endpoint | Done | `1503dab` |
 | 2F Status Extension | Done | `b4f35c8` |
 
-Current active implementation work is Issue #22:
+Issue #22 support tooling is complete and pushed at `47f30df`:
 
 - Additive `scripts/doctor.sh` Merlin Core checks only.
 - `scripts/redact.sh` shared redaction helper.
 - `scripts/report-bug.sh` sanitized bug report generator.
 - `wizard doctor` and `wizard report-bug` wiring.
 - Smoke tests for doctor/report-bug/redaction.
+
+Current active implementation work is Issue #24:
+
+- Add `merlin-staff-core-pytest` to `.github/workflows/ci.yml`.
+- Validate `configs/merlin/persona.yaml` with Python against the real nested schema.
+- Run the offline Merlin Staff Core pytest files in CI.
+- Add the new Python job to `ci-success.needs`.
 
 Port contract:
 

@@ -182,9 +182,108 @@ jobs:
           fi
           [ $FAIL -eq 0 ] || exit 1
 
+  merlin-staff-core-pytest:
+    name: Merlin Staff Core — Python unit tests (offline)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install test dependencies (network — pip only)
+        run: |
+          pip install --quiet \
+            pytest \
+            pytest-mock \
+            pydantic \
+            pyyaml \
+            httpx \
+            starlette \
+            fastapi \
+            uvicorn
+          echo "✅ Test dependencies installed"
+
+      - name: Verify YAML configs parseable (master prompt + team skin)
+        run: |
+          python - <<'PYEOF'
+          import pathlib
+          import sys
+          import yaml
+
+          required_persona_keys = ["name", "voice", "guardian_ethos", "team_modes"]
+          required_team_modes = {
+              "Architect": "architect",
+              "AI Engineer": "ai_engineer",
+              "Software Engineer": "software_engineer",
+              "Security Reviewer": "security_reviewer",
+              "Product Designer": "product_designer",
+              "Operator": "operator",
+          }
+
+          persona_path = pathlib.Path("configs/merlin/persona.yaml")
+          if not persona_path.exists():
+              print(f"❌ {persona_path} not found")
+              sys.exit(1)
+
+          data = yaml.safe_load(persona_path.read_text()) or {}
+          persona = data.get("persona", {})
+          if not isinstance(persona, dict):
+              print("❌ persona.yaml missing top-level persona mapping")
+              sys.exit(1)
+
+          missing_keys = [key for key in required_persona_keys if key not in persona]
+          if missing_keys:
+              print(f"❌ persona.yaml missing keys: {missing_keys}")
+              sys.exit(1)
+
+          team_modes = persona.get("team_modes", {})
+          if not isinstance(team_modes, dict):
+              print("❌ persona.yaml team_modes must be a mapping")
+              sys.exit(1)
+
+          missing_modes = [
+              display_name
+              for display_name, mode_key in required_team_modes.items()
+              if mode_key not in team_modes
+          ]
+          if missing_modes:
+              print(f"❌ persona.yaml missing team modes: {missing_modes}")
+              sys.exit(1)
+
+          print(f"✅ persona.yaml valid — {len(team_modes)} team modes confirmed")
+          PYEOF
+
+      - name: Run Merlin Staff Core Python unit tests (offline, no live services)
+        run: |
+          python -m pytest \
+            tests/test_config_loader.py \
+            tests/test_memory_manager.py \
+            tests/test_policy_engine.py \
+            tests/test_router.py \
+            tests/test_status_extension.py \
+            tests/test_task_endpoint.py \
+            --ignore=tests/test_memory_manager_integration.py \
+            -k "not integration and not live" \
+            -v \
+            --tb=short \
+            --no-header \
+            -q
+          echo "✅ Merlin Staff Core Python tests passed"
+
   ci-success:
     name: CI Passed
-    needs: [shellcheck, compose-validate, install-dryrun, validate-workflows, validate-configs, static-smoke-tests, secret-scan]
+    needs:
+      - shellcheck
+      - compose-validate
+      - install-dryrun
+      - validate-workflows
+      - validate-configs
+      - static-smoke-tests
+      - secret-scan
+      - merlin-staff-core-pytest
     runs-on: ubuntu-latest
     steps:
       - run: echo "✅ All CI checks passed — home-ai-elite installer is valid"
