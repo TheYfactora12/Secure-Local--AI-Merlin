@@ -353,4 +353,5 @@ Next implementation slice:
 - Add read-only Merlin status summary before runtime action execution. `Done: scripts/merlin-status.sh, cli/wizard, tests/merlin-status-smoke.sh`
 - Add read-only Merlin dashboard status visibility without turning the static dashboard into a privileged control plane. `Done: dashboard/index.html, tests/dashboard-merlin-status-smoke.sh`
 - Add a localhost-only read-only Merlin status API for dashboard-backed live state before any control endpoints exist. `Done: scripts/merlin-status-api.py, cli/wizard, tests/merlin-status-api-smoke.sh`
+- Add guarded start/stop/status lifecycle commands for the read-only Merlin status API before installer auto-start. `Done: scripts/merlin-status-api.sh, cli/wizard, tests/merlin-status-api-smoke.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

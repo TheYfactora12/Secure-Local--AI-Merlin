@@ -11,6 +11,13 @@ cleanup() {
     kill "$API_PID" >/dev/null 2>&1 || true
     wait "$API_PID" >/dev/null 2>&1 || true
   fi
+  if [[ -f "${TMP}/manager.pid" ]]; then
+    MANAGER_PID="$(tr -cd '0-9' < "${TMP}/manager.pid")"
+    if [[ -n "$MANAGER_PID" ]]; then
+      kill "$MANAGER_PID" >/dev/null 2>&1 || true
+      wait "$MANAGER_PID" >/dev/null 2>&1 || true
+    fi
+  fi
   rm -rf "$TMP"
 }
 trap cleanup EXIT
@@ -79,8 +86,42 @@ if echo "$STATUS" | grep -Eq -- 'sk-test|debug token'; then
   fail "status API must not expose raw goal or secret-like text"
 fi
 
-MERLIN_HELP="$(bash "${STACK_DIR}/cli/wizard" merlin status-api --help)"
-echo "$MERLIN_HELP" | grep -q "Read-only Merlin status API" \
-  || fail "wizard merlin status-api should route to the status API script"
+MANAGER_HELP="$(bash "${STACK_DIR}/cli/wizard" merlin status-api --help)"
+echo "$MANAGER_HELP" | grep -q "scripts/merlin-status-api.sh start" \
+  || fail "wizard merlin status-api should route to the lifecycle manager"
+
+MANAGER_PID_FILE="${TMP}/manager.pid"
+MANAGER_PORT_FILE="${TMP}/manager.port"
+MANAGER_LOG_FILE="${TMP}/manager.log"
+
+MANAGER_START="$(bash "${STACK_DIR}/cli/wizard" merlin status-api start \
+  --port 0 \
+  --pid-file "$MANAGER_PID_FILE" \
+  --port-file "$MANAGER_PORT_FILE" \
+  --log-file "$MANAGER_LOG_FILE" \
+  --trace-log "$TRACE_LOG" \
+  --approval-log "$APPROVAL_LOG")"
+echo "$MANAGER_START" | grep -q '^status: started$' \
+  || fail "status-api start should start the lifecycle-managed API"
+echo "$MANAGER_START" | grep -q '^execution_allowed: false$' \
+  || fail "status-api start must not allow execution"
+
+MANAGER_STATUS="$(bash "${STACK_DIR}/cli/wizard" merlin status-api status \
+  --pid-file "$MANAGER_PID_FILE" \
+  --port-file "$MANAGER_PORT_FILE" \
+  --log-file "$MANAGER_LOG_FILE")"
+echo "$MANAGER_STATUS" | grep -q '^status: running$' \
+  || fail "status-api status should report running"
+echo "$MANAGER_STATUS" | grep -q '^execution_allowed: false$' \
+  || fail "status-api status must not allow execution"
+
+MANAGER_STOP="$(bash "${STACK_DIR}/cli/wizard" merlin status-api stop \
+  --pid-file "$MANAGER_PID_FILE" \
+  --port-file "$MANAGER_PORT_FILE" \
+  --log-file "$MANAGER_LOG_FILE")"
+echo "$MANAGER_STOP" | grep -q '^status: stopped$' \
+  || fail "status-api stop should stop the lifecycle-managed API"
+echo "$MANAGER_STOP" | grep -q '^execution_allowed: false$' \
+  || fail "status-api stop must not allow execution"
 
 echo "PASS: Merlin status API is read-only and redacted"
