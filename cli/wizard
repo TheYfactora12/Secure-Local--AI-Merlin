@@ -204,6 +204,8 @@ cat << 'EOF'
                               Preview approved memory-write boundary
     wizard merlin memory simulate --memory-type preference --text "..." --approval-id <id>
                               Simulate approved memory write without Qdrant writes
+    wizard merlin memory write --memory-type preference --text "..." --approval-id <id>
+                              Write approved memory to local Qdrant with local embeddings
     wizard ask "question"     Ask a quick question (swarm-tiny, fastest)
     wizard route "task"       Alias for wizard swarm (full coordinator)
     wizard models             List loaded Ollama models

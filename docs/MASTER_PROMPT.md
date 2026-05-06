@@ -40,7 +40,7 @@ Current Merlin control-plane state:
 - `wizard merlin status` reports profile, hardware tier, privacy mode, approval counts, and service state.
 - `wizard merlin execute plan|execute --action merlin_status` is the v0 policy-gated execution boundary; it only allows read-only status and audits execute calls.
 - `wizard merlin magic plan "goal"` drafts plan-only Magic Mode steps and can write redacted plan audit records with `--write-plan`.
-- `wizard merlin memory plan|simulate --memory-type <type> --text <text>` validates the approved memory-write simulator without real Qdrant writes.
+- `wizard merlin memory plan|simulate|write --memory-type <type> --text <text>` validates approved memory writes. Plan writes nothing, simulate writes redacted audit only, and write can upsert to local Qdrant only after approval, canonical collection existence, and local Ollama embedding success.
 - `wizard merlin status-api start|status|stop` manages a localhost-only read-only status API.
 - `wizard start` starts the selected profile and then starts the read-only status API if profile startup succeeds.
 - `wizard stop` stops the status API before stopping Docker services.
@@ -48,7 +48,7 @@ Current Merlin control-plane state:
 - launchd starts the laptop-safe core profile through `wizard start core`.
 - launchd runs the read-only status API as its own foreground job: `com.homeai.merlin-status-api`.
 - The dashboard reads `http://localhost:8765/status` when the status API is running.
-- No Merlin endpoint may execute approvals, shell commands, file writes, model downloads, real memory writes, service controls, Magic Mode steps, or cloud calls. The only current execution path is the CLI-only `merlin_status` allowlist action; memory simulation writes audit metadata only.
+- No Merlin endpoint may execute approvals, shell commands, file writes, model downloads, service controls, Magic Mode steps, or cloud calls. The CLI-only `merlin_status` allowlist action is the only general execution path. Memory write is a separate approved local-only adapter that must fail closed and never log raw memory text.
 
 Current status API contract:
 - `GET /healthz` and `GET /status` only.

@@ -55,7 +55,7 @@ Merlin control-plane status:
 - `wizard merlin status` reports local profile, hardware tier, privacy mode, approvals, and services.
 - `wizard merlin execute plan|execute --action merlin_status` is the v0 policy-gated execution boundary. It only allows read-only Merlin status and writes a redacted execution audit record on execute.
 - `wizard merlin magic plan "goal"` drafts plan-only Magic Mode steps from the existing route dry-run. With `--write-plan`, it writes redacted plan JSONL and route/approval audit records; it still executes nothing.
-- `wizard merlin memory plan|simulate --memory-type <type> --text <text>` is the approved memory-write simulator. Simulate requires an approved `memory_write` approval id and writes hash/redacted JSONL only; it does not write Qdrant or embeddings.
+- `wizard merlin memory plan|simulate|write --memory-type <type> --text <text>` is the approved memory-write boundary. Simulate writes redacted JSONL only. Write requires an approved `memory_write` approval id, an existing canonical Qdrant collection, and local Ollama embeddings before it upserts approved memory to local Qdrant.
 - `wizard merlin status-api start|status|stop` manages the localhost-only read-only status API.
 - `wizard start` starts the selected profile, then starts the read-only Merlin status API if profile startup succeeds.
 - `wizard stop` stops the status API before stopping Docker services.
@@ -117,15 +117,20 @@ The next engineering priority is live-safe memory persistence design: define the
 ## Next Actions
 
 1. Keep validating the read-only Merlin status API during each startup-related change.
-2. Add the real memory write adapter only with approval validation, Qdrant collection checks, backup/restore updates, and denial tests.
+2. Validate the real memory write adapter against live local Qdrant after canonical collections are initialized and the embedding model is explicitly installed.
 3. Continue updating roadmap/docs/tests with every milestone before signing/notarization work.
 
 ## Validation
 
-Last validated on 2026-05-06:
+Last verified: 2026-05-06.
 
-- GitHub Actions passed for commit `7b9302a`:
-  - CI `25414421371`
+- Current local validation for the Qdrant memory adapter work:
+  - `bash tests/merlin-memory-write-smoke.sh`
+  - `bash tests/memory-config-smoke.sh`
+  - `bash tests/master-prompt-smoke.sh`
+  - `bash -n cli/wizard scripts/merlin-memory-write.sh tests/merlin-memory-write-smoke.sh tests/memory-config-smoke.sh tests/master-prompt-smoke.sh`
+  - `git diff --check`
+- Most recent checked GitHub Actions run before this patch passed for commit `232038c`.
 - `wizard start|stop|restart` is wired to the guarded read-only Merlin status API lifecycle for manual starts.
 - launchd source now includes a dedicated read-only Merlin status API foreground agent for persistent login auto-start.
 - `tests/wizard-start-status-api-smoke.sh` passed.
@@ -142,7 +147,8 @@ Last validated on 2026-05-06:
 - `wizard merlin magic plan "goal"` drafts plan-only steps and can write redacted plan records to `logs/merlin-magic-plans.jsonl`.
 - `tests/merlin-magic-plan-smoke.sh` verifies Magic Mode remains plan-only, writes no raw goals, and produces approval-blocked plans for risky routes.
 - `wizard merlin memory simulate --memory-type preference --text "..." --approval-id <id>` writes only redacted simulated memory audit records to `logs/merlin-memory-writes.jsonl`.
-- `tests/merlin-memory-write-smoke.sh` verifies approved `memory_write` gate validation, fail-closed denial, no raw memory logging, and no Qdrant/embedding/model calls.
+- `wizard merlin memory write --memory-type preference --text "..." --approval-id <id>` can upsert approved memory to local Qdrant with local Ollama embeddings. It does not create collections, pull models, start services, call cloud APIs, or store raw text in the JSONL audit log.
+- `tests/merlin-memory-write-smoke.sh` verifies approved `memory_write` gate validation, fail-closed denial, no raw audit logging, no Qdrant/embedding calls during plan/simulate/denial, and a fake local Qdrant/Ollama write path for approved `write`.
 
 Earlier live validation on 2026-05-05:
 

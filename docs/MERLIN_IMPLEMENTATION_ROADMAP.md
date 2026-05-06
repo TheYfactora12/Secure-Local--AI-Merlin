@@ -360,4 +360,5 @@ Next implementation slice:
 - Add v0 policy-gated execution boundary with only read-only `merlin_status` allowed and risky actions denied even after approval. `Done: scripts/merlin-execute.sh, cli/wizard, tests/merlin-execute-smoke.sh`
 - Add plan-only Magic Mode runner that turns route dry-runs into auditable steps without executing any step. `Done: scripts/merlin-magic-plan.sh, cli/wizard, tests/merlin-magic-plan-smoke.sh`
 - Add approved memory-write simulator before real Qdrant writes so consent/audit behavior is stable first. `Done: scripts/merlin-memory-write.sh, cli/wizard, tests/merlin-memory-write-smoke.sh`
+- Add approved local Qdrant memory write adapter behind the simulator contract, with canonical collection checks, local Ollama embeddings only, redacted audit records, backup manifest coverage, and fake-adapter denial tests. `Done: scripts/merlin-memory-write.sh, config/merlin/memory-collections.env, tests/merlin-memory-write-smoke.sh, tests/memory-config-smoke.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

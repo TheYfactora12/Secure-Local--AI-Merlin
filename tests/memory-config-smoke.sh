@@ -28,6 +28,14 @@ require_collection() {
   fail "Missing legacy collection in manifest: ${wanted}"
 }
 
+require_backup_collection() {
+  local wanted="$1"
+  case " ${MERLIN_QDRANT_BACKUP_COLLECTIONS} " in
+    *" ${wanted} "*) ;;
+    *) fail "Missing collection in backup manifest: ${wanted}" ;;
+  esac
+}
+
 [[ -f "$MANIFEST" ]] || fail "Missing manifest: ${MANIFEST}"
 [[ -f "$RESTORE" ]] || fail "Missing restore script: ${RESTORE}"
 
@@ -41,6 +49,10 @@ require_collection "openwebui"
 require_collection "perplexica"
 require_collection "n8n_memory"
 require_collection "conversations"
+require_backup_collection "merlin_user"
+require_backup_collection "merlin_documents"
+require_backup_collection "merlin_tools"
+require_backup_collection "merlin_audit"
 
 BACKUP_ROOT="${TMP}/wizard_backup_test"
 mkdir -p "$BACKUP_ROOT"

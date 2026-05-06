@@ -199,6 +199,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Add v0 policy-gated execution boundary with only read-only `merlin_status` allowed
 - [x] Add plan-only Magic Mode runner with auditable steps and no execution
 - [x] Add approved memory-write simulator before real Qdrant writes
+- [x] Add approved local Qdrant memory write adapter with fail-closed consent, collection, and embedding checks
 - [x] Add canonical/legacy memory schema and runtime Qdrant collection manifest
 - [x] Align `cli/wizard` memory commands with the runtime collection manifest
 - [ ] Connect Magic Mode to shared Qdrant memory only after memory approval/audit is implemented
