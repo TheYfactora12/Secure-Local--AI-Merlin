@@ -191,6 +191,8 @@ When dry-run tracing is enabled, pending approval requests are also appended to 
 
 Pending approval requests can be reviewed with `wizard merlin approvals list`. The command is read-only and displays approval id, status, execution flag, route, task type, gates, policy decision, and hashed user goal. It does not approve, deny, execute, start services, call models, or expose raw prompt text.
 
+Approval decisions can be recorded with `wizard merlin approvals approve <id>` and `wizard merlin approvals deny <id>`. These commands append a decision record to the local approval JSONL log and update the latest-state list view. They still set `execution_allowed: false` and must not execute actions, start services, call models, write memory, or expose raw prompt text. Runtime execution requires a later, separate execution layer with its own policy checks.
+
 ## Memory Design
 
 Merlin memory must be explicit and auditable. It should not silently learn every prompt.

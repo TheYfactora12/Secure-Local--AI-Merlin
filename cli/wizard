@@ -176,6 +176,10 @@ cat << 'EOF'
                               Preview Merlin route, model, profile, and approvals
     wizard merlin approvals list
                               Review pending Merlin approval requests
+    wizard merlin approvals approve <id>
+                              Append approval decision without execution
+    wizard merlin approvals deny <id>
+                              Append denial decision without execution
     wizard ask "question"     Ask a quick question (swarm-tiny, fastest)
     wizard route "task"       Alias for wizard swarm (full coordinator)
     wizard models             List loaded Ollama models
