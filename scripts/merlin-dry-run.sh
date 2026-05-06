@@ -231,19 +231,23 @@ write_trace_record() {
   local trace_log="$1"
   local timestamp="$2"
   local approval_gates_json
+  local approval_request_id_json
+  local approval_required_json
   local decision_reason_json
   local user_goal_hash_json
   local online_mode_json
   local cloud_allowed_json
 
   approval_gates_json="$(json_array_from_csv "$APPROVAL_GATES")"
+  approval_request_id_json="$(printf '%s' "$APPROVAL_REQUEST_ID" | json_escape)"
+  approval_required_json="$(json_bool "$APPROVAL_REQUIRED")"
   decision_reason_json="$(printf '%s' "$DECISION_REASON" | json_escape)"
   user_goal_hash_json="$(printf '%s' "$USER_GOAL_HASH" | json_escape)"
   online_mode_json="$(json_bool "$ONLINE_MODE")"
   cloud_allowed_json="$(json_bool "$CLOUD_ALLOWED")"
 
   mkdir -p "$(dirname "$trace_log")"
-  printf '{"trace_id":%s,"timestamp":%s,"user_goal_hash":%s,"route_id":%s,"task_type":%s,"selected_agent":%s,"required_profile":%s,"active_profile":%s,"hardware_tier":%s,"privacy_mode":%s,"online_mode":%s,"cloud_allowed":%s,"selected_model_alias":%s,"provider":%s,"approval_gates":%s,"approval_status":%s,"policy_decision":%s,"decision_reason":%s,"redaction_applied":true,"side_effects":"none","model_calls":"none","memory_writes":"none","service_starts":"none","tool_execution":"none"}\n' \
+  printf '{"trace_id":%s,"timestamp":%s,"user_goal_hash":%s,"route_id":%s,"task_type":%s,"selected_agent":%s,"required_profile":%s,"active_profile":%s,"hardware_tier":%s,"privacy_mode":%s,"online_mode":%s,"cloud_allowed":%s,"selected_model_alias":%s,"provider":%s,"approval_required":%s,"approval_request_id":%s,"approval_gates":%s,"approval_status":%s,"policy_decision":%s,"decision_reason":%s,"redaction_applied":true,"side_effects":"none","model_calls":"none","memory_writes":"none","service_starts":"none","tool_execution":"none"}\n' \
     "$(printf '%s' "$TRACE_ID" | json_escape)" \
     "$(printf '%s' "$timestamp" | json_escape)" \
     "$user_goal_hash_json" \
@@ -258,6 +262,8 @@ write_trace_record() {
     "$cloud_allowed_json" \
     "$(printf '%s' "$MODEL_ALIAS" | json_escape)" \
     "$(printf '%s' "ollama" | json_escape)" \
+    "$approval_required_json" \
+    "$approval_request_id_json" \
     "$approval_gates_json" \
     "$(printf '%s' "$APPROVAL_STATUS" | json_escape)" \
     "$(printf '%s' "$POLICY_DECISION" | json_escape)" \
@@ -303,18 +309,22 @@ CLOUD_ALLOWED="${MERLIN_CLOUD_ALLOWED:-false}"
 TRACE_ID="dryrun_$(date -u +%Y%m%d_%H%M%S)"
 TRACE_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 USER_GOAL_HASH="$(goal_hash "$GOAL")"
+APPROVAL_REQUEST_ID="none"
+APPROVAL_REQUIRED=false
 
 POLICY_DECISION="allow"
 APPROVAL_STATUS="not_required"
 DECISION_REASON="Core local route can proceed after runtime implementation."
 
 if [[ -n "$APPROVAL_GATES" ]]; then
+  APPROVAL_REQUIRED=true
   POLICY_DECISION="require_approval"
   APPROVAL_STATUS="required_pending"
   DECISION_REASON="Route includes approval gates: ${APPROVAL_GATES}."
 fi
 
 if ! profile_has_capability "$ACTIVE_PROFILE" "$REQUIRED_PROFILE" "$CUSTOM_PROFILES"; then
+  APPROVAL_REQUIRED=true
   POLICY_DECISION="ask_to_start_profile"
   APPROVAL_STATUS="required_pending"
   DECISION_REASON="Route requires optional profile '${REQUIRED_PROFILE}', but active profile is '${ACTIVE_PROFILE}'."
@@ -322,6 +332,10 @@ fi
 
 if [[ "$HARDWARE_TIER" == "low" && "$REQUIRED_PROFILE" != "core" ]]; then
   DECISION_REASON="${DECISION_REASON} Low-memory tier should avoid heavy optional profiles unless the user explicitly approves."
+fi
+
+if [[ "$APPROVAL_REQUIRED" == true ]]; then
+  APPROVAL_REQUEST_ID="approval_${TRACE_ID}"
 fi
 
 TRACE_LOG_PATH="${TRACE_LOG_OVERRIDE:-$(default_trace_log_path)}"
@@ -347,6 +361,8 @@ online_mode: ${ONLINE_MODE}
 cloud_allowed: ${CLOUD_ALLOWED}
 selected_model_alias: ${MODEL_ALIAS}
 provider: ollama
+approval_required: ${APPROVAL_REQUIRED}
+approval_request_id: ${APPROVAL_REQUEST_ID}
 approval_gates: ${APPROVAL_GATES:-none}
 approval_status: ${APPROVAL_STATUS}
 policy_decision: ${POLICY_DECISION}
@@ -361,4 +377,13 @@ service_starts: none
 tool_execution: none
 trace_written: ${WRITE_TRACE}
 trace_log: ${TRACE_LOG_PATH}
+
+approval_request:
+  id: ${APPROVAL_REQUEST_ID}
+  required: ${APPROVAL_REQUIRED}
+  status: ${APPROVAL_STATUS}
+  route_id: ${ROUTE_ID}
+  gates: ${APPROVAL_GATES:-none}
+  proposed_action: evaluate route only; no execution requested
+  execution_allowed: false
 EOF

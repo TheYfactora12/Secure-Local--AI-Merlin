@@ -183,6 +183,8 @@ This keeps the product path aligned with the installer: Merlin can reason about 
 
 Dry-run can also append an audit record with `--write-trace`. This writes one redacted JSONL route decision to the trace log from `config/merlin/trace.yaml`, or to `--trace-log <path>` for tests. Trace writes store the hashed user goal and route metadata only; they must not store raw prompts, documents, API keys, auth headers, or tool outputs. Trace writing is intentionally separate from model calls and tool execution.
 
+Risky dry-run routes also produce a non-executing approval request object. The request includes an approval id, route id, pending status, required gates, and an explicit `execution_allowed: false` field. This is the approval foundation for Magic Mode: Merlin can now explain what approval would be needed before any service start, shell command, file write, network call, memory write, model download, or OpenHands task is implemented.
+
 ## Memory Design
 
 Merlin memory must be explicit and auditable. It should not silently learn every prompt.

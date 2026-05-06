@@ -21,6 +21,8 @@ GENERAL_OUTPUT="$(HOME_AI_PROFILE=core bash "${STACK_DIR}/scripts/merlin-dry-run
 require_output "$GENERAL_OUTPUT" '^route_id: general$' "general task should route to general"
 require_output "$GENERAL_OUTPUT" '^required_profile: core$' "general task should require core"
 require_output "$GENERAL_OUTPUT" '^policy_decision: allow$' "general route should be allowed in dry-run"
+require_output "$GENERAL_OUTPUT" '^approval_required: false$' "general route should not require approval"
+require_output "$GENERAL_OUTPUT" '^approval_request_id: none$' "general route should not allocate approval id"
 require_output "$GENERAL_OUTPUT" '^side_effects: none$' "dry-run should have no side effects"
 require_output "$GENERAL_OUTPUT" '^model_calls: none$' "dry-run should not call models"
 require_output "$GENERAL_OUTPUT" '^memory_writes: none$' "dry-run should not write memory"
@@ -32,10 +34,14 @@ CODE_OUTPUT="$(HOME_AI_PROFILE=core bash "${STACK_DIR}/scripts/merlin-dry-run.sh
 require_output "$CODE_OUTPUT" '^route_id: code$' "code task should route to code"
 require_output "$CODE_OUTPUT" '^selected_agent: coding$' "code task should select coding agent"
 require_output "$CODE_OUTPUT" '^required_profile: coding$' "code task should require coding profile"
+require_output "$CODE_OUTPUT" '^approval_required: true$' "code task should require approval"
+require_output "$CODE_OUTPUT" '^approval_request_id: approval_dryrun_' "code task should allocate approval id"
 require_output "$CODE_OUTPUT" '^approval_status: required_pending$' "code task should require pending approval"
 require_output "$CODE_OUTPUT" '^policy_decision: ask_to_start_profile$' "code route should not auto-start optional profile"
 require_output "$CODE_OUTPUT" 'shell_command' "code route should include shell approval gate"
 require_output "$CODE_OUTPUT" 'openhands_task' "code route should include OpenHands approval gate"
+require_output "$CODE_OUTPUT" '^approval_request:$' "code route should include approval request block"
+require_output "$CODE_OUTPUT" 'execution_allowed: false' "approval request should not allow execution"
 
 FULL_CODE_OUTPUT="$(HOME_AI_PROFILE=full bash "${STACK_DIR}/scripts/merlin-dry-run.sh" --task-type code "review repo")"
 require_output "$FULL_CODE_OUTPUT" '^route_id: code$' "forced code task should route to code"
@@ -62,6 +68,7 @@ trap cleanup EXIT
 TRACE_LOG="${TMP}/merlin-route-decisions.jsonl"
 TRACE_OUTPUT="$(HOME_AI_PROFILE=core bash "${STACK_DIR}/scripts/merlin-dry-run.sh" --write-trace --trace-log "$TRACE_LOG" "debug token sk-test installer")"
 require_output "$TRACE_OUTPUT" '^trace_written: true$' "write-trace should report trace_written"
+require_output "$TRACE_OUTPUT" '^approval_required: true$' "write-trace route should require approval"
 require_output "$TRACE_OUTPUT" "^trace_log: ${TRACE_LOG}$" "write-trace should report trace path"
 [[ -s "$TRACE_LOG" ]] || fail "write-trace should append JSONL record"
 [[ "$(wc -l < "$TRACE_LOG" | tr -d ' ')" == "1" ]] || fail "write-trace should append one line"
@@ -89,6 +96,8 @@ required = [
     "cloud_allowed",
     "selected_model_alias",
     "provider",
+    "approval_required",
+    "approval_request_id",
     "approval_gates",
     "approval_status",
     "policy_decision",
@@ -104,6 +113,10 @@ if record["policy_decision"] != "ask_to_start_profile":
     raise SystemExit("expected optional profile approval decision")
 if record["online_mode"] is not False or record["cloud_allowed"] is not False:
     raise SystemExit("online/cloud flags must be false booleans")
+if record["approval_required"] is not True:
+    raise SystemExit("trace should include approval_required true")
+if not str(record["approval_request_id"]).startswith("approval_dryrun_"):
+    raise SystemExit("trace should include approval request id")
 if record["redaction_applied"] is not True:
     raise SystemExit("redaction flag missing")
 if "sk-test" in line or "debug token" in line:
