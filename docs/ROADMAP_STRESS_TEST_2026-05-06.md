@@ -56,11 +56,13 @@ They overlap but are not identical. The lowercase file contains useful older res
 
 ## Current Execution Queue
 
-1. Rerun full fresh uninstall/install from current `main`.
-2. Close or update `v1.0` release issue #1 only after fresh install, package, upgrade, backup, restore, and uninstall checks are green.
-3. Start #47 only after `v1.0` is release-stable, unless it is docs-only and does not touch installer defaults.
-4. Rewrite #5 against current 8GB-first hardware tiers.
-5. Then return to `v1.3` reliability/router/memory issues.
+1. Run backup/restore verification against the package-installed stack.
+2. Run upgrade verification.
+3. Validate launchd persistence and read-only status API behavior.
+4. Close or update `v1.0` release issue #1 only after fresh install, package, upgrade, backup, restore, launchd, and uninstall checks are green.
+5. Start #47 only after `v1.0` is release-stable, unless it is docs-only and does not touch installer defaults.
+6. Rewrite #5 against current 8GB-first hardware tiers.
+7. Then return to `v1.3` reliability/router/memory issues.
 
 ## Do Not Do Yet
 
@@ -69,4 +71,4 @@ They overlap but are not identical. The lowercase file contains useful older res
 - Do not add cloud routing as fallback behavior.
 - Do not add heavy document-ingestion containers to the core profile.
 - Do not replace Open WebUI with a custom chat UI.
-- Do not close `v1.0` until a second fresh install validates the fixes from #41 through #46 together.
+- Do not close `v1.0` until backup/restore, upgrade, launchd persistence, package readiness, and uninstall checks are green.

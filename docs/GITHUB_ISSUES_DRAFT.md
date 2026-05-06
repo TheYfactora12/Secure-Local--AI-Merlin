@@ -20,19 +20,24 @@ The active GitHub milestone ladder is:
 
 Recent normalization:
 
-- #41 through #46 are closed under `v1.0`.
+- #41 through #46 are closed under `v1.0` and normalized with `v1.0`, `release`, and `priority: critical` labels.
+- #48 and #49 are closed under `v1.0`.
 - #47 is open under `v1.1`.
 - #5 is open under `v1.2`.
 - #28 is closed under `v2.0`.
+- #50, #51, #52, #54, #55, #56, #57, #58, and #59 are closed under `v2.0`.
+- #53 and #60 remain open under `v2.0`.
 - #30 and #39 are open under `v2.1`.
 - #33 and #34 are open under `v2.2`.
 - #37 is open under `v3.0`.
 
 Current next queue:
 
-1. Rerun full fresh uninstall/install from current `main`.
-2. Finish #1 only after fresh install, package, upgrade, backup, restore, and uninstall checks pass.
-3. Then take #47 or #5 as docs/planning work, not runtime behavior.
+1. Run backup/restore verification against the package-installed stack.
+2. Run upgrade verification.
+3. Validate launchd persistence and read-only status API behavior.
+4. Finish #1 only after fresh install, package, upgrade, backup, restore, launchd, and uninstall checks pass.
+5. Then take #47 or #5 as docs/planning work, not runtime behavior.
 
 ## Issue 1: Document Current Installer Baseline And Do-Not-Break List
 

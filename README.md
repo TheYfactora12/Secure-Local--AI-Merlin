@@ -264,7 +264,7 @@ Optional profiles:
 - [x] v0.1 — Core scaffold exists and the laptop-safe core path is verified
 - [~] v0.2 — Full stack prototype exists, but optional profiles still need separate validation
 - [~] v0.3 — First-boot automation is partial; n8n import still depends on API key setup
-- [~] v0.4 — macOS `.pkg`, backup, and restore are scaffolded but not release-verified
+- [~] v0.4 — macOS unsigned `.pkg` install is validated; backup/restore and upgrade still need release verification
 - [ ] v1.0 — Stable laptop-first release with profiles, doctor checks, tests, backup/restore, and upgrade path
 
 ---

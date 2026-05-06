@@ -34,7 +34,9 @@ Fresh Mac installer validation:
 
 - First fresh 8GB Mac core install completed on 2026-05-06 and produced issues #41 through #46.
 - Follow-up fixes landed for uninstall sudo behavior, Open WebUI local-first startup, Merlin API startup policy, CLI fallback messaging, and low-tier model recommendations.
-- A second full fresh uninstall/install rerun is required before marking v1.0 stable installer complete.
+- A second full fresh uninstall/install rerun is green after #48.
+- Unsigned `.pkg` install validation is green after #49.
+- Backup/restore, upgrade, launchd persistence, and signing/notarization readiness remain before marking v1.0 stable installer complete.
 
 Tasks:
 
@@ -221,9 +223,9 @@ Acceptance:
 
 Current next implementation slice:
 
-**Rerun full fresh uninstall/install from current `main`.**
+**Run backup/restore verification against the package-installed stack.**
 
-Reason: #41 through #46 were fixed after the first fresh Mac install test. v1.0 cannot be treated as stable until those fixes are verified together in one clean run.
+Reason: the fresh install and unsigned package paths are now green after #48 and #49. v1.0 cannot be treated as stable until restore safety is proven against live Qdrant data and the package-installed runtime.
 
 Previous recommended first PR:
 

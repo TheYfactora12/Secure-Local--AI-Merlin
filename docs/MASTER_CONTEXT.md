@@ -100,6 +100,8 @@ Phase 2 runtime package:
 - `merlin/task_endpoint.py` exposes FastAPI on port 8766.
 - `merlin/status_extension.py` adds route, approval, trace, and memory status panels to the FastAPI app.
 
+Later GitHub roadmap normalization assigned the duplicate/new Phase 2 tracking issues #50 through #60 to `v2.0 — Merlin Staff Core`. Issues #50, #51, #52, #54, #55, #56, #57, #58, and #59 were closed after verification against the implemented files and tests. #53 and #60 remain open v2.0 integration work; do not create a duplicate `Merlin Staff — Core` milestone.
+
 ## RAM Tiers
 
 Do not change these without a dedicated issue and validation run.
@@ -127,9 +129,9 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Continue Issue #25 with deeper SAST planning only after reviewing the gitleaks gate outcome.
-2. Start Pi Emotional Intelligence only after the next security slice is scoped.
-3. Keep signed package/notarization work deferred until installer, Phase 2 API, support tooling, and CI gates remain green.
+1. Finish `v1.0 — Stable Installer Release` gates: backup/restore verification, upgrade verification, launchd persistence validation, and package readiness.
+2. Keep signing/notarization deferred until the unsigned installer and package paths are functionally green.
+3. Continue #53 and #60 only after the v1.0 release gates are green, unless the work is docs-only.
 4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 
 ## Reasoning Summary
@@ -154,9 +156,11 @@ The next engineering priority is supportability: diagnostics, sanitized bug repo
 
 ## Next Actions
 
-1. Review Issue #25 Layer 1 results and decide whether the next slice is deeper SAST or Pi Emotional Intelligence.
-2. Keep verifying `ci-success` requires both `gitleaks-scan` and `merlin-staff-core-pytest`.
-3. Continue updating roadmap/docs/tests with every milestone before signing/notarization work.
+1. Run backup/restore verification against the package-installed stack.
+2. Run upgrade verification from the current package/main state.
+3. Validate launchd persistence and read-only status API behavior after login/startup.
+4. Keep verifying `ci-success` requires both `gitleaks-scan` and `merlin-staff-core-pytest`.
+5. Continue updating roadmap/docs/tests with every milestone before signing/notarization work.
 
 ## Validation
 
@@ -164,6 +168,9 @@ Last verified: 2026-05-06.
 
 - Phase 2F merged at `b4f35c8`; local Phase 2 Python suite reported 58 passing tests.
 - CI was green for the Phase 2F merge run.
+- Fresh 8GB Mac core reinstall is green after #48; #48 fixed non-interactive status API startup messaging so the installer no longer implies persistent port 8765 without launchd or manual start.
+- Unsigned `.pkg` install is green after #49; #49 filtered package runtime copy so stale `.wizard-bootstrapped`, logs, caches, `.venv`, and build artifacts are not copied into the user runtime.
+- GitHub Actions run `25467394670` passed for commit `88d4f96`.
 - Issue #22 support tooling is merged and pushed at `47f30df`: additive doctor checks, redaction helper, sanitized report generator, wizard wiring, and doctor/report-bug/redaction smokes.
 - Issue #24 CI gate is merged and pushed at `c6f6652`; GitHub Actions run `25451110988` passed.
 - Issue #25 Layer 1 is merged and pushed at `d4ece3d`; GitHub Actions run `25454666989` passed with `gitleaks-scan` and `merlin-staff-core-pytest` both required by `ci-success`.

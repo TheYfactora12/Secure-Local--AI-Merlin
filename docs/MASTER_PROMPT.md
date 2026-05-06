@@ -57,7 +57,7 @@ Current Merlin control-plane state:
 - No Merlin endpoint may execute approvals, shell commands, file writes, model downloads, service controls, Magic Mode steps, or cloud calls. The CLI-only `merlin_status` allowlist action is the only general execution path. Memory write and memory search are separate local-only adapters that must fail closed and never log raw memory text.
 
 Dimension safety rule:
-- The `documents` Qdrant collection uses 1536 dimensions. All other Merlin collections (merlin-session, merlin-longterm, merlin-skills, merlin-context) use 768 dimensions (nomic-embed-text). Never write to `documents` with nomic-embed-text — it causes silent vector corruption. memory_manager.py must validate dimensions on every write and raise DimensionMismatchError on mismatch.
+- The legacy `documents` Qdrant collection uses 1536 dimensions. Canonical Merlin collections (`merlin_session`, `merlin_user`, `merlin_documents`, `merlin_tools`, `merlin_audit`) and other active local collections use 768 dimensions (nomic-embed-text). Never write to `documents` with nomic-embed-text. `memory_manager.py` must validate dimensions on every write and raise `DimensionMismatchError` on mismatch.
 
 Current status API contract:
 - `GET /healthz` and `GET /status` only.
@@ -101,8 +101,8 @@ Important files:
 - `merlin/router.py`
 - `merlin/memory_manager.py`
 - `merlin/persona_injector.py`
-- `merlin/trace_manager.py`
-- `merlin/swarm_coordinator.py`
+- `merlin/status_extension.py`
+- `merlin/provider_registry.py`
 - `merlin/task_endpoint.py`
 - `ROADMAP.md`
 - `docs/MERLIN_STAFF_CORE.md`
@@ -142,10 +142,11 @@ Before final response:
 
 ## Current Next Recommendation
 
-Phase 2A (`merlin/config_loader.py`) is the active build target. It is one day of zero-risk work that unlocks every other phase. Start there. The moment Pydantic validates all 7 YAML files cleanly on startup, the entire Merlin Staff — Core architecture becomes operational.
+Phase 2A through 2F are implemented on `main`; do not restart them from stale prompts. The remaining `v2.0 — Merlin Staff Core` GitHub work is integration, not initial scaffolding:
 
-After Phase 2A is green and CI passes:
-- Phase 2B: `merlin/policy_engine.py` — 14 gate enforcement
-- Phase 2E: `merlin/persona_injector.py` — Pi EQ activation (4 lines in persona.yaml)
+- #53: Session memory bridge n8n workflow is still open.
+- #60: Staff router + swarm coordinator integration is still open because `merlin/swarm_coordinator.py` is not present yet.
+
+The current release priority is `v1.0 — Stable Installer Release`: finish backup/restore verification, upgrade verification, launchd persistence validation, and package/signing readiness without changing the installer unless a specific defect is found.
 
 See `docs/MERLIN_STAFF_CORE.md` for the full architecture, team modes, policy gates, Pi EQ implementation, and dimension safety rule.

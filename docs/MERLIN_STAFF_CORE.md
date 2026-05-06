@@ -1,15 +1,15 @@
 # Merlin Staff — Core
 
-> **Status:** Active build target — Phase 2A (config loader) in progress  
-> **Last updated:** 2026-05-06  
-> **Canonical source:** `docs/MERLIN_STAFF_CORE.md`  
+> **Status:** Phase 2 core scaffolding implemented; remaining work is v2.0 integration
+> **Last updated:** 2026-05-06
+> **Canonical source:** `docs/MERLIN_STAFF_CORE.md`
 > **Update rule:** This file MUST be updated whenever a config file, policy gate, team mode, phase boundary, or Pi EQ behavior changes. No milestone is complete without a doc update.
 
 ---
 
 ## What Is Merlin Staff — Core?
 
-Merlin Staff — Core is the runtime that activates the six AI team roles declared in `configs/merlin/persona.yaml`. It is the bridge between the YAML config layer and the Python execution layer. Before this component exists, the roles are aspirational. After it exists, Merlin dynamically routes every request to the right team member, enforces policy, manages memory safely, and carries session context forward the way Pi did — but locally, privately, and for free.
+Merlin Staff — Core is the runtime that activates the six AI team roles declared in `configs/merlin/persona.yaml`. It is the bridge between the YAML config layer and the Python execution layer. The initial core scaffolding now exists on `main`: config validation, policy gates, route classification, dimension-safe memory management, persona prompt injection, the task API, status panels, and provider registry are implemented. The remaining v2.0 work is to integrate session memory with n8n and add a real swarm coordinator without breaking the stable installer path.
 
 The name is intentional. The **Staff** is the team. The **Core** is the runtime. Together they are the living, breathing version of the architecture that has been designed for months.
 
@@ -32,8 +32,9 @@ graph TD
         ROUTER["router.py\nRoutes requests to\nbest available model\nper routes.yaml"]
         POLICY["policy_engine.py\n14 @requires_approval\ngates — fail closed"]
         MEMORY["memory_manager.py\nDimension-safe writes\nto Qdrant collections\n(768d only)"]
-        TRACE["trace_manager.py\nRedacted audit log\nper trace.yaml"]
-        SWARM["swarm_coordinator.py\nOrchestrates multi-step\nagent tasks"]
+        STATUS_EXT["status_extension.py\nFastAPI status panels\nroutes / approvals /\ntraces / memory"]
+        PROVIDERS["provider_registry.py\nRead-only local-first\nprovider status"]
+        SWARM["swarm_coordinator.py\nPlanned integration\nfor multi-step agent tasks"]
     end
 
     subgraph CONFIG_LAYER["Config Layer (configs/merlin/)"]
@@ -46,10 +47,11 @@ graph TD
     end
 
     subgraph MEMORY_LAYER["Qdrant Memory Layer (localhost:6333)"]
-        M_SESSION["merlin-session\n768d — active session"]
-        M_LONGTERM["merlin-longterm\n768d — approved facts"]
-        M_SKILLS["merlin-skills\n768d — learned skills"]
-        M_CONTEXT["merlin-context\n768d — project context"]
+        M_SESSION["merlin_session\n768d — active session"]
+        M_USER["merlin_user\n768d — approved facts"]
+        M_DOCS_CANON["merlin_documents\n768d — approved local RAG"]
+        M_TOOLS["merlin_tools\n768d — approved tool results"]
+        M_AUDIT["merlin_audit\n768d — audit pointers"]
         M_DOCS["documents\n⚠️ 1536d — DIFFERENT\nDo NOT write with\nnomic-embed-text"]
     end
 
@@ -76,7 +78,8 @@ graph TD
     CONFIG --> ROUTER
     CONFIG --> POLICY
     CONFIG --> MEMORY
-    CONFIG --> TRACE
+    CONFIG --> STATUS_EXT
+    CONFIG --> PROVIDERS
     PERSONA_YAML --> CONFIG
     POLICY_YAML --> CONFIG
     ROUTES_YAML --> CONFIG
@@ -84,13 +87,15 @@ graph TD
     TRACE_YAML --> CONFIG
     MEMORY_YAML --> CONFIG
     PERSONA --> ROUTER
+    ROUTER --> STATUS_EXT
     ROUTER --> SWARM
     SWARM --> OLLAMA
     SWARM --> LITELLM
     MEMORY --> M_SESSION
-    MEMORY --> M_LONGTERM
-    MEMORY --> M_SKILLS
-    MEMORY --> M_CONTEXT
+    MEMORY --> M_USER
+    MEMORY --> M_DOCS_CANON
+    MEMORY --> M_TOOLS
+    MEMORY --> M_AUDIT
     PERSONA --> T1
     PERSONA --> T2
     PERSONA --> T3
@@ -99,9 +104,9 @@ graph TD
     PERSONA --> T6
     OLLAMA --> EMBED
     EMBED --> MEMORY
-    ROUTER --> TRACE
-    MEMORY --> TRACE
-    POLICY --> TRACE
+    ROUTER --> STATUS_EXT
+    MEMORY --> STATUS_EXT
+    POLICY --> STATUS_EXT
 ```
 
 ---
@@ -140,9 +145,9 @@ Declared in `configs/merlin/policy.yaml`. Enforced by `policy_engine.py` via `@r
 | 11 | `service_stop` | Stopping services |
 | 12 | `model_download` | Pulling models via Ollama or HuggingFace |
 | 13 | `openhands_task` | Any OpenHands agent execution (Docker socket risk) |
-| 14 | `magic_mode_execute` | Executing a Magic Mode plan step |
+| 14 | `secret_access` | Direct access to secrets, API keys, or credentials |
 
-**Audit trail:** Every gate decision (approved or denied) is written to the redacted audit log via `trace_manager.py` per `configs/merlin/trace.yaml`.
+**Audit trail:** Gate decisions must be redacted and traceable. The current FastAPI status extension maintains route traces for task requests. A dedicated trace manager is future work and must not be treated as present until implemented and tested.
 
 ---
 
@@ -178,7 +183,7 @@ pi_eq:
   max_follow_ups: 1        # Never ask more than one follow-up per turn
 ```
 
-Session recall uses `merlin-session` (768d) in Qdrant. The `swarm_coordinator.py` already seeds this collection on session start. The Pi milestone is activated the moment `persona_injector.py` reads these flags and injects the directive.
+Session recall is designed to use `merlin_session` (768d) in Qdrant. `persona_injector.py` already injects the Pi warmth directives. The n8n session memory bridge remains open as #53, and `swarm_coordinator.py` remains planned under #60.
 
 ---
 
@@ -186,64 +191,51 @@ Session recall uses `merlin-session` (768d) in Qdrant. The `swarm_coordinator.py
 
 > ⚠️ **This is a silent data corruption risk. Read carefully.**
 
-The `documents` Qdrant collection uses **1536 dimensions**. Every other Merlin collection (`merlin-session`, `merlin-longterm`, `merlin-skills`, `merlin-context`) uses **768 dimensions** (nomic-embed-text output).
+The legacy `documents` Qdrant collection uses **1536 dimensions**. Canonical Merlin collections (`merlin_session`, `merlin_user`, `merlin_documents`, `merlin_tools`, `merlin_audit`) and the other active/legacy local collections use **768 dimensions** (nomic-embed-text output).
 
 If `memory_manager.py` writes to `documents` using `nomic-embed-text`, Qdrant will silently reject or corrupt the vector. There is no loud failure — the write appears to succeed but produces garbage search results.
 
-**The fix, already in the plan:**
-```python
-# memory_manager.py — dimension validation on every write
-COLLECTION_DIMS = {
-    "merlin-session": 768,
-    "merlin-longterm": 768,
-    "merlin-skills": 768,
-    "merlin-context": 768,
-    "documents": 1536,  # Requires text-embedding-ada-002 or equivalent
-}
-
-def validate_dimension(collection: str, vector: list) -> None:
-    expected = COLLECTION_DIMS.get(collection)
-    if expected and len(vector) != expected:
-        raise DimensionMismatchError(
-            f"Collection '{collection}' expects {expected}d, got {len(vector)}d. "
-            f"Do not write to 'documents' with nomic-embed-text."
-        )
-```
+**The implemented guard:**
+`merlin/config_loader.py` validates collection dimensions from `configs/merlin/memory.yaml`, and `merlin/memory_manager.py` raises `DimensionMismatchError` before any wrong-dimension write. Keep this rule fail-closed.
 
 ---
 
 ## Build Phases
 
-### Phase 2A — Config Loader (Start Here)
+### Phase 2A — Config Loader (Done)
 - File: `merlin/config_loader.py`
 - Validates all 7 YAML files via Pydantic on startup
 - Hard stops with clear error messages if any contract is violated
-- **Risk:** Zero. Read-only. No execution path touched.
-- **Time:** ~1 day
+- **Status:** Done; #56 closed as implemented.
 
-### Phase 2B — Policy Engine
+### Phase 2B — Policy Engine (Done)
 - File: `merlin/policy_engine.py`
 - Implements `@requires_approval` for all 14 gates
 - Wires to `policy.yaml` via config loader
-- **Risk:** Low. Adds gates, removes nothing.
+- **Status:** Done; #51/#58 closed as implemented.
 
-### Phase 2C — Router
+### Phase 2C — Router (Done; Integration Remains)
 - File: `merlin/router.py`
 - Routes requests to model per `routes.yaml`
 - Respects hardware tier, privacy mode, and fallback chain
-- **Risk:** Medium. First execution path.
+- **Status:** Base router done. #60 remains open for staff router + swarm coordinator integration because `merlin/swarm_coordinator.py` does not exist yet.
 
-### Phase 2D — Memory Manager
+### Phase 2D — Memory Manager (Done)
 - File: `merlin/memory_manager.py`
 - Dimension-safe writes with `DimensionMismatchError`
 - Wraps existing Qdrant adapter
-- **Risk:** Low-medium. Write path but fail-closed.
+- **Status:** Done; #59 closed as implemented.
 
-### Phase 2E — Persona Injector (Pi EQ)
+### Phase 2E — Persona Injector (Pi EQ) (Done)
 - File: `merlin/persona_injector.py`
 - Reads `persona.yaml`, injects team mode + Pi EQ directives
 - Activates the 6 staff modes and Pi follow-up/recall behavior
-- **Risk:** Low. System prompt injection only.
+- **Status:** Done; #54/#55/#57 closed as implemented.
+
+### Remaining v2.0 Work
+
+- #53: Session memory bridge n8n workflow. Do not mark done until `06-session-memory-bridge.json` or its approved replacement exists and is tested.
+- #60: Staff router + swarm coordinator integration. Do not mark done until the planned coordinator exists, is policy-gated, and passes tests.
 
 ---
 
@@ -262,8 +254,9 @@ def validate_dimension(collection: str, vector: list) -> None:
 | `merlin/router.py` | Phase 2C — model routing |
 | `merlin/memory_manager.py` | Phase 2D — dimension-safe Qdrant writes |
 | `merlin/persona_injector.py` | Phase 2E — team mode + Pi EQ injection |
-| `merlin/trace_manager.py` | Redacted audit logging |
-| `merlin/swarm_coordinator.py` | Multi-step agent orchestration |
+| `merlin/status_extension.py` | Phase 2F — FastAPI status panels |
+| `merlin/provider_registry.py` | Read-only provider visibility; cloud remains disabled by default |
+| `merlin/swarm_coordinator.py` | Planned under #60; not present yet |
 | `merlin/task_endpoint.py` | FastAPI task API :8766 |
 | `scripts/merlin-status-api.py` | Read-only status API :8765 |
 | `docs/MASTER_PROMPT.md` | Codex session north star — always current |
