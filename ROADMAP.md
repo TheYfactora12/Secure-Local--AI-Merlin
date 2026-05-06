@@ -230,7 +230,8 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Wire `wizard report-bug`
 - [x] Add smoke coverage for doctor/report-bug/redaction
 - [x] Commit and push Issue #22 support tooling at `47f30df`
-- [ ] Commit and push Issue #24 CI Python gate after validation
+- [x] Commit and push Issue #24 CI Python gate at `c6f6652`
+- [ ] Commit and push Issue #25 Layer 1 gitleaks CI gate after validation
 
 ### 4. Fix Backup/Restore
 
@@ -390,10 +391,10 @@ Tools: SonarQube Community (Docker-native, integrates with GitHub Actions), gitl
 
 - [ ] Add `sonarqube` service to `docker-compose.yml` under the `security` profile (not default). Port `9000`, volume `sonarqube_data`. Runs only when `wizard start security` is invoked.
 - [ ] Add `scripts/sast-scan.sh` — runs SonarQube scanner against `scripts/`, `configs/merlin/`, `cli/`, `dashboard/` directories. Outputs SARIF report to `logs/sast-report.json`.
-- [ ] Wire gitleaks to pre-commit hook and CI: `gitleaks detect --source . --config .gitleaks.toml --exit-code 1`. Blocks any commit that contains a detected secret pattern.
-- [ ] Add GitHub Actions CI step: `gitleaks detect` on every push to `main` and every PR. Fails CI if secrets detected. Uses existing `.gitleaks.toml`.
+- [x] Wire gitleaks default rules into `.gitleaks.toml` and add a required CI gitleaks gate.
+- [x] Add GitHub Actions CI step: `gitleaks detect` on every push to `main` and every PR. Fails CI if secrets detected. Uses existing `.gitleaks.toml`.
 - [ ] Add `wizard doctor` check: verify gitleaks is installed and pre-commit hook is wired. Warn (not fail) if missing.
-- [ ] Add smoke test: `tests/sast-gitleaks-smoke.sh` — creates a temp file with a fake API key pattern, runs gitleaks, asserts detection, cleans up.
+- [x] Add smoke test: `tests/sast-gitleaks-smoke.sh` — creates a temp file with a fake API key pattern, runs gitleaks when installed, asserts detection, cleans up, and verifies CI gate wiring.
 
 **Layer 2 — LLM Red Teaming: Prompt Injection and Jailbreak Rejection Scanning**
 

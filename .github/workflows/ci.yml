@@ -139,6 +139,7 @@ jobs:
           bash tests/dashboard-merlin-status-smoke.sh
           bash tests/uninstall-smoke.sh
           bash tests/launchd-core-smoke.sh
+          bash tests/sast-gitleaks-smoke.sh
           bash tests/container-image-policy-smoke.sh
           bash tests/pkg-readiness-smoke.sh
           bash tests/pkg-signing-preflight-smoke.sh
@@ -181,6 +182,26 @@ jobs:
             echo "✅ No hardcoded API key patterns found"
           fi
           [ $FAIL -eq 0 ] || exit 1
+
+  gitleaks-scan:
+    name: Security — gitleaks secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Run gitleaks with repo config
+        run: |
+          docker run --rm \
+            -v "$PWD:/repo" \
+            zricethezav/gitleaks:v8.24.3 \
+            detect \
+            --source /repo \
+            --config /repo/.gitleaks.toml \
+            --no-banner \
+            --redact \
+            --exit-code 1
+          echo "✅ gitleaks scan passed"
 
   merlin-staff-core-pytest:
     name: Merlin Staff Core — Python unit tests (offline)
@@ -283,6 +304,7 @@ jobs:
       - validate-configs
       - static-smoke-tests
       - secret-scan
+      - gitleaks-scan
       - merlin-staff-core-pytest
     runs-on: ubuntu-latest
     steps:

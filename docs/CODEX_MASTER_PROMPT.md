@@ -140,12 +140,17 @@ Current Phase 2 API:
 - Keep `scripts/doctor.sh` additive only. Preserve the existing 30GB disk check; the Merlin
   Core 10GB check is separate.
 
-### 🔄 Issue #24 — CI Python Gate (CURRENT)
-- Add one CI job: `merlin-staff-core-pytest`.
-- Do not disturb the existing installer/static CI jobs.
-- The new job validates `configs/merlin/persona.yaml` against the real nested schema and runs
+### ✅ Issue #24 — CI Python Gate (DONE)
+- Commit `c6f6652` added `merlin-staff-core-pytest`.
+- The job validates `configs/merlin/persona.yaml` against the real nested schema and runs
   the offline Merlin Staff Core pytest suite.
-- `ci-success` must require the new Python job.
+- `ci-success` requires the Python job.
+
+### 🔄 Issue #25 Layer 1 — Secrets Audit (CURRENT)
+- `.gitleaks.toml` must extend gitleaks default rules.
+- Add a required `gitleaks-scan` CI job without removing the existing regex `secret-scan`.
+- Add `tests/sast-gitleaks-smoke.sh` to prove the CI gate exists and, when the local gitleaks CLI is installed, a fake AWS key is detected.
+- `ci-success` must require both `secret-scan` and `gitleaks-scan`.
 
 ### ✅ PR #10 — Installer Hardening (CLOSED)
 - `origin/installer-hardening` is an ancestor of `origin/main`; it is not an active blocker.
@@ -163,7 +168,8 @@ Current Phase 2 API:
 | #7 | Memory benchmark harness | 5 | OPEN | No proof memory is improving |
 | #8 | Langfuse observability | 5 | OPEN | Zero trace visibility |
 | #22 | sanitized failure reporting | hardening | DONE | Merged and pushed at `47f30df` |
-| #24 | CI pipeline for Python tests | hardening | LOCAL REVIEW | Add `merlin-staff-core-pytest` without changing existing CI jobs |
+| #24 | CI pipeline for Python tests | hardening | DONE | Merged and pushed at `c6f6652` |
+| #25 | Secrets audit Layer 1 | security | LOCAL REVIEW | Add gitleaks default rules, CI gate, and smoke coverage |
 | #5 | Hardware guide docs | docs | OPEN | Low urgency |
 
 ---
@@ -288,25 +294,18 @@ Do not list every file — describe the behavior change.
 
 ---
 
-## Current Build Spec: Issue #24 CI Python Gate
+## Current Build Spec: Issue #25 Layer 1 Secrets Audit
 
-Add exactly one workflow job to `.github/workflows/ci.yml`:
+Add a small secrets-audit slice:
 
-- Job id: `merlin-staff-core-pytest`
-- Runner: `ubuntu-latest`
-- Dependency install: `pytest`, `pytest-mock`, `pydantic`, `pyyaml`, `httpx`, `starlette`,
-  `fastapi`, `uvicorn`
-- Validate `configs/merlin/persona.yaml` with Python against the real schema:
-  `persona.name`, `persona.voice`, `persona.guardian_ethos`, and the 6 keyed team modes
-  `architect`, `ai_engineer`, `software_engineer`, `security_reviewer`, `product_designer`,
-  and `operator`
-- Run the offline Python unit tests:
-  `test_config_loader.py`, `test_memory_manager.py`, `test_policy_engine.py`, `test_router.py`,
-  `test_status_extension.py`, and `test_task_endpoint.py`
-- Ignore `tests/test_memory_manager_integration.py`
-- Add `merlin-staff-core-pytest` to `ci-success.needs`
+- Add `[extend] useDefault = true` to `.gitleaks.toml`.
+- Add `gitleaks-scan` to `.github/workflows/ci.yml` using pinned `zricethezav/gitleaks:v8.24.3`.
+- Keep the existing regex `secret-scan` job.
+- Add `gitleaks-scan` to `ci-success.needs`.
+- Add `tests/sast-gitleaks-smoke.sh`.
+- Run local validation: CI YAML parse, smoke test, master prompt smoke, and `git diff --check`.
 
-Do not rewrite the existing CI jobs while doing Issue #24.
+Do not add SonarQube or red-team tooling in this slice.
 
 ---
 
@@ -339,5 +338,5 @@ When the watch partner flags an issue, treat it as a blocking review comment.
 
 ## Daily Edge
 
-> The current delivery gap is CI confidence. The Merlin Staff Core exists; now every merge must
-> prove the Python core still passes offline.
+> The current delivery gap is secret-scan confidence. The support tooling can redact; now CI must
+> block secrets before they land.

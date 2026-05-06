@@ -4,6 +4,9 @@
 
 title = "home-ai-elite gitleaks config"
 
+[extend]
+  useDefault = true
+
 [allowlist]
   description = "Allowlisted paths and patterns"
   paths = [

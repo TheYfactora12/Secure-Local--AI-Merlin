@@ -126,4 +126,4 @@ Before final response:
 
 ## Current Next Recommendation
 
-Finish Issue #24 by adding the `merlin-staff-core-pytest` GitHub Actions job and requiring it in `ci-success`. After CI is green, move to Issue #25 Layer 1 secrets audit.
+Finish Issue #25 Layer 1 by adding the gitleaks default-rule config, required CI gitleaks gate, and smoke coverage. Do not add SonarQube or red-team tooling until the gitleaks slice is green.

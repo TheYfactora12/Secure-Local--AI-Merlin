@@ -36,12 +36,19 @@ Issue #22 support tooling is complete and pushed at `47f30df`:
 - `wizard doctor` and `wizard report-bug` wiring.
 - Smoke tests for doctor/report-bug/redaction.
 
-Current active implementation work is Issue #24:
+Issue #24 CI gate is complete and pushed at `c6f6652`; GitHub Actions run `25451110988` passed:
 
 - Add `merlin-staff-core-pytest` to `.github/workflows/ci.yml`.
 - Validate `configs/merlin/persona.yaml` with Python against the real nested schema.
 - Run the offline Merlin Staff Core pytest files in CI.
 - Add the new Python job to `ci-success.needs`.
+
+Current active implementation work is Issue #25 Layer 1:
+
+- Extend `.gitleaks.toml` with default gitleaks rules.
+- Add a required `gitleaks-scan` CI job while preserving the existing regex `secret-scan`.
+- Add `tests/sast-gitleaks-smoke.sh`.
+- Require `gitleaks-scan` in `ci-success.needs`.
 
 Port contract:
 
