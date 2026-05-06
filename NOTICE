@@ -1,0 +1,93 @@
+home-ai-elite — NOTICE
+======================
+
+Copyright (c) 2026 TheYfactora12
+https://github.com/TheYfactora12/home-ai-elite
+
+This product includes software and components developed by third parties.
+All third-party components are used under their respective licenses as listed
+below. This NOTICE file is provided for attribution compliance.
+
+-------------------------------------------------------------------------------
+
+THIRD-PARTY COMPONENTS
+
+1. Ollama
+   License: MIT
+   Source:  https://github.com/ollama/ollama
+   Use:     Local LLM inference engine
+
+2. n8n
+   License: Sustainable Use License (source-available)
+   Source:  https://github.com/n8n-io/n8n
+   Use:     Workflow automation and AI agent orchestration
+   Note:    Self-hosted deployment only. Review n8n license terms before
+            any commercial redistribution of workflows.
+
+3. Open WebUI
+   License: BSD 3-Clause
+   Source:  https://github.com/open-webui/open-webui
+   Use:     Chat interface for local LLM models
+
+4. LiteLLM
+   License: MIT
+   Source:  https://github.com/BerriAI/litellm
+   Use:     LLM proxy and model routing layer
+
+5. Qdrant
+   License: Apache 2.0
+   Source:  https://github.com/qdrant/qdrant
+   Use:     Vector database for semantic memory storage
+
+6. Langfuse
+   License: MIT (self-hosted community edition)
+   Source:  https://github.com/langfuse/langfuse
+   Use:     LLM observability, tracing, and quality scoring
+
+7. Docker
+   License: Apache 2.0 (Docker Engine)
+   Source:  https://github.com/docker/docker-ce
+   Use:     Container runtime for all services
+
+8. gitleaks
+   License: MIT
+   Source:  https://github.com/gitleaks/gitleaks
+   Use:     Secret scanning in CI and pre-commit hooks
+
+9. garak
+   License: Apache 2.0
+   Source:  https://github.com/NVIDIA/garak
+   Use:     LLM vulnerability and red-team scanning
+
+10. promptfoo
+    License: MIT
+    Source:  https://github.com/promptfoo/promptfoo
+    Use:     Adversarial LLM evaluation and red-team testing
+
+-------------------------------------------------------------------------------
+
+ORIGINAL WORK
+
+All scripts, configuration files, CLI tooling, n8n workflow designs, Qdrant
+schema definitions, installer logic, persona definitions, memory architecture,
+and documentation in this repository are original works authored by
+TheYfactora12 and are protected under the MIT License with additional terms
+as stated in the LICENSE file.
+
+Brand names "Merlin", "Wizard AI", and "home-ai-elite" are original designations
+of this project and may not be used in derivative works without permission.
+
+-------------------------------------------------------------------------------
+
+PRODUCTION UPDATE REQUIRED
+
+Prior to wide public distribution or commercialization, this file must be
+updated with:
+- Author's full legal name
+- Any additional third-party components added after this date
+- Formal SPDX license identifiers for each component
+- Review of n8n Sustainable Use License compliance for intended use case
+
+-------------------------------------------------------------------------------
+
+Last updated: 2026-05-06
