@@ -361,4 +361,5 @@ Next implementation slice:
 - Add plan-only Magic Mode runner that turns route dry-runs into auditable steps without executing any step. `Done: scripts/merlin-magic-plan.sh, cli/wizard, tests/merlin-magic-plan-smoke.sh`
 - Add approved memory-write simulator before real Qdrant writes so consent/audit behavior is stable first. `Done: scripts/merlin-memory-write.sh, cli/wizard, tests/merlin-memory-write-smoke.sh`
 - Add approved local Qdrant memory write adapter behind the simulator contract, with canonical collection checks, local Ollama embeddings only, redacted audit records, backup manifest coverage, and fake-adapter denial tests. `Done: scripts/merlin-memory-write.sh, config/merlin/memory-collections.env, tests/merlin-memory-write-smoke.sh, tests/memory-config-smoke.sh`
+- Live-validate approved local Qdrant memory write on the low-memory core profile after explicit canonical collection initialization and explicit `nomic-embed-text` install. `Done: merlin_user point 640cc4bb-5dc9-3c68-8a44-5d2560a15ab5, redacted audit mem_20260506_040805_654553`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

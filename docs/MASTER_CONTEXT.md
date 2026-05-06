@@ -117,7 +117,7 @@ The next engineering priority is live-safe memory persistence design: define the
 ## Next Actions
 
 1. Keep validating the read-only Merlin status API during each startup-related change.
-2. Validate the real memory write adapter against live local Qdrant after canonical collections are initialized and the embedding model is explicitly installed.
+2. Add the memory retrieval/read adapter so Merlin can safely recall approved local Qdrant memory without exposing secrets or bypassing approval policy.
 3. Continue updating roadmap/docs/tests with every milestone before signing/notarization work.
 
 ## Validation
@@ -149,6 +149,7 @@ Last verified: 2026-05-06.
 - `wizard merlin memory simulate --memory-type preference --text "..." --approval-id <id>` writes only redacted simulated memory audit records to `logs/merlin-memory-writes.jsonl`.
 - `wizard merlin memory write --memory-type preference --text "..." --approval-id <id>` can upsert approved memory to local Qdrant with local Ollama embeddings. It does not create collections, pull models, start services, call cloud APIs, or store raw text in the JSONL audit log.
 - `tests/merlin-memory-write-smoke.sh` verifies approved `memory_write` gate validation, fail-closed denial, no raw audit logging, no Qdrant/embedding calls during plan/simulate/denial, and a fake local Qdrant/Ollama write path for approved `write`.
+- Live memory validation on 2026-05-06 initialized canonical Qdrant collections with `MERLIN_CREATE_CANONICAL_COLLECTIONS=true bash scripts/init-qdrant.sh`, explicitly installed local `nomic-embed-text`, approved `approval_dryrun_20260506_040756_17686`, wrote point `640cc4bb-5dc9-3c68-8a44-5d2560a15ab5` into `merlin_user`, and verified the JSONL audit record `mem_20260506_040805_654553` stayed redacted.
 
 Earlier live validation on 2026-05-05:
 
