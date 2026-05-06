@@ -181,6 +181,8 @@ Dry-run behavior:
 
 This keeps the product path aligned with the installer: Merlin can reason about the existing stack before it is allowed to operate the stack.
 
+Dry-run can also append an audit record with `--write-trace`. This writes one redacted JSONL route decision to the trace log from `config/merlin/trace.yaml`, or to `--trace-log <path>` for tests. Trace writes store the hashed user goal and route metadata only; they must not store raw prompts, documents, API keys, auth headers, or tool outputs. Trace writing is intentionally separate from model calls and tool execution.
+
 ## Memory Design
 
 Merlin memory must be explicit and auditable. It should not silently learn every prompt.

@@ -53,4 +53,65 @@ WIZARD_OUTPUT="$(HOME_AI_PROFILE=core bash "${STACK_DIR}/cli/wizard" merlin dry-
 require_output "$WIZARD_OUTPUT" '^route_id: memory$' "wizard merlin dry-run should call dry-run script"
 require_output "$WIZARD_OUTPUT" '^policy_decision: require_approval$' "memory route should require approval"
 
+TMP="$(mktemp -d)"
+cleanup() {
+  rm -rf "$TMP"
+}
+trap cleanup EXIT
+
+TRACE_LOG="${TMP}/merlin-route-decisions.jsonl"
+TRACE_OUTPUT="$(HOME_AI_PROFILE=core bash "${STACK_DIR}/scripts/merlin-dry-run.sh" --write-trace --trace-log "$TRACE_LOG" "debug token sk-test installer")"
+require_output "$TRACE_OUTPUT" '^trace_written: true$' "write-trace should report trace_written"
+require_output "$TRACE_OUTPUT" "^trace_log: ${TRACE_LOG}$" "write-trace should report trace path"
+[[ -s "$TRACE_LOG" ]] || fail "write-trace should append JSONL record"
+[[ "$(wc -l < "$TRACE_LOG" | tr -d ' ')" == "1" ]] || fail "write-trace should append one line"
+
+TRACE_LOG="$TRACE_LOG" python3 - <<'PY' || fail "trace JSONL record failed validation"
+import json
+import os
+from pathlib import Path
+
+line = Path(os.environ["TRACE_LOG"]).read_text(encoding="utf-8").strip()
+record = json.loads(line)
+
+required = [
+    "trace_id",
+    "timestamp",
+    "user_goal_hash",
+    "route_id",
+    "task_type",
+    "selected_agent",
+    "required_profile",
+    "active_profile",
+    "hardware_tier",
+    "privacy_mode",
+    "online_mode",
+    "cloud_allowed",
+    "selected_model_alias",
+    "provider",
+    "approval_gates",
+    "approval_status",
+    "policy_decision",
+    "decision_reason",
+    "redaction_applied",
+]
+missing = [field for field in required if field not in record]
+if missing:
+    raise SystemExit(f"missing fields: {missing}")
+if record["route_id"] != "code":
+    raise SystemExit("expected code route")
+if record["policy_decision"] != "ask_to_start_profile":
+    raise SystemExit("expected optional profile approval decision")
+if record["online_mode"] is not False or record["cloud_allowed"] is not False:
+    raise SystemExit("online/cloud flags must be false booleans")
+if record["redaction_applied"] is not True:
+    raise SystemExit("redaction flag missing")
+if "sk-test" in line or "debug token" in line:
+    raise SystemExit("trace must not contain raw goal or secret-like prompt text")
+if not str(record["user_goal_hash"]).startswith("sha256:"):
+    raise SystemExit("trace must contain goal hash")
+if "shell_command" not in record["approval_gates"]:
+    raise SystemExit("code trace missing shell approval gate")
+PY
+
 echo "PASS: Merlin dry-run control plane is read-only and approval-gated"

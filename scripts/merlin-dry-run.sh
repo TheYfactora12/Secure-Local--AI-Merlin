@@ -18,12 +18,16 @@ usage() {
 Usage:
   scripts/merlin-dry-run.sh "user goal"
   scripts/merlin-dry-run.sh --task-type code "debug the installer"
+  scripts/merlin-dry-run.sh --write-trace "plan a local install"
 
 Options:
   --task-type <type>  Force task type: general, search, code, automation, memory
+  --write-trace       Append a redacted JSONL route trace
+  --trace-log <path>  Override trace log path for --write-trace
 
-This command is read-only. It does not call models, start services, write memory,
-download models, use API keys, or execute tools.
+By default this command is read-only. It does not call models, start services,
+write memory, download models, use API keys, or execute tools. With
+--write-trace it only appends redacted route metadata to a local JSONL log.
 EOF
 }
 
@@ -41,10 +45,37 @@ fail() {
 source "$PROFILE_LIB"
 
 TASK_TYPE=""
-if [[ "${1:-}" == "--task-type" ]]; then
-  TASK_TYPE="${2:-}"
-  shift 2 || true
-fi
+WRITE_TRACE=false
+TRACE_LOG_OVERRIDE=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --task-type)
+      TASK_TYPE="${2:-}"
+      [[ -n "$TASK_TYPE" ]] || fail "--task-type requires a value"
+      shift 2
+      ;;
+    --write-trace)
+      WRITE_TRACE=true
+      shift
+      ;;
+    --trace-log)
+      TRACE_LOG_OVERRIDE="${2:-}"
+      [[ -n "$TRACE_LOG_OVERRIDE" ]] || fail "--trace-log requires a path"
+      shift 2
+      ;;
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    --*)
+      fail "unknown option: $1"
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 GOAL="${*:-}"
 [[ -n "$GOAL" ]] || { usage; exit 1; }
@@ -161,6 +192,78 @@ goal_hash() {
   fi
 }
 
+default_trace_log_path() {
+  local configured
+  configured="$(awk -F': ' '/^[[:space:]]+local_file:/ { print $2; exit }' "$TRACE_FILE")"
+  configured="${configured:-logs/merlin-route-decisions.jsonl}"
+  if [[ "$configured" = /* ]]; then
+    echo "$configured"
+  else
+    echo "${STACK_DIR}/${configured}"
+  fi
+}
+
+json_escape() {
+  python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'
+}
+
+json_array_from_csv() {
+  local csv="$1"
+  if [[ -z "$csv" ]]; then
+    printf '[]'
+    return
+  fi
+  CSV_VALUE="$csv" python3 -c '
+import json
+import os
+print(json.dumps([item for item in os.environ["CSV_VALUE"].split(",") if item]))
+'
+}
+
+json_bool() {
+  case "$1" in
+    true|TRUE|True|1|yes|YES|Yes) printf 'true' ;;
+    *) printf 'false' ;;
+  esac
+}
+
+write_trace_record() {
+  local trace_log="$1"
+  local timestamp="$2"
+  local approval_gates_json
+  local decision_reason_json
+  local user_goal_hash_json
+  local online_mode_json
+  local cloud_allowed_json
+
+  approval_gates_json="$(json_array_from_csv "$APPROVAL_GATES")"
+  decision_reason_json="$(printf '%s' "$DECISION_REASON" | json_escape)"
+  user_goal_hash_json="$(printf '%s' "$USER_GOAL_HASH" | json_escape)"
+  online_mode_json="$(json_bool "$ONLINE_MODE")"
+  cloud_allowed_json="$(json_bool "$CLOUD_ALLOWED")"
+
+  mkdir -p "$(dirname "$trace_log")"
+  printf '{"trace_id":%s,"timestamp":%s,"user_goal_hash":%s,"route_id":%s,"task_type":%s,"selected_agent":%s,"required_profile":%s,"active_profile":%s,"hardware_tier":%s,"privacy_mode":%s,"online_mode":%s,"cloud_allowed":%s,"selected_model_alias":%s,"provider":%s,"approval_gates":%s,"approval_status":%s,"policy_decision":%s,"decision_reason":%s,"redaction_applied":true,"side_effects":"none","model_calls":"none","memory_writes":"none","service_starts":"none","tool_execution":"none"}\n' \
+    "$(printf '%s' "$TRACE_ID" | json_escape)" \
+    "$(printf '%s' "$timestamp" | json_escape)" \
+    "$user_goal_hash_json" \
+    "$(printf '%s' "$ROUTE_ID" | json_escape)" \
+    "$(printf '%s' "$TASK_TYPE" | json_escape)" \
+    "$(printf '%s' "$AGENT" | json_escape)" \
+    "$(printf '%s' "$REQUIRED_PROFILE" | json_escape)" \
+    "$(printf '%s' "$ACTIVE_PROFILE" | json_escape)" \
+    "$(printf '%s' "$HARDWARE_TIER" | json_escape)" \
+    "$(printf '%s' "$PRIVACY_MODE" | json_escape)" \
+    "$online_mode_json" \
+    "$cloud_allowed_json" \
+    "$(printf '%s' "$MODEL_ALIAS" | json_escape)" \
+    "$(printf '%s' "ollama" | json_escape)" \
+    "$approval_gates_json" \
+    "$(printf '%s' "$APPROVAL_STATUS" | json_escape)" \
+    "$(printf '%s' "$POLICY_DECISION" | json_escape)" \
+    "$decision_reason_json" >> "$trace_log"
+}
+
 profile_has_capability() {
   local active_profile="$1"
   local required_profile="$2"
@@ -198,6 +301,7 @@ PRIVACY_MODE="${MERLIN_PRIVACY_MODE:-local_only}"
 ONLINE_MODE="${MERLIN_ONLINE_MODE:-false}"
 CLOUD_ALLOWED="${MERLIN_CLOUD_ALLOWED:-false}"
 TRACE_ID="dryrun_$(date -u +%Y%m%d_%H%M%S)"
+TRACE_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 USER_GOAL_HASH="$(goal_hash "$GOAL")"
 
 POLICY_DECISION="allow"
@@ -220,9 +324,16 @@ if [[ "$HARDWARE_TIER" == "low" && "$REQUIRED_PROFILE" != "core" ]]; then
   DECISION_REASON="${DECISION_REASON} Low-memory tier should avoid heavy optional profiles unless the user explicitly approves."
 fi
 
+TRACE_LOG_PATH="${TRACE_LOG_OVERRIDE:-$(default_trace_log_path)}"
+
+if [[ "$WRITE_TRACE" == true ]]; then
+  write_trace_record "$TRACE_LOG_PATH" "$TRACE_TIMESTAMP"
+fi
+
 cat <<EOF
 Merlin dry-run route decision
 trace_id: ${TRACE_ID}
+timestamp: ${TRACE_TIMESTAMP}
 user_goal_hash: ${USER_GOAL_HASH}
 route_id: ${ROUTE_ID}
 task_type: ${TASK_TYPE}
@@ -248,4 +359,6 @@ model_calls: none
 memory_writes: none
 service_starts: none
 tool_execution: none
+trace_written: ${WRITE_TRACE}
+trace_log: ${TRACE_LOG_PATH}
 EOF
