@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import time
 import uuid
+from collections import deque
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -23,6 +26,7 @@ LITELLM_CHAT_COMPLETIONS_URL = "http://localhost:4000/v1/chat/completions"
 LITELLM_TIMEOUT_SECONDS = 90
 
 app = FastAPI(title="Merlin Task Endpoint")
+TASK_TRACE_BUFFER: deque[dict[str, Any]] = deque(maxlen=50)
 
 
 class TaskRequest(BaseModel):
@@ -41,6 +45,31 @@ class TaskResponse(BaseModel):
 
 def _input_hash(user_input: str) -> str:
     return hashlib.sha256(user_input.encode("utf-8")).hexdigest()
+
+
+def record_task_trace(
+    *,
+    input_hash: str,
+    session_id: str,
+    route: RouteDecision,
+    approved: bool,
+    memory_written: bool,
+    degraded: bool,
+    latency_ms: int,
+) -> None:
+    TASK_TRACE_BUFFER.append(
+        {
+            "timestamp": datetime.now(UTC).isoformat(),
+            "input_hash": input_hash,
+            "session_id": session_id,
+            "route_id": route.route_id,
+            "staff_mode": route.staff_mode,
+            "approved": approved,
+            "memory_written": memory_written,
+            "degraded": degraded,
+            "latency_ms": max(1, latency_ms),
+        }
+    )
 
 
 def _validate_user_input(user_input: str) -> str:
@@ -111,17 +140,46 @@ def _write_session_memory(session_id: str, user_input: str, merlin_response: str
 
 @app.post("/task", response_model=TaskResponse)
 def task(request: TaskRequest) -> TaskResponse:
+    started = time.perf_counter()
     user_input = _validate_user_input(request.input)
     session_id = request.session_id or str(uuid.uuid4())
-    logger.info("Task request received: input_hash=%s session_id=%s", _input_hash(user_input), session_id)
+    input_hash = _input_hash(user_input)
+    logger.info("Task request received: input_hash=%s session_id=%s", input_hash, session_id)
 
-    route = _route_or_block(user_input)
+    route = route_task(user_input)
+    if route.requires_approval:
+        record_task_trace(
+            input_hash=input_hash,
+            session_id=session_id,
+            route=route,
+            approved=False,
+            memory_written=False,
+            degraded=False,
+            latency_ms=int((time.perf_counter() - started) * 1000),
+        )
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": "Approval required before Merlin can continue this route.",
+                "route_id": route.route_id,
+                "approval_gates": route.approval_gates,
+            },
+        )
     system_prompt = build_system_prompt(route)
 
     try:
         response_text = _call_litellm(system_prompt, user_input, route.selected_model_alias)
     except (httpx.ConnectError, httpx.TimeoutException, httpx.HTTPError, OSError):
-        logger.warning("LiteLLM unavailable: input_hash=%s route_id=%s", _input_hash(user_input), route.route_id)
+        logger.warning("LiteLLM unavailable: input_hash=%s route_id=%s", input_hash, route.route_id)
+        record_task_trace(
+            input_hash=input_hash,
+            session_id=session_id,
+            route=route,
+            approved=False,
+            memory_written=False,
+            degraded=True,
+            latency_ms=int((time.perf_counter() - started) * 1000),
+        )
         return TaskResponse(
             response="Merlin is starting up. Try again in 30 seconds.",
             route={},
@@ -135,6 +193,16 @@ def task(request: TaskRequest) -> TaskResponse:
     if request.session_id:
         memory_written = _write_session_memory(session_id, user_input, response_text, route)
 
+    record_task_trace(
+        input_hash=input_hash,
+        session_id=session_id,
+        route=route,
+        approved=True,
+        memory_written=memory_written,
+        degraded=False,
+        latency_ms=int((time.perf_counter() - started) * 1000),
+    )
+
     return TaskResponse(
         response=response_text,
         route=route.model_dump(),
@@ -142,3 +210,12 @@ def task(request: TaskRequest) -> TaskResponse:
         session_id=session_id,
         memory_written=memory_written,
     )
+
+
+from merlin import status_extension  # noqa: E402,F401  Register status routes after app setup.
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="127.0.0.1", port=8766)
