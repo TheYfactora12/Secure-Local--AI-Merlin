@@ -177,6 +177,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 
 - [ ] Keep agent orchestration optional until core mode is stable
 - [x] Add Merlin persona seed for local-first AI engineering team behavior
+- [x] Add Merlin guardian ethos with consent and safety boundaries
 - [x] Define Magic Mode task routing: general, search, code, automation, memory
 - [x] Define approval rules for code execution, shell commands, file writes, and network access
 - [x] Decide whether orchestration lives in n8n, a Python controller, LangGraph-style graphs, or a hybrid
