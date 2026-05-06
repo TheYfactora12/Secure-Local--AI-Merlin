@@ -2,6 +2,38 @@
 
 Last updated: 2026-05-06
 
+## Current GitHub Milestone Alignment
+
+The active GitHub milestone ladder is:
+
+- `v1.0 — Stable Installer Release`
+- `v1.1 — Mobile Access + Remote-Safe Entry Points`
+- `v1.2 — Hardware Guide + Document Ingestion Planning`
+- `v1.3 — Reliability + Memory + Router`
+- `v1.5 — Memory Benchmarking`
+- `v1.6 — Pi Intelligence + Observability`
+- `v1.7 — Security Hardening`
+- `v2.0 — Merlin Staff Core`
+- `v2.1 — Dashboard Command Center`
+- `v2.2 — Magic Mode`
+- `v3.0 — Public Product Release`
+
+Recent normalization:
+
+- #41 through #46 are closed under `v1.0`.
+- #47 is open under `v1.1`.
+- #5 is open under `v1.2`.
+- #28 is closed under `v2.0`.
+- #30 and #39 are open under `v2.1`.
+- #33 and #34 are open under `v2.2`.
+- #37 is open under `v3.0`.
+
+Current next queue:
+
+1. Rerun full fresh uninstall/install from current `main`.
+2. Finish #1 only after fresh install, package, upgrade, backup, restore, and uninstall checks pass.
+3. Then take #47 or #5 as docs/planning work, not runtime behavior.
+
 ## Issue 1: Document Current Installer Baseline And Do-Not-Break List
 
 - Goal: Preserve the working installer before product changes.
@@ -83,7 +115,7 @@ Status: implemented in Issue #28.
 - Goal: Make route/model decisions explainable.
 - User value: Better trust and fewer low-memory crashes.
 - Files likely touched: `merlin/router.py`, configs, tests.
-- Implementation notes: Avoid heavy aliases on low tier; no cloud fallback.
+- Implementation notes: Avoid heavy aliases on low tier; no automatic external-provider fallback.
 - Acceptance criteria: Route metadata includes model alias and warning.
 - Manual tests: route common prompts.
 - Automated tests: router tests for all route IDs.
@@ -128,4 +160,4 @@ Status: implemented in Issue #28.
 
 ## Recommended First PR
 
-Issue 4 gives the most immediate product value now that baseline docs, doctor, config validation, CI, and security scanning already exist. If the team wants a pure-doc first PR, use Issue 1. If shipping value is the goal, use Issue 4.
+Issue 4 is complete. The current highest-value work is not a new feature PR; it is the second fresh v1.0 installer validation run from current `main`.

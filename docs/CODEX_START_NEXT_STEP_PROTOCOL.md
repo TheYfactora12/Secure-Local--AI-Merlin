@@ -28,7 +28,7 @@ When the repo owner says `start`, Codex must:
 2. Identify the current phase from `docs/CODEX_MASTER_PROMPT.md` and roadmap docs.
 3. Identify the highest-priority open issue or build slice.
 4. Validate that the proposed work preserves the working installer.
-5. Validate that the proposed work is safe for M1 8GB Macs.
+5. Validate that the proposed work is safe for M1 8GB Macs in entry-level low/core mode.
 6. Validate that local-only mode remains default.
 7. Validate that no cloud/API behavior is introduced by default.
 8. Validate that no autonomous agent behavior is introduced without approval gates.

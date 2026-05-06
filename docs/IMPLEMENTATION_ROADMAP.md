@@ -6,6 +6,26 @@ Last updated: 2026-05-06
 
 Ship Merlin as a useful local-first product before expanding into supervised execution. The installer remains protected. The first implementation slices should be docs/config/health/CLI/dashboard layers, not broad service rewrites.
 
+## GitHub Milestone Ladder
+
+Current GitHub milestone sequence:
+
+| Milestone | Purpose | Current rule |
+|---|---|---|
+| `v1.0 — Stable Installer Release` | Fresh install, package, backup/restore, upgrade, uninstall | Must finish before new runtime feature work |
+| `v1.1 — Mobile Access + Remote-Safe Entry Points` | Optional mobile/local-network entry point design | Opt-in only; no default LAN exposure |
+| `v1.2 — Hardware Guide + Document Ingestion Planning` | 8GB-first hardware guide and optional ingestion plan | Docs/planning before heavy dependencies |
+| `v1.3 — Reliability + Memory + Router` | Retry logic, memory reliability, router cleanup | Local-first and approval-gated |
+| `v1.5 — Memory Benchmarking` | Memory quality evaluation | After memory behavior is stable |
+| `v1.6 — Pi Intelligence + Observability` | Warmth/persona and local observability | No heavy default tracing dependency |
+| `v1.7 — Security Hardening` | SAST, red team, policy enforcement | Security gates stay fail-closed |
+| `v2.0 — Merlin Staff Core` | Python Merlin core and policy surfaces | No cloud default, no autonomous execution |
+| `v2.1 — Dashboard Command Center` | Read-only/user-facing control center | No privileged mutation in dashboard v1 |
+| `v2.2 — Magic Mode` | Supervised orchestration | Plan-first, approval-gated |
+| `v3.0 — Public Product Release` | Public packaging/onboarding polish | Only after stable lower milestones |
+
+Stress-test result: keep this ladder explicit. Do not jump from `v1.0` to `v1.3`; `v1.1` and `v1.2` are now real GitHub milestones.
+
 ## Milestone 0: Protect Installer And Document Baseline
 
 Goal: Make the current working baseline explicit.
@@ -199,8 +219,14 @@ Acceptance:
 
 ## First Implementation Slice
 
-Recommended first PR:
+Current next implementation slice:
+
+**Rerun full fresh uninstall/install from current `main`.**
+
+Reason: #41 through #46 were fixed after the first fresh Mac install test. v1.0 cannot be treated as stable until those fixes are verified together in one clean run.
+
+Previous recommended first PR:
 
 **Add `wizard merlin ask` as a thin local wrapper.**
 
-It does not break the installer, works on 8GB Macs, requires no cloud APIs, introduces no autonomous agents, is testable in one PR, and rolls back cleanly.
+Status: completed. It does not break the installer, works on 8GB Macs, requires no cloud APIs, introduces no autonomous agents, is testable in one PR, and rolls back cleanly.

@@ -2,7 +2,7 @@
 
 Last updated: 2026-05-06
 
-The 8GB Mac is the design floor. If v1 works there, it will scale up. If it assumes workstation resources, it will fail the users who need safe defaults most.
+The 8GB Mac is the entry point and design floor. It is not the target for the full stack. If v1 works there in low/core mode, it can scale up by enabling profiles, services, and larger models as hardware allows. If v1 assumes workstation resources, it will fail the users who need safe defaults most.
 
 ## Tier Table
 
@@ -16,6 +16,7 @@ The 8GB Mac is the design floor. If v1 works there, it will scale up. If it assu
 ## Tier 1: M1/M2 8GB
 
 - Safe default: `core`.
+- Entry point only: no expectation that every capability runs here.
 - One model active at a time.
 - No automatic large downloads.
 - No heavy background services.
@@ -77,6 +78,7 @@ Test cases:
 ## Dashboard Behavior
 
 - Always show tier.
+- Explain that 8GB is entry-level low/core mode, not full-stack mode.
 - Explain why services are disabled.
 - Warn before model pulls.
 - Warn before starting optional heavy profiles.

@@ -308,7 +308,7 @@ The declarative v1 policy seed lives in `configs/merlin/policy.yaml`. It is non-
 The policy must keep these defaults until runtime approval handling is implemented:
 
 - Magic Mode disabled by default.
-- Online/cloud fallback disabled by default.
+- Online external providers disabled by default.
 - Shell and file writes disabled for agents by default.
 - Memory auto-write disabled by default.
 - OpenHands tasks treated as critical risk.
@@ -367,6 +367,6 @@ Do not introduce all files at once. Start with `profiles.yaml` or `hardware-tier
 - Replacing LiteLLM.
 - Replacing Qdrant.
 - Building a new full agent framework before core is stable.
-- Automatic cloud fallback.
+- Automatic external-provider fallback.
 - Silent memory learning.
 - Autonomous shell/file/network actions.

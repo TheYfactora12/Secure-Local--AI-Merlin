@@ -1,6 +1,6 @@
 # 🧠 Home AI Elite
 
-> **Local AI on hardware you own. Start small, scale by profile. Zero required subscriptions.**
+> **Local AI on hardware you own. 8GB entry point, scales by profile. Zero required subscriptions.**
 
 A local-first AI stack for chat, model routing, vector memory, private search, automation, and autonomous coding. The target architecture is core-first: start with the lightweight local AI core, then enable heavier profiles such as search, automation, coding agents, and server operations when the machine can handle them.
 
@@ -70,7 +70,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/TheYfactora12/home-ai-elite/
 **Requirements:**
 - Docker Desktop (running)
 - macOS 13+ or Ubuntu 22.04+
-- 8 GB RAM minimum (24 GB recommended)
+- 8 GB RAM entry point for low/core mode (24 GB+ recommended for heavier profiles)
 - 50 GB free disk
 
 ---
@@ -118,7 +118,7 @@ You
  │
  │    (all route through)
  │
- ├──► LiteLLM      :4000   ← Model router (local-first, cloud fallback)
+ ├──► LiteLLM      :4000   ← Model router (local-first, optional cloud only with approval)
  │         │
  │         ├──► Ollama  :11434  ← Local AI brain
  │         └──► Cloud APIs      ← Optional escalation
@@ -138,7 +138,7 @@ You
 | **Perplexica** | 3002 | AI-powered web search with citations | Perplexity AI |
 | **OpenHands** | 3003 | Autonomous multi-file coding agent | GitHub Copilot Workspace / Codex |
 | **SearXNG** | 8080 | Private metasearch engine | Google (for the AI) |
-| **LiteLLM** | 4000 | Unified model router — local + cloud | OpenAI API layer |
+| **LiteLLM** | 4000 | Unified local-first model router; optional cloud only with approval | OpenAI-compatible API layer |
 | **n8n** | 5678 | Workflow automation + AI routing | Zapier + custom logic |
 | **Qdrant** | 6333 | Vector database for AI memory | Pinecone |
 | **Ollama** | 11434 | Local LLM server | OpenAI API |
@@ -205,7 +205,7 @@ See `docs/MODEL_OPERATIONS.md` for model efficiency and cooldown notes.
 | File | Purpose |
 |------|---------|
 | `.env` | API keys, passwords, model selection |
-| `configs/litellm/config.yaml` | Model routing rules (add cloud fallback here) |
+| `configs/litellm/config.yaml` | Model routing rules (optional cloud providers stay disabled unless explicitly enabled) |
 | `configs/searxng/settings.yml` | Search engines, privacy settings |
 | `configs/perplexica/config.toml` | Perplexica model + endpoint config |
 
@@ -230,7 +230,7 @@ Do not expose n8n over LAN or internet with `N8N_SECURE_COOKIE=false`.
 
 ## 🔑 Optional: Cloud Escalation
 
-The stack runs 100% locally out of the box. To add cloud fallback for hard tasks:
+The stack runs locally out of the box. Optional cloud providers are off by default and must be explicitly enabled and approved. To add optional cloud routing for hard tasks:
 
 1. Edit `.env` — add `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.
 2. Edit `configs/litellm/config.yaml` — uncomment cloud model entries

@@ -31,7 +31,7 @@ You are a builder with a specific codebase, a specific roadmap, and specific ope
 | Purpose | One-shot local AI stack for macOS Apple Silicon |
 | Stack | Ollama · Open WebUI · LiteLLM · Qdrant · n8n · Perplexica · OpenHands · SearXNG |
 | Default profile | `core` (Ollama + Open WebUI + LiteLLM + Qdrant) |
-| Default model | `qwen2.5:7b` (8 GB Mac), `qwen2.5:32b` (36 GB+) |
+| Default model | `qwen2.5:7b` (8 GB entry low/core mode), `qwen2.5:32b` (36 GB+) |
 | Installer | `install.sh` → Docker Compose + native Ollama |
 | CLI | `cli/wizard` |
 | Dashboard | `dashboard/index.html` (static, localhost:8888) |
@@ -80,7 +80,7 @@ serves execution-aware Phase 2 routes/status panels. Do not merge these servers.
 
 ### ✅ Phase 1 — Architecture, Profiles, Health (DONE)
 - Profiles defined: `core`, `search`, `automation`, `coding`, `full`
-- Hardware tiers: `low`(≤8 GB), `base`(16 GB), `mid`(24 GB), `high`(48 GB+)
+- Hardware tiers: `low`(8-15 GB entry/core mode), `base`(16 GB), `mid`(24 GB), `high`(48 GB+)
 - `wizard doctor` — 43 checks, 0 failures on core install (Issue #2 CLOSED)
 - `wizard start [profile]` — profile-aware launch
 - `configs/merlin/policy.yaml` — declarative gates, NOT yet runtime-parsed

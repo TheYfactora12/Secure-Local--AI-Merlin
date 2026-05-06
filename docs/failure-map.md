@@ -2,6 +2,10 @@
 **Research Date:** May 2, 2026 | **Owner:** TheYfactora12 | Oxford, MA
 **Purpose:** Map 20 documented failure patterns across real self-hosted AI projects so Wizard avoids each one.
 
+> Status: legacy research note. Keep this file for historical failure-pattern context, but use `docs/IMPLEMENTATION_ROADMAP.md`, `docs/FRESH_INSTALL_MAC_TEST_2026-05-06.md`, GitHub milestones, and GitHub issues as the current execution source of truth.
+>
+> Current policy changes since this note was written: 8GB Macs are supported in low/core mode, cloud fallback is never automatic, and mobile/LAN access is opt-in planning under `v1.1`.
+
 ---
 
 ## Executive Summary
@@ -16,7 +20,7 @@ Gartner predicts 60% of AI projects will be abandoned through 2026. MIT research
 
 #### Failure 1: Ollama ↔ Open WebUI Hostname Death Spiral
 Ollama listens on `127.0.0.1` by default. Docker containers can't reach localhost — need `host.docker.internal` or `OLLAMA_HOST=0.0.0.0`. Most stacks ship wrong defaults. Users see "Failed to fetch models", give up.
-**Wizard fix:** `install.sh` sets `OLLAMA_HOST=0.0.0.0`. `wizard doctor` validates every hostname/port at preflight.
+**Wizard fix:** macOS uses native Ollama and services reach it through `host.docker.internal`; public/LAN binding is not the default. `wizard doctor` validates host/port reachability.
 
 #### Failure 2: n8n + Ollama "Context Canceled" Crash
 n8n Ollama node cancels mid-stream on longer outputs → HTTP 500 "context canceled" → Structured Output Parser throws format error. Production workflows silently fail.
@@ -71,8 +75,8 @@ One model handles all task types — mediocre at all of them.
 **Wizard fix:** LiteLLM config + n8n smart router. Already in v0.2/v0.9.
 
 #### Failure 13: Sensitive Data Leaks to Cloud APIs
-Stacks with cloud fallback keys send sensitive queries to OpenAI/Anthropic with no routing enforcement.
-**Wizard fix:** SENSITIVE class hardcoded to local-only. Not configurable. v0.9.
+Stacks with automatic cloud fallback can send sensitive queries to OpenAI/Anthropic with no routing enforcement.
+**Wizard fix:** Sensitive routes stay local-only by default. External providers are optional, explicit, and approval-gated.
 
 #### Failure 14: Web Search Returns Links, Not Answers
 SearXNG returns raw results. No synthesis layer. Experience feels like worse Google.
@@ -96,7 +100,7 @@ Users run 6-month-old models. New models (qwen2.5, deepseek-r1) are materially b
 
 #### Failure 18: No Mobile/Remote Access
 Powerful local AI stack can't be accessed from phone or other machines. Becomes a desktop toy.
-**Wizard fix:** v1.1 — iOS shortcut → n8n webhook → Wizard brain. Nginx proxy already in v0.7.
+**Wizard fix:** v1.1 planning issue #47 defines optional mobile/remote-safe entry points. No LAN/mobile exposure is default behavior.
 
 ---
 

@@ -16,11 +16,11 @@ The #1 cause of self-hosted AI project death is not hardware or model quality �
 
 | # | Failure Mode | Root Cause | Real-World Example | Our Target / Mitigation |
 |---|---|---|---|---|
-| 1 | **RAM starvation kills inference** | Running 7B+ models on 16GB unified memory machines with Docker overhead | Users running Ollama + Open WebUI + n8n + Qdrant on M1 MacBook Air 8GB — swap thrashing, 30s+ response times | Minimum 16GB unified RAM; 32GB recommended. install.sh preflight check blocks install if RAM < 16GB |
+| 1 | **RAM starvation kills inference** | Running too many services or too-large models on low-memory machines | Users running Ollama + Open WebUI + n8n + Qdrant on M1 MacBook Air 8GB — swap thrashing, 30s+ response times | 8GB is the entry point and is supported only in low/core mode. Doctor warns against heavy profiles and model pulls are opt-in. |
 | 2 | **GPU/NPU not utilized** | Default Docker config ignores Apple Silicon GPU; models run on CPU | Ollama installed via Docker without Metal acceleration — 10x slower than native | Ollama installed natively (not Docker) to get full Metal GPU access on Apple Silicon |
 | 3 | **Disk fills silently** | Model files (4–20GB each), n8n logs, Qdrant vectors grow unbounded | Qdrant fills `/var/lib/docker` volume, container crashes with no warning | `status.sh` monitors disk usage; launchd agent alerts at 80% disk; model storage mapped to external volume path |
 | 4 | **Docker Desktop memory cap** | Default Docker Desktop on Mac limits container memory to 2GB | Open WebUI OOM-killed repeatedly; users can't figure out why | `docker-compose.yml` includes `mem_limit` directives; README documents Docker Desktop memory setting to 10GB+ |
-| 5 | **Port conflicts block startup** | Multiple services competing for common ports (3000, 8080, 5678) | Open WebUI default port 3000 conflicts with local dev server; silent failure | All services use non-default ports: Open WebUI→3001, n8n→5678, Qdrant→6333, Ollama→11434. `preflight.sh` checks all ports |
+| 5 | **Port conflicts block startup** | Multiple services competing for common ports (3000, 8080, 5678) | Open WebUI port 3000 conflicts with local dev server; silent failure | Core services bind to documented localhost ports and `wizard doctor` reports closed/unreachable services without mutating the system. |
 
 ---
 
@@ -55,7 +55,7 @@ The #1 cause of self-hosted AI project death is not hardware or model quality �
 | 16 | **Wrong model for task** | Using a 3B chat model for code generation or a 70B model on 16GB RAM | llama3.2:3b used for complex reasoning — poor output quality blamed on "local AI is bad" | Model selection guide in README: llama3.1:8b for chat, deepseek-coder-v2:16b for code, nomic-embed-text for RAG |
 | 17 | **RAG returns garbage** | Wrong embedding model, chunk size mismatch, or Qdrant collection misconfigured | Using mxbai-embed-large with 2048-char chunks — retrieval irrelevant, LLM hallucinates anyway | `configs/qdrant-collections.json` standardizes collection setup; embedding model pinned to `nomic-embed-text:v1.5` |
 | 18 | **Context window overflow** | Sending too much context to small models causes truncation and incoherent output | n8n workflow sends 50-message chat history to 8B model — last messages ignored | n8n workflow templates include context windowing; max 10-turn history passed to local models |
-| 19 | **Cloud fallback never triggers** | Routing logic hardcoded to local only; no escalation when local model is inadequate | Complex multi-step reasoning task routed to llama3.1:8b — wrong answer used in production workflow | n8n `ModelRouter` workflow: local first, escalate to Perplexity/Claude/GPT-4 on confidence score < threshold |
+| 19 | **Unsafe cloud fallback** | Cloud escalation happens without explicit user approval | Sensitive local prompts get sent to external APIs because fallback logic is automatic | Local-first routing is mandatory. Cloud providers are optional, disabled by default, and require explicit user approval. |
 
 ---
 
@@ -89,14 +89,14 @@ The #1 cause of self-hosted AI project death is not hardware or model quality �
 The stack is considered production-ready for home lab use when all of the following are true:
 
 - [ ] `install.sh` runs idempotently from zero to working stack in < 30 minutes on a supported Mac
-- [ ] `preflight.sh` blocks install if RAM < 16GB, required ports are in use, or Docker Desktop is not running
+- [ ] 8GB machines install in low/core mode with conservative model/service defaults
 - [ ] All services bind to `127.0.0.1` only; zero open ports on LAN interfaces
 - [ ] `.env` is never tracked by git; gitleaks pre-commit hook is active
 - [ ] `status.sh` returns green for all 5 services (Ollama, Open WebUI, n8n, Qdrant, launchd agents)
 - [ ] `backup.sh` runs on schedule and produces restorable artifacts
 - [ ] `rollback.sh` can restore last known-good state in < 5 minutes
 - [ ] Model selection defaults are documented with specific model names and use cases
-- [ ] ModelRouter n8n workflow is live and tested with a real escalation event
+- [ ] Model routing remains local-first and never escalates to cloud without explicit approval
 - [ ] Zero secrets in git history (verified with `git log -p | grep -E 'sk-|Bearer'`)
 
 ---

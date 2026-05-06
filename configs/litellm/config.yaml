@@ -1,6 +1,6 @@
 # LiteLLM Gateway Config — home-ai-elite
 # Ruflo-pattern 3-tier complexity routing (Phase 2)
-# Local-first model router with optional cloud fallback
+# Local-first model router with optional external providers by approval
 # Docs: https://docs.litellm.ai/docs/proxy/configs
 
 # ── Model Registry ───────────────────────────────────────────────────────────
@@ -152,19 +152,19 @@ model_list:
       id: swarm-code-fallback
       description: "Swarm Code: fallback (deepseek-r1:7b)"
 
-  # ── Cloud Fallback (optional) ───────────────────────────────────────────
-  # Only activates if: (1) API key is set in .env, AND
-  # (2) all local fallbacks fail or time out.
-  # Treats cloud as last-resort escalation, not primary routing.
+  # ── External Providers (optional, disabled by default) ─────────────────
+  # These examples stay commented unless the user explicitly enables online
+  # mode and policy approval gates allow the request. Do not use cloud
+  # providers as automatic fallbacks for private local prompts.
 
-  # - model_name: swarm-heavy   # Cloud escalation for truly impossible local tasks
+  # - model_name: swarm-heavy   # Explicit approval only; never automatic fallback
   #   litellm_params:
   #     model: gpt-4o
   #     api_key: os.environ/OPENAI_API_KEY
   #     timeout: 60
   #   model_info:
-  #     id: swarm-heavy-cloud-escalation
-  #     description: "Cloud escalation: GPT-4o (last resort only)"
+  #     id: swarm-heavy-external-approved
+  #     description: "External provider: GPT-4o (explicit approval only)"
 
   # - model_name: gpt-4o
   #   litellm_params:

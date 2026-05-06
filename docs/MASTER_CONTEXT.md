@@ -11,6 +11,8 @@ Use this file with `docs/MASTER_PROMPT.md` at the start of every Codex, Perplexi
 
 Wizard AI is a local-first AI platform: own Perplexity + Codex + Memory on user-owned hardware with zero required subscriptions.
 
+Hardware principle: 8GB Macs are the entry point in low/core mode. The system scales upward by profile and hardware tier; the full stack is not expected to run on 8GB.
+
 The supported install path is:
 
 ```bash

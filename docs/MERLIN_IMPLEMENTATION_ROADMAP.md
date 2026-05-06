@@ -320,7 +320,7 @@ Acceptance criteria:
 - Do not add a mandatory LangChain/LangGraph/OpenAI Agents SDK dependency.
 - Do not make OpenHands default.
 - Do not make n8n required for basic chat.
-- Do not enable cloud fallback by default.
+- Do not enable external providers or cloud fallback by default.
 - Do not auto-learn memory without approval.
 - Do not implement autonomous Magic Mode before approval gates.
 

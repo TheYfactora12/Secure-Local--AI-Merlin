@@ -13,7 +13,7 @@ Home AI Elite should provide:
 - Optional workflow automation
 - Optional coding/agent workflows
 - A dashboard and CLI that make the system understandable
-- Secure defaults where data stays local unless the user explicitly enables cloud fallback
+- Secure defaults where data stays local unless the user explicitly enables and approves an external provider
 
 ## Architecture Principles
 
@@ -58,7 +58,7 @@ Home AI Elite should not hardcode one model or provider as the system brain. Lit
 
 - Local Ollama models
 - OpenAI-compatible APIs
-- Optional cloud fallback providers
+- Optional external providers gated by policy and user approval
 - Future local runtimes such as MLX, llama.cpp, vLLM, or LocalAI-style backends
 
 Open WebUI remains the primary user-facing chat UI, while LiteLLM provides a stable model endpoint for apps and agents.
@@ -96,7 +96,7 @@ Local-first does not automatically mean safe. Secure defaults are required:
 
 - Bind service ports to `127.0.0.1` by default
 - Do not expose n8n, Ollama, Qdrant, OpenHands, or LiteLLM on LAN by accident
-- Keep cloud fallback disabled unless API keys are explicitly configured
+- Keep external providers disabled unless API keys are explicitly configured and policy approval is granted
 - Keep `.env` out of git and chmod it to `600`
 - Require user approval for file writes, shell commands, code execution, or networked agent actions
 - Treat OpenHands and future code-execution tools as high-risk profiles

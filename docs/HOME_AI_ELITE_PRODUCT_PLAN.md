@@ -15,7 +15,7 @@ Merlin is the product brain. The installer delivers the stack, but Merlin is the
 - Consent before external network.
 - Consent before computer action.
 - Simple enough for non-technical users.
-- Scales by hardware tier.
+- Scales by hardware tier: 8GB is the entry point; higher tiers unlock heavier profiles intentionally.
 - Wrap mature tools instead of rebuilding them.
 - Ship small, tested slices.
 
@@ -54,6 +54,7 @@ Merlin is the product brain. The installer delivers the stack, but Merlin is the
 - Making the dashboard too technical.
 - Confusing Open WebUI chat, `wizard ask`, swarm, and Merlin task API.
 - Low-memory Macs feeling slow or broken.
+- Treating 8GB entry support as permission to run the full stack.
 - Cloud provider behavior accidentally becoming default.
 - Users misunderstanding "learning" as self-training.
 
