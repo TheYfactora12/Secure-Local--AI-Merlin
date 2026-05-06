@@ -870,6 +870,25 @@ else
   log_to_file "[WARN] STEP 8: CLI not found at ${CLI_PATH}"
 fi
 
+# ── STEP 8B: Start read-only Merlin status API ────────────────────────
+step "Starting Merlin Status API"
+log_to_file "[STEP 8B] Merlin status API"
+
+MERLIN_STATUS_API_STARTED=false
+if [[ -f "${SCRIPT_DIR}/scripts/merlin-status-api.sh" ]]; then
+  if bash "${SCRIPT_DIR}/scripts/merlin-status-api.sh" start >/dev/null 2>&1; then
+    MERLIN_STATUS_API_STARTED=true
+    log "Merlin Status API running → http://localhost:8765/status"
+    log_to_file "[PASS] STEP 8B: Merlin status API running"
+  else
+    warn "Merlin Status API did not start — run manually: bash scripts/merlin-status-api.sh start"
+    log_to_file "[WARN] STEP 8B: Merlin status API did not start"
+  fi
+else
+  warn "scripts/merlin-status-api.sh not found — skipping Merlin Status API startup"
+  log_to_file "[WARN] STEP 8B: merlin-status-api.sh missing"
+fi
+
 # ── STEP 9: Optional MCP Servers ──────────────────────────────────────
 step "MCP Server Setup (Optional)"
 if [[ -f "mcp/install-mcp-servers.sh" ]]; then
@@ -964,6 +983,12 @@ echo -e "  ${CYAN}🧠 Chat (Open WebUI):${NC}       http://localhost:3000"
 echo -e "  ${CYAN}📦 Vector Memory (Qdrant):${NC}  http://localhost:6333"
 echo -e "  ${CYAN}🔀 Model Router (LiteLLM):${NC}  http://localhost:4000"
 echo -e "  ${CYAN}📊 Dashboard (Wizard HQ):${NC}   http://localhost:8888"
+if [[ "$MERLIN_STATUS_API_STARTED" == true ]]; then
+  echo -e "  ${CYAN}🩺 Merlin Status API:${NC}       http://localhost:8765/status"
+else
+  echo -e "  ${YELLOW}! Merlin Status API:${NC}       not started; run: bash scripts/merlin-status-api.sh start"
+fi
+echo -e "  ${YELLOW}! Merlin Task API:${NC}         not auto-started; supervised task execution stays manual"
 if [[ " ${INSTALL_CAPABILITIES} " == *" search "* ]]; then
   echo -e "  ${CYAN}🔍 Search AI (Perplexica):${NC}  http://localhost:3002"
   echo -e "  ${CYAN}🔎 Private Search (SearXNG):${NC} http://localhost:8080"
@@ -984,11 +1009,19 @@ echo -e "  ${GREEN}✓  .env locked to 600 (owner only)${NC}"
 echo -e "  ${GREEN}✓  Cloud API keys entered in hidden mode${NC}"
 echo -e "  ${GREEN}✓  Security review complete${NC}"
 echo -e "  ${GREEN}✓  Install log: ${LOGFILE}${NC}"
+echo -e "  ${GREEN}✓  Read-only Merlin status is separated from task execution${NC}"
 echo ""
 echo -e "  ${BOLD}First commands to run:${NC}"
-echo -e "  ${CYAN}wizard status${NC}                    → full stack health check"
-echo -e "  ${CYAN}wizard ask \"hello wizard\"${NC}        → test your AI"
-echo -e "  ${CYAN}wizard open${NC}                      → open Wizard HQ in browser"
+if command -v wizard >/dev/null 2>&1; then
+  echo -e "  ${CYAN}wizard status${NC}                    → full stack health check"
+  echo -e "  ${CYAN}wizard merlin status-api status${NC}  → confirm read-only Merlin status API"
+  echo -e "  ${CYAN}wizard open${NC}                      → open Wizard HQ in browser"
+else
+  echo -e "  ${CYAN}${CLI_PATH} status${NC}               → full stack health check"
+  echo -e "  ${CYAN}${CLI_PATH} merlin status-api status${NC} → confirm read-only Merlin status API"
+  echo -e "  ${CYAN}${CLI_PATH} open${NC}                 → open Wizard HQ in browser"
+fi
+echo -e "  ${CYAN}python3 merlin/task_endpoint.py${NC}   → optional supervised Merlin Task API on :8766"
 echo ""
 echo -e "  ${BOLD}First-time setup steps:${NC}"
 echo -e "  1. http://localhost:3000  → create your admin account"
