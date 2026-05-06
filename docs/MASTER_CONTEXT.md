@@ -104,7 +104,7 @@ Do not change these without a dedicated issue and validation run.
 
 | RAM | Tier | Models |
 | --- | --- | --- |
-| 8-15 GB | low | `mistral:7b`, `qwen2.5:7b` |
+| 8-15 GB | low | `qwen2.5:7b`, `nomic-embed-text` |
 | 16-23 GB | base | `qwen2.5:7b`, `qwen2.5-coder:7b`, `deepseek-r1:7b` |
 | 24-47 GB | mid | `qwen2.5:32b`, `qwen2.5-coder:14b`, `deepseek-r1:14b` |
 | 48+ GB | high | `llama3.3:70b`, `qwen2.5:32b`, `deepseek-r1:32b` |

@@ -12,7 +12,6 @@ tiers:
     max_model_class: "7b"
     quantization: "q4"
     recommended_models:
-      - mistral:7b
       - qwen2.5:7b
       - nomic-embed-text
     disabled_by_default:

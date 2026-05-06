@@ -131,7 +131,7 @@ Installer RAM-tier models:
 
 | Tier | Models pulled by `install.sh` unless skipped |
 |---|---|
-| low | `nomic-embed-text`, `mistral:7b`, `qwen2.5:7b` |
+| low | `nomic-embed-text`, `qwen2.5:7b` |
 | base | `nomic-embed-text`, `qwen2.5:7b`, `qwen2.5-coder:7b`, `deepseek-r1:7b` |
 | mid | `nomic-embed-text`, `qwen2.5:32b`, `qwen2.5-coder:14b`, `deepseek-r1:14b` |
 | high | `nomic-embed-text`, `llama3.3:70b`, `qwen2.5:32b`, `deepseek-r1:32b` |

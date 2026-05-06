@@ -151,7 +151,7 @@ The installer detects RAM and recommends safe model tiers. Model pulls are optio
 
 | RAM | Tier | Recommended models | Default behavior |
 |-----|------|-----------------|----------------------|
-| 8-15 GB | Low | qwen2.5:7b, mistral:7b, nomic-embed-text | Core only; avoid OpenHands, n8n, full search stack, and 14B+ models |
+| 8-15 GB | Low | qwen2.5:7b, nomic-embed-text | Core only; avoid OpenHands, n8n, full search stack, and 14B+ models |
 | 16-23 GB | Base | qwen2.5:7b, qwen2.5-coder:7b, deepseek-r1:7b | Core + optional search |
 | 24-47 GB | Mid | qwen2.5:32b, qwen2.5-coder:14b, deepseek-r1:14b | Core + search + automation where practical |
 | 48+ GB | High | llama3.3:70b, qwen2.5:32b, deepseek-r1:32b | Full stack available intentionally |
