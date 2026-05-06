@@ -146,11 +146,11 @@ Current Phase 2 API:
   the offline Merlin Staff Core pytest suite.
 - `ci-success` requires the Python job.
 
-### 🔄 Issue #25 Layer 1 — Secrets Audit (CURRENT)
-- `.gitleaks.toml` must extend gitleaks default rules.
-- Add a required `gitleaks-scan` CI job without removing the existing regex `secret-scan`.
-- Add `tests/sast-gitleaks-smoke.sh` to prove the CI gate exists and, when the local gitleaks CLI is installed, a fake AWS key is detected.
-- `ci-success` must require both `secret-scan` and `gitleaks-scan`.
+### ✅ Issue #25 Layer 1 — Secrets Audit (DONE)
+- Commit `d4ece3d` extended `.gitleaks.toml` with gitleaks default rules.
+- CI now has a required `gitleaks-scan` job without removing the existing regex `secret-scan`.
+- `tests/sast-gitleaks-smoke.sh` verifies CI gate wiring and detects a fake AWS key when local gitleaks is installed.
+- GitHub Actions run `25454666989` passed.
 
 ### ✅ PR #10 — Installer Hardening (CLOSED)
 - `origin/installer-hardening` is an ancestor of `origin/main`; it is not an active blocker.
@@ -169,7 +169,7 @@ Current Phase 2 API:
 | #8 | Langfuse observability | 5 | OPEN | Zero trace visibility |
 | #22 | sanitized failure reporting | hardening | DONE | Merged and pushed at `47f30df` |
 | #24 | CI pipeline for Python tests | hardening | DONE | Merged and pushed at `c6f6652` |
-| #25 | Secrets audit Layer 1 | security | LOCAL REVIEW | Add gitleaks default rules, CI gate, and smoke coverage |
+| #25 | Secrets audit Layer 1 | security | DONE | Merged and pushed at `d4ece3d`; CI run `25454666989` passed |
 | #5 | Hardware guide docs | docs | OPEN | Low urgency |
 
 ---
@@ -294,18 +294,15 @@ Do not list every file — describe the behavior change.
 
 ---
 
-## Current Build Spec: Issue #25 Layer 1 Secrets Audit
+## Current Build Spec: Next Security Slice
 
-Add a small secrets-audit slice:
+Do not rush into broad security tooling. Pick one small follow-up after reviewing the gitleaks
+gate outcome:
 
-- Add `[extend] useDefault = true` to `.gitleaks.toml`.
-- Add `gitleaks-scan` to `.github/workflows/ci.yml` using pinned `zricethezav/gitleaks:v8.24.3`.
-- Keep the existing regex `secret-scan` job.
-- Add `gitleaks-scan` to `ci-success.needs`.
-- Add `tests/sast-gitleaks-smoke.sh`.
-- Run local validation: CI YAML parse, smoke test, master prompt smoke, and `git diff --check`.
+- deeper SAST design for Issue #25, or
+- Pi Emotional Intelligence prompt/session work if security work pauses.
 
-Do not add SonarQube or red-team tooling in this slice.
+Keep the next slice small, tested, and installer-safe.
 
 ---
 
@@ -338,5 +335,5 @@ When the watch partner flags an issue, treat it as a blocking review comment.
 
 ## Daily Edge
 
-> The current delivery gap is secret-scan confidence. The support tooling can redact; now CI must
-> block secrets before they land.
+> The current delivery gap is choosing the next narrow slice. Gitleaks is green; do not turn the
+> next step into a broad security rewrite.

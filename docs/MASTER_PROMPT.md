@@ -126,4 +126,4 @@ Before final response:
 
 ## Current Next Recommendation
 
-Finish Issue #25 Layer 1 by adding the gitleaks default-rule config, required CI gitleaks gate, and smoke coverage. Do not add SonarQube or red-team tooling until the gitleaks slice is green.
+Issue #25 Layer 1 is green. Choose the next narrow slice deliberately: either deeper SAST planning for Issue #25, or Pi Emotional Intelligence prompt/session work. Keep installer behavior untouched.

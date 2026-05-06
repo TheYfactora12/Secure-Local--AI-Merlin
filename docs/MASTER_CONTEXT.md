@@ -125,8 +125,8 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Finish Issue #25 Layer 1: gitleaks default rules, CI gate, and smoke coverage.
-2. Continue Issue #25 Layer 1 with deeper SAST only after gitleaks is green.
+1. Continue Issue #25 with deeper SAST planning only after reviewing the gitleaks gate outcome.
+2. Start Pi Emotional Intelligence only after the next security slice is scoped.
 3. Keep signed package/notarization work deferred until installer, Phase 2 API, support tooling, and CI gates remain green.
 4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 
@@ -152,8 +152,8 @@ The next engineering priority is supportability: diagnostics, sanitized bug repo
 
 ## Next Actions
 
-1. Commit and push Issue #25 gitleaks CI gate only after local validation passes.
-2. Watch GitHub Actions and verify `ci-success` requires both `gitleaks-scan` and `merlin-staff-core-pytest`.
+1. Review Issue #25 Layer 1 results and decide whether the next slice is deeper SAST or Pi Emotional Intelligence.
+2. Keep verifying `ci-success` requires both `gitleaks-scan` and `merlin-staff-core-pytest`.
 3. Continue updating roadmap/docs/tests with every milestone before signing/notarization work.
 
 ## Validation
@@ -164,7 +164,7 @@ Last verified: 2026-05-06.
 - CI was green for the Phase 2F merge run.
 - Issue #22 support tooling is merged and pushed at `47f30df`: additive doctor checks, redaction helper, sanitized report generator, wizard wiring, and doctor/report-bug/redaction smokes.
 - Issue #24 CI gate is merged and pushed at `c6f6652`; GitHub Actions run `25451110988` passed.
-- Issue #25 Layer 1 is in local review: `.gitleaks.toml` extends default rules, CI adds `gitleaks-scan`, and `tests/sast-gitleaks-smoke.sh` verifies local/CI coverage.
+- Issue #25 Layer 1 is merged and pushed at `d4ece3d`; GitHub Actions run `25454666989` passed with `gitleaks-scan` and `merlin-staff-core-pytest` both required by `ci-success`.
 
 - Current local validation for the Qdrant memory adapter work:
   - `bash tests/merlin-memory-write-smoke.sh`

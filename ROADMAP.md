@@ -231,7 +231,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Add smoke coverage for doctor/report-bug/redaction
 - [x] Commit and push Issue #22 support tooling at `47f30df`
 - [x] Commit and push Issue #24 CI Python gate at `c6f6652`
-- [ ] Commit and push Issue #25 Layer 1 gitleaks CI gate after validation
+- [x] Commit and push Issue #25 Layer 1 gitleaks CI gate at `d4ece3d`
 
 ### 4. Fix Backup/Restore
 

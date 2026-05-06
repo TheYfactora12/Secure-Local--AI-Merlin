@@ -43,12 +43,14 @@ Issue #24 CI gate is complete and pushed at `c6f6652`; GitHub Actions run `25451
 - Run the offline Merlin Staff Core pytest files in CI.
 - Add the new Python job to `ci-success.needs`.
 
-Current active implementation work is Issue #25 Layer 1:
+Issue #25 Layer 1 is complete and pushed at `d4ece3d`; GitHub Actions run `25454666989` passed:
 
 - Extend `.gitleaks.toml` with default gitleaks rules.
 - Add a required `gitleaks-scan` CI job while preserving the existing regex `secret-scan`.
 - Add `tests/sast-gitleaks-smoke.sh`.
 - Require `gitleaks-scan` in `ci-success.needs`.
+
+Next work should be selected as a narrow slice: deeper SAST design for Issue #25 or Pi Emotional Intelligence prompt/session work.
 
 Port contract:
 
