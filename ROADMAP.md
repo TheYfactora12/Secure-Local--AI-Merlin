@@ -190,6 +190,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Add non-executing Merlin approval approve/deny audit commands
 - [x] Add read-only Merlin status command for profile, hardware, services, and approvals
 - [x] Add read-only Merlin dashboard status panel with CLI-backed commands
+- [x] Add read-only Merlin status API for dashboard-backed status visibility
 - [x] Add canonical/legacy memory schema and runtime Qdrant collection manifest
 - [x] Align `cli/wizard` memory commands with the runtime collection manifest
 - [ ] Connect Magic Mode to shared Qdrant memory only after memory approval/audit is implemented
@@ -237,6 +238,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Merlin approval list smoke test
 - [x] Merlin approval decision smoke test
 - [x] Merlin status smoke test
+- [x] Merlin status API smoke test
 - [x] Dashboard Merlin status smoke test
 - [ ] Automation live test: n8n health and workflow import
 - [x] Coding static test: OpenHands profile safety and LiteLLM wiring

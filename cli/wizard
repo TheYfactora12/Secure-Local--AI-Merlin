@@ -173,6 +173,7 @@ cat << 'EOF'
     wizard brain stop        Stop native Ollama and unload hot runners
     wizard brain cooldown    Alias for brain stop when CPU is running hot
     wizard merlin status     Show read-only Merlin control-plane status
+    wizard merlin status-api Start read-only Merlin status API
     wizard merlin dry-run "goal"
                               Preview Merlin route, model, profile, and approvals
     wizard merlin approvals list
@@ -298,6 +299,10 @@ case "$1" in
         shift 2
         bash "$WIZARD_DIR/scripts/merlin-status.sh" "$@"
         ;;
+      status-api)
+        shift 2
+        python3 "$WIZARD_DIR/scripts/merlin-status-api.py" "$@"
+        ;;
       dry-run)
         shift 2
         bash "$WIZARD_DIR/scripts/merlin-dry-run.sh" "$@"
@@ -307,7 +312,7 @@ case "$1" in
         bash "$WIZARD_DIR/scripts/merlin-approvals.sh" "$@"
         ;;
       *)
-        echo "Usage: wizard merlin [status|dry-run|approvals] ..."
+        echo "Usage: wizard merlin [status|status-api|dry-run|approvals] ..."
         exit 1
         ;;
     esac

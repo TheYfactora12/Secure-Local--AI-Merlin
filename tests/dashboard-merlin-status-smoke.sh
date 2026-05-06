@@ -7,12 +7,15 @@ DASHBOARD_FILE="${ROOT_DIR}/dashboard/index.html"
 
 grep -q "Merlin Control Status" "$DASHBOARD_FILE"
 grep -q "wizard merlin status" "$DASHBOARD_FILE"
+grep -q "wizard merlin status-api" "$DASHBOARD_FILE"
 grep -q "wizard merlin approvals list" "$DASHBOARD_FILE"
 grep -q "wizard merlin dry-run" "$DASHBOARD_FILE"
 grep -q "local_only" "$DASHBOARD_FILE"
 grep -q "Cloud Allowed" "$DASHBOARD_FILE"
 grep -q "Execution Allowed" "$DASHBOARD_FILE"
 grep -q "does not execute approvals" "$DASHBOARD_FILE"
+grep -q "http://localhost:8765/status" "$DASHBOARD_FILE"
+grep -q "loadMerlinStatus" "$DASHBOARD_FILE"
 grep -q "updateMerlinServices" "$DASHBOARD_FILE"
 
 if grep -q "approvals approve" "$DASHBOARD_FILE"; then
