@@ -180,7 +180,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Define Magic Mode task routing: general, search, code, automation, memory
 - [x] Define approval rules for code execution, shell commands, file writes, and network access
 - [x] Decide whether orchestration lives in n8n, a Python controller, LangGraph-style graphs, or a hybrid
-- [ ] Add trace/log output for routing decisions
+- [x] Add trace/log output schema for routing decisions
 - [x] Add canonical/legacy memory schema and runtime Qdrant collection manifest
 - [x] Align `cli/wizard` memory commands with the runtime collection manifest
 - [ ] Connect Magic Mode to shared Qdrant memory only after memory approval/audit is implemented
@@ -220,6 +220,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Merlin policy approval-gate smoke test
 - [x] Merlin routing smoke test
 - [x] Merlin orchestration decision smoke test
+- [x] Merlin trace schema smoke test
 - [ ] Automation live test: n8n health and workflow import
 - [x] Coding static test: OpenHands profile safety and LiteLLM wiring
 - [ ] Coding live test: OpenHands startup and LiteLLM connection

@@ -342,4 +342,5 @@ Next implementation slice:
 - Add declarative Merlin policy and approval-gate coverage before Magic Mode execution. `Done: config/merlin/policy.yaml, tests/merlin-policy-smoke.sh`
 - Add declarative Magic Mode task routing before runtime orchestration. `Done: config/merlin/routes.yaml, tests/merlin-routing-smoke.sh`
 - Add declarative hybrid orchestration decision before runtime control-plane work. `Done: config/merlin/orchestration.yaml, tests/merlin-orchestration-smoke.sh`
+- Add declarative route trace schema before runtime logging. `Done: config/merlin/trace.yaml, tests/merlin-trace-smoke.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

@@ -123,6 +123,7 @@ jobs:
           bash tests/merlin-policy-smoke.sh
           bash tests/merlin-routing-smoke.sh
           bash tests/merlin-orchestration-smoke.sh
+          bash tests/merlin-trace-smoke.sh
           bash tests/uninstall-smoke.sh
           bash tests/launchd-core-smoke.sh
           bash tests/container-image-policy-smoke.sh

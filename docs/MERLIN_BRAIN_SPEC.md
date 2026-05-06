@@ -148,6 +148,23 @@ Magic Mode route classes:
 
 Routes must emit trace fields for route id, task type, selected agent, required profile, selected model alias, privacy mode, online mode, approval gates, and decision reason.
 
+## Route Trace Design
+
+The trace schema lives in `config/merlin/trace.yaml`. Future Merlin runtime code must write route decisions as local append-only JSONL before any tool/model side effect. Trace records must redact secrets before writing and include approval state.
+
+Minimum route trace fields:
+
+- trace id and timestamp
+- hashed user goal or short non-sensitive summary
+- route id and task type
+- selected agent, required profile, active profile, hardware tier
+- privacy mode, online mode, cloud allowed flag
+- selected model alias and provider
+- approval gates, approval status, policy decision, decision reason
+- redaction flag
+
+Route traces must never log raw API keys, auth headers, cookies, private keys, full documents, or raw sensitive prompts.
+
 ## Memory Design
 
 Merlin memory must be explicit and auditable. It should not silently learn every prompt.

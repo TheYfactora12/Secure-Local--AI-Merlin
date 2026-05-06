@@ -1,0 +1,115 @@
+# Merlin route decision trace schema.
+#
+# Declarative trace contract for future Merlin runtime code. It defines what a
+# route decision must log, which fields are redacted, and where approval status
+# appears before any tool/model action is executed.
+
+version: 1
+
+storage:
+  default_sink: local_file
+  local_file: logs/merlin-route-decisions.jsonl
+  future_memory_collection: merlin_audit
+  append_only: true
+  redact_before_write: true
+
+route_decision_schema:
+  required_fields:
+    - trace_id
+    - timestamp
+    - user_goal_hash
+    - route_id
+    - task_type
+    - selected_agent
+    - required_profile
+    - active_profile
+    - hardware_tier
+    - privacy_mode
+    - online_mode
+    - cloud_allowed
+    - selected_model_alias
+    - provider
+    - approval_gates
+    - approval_status
+    - policy_decision
+    - decision_reason
+    - redaction_applied
+
+  optional_fields:
+    - candidate_routes
+    - candidate_models
+    - fallback_reason
+    - required_services
+    - started_services
+    - memory_collections_read
+    - memory_write_request_id
+    - user_approval_id
+    - elapsed_ms
+
+approval_status_values:
+  - not_required
+  - required_pending
+  - approved
+  - denied
+  - expired
+
+policy_decision_values:
+  - allow
+  - deny
+  - require_approval
+  - ask_to_start_profile
+  - ask_to_enable_online_mode
+  - ask_to_download_model
+
+redaction:
+  enabled: true
+  replacement: "[REDACTED]"
+  redact_field_names:
+    - api_key
+    - token
+    - password
+    - secret
+    - authorization
+    - cookie
+    - private_key
+  redact_value_patterns:
+    - "sk-[A-Za-z0-9_-]+"
+    - "ghp_[A-Za-z0-9_]+"
+    - "Bearer [A-Za-z0-9._-]+"
+
+no_secret_guarantees:
+  - "Never log raw API keys, provider tokens, auth headers, cookies, or private keys."
+  - "Never log full user documents in route traces."
+  - "Store user goal hash or short summary, not raw sensitive prompt text by default."
+  - "Record approval identifiers, not private approval message bodies."
+
+low_memory_trace_fields:
+  - hardware_tier
+  - low_memory_warning
+  - heavy_profile_requested
+  - parallel_agents_denied
+
+example:
+  trace_id: "route_20260506_000001"
+  timestamp: "2026-05-06T00:00:01Z"
+  user_goal_hash: "sha256:example"
+  route_id: "code"
+  task_type: "debug"
+  selected_agent: "coding"
+  required_profile: "coding"
+  active_profile: "core"
+  hardware_tier: "low"
+  privacy_mode: "local_only"
+  online_mode: false
+  cloud_allowed: false
+  selected_model_alias: "qwen-coder"
+  provider: "ollama"
+  approval_gates:
+    - service_start
+    - file_write
+    - shell_command
+    - openhands_task
+  approval_status: "required_pending"
+  policy_decision: "ask_to_start_profile"
+  decision_reason: "Coding route requires optional high-risk OpenHands profile."
+  redaction_applied: true
