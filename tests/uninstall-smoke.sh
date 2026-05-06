@@ -39,5 +39,7 @@ grep -q 'Ollama models were not removed' "$PKG_UNINSTALL" \
   || fail "uninstaller does not document preserving Ollama models"
 grep -q 'com.homeai.backup' "$PKG_UNINSTALL" \
   || fail "uninstaller does not remove backup launchd agent"
+grep -q 'com.homeai.merlin-status-api' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not remove Merlin status API launchd agent"
 
 echo "PASS: uninstaller is guarded and testable"

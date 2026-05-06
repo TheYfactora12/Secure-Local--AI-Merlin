@@ -139,6 +139,7 @@ remove_launchd_agents() {
   local labels=(
     com.homeai.docker
     com.homeai.stack
+    com.homeai.merlin-status-api
     com.homeai.backup
   )
 

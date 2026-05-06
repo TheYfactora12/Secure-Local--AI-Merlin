@@ -57,6 +57,7 @@ Merlin control-plane status:
 - `wizard start` starts the selected profile, then starts the read-only Merlin status API if profile startup succeeds.
 - `wizard stop` stops the status API before stopping Docker services.
 - `wizard restart` stops and restarts the status API around Docker restart.
+- launchd runs the read-only Merlin status API as its own foreground job: `com.homeai.merlin-status-api`.
 - Dashboard reads `http://localhost:8765/status` when the status API is running.
 - The status API is read-only: `GET /healthz`, `GET /status`, mutation methods rejected, `execution_allowed=false`.
 
@@ -87,44 +88,49 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Run one real local `wizard start` and dashboard check after status API wiring.
-2. Decide whether launchd should include the read-only status API or keep it tied to manual `wizard start`.
-3. Continue Merlin v1 work toward policy-gated execution only after read-only status/approval flows are stable.
-4. Keep signed package/notarization work deferred until the installer and local validation remain green.
-5. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
+1. Continue Merlin v1 work toward policy-gated execution only after read-only status/approval flows are stable.
+2. Keep signed package/notarization work deferred until the installer and local validation remain green.
+3. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
+4. Add dashboard-side polling polish only after the read-only API contract stays stable.
 
 ## Reasoning Summary
 
 The current architecture keeps the default user path local-first and low-friction while preserving Linux server security options through explicit profiles. macOS avoids Docker Ollama conflicts by using native Ollama; Linux can still run Ollama in Docker when profiles are enabled.
 
-The next engineering priority is a real local `wizard start` verification of the read-only Merlin status API and dashboard state. Signed release work can wait until the local core loop is stable.
+The next engineering priority is policy-gated Merlin execution design now that the read-only status/approval loop is stable. Signed release work can wait until the local core loop remains green.
 
 ## Risks / Unknowns
 
 - Native macOS Ollama availability depends on the host service staying up.
 - `host.docker.internal` plus `host-gateway` must be retested on future Docker Desktop and Linux Docker engine changes.
 - The status API is intentionally read-only and must not become a privileged control plane without a separate policy-gated execution layer.
-- launchd starts the core profile through `wizard start core`, so the read-only status API starts on login with the laptop-safe core profile.
+- launchd starts the core profile through `wizard start core` and runs the read-only status API as a separate foreground LaunchAgent. Do not rely on a short-lived launchd shell to daemonize the API.
 - Optional live profile tests still need hardware/time validation.
 - Memory quality and regression safety still need stronger test coverage before Magic Mode writes memory.
 
 ## Next Actions
 
-1. Run `wizard start` and confirm `wizard merlin status-api status` reports running.
-2. Open the dashboard and confirm Merlin Control Status shows the API online.
-3. If clean, run or reinstall launchd agents and verify login auto-start behavior.
+1. Keep validating the read-only Merlin status API during each startup-related change.
+2. Start the first policy-gated execution milestone without adding privileged dashboard controls.
+3. Continue updating roadmap/docs/tests with every milestone before signing/notarization work.
 
 ## Validation
 
 Last validated on 2026-05-06:
 
-- GitHub Actions passed for commit `f41f019`:
-  - CI `25413833697`
-- `wizard start|stop|restart` is wired to the guarded read-only Merlin status API lifecycle.
+- GitHub Actions passed for commit `7b9302a`:
+  - CI `25414421371`
+- `wizard start|stop|restart` is wired to the guarded read-only Merlin status API lifecycle for manual starts.
+- launchd source now includes a dedicated read-only Merlin status API foreground agent for persistent login auto-start.
 - `tests/wizard-start-status-api-smoke.sh` passed.
 - `tests/merlin-status-api-smoke.sh` passed with localhost-bind permission.
 - Full local static smoke suite passed.
 - Dashboard contains the read-only Merlin Control Status panel and points to `wizard merlin status-api start`.
+- Live launchd reinstall registered `com.homeai.docker`, `com.homeai.stack`, and `com.homeai.merlin-status-api`.
+- `launchctl print gui/501/com.homeai.merlin-status-api` reported `state = running` and `last exit code = (never exited)`.
+- `wizard merlin status-api status`, `GET /healthz`, and `GET /status` passed against `http://127.0.0.1:8765`.
+- `GET /status` reported profile `core`, hardware tier `low`, RAM `8`, privacy `local_only`, cloud disabled, all core services running, and `execution_allowed=false`.
+- `bash tests/core-live-smoke.sh` passed with 18 checks, 0 warnings, and 0 failures.
 
 Earlier live validation on 2026-05-05:
 

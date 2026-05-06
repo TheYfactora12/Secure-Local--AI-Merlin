@@ -24,6 +24,6 @@ grep -A6 '^  restart)' "$WIZARD_FILE" | grep -q 'start_merlin_status_api' \
   || { echo "wizard restart should restart read-only status API" >&2; exit 1; }
 
 grep -q 'cli/wizard start core' "$LAUNCHD_STACK_FILE" \
-  || { echo "launchd should use wizard start core so status API lifecycle is included" >&2; exit 1; }
+  || { echo "launchd should use wizard start core for laptop-safe profile startup" >&2; exit 1; }
 
 echo "PASS: wizard start/stop status API lifecycle wiring is conservative"

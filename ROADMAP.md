@@ -194,7 +194,8 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Add read-only Merlin status API for dashboard-backed status visibility
 - [x] Add guarded Merlin status API start/stop/status lifecycle commands
 - [x] Wire `wizard start|stop|restart` to the guarded read-only Merlin status API lifecycle
-- [x] Wire launchd core auto-start through `wizard start core` so dashboard status API starts on login
+- [x] Wire launchd core auto-start through `wizard start core`
+- [x] Run the dashboard status API through a dedicated read-only Merlin LaunchAgent
 - [x] Add canonical/legacy memory schema and runtime Qdrant collection manifest
 - [x] Align `cli/wizard` memory commands with the runtime collection manifest
 - [ ] Connect Magic Mode to shared Qdrant memory only after memory approval/audit is implemented

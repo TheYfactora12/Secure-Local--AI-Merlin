@@ -42,7 +42,8 @@ Current Merlin control-plane state:
 - `wizard start` starts the selected profile and then starts the read-only status API if profile startup succeeds.
 - `wizard stop` stops the status API before stopping Docker services.
 - `wizard restart` stops and restarts the status API around Docker restart.
-- launchd starts the laptop-safe core profile through `wizard start core`, so the read-only status API starts on login with the dashboard.
+- launchd starts the laptop-safe core profile through `wizard start core`.
+- launchd runs the read-only status API as its own foreground job: `com.homeai.merlin-status-api`.
 - The dashboard reads `http://localhost:8765/status` when the status API is running.
 - No Merlin endpoint may execute approvals, shell commands, file writes, model downloads, memory writes, service controls, or cloud calls until a separate policy-gated execution layer exists.
 
@@ -114,4 +115,4 @@ Before final response:
 
 ## Current Next Recommendation
 
-Run or reinstall the launchd agents and verify login auto-start behavior for Docker Desktop, the laptop-safe core profile, and the read-only Merlin status API.
+Begin the first policy-gated Merlin execution milestone. Keep the dashboard read-only, keep cloud disabled by default, and preserve the installer while adding the smallest testable execution boundary.

@@ -10,11 +10,11 @@
 #   1. Copies .plist files to ~/Library/LaunchAgents/
 #   2. Patches WorkingDirectory to match actual install path
 #   3. Bootstraps each agent into the current login session
-#   4. Verifies agents appear in launchctl list
+#   4. Registers each agent in the current login session
 #
-# The stack agent intentionally starts only the laptop-safe core profile through
-# `wizard start core`, which also starts the read-only Merlin status API.
-# Optional profiles must be started explicitly.
+# The stack agent intentionally starts only the laptop-safe core profile. The
+# read-only Merlin status API is a separate foreground LaunchAgent so launchd
+# owns its lifecycle directly. Optional profiles must be started explicitly.
 #
 # Reference:
 #   https://gist.github.com/johndturn/09a5c055e6a56ab61212204607940fa0
@@ -38,6 +38,7 @@ fail() { echo -e "${COLOR_RED}[launchd]${COLOR_RESET} $*" >&2; exit 1; }
 PLISTS=(
   "com.homeai.docker.plist"
   "com.homeai.stack.plist"
+  "com.homeai.merlin-status-api.plist"
 )
 
 uninstall() {
@@ -98,10 +99,10 @@ install_plist() {
     return
   fi
 
-  # Patch the install path into the stack plist
-  if [[ "$plist" == "com.homeai.stack.plist" ]]; then
+  # Patch the install path into repo-local plists
+  if [[ "$plist" == "com.homeai.stack.plist" || "$plist" == "com.homeai.merlin-status-api.plist" ]]; then
     sed "s|\$HOME/home-ai-elite|${INSTALL_DIR}|g" "$src" > "$dest"
-    # Also fix the ProgramArguments path
+    # Also fix ProgramArguments paths.
     sed -i '' "s|cd \"\$HOME/home-ai-elite\"|cd \"${INSTALL_DIR}\"|g" "$dest" 2>/dev/null || true
   else
     cp "$src" "$dest"
@@ -145,11 +146,13 @@ main() {
   log "✅ Auto-start agents installed."
   log "   On your next macOS login:"
   log "   1. Docker Desktop will open automatically (5s after login)"
-  log "   2. The laptop-safe core profile and read-only Merlin status API will start automatically (30s after login)"
+  log "   2. The laptop-safe core profile will start automatically (30s after login)"
+  log "   3. The read-only Merlin status API will run under its own LaunchAgent (35s after login)"
   log ""
   log "Verify:"
   log "   launchctl list | grep homeai"
   log "   tail -f /tmp/homeai-stack.log"
+  log "   tail -f /tmp/homeai-merlin-status-api.log"
   log "   wizard merlin status-api status"
   log ""
   log "To uninstall:"
