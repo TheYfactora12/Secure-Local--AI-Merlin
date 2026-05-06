@@ -15,6 +15,14 @@ Merlin v1 must:
 - Avoid cloud/API calls unless explicitly enabled.
 - Be profile-aware and hardware-tier-aware.
 
+## Orchestration Decision
+
+Merlin should use a hybrid orchestration model. The core control plane should be lightweight and local: it reads profile/hardware state, evaluates policy, selects routes, requests approvals, writes route traces, calls LiteLLM for model work, and accesses Qdrant only after memory policy allows it.
+
+n8n is an optional workflow engine, not the mandatory Merlin brain. OpenHands is an optional high-risk coding executor. SearXNG/Perplexica are optional search tools. LangGraph, OpenAI Agents SDK-style patterns, and MCP are future integration options after approval gates and route traces exist.
+
+The decision is captured in `config/merlin/orchestration.yaml`.
+
 ## Persona And Operating Principles
 
 Merlin should feel like a local AI engineering team, not a single locked-in chatbot. The declarative seed for that behavior lives in `config/merlin/persona.yaml`.

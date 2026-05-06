@@ -1,0 +1,116 @@
+# Merlin orchestration decision.
+#
+# Declarative architecture decision for future runtime work. This is not parsed
+# by install/start scripts yet and adds no mandatory dependency.
+
+version: 1
+
+decision: hybrid
+
+control_plane:
+  name: merlin-core
+  implementation_target: lightweight_local_controller
+  acceptable_forms:
+    - python_cli_or_service
+    - shell_safe_cli_facade
+  responsibilities:
+    - read_profile_and_hardware_state
+    - evaluate_policy
+    - select_route
+    - produce_route_decision_trace
+    - request_user_approval
+    - call_litellm_for_model_requests
+    - call_qdrant_for_memory_after_approval
+    - report_status_to_dashboard_or_cli
+  must_not:
+    - replace_install_sh
+    - replace_open_webui
+    - replace_litellm
+    - replace_qdrant
+    - make_cloud_calls_by_default
+    - auto_start_heavy_profiles
+
+core_services:
+  model_gateway: litellm
+  local_runtime: ollama
+  chat_ui: open-webui
+  memory_store: qdrant
+  dashboard: swarm-dashboard
+
+optional_execution_tools:
+  search:
+    profile: search
+    tools:
+      - searxng
+      - perplexica
+    starts_by_default: false
+    requires_approval: true
+  automation:
+    profile: automation
+    tools:
+      - n8n
+    starts_by_default: false
+    requires_approval: true
+  coding:
+    profile: coding
+    tools:
+      - openhands
+    starts_by_default: false
+    requires_approval: true
+    risk: critical
+  mcp:
+    profile: future
+    starts_by_default: false
+    requires_policy_adapter: true
+
+framework_position:
+  langgraph:
+    status: optional_future
+    reason: "Useful for stateful graphs after approval gates and core route decisions are stable."
+  openai_agents_sdk:
+    status: optional_future
+    reason: "Useful as an agent pattern reference; must not make cloud-first behavior mandatory."
+  n8n:
+    status: optional_workflow_engine
+    reason: "Good for user-approved workflows, not the core safety policy engine."
+  mcp:
+    status: optional_tool_boundary
+    reason: "Good for tools after policy adapters exist."
+
+runtime_phases:
+  phase_0:
+    name: declarative_foundation
+    includes:
+      - profiles
+      - hardware_tiers
+      - persona
+      - policy
+      - routes
+      - orchestration_decision
+  phase_1:
+    name: status_and_dry_run
+    includes:
+      - merlin_status
+      - route_decision_dry_run
+      - no_runtime_side_effects
+  phase_2:
+    name: approved_local_actions
+    includes:
+      - approval_prompts
+      - route_trace_logs
+      - local_model_calls
+      - approved_memory_reads
+  phase_3:
+    name: optional_tool_execution
+    includes:
+      - search_profile_execution
+      - automation_profile_execution
+      - coding_profile_execution
+      - mcp_tool_adapters
+
+non_goals_for_v1:
+  - mandatory_langchain_or_langgraph_dependency
+  - mandatory_n8n_for_basic_chat
+  - autonomous_openhands_without_approval
+  - cloud_fallback_without_user_enablement
+  - silent_memory_learning

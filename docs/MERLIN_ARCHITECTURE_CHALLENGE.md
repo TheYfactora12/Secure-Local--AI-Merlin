@@ -69,6 +69,8 @@ Recommendation: choose the hybrid.
 
 Use the working installer as the baseline. Add profile-aware startup and a small Merlin core interface. Keep Open WebUI/LiteLLM/Qdrant/Ollama as the core. Treat n8n, OpenHands, Perplexica, SearXNG, nginx, watchtower, MCP, and launchd as optional capability profiles. Introduce a Merlin orchestration layer only after health checks and profile selection are reliable.
 
+Final orchestration decision: Merlin should use a hybrid architecture. The Merlin control plane should be a lightweight local controller or CLI facade responsible for status, policy evaluation, route decisions, approval requests, route traces, LiteLLM calls, and approved Qdrant memory access. n8n remains an optional workflow engine, OpenHands remains an optional high-risk coding executor, Perplexica/SearXNG remain optional search tools, and LangGraph/OpenAI Agents SDK-style frameworks remain optional future references rather than v1 dependencies. This decision is captured in `config/merlin/orchestration.yaml`.
+
 ## Architecture References
 
 These are reference patterns, not dependencies to copy.
@@ -114,6 +116,7 @@ Merlin v1 should:
 7. Keep Qdrant as the vector store for v1.
 8. Keep Open WebUI as the primary chat UI for v1.
 9. Keep n8n and OpenHands optional.
+10. Use a hybrid orchestration model: lightweight Merlin control plane first, optional workflow/agent frameworks later.
 
 ## Risks of Overengineering
 
