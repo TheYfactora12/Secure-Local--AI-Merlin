@@ -197,6 +197,8 @@ Approval decisions can be recorded with `wizard merlin approvals approve <id>` a
 
 `wizard merlin execute plan|execute --action merlin_status` is the v0 execution boundary. It supports only the harmless read-only `merlin_status` action, separates plan mode from execute mode, and appends a redacted local JSONL execution audit record on execute. It refuses shell, file, git, network, cloud, API key, memory write, service control, model download, and OpenHands actions even if an approval id is already approved. Future adapters must be added one at a time with allowlists, approval checks, audit logging, and denial tests.
 
+`wizard merlin magic plan "goal"` is the first Magic Mode runner. It calls the existing route dry-run, converts the route decision into visible steps, shows pause/stop support, marks every step `execution_allowed: false`, and can append a redacted plan record to `logs/merlin-magic-plans.jsonl`. It may create route trace and pending approval audit records when `--write-plan` is used, but it must not execute steps, call models, start services, write memory, run tools, use cloud, or log the raw user goal.
+
 ## Memory Design
 
 Merlin memory must be explicit and auditable. It should not silently learn every prompt.
@@ -252,8 +254,8 @@ Magic Mode v1 capabilities:
 2. Draft a plan.
 3. Show steps and required tools.
 4. Ask for approval before risky steps.
-5. Execute approved steps.
-6. Log every action.
+5. Log every planned step.
+6. Execute approved steps only after a scoped adapter exists.
 7. Allow pause/stop.
 8. Summarize results and changed files/settings.
 

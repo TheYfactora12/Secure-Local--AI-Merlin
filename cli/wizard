@@ -198,6 +198,8 @@ cat << 'EOF'
                               Preview policy-gated execution boundary
     wizard merlin execute execute --action merlin_status
                               Execute v0 read-only Merlin status action
+    wizard merlin magic plan "goal"
+                              Draft plan-only Magic Mode steps
     wizard ask "question"     Ask a quick question (swarm-tiny, fastest)
     wizard route "task"       Alias for wizard swarm (full coordinator)
     wizard models             List loaded Ollama models
@@ -334,8 +336,20 @@ case "$1" in
         shift 2
         bash "$WIZARD_DIR/scripts/merlin-execute.sh" "$@"
         ;;
+      magic)
+        case "${3:-}" in
+          plan)
+            shift 3
+            bash "$WIZARD_DIR/scripts/merlin-magic-plan.sh" "$@"
+            ;;
+          *)
+            echo "Usage: wizard merlin magic plan \"goal\""
+            exit 1
+            ;;
+        esac
+        ;;
       *)
-        echo "Usage: wizard merlin [status|status-api|dry-run|approvals|execute] ..."
+        echo "Usage: wizard merlin [status|status-api|dry-run|approvals|execute|magic] ..."
         exit 1
         ;;
     esac

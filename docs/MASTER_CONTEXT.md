@@ -54,6 +54,7 @@ Merlin control-plane status:
 - `wizard merlin approvals list|approve|deny` records approval audit state but still does not execute actions.
 - `wizard merlin status` reports local profile, hardware tier, privacy mode, approvals, and services.
 - `wizard merlin execute plan|execute --action merlin_status` is the v0 policy-gated execution boundary. It only allows read-only Merlin status and writes a redacted execution audit record on execute.
+- `wizard merlin magic plan "goal"` drafts plan-only Magic Mode steps from the existing route dry-run. With `--write-plan`, it writes redacted plan JSONL and route/approval audit records; it still executes nothing.
 - `wizard merlin status-api start|status|stop` manages the localhost-only read-only status API.
 - `wizard start` starts the selected profile, then starts the read-only Merlin status API if profile startup succeeds.
 - `wizard stop` stops the status API before stopping Docker services.
@@ -89,7 +90,7 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Extend policy-gated execution only through scoped adapters with focused tests; do not jump directly to shell/file/network execution.
+1. Extend Magic Mode only through scoped adapters with focused tests; do not jump directly to shell/file/network execution.
 2. Keep signed package/notarization work deferred until the installer and local validation remain green.
 3. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 4. Add dashboard-side polling polish only after the read-only API contract stays stable.
@@ -98,7 +99,7 @@ Recently verified closures:
 
 The current architecture keeps the default user path local-first and low-friction while preserving Linux server security options through explicit profiles. macOS avoids Docker Ollama conflicts by using native Ollama; Linux can still run Ollama in Docker when profiles are enabled.
 
-The next engineering priority is the first real scoped adapter after `merlin_status`, likely a plan-only Magic Mode step runner or approved memory-write simulator. Signed release work can wait until the local core loop remains green.
+The next engineering priority is the first data adapter after plan-only Magic Mode, likely an approved memory-write simulator before any real Qdrant writes. Signed release work can wait until the local core loop remains green.
 
 ## Risks / Unknowns
 
@@ -106,6 +107,7 @@ The next engineering priority is the first real scoped adapter after `merlin_sta
 - `host.docker.internal` plus `host-gateway` must be retested on future Docker Desktop and Linux Docker engine changes.
 - The status API is intentionally read-only and must not become a privileged control plane without a separate policy-gated execution layer.
 - The v0 execution layer only allows `merlin_status`; approval alone must not unlock shell, file, network, memory write, service, model download, cloud, or OpenHands actions.
+- Magic Mode is plan-only: steps can be drafted and audited, but no step adapter can execute until separately implemented and tested.
 - launchd starts the core profile through `wizard start core` and runs the read-only status API as a separate foreground LaunchAgent. Do not rely on a short-lived launchd shell to daemonize the API.
 - Optional live profile tests still need hardware/time validation.
 - Memory quality and regression safety still need stronger test coverage before Magic Mode writes memory.
@@ -113,7 +115,7 @@ The next engineering priority is the first real scoped adapter after `merlin_sta
 ## Next Actions
 
 1. Keep validating the read-only Merlin status API during each startup-related change.
-2. Add the next execution adapter only after defining its allowlist, approval behavior, audit log, and denial tests.
+2. Add an approved memory-write simulator before real Qdrant writes.
 3. Continue updating roadmap/docs/tests with every milestone before signing/notarization work.
 
 ## Validation
@@ -135,6 +137,8 @@ Last validated on 2026-05-06:
 - `bash tests/core-live-smoke.sh` passed with 18 checks, 0 warnings, and 0 failures.
 - `wizard merlin execute execute --action merlin_status` is the only v0 executable action; it prints read-only status and writes `logs/merlin-executions.jsonl`.
 - `tests/merlin-execute-smoke.sh` verifies dry-run/execute separation, audit logging, CLI routing, and denial of risky actions even after approval.
+- `wizard merlin magic plan "goal"` drafts plan-only steps and can write redacted plan records to `logs/merlin-magic-plans.jsonl`.
+- `tests/merlin-magic-plan-smoke.sh` verifies Magic Mode remains plan-only, writes no raw goals, and produces approval-blocked plans for risky routes.
 
 Earlier live validation on 2026-05-05:
 

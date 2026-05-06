@@ -86,6 +86,7 @@ already fixed on `main` in commit `12de379`. Do NOT revert.
 - `scripts/merlin-status.sh` — read-only status summary
 - `scripts/merlin-approvals.sh` — read-only approval review + audit log writes
 - `scripts/merlin-execute.sh` — v0 policy execution boundary; only read-only `merlin_status` is executable
+- `scripts/merlin-magic-plan.sh` — plan-only Magic Mode runner; no step execution
 - `scripts/merlin-status-api.py` — localhost:8765 read-only HTTP status JSON
 - `dashboard/index.html` — status panel wired to API
 
@@ -95,7 +96,9 @@ The first boundary exists, but Merlin is not yet autonomous.
 Current v0 boundary:
 - `wizard merlin execute plan --action merlin_status`
 - `wizard merlin execute execute --action merlin_status`
+- `wizard merlin magic plan "goal"`
 - Writes redacted local execution audit records to `logs/merlin-executions.jsonl`
+- Writes redacted plan records to `logs/merlin-magic-plans.jsonl` only with `--write-plan`
 - Refuses shell, file, git, network, cloud, API key, memory write, service control, model download, and OpenHands actions even after approval
 
 Needed: `scripts/merlin-core.py`
