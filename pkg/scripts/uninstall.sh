@@ -70,6 +70,19 @@ done
 log() { printf '[uninstall] %s\n' "$*"; }
 warn() { printf '[uninstall] WARNING: %s\n' "$*" >&2; }
 
+sudo_noninteractive_available() {
+  [[ "$(id -u)" == "0" ]] && return 0
+  command -v sudo >/dev/null 2>&1 || return 1
+  sudo -n true >/dev/null 2>&1
+}
+
+manual_admin_cleanup_hint() {
+  local target="$1"
+  local command_text="$2"
+  warn "Skipped ${target}; admin privileges are required."
+  warn "Run manually if needed: ${command_text}"
+}
+
 run() {
   if [[ "$DRY_RUN" == true ]]; then
     printf '[dry-run] %s\n' "$*"
@@ -171,8 +184,10 @@ remove_files() {
     log "Removing ${SYSTEM_DIR}"
     if [[ "$DRY_RUN" == true ]]; then
       printf '[dry-run] sudo rm -rf %s\n' "$SYSTEM_DIR"
-    else
+    elif sudo_noninteractive_available; then
       sudo rm -rf "$SYSTEM_DIR"
+    else
+      manual_admin_cleanup_hint "$SYSTEM_DIR" "sudo rm -rf ${SYSTEM_DIR}"
     fi
   fi
 }
@@ -188,8 +203,10 @@ forget_receipt() {
   log "Forgetting package receipt ${PKG_ID}"
   if [[ "$DRY_RUN" == true ]]; then
     printf '[dry-run] sudo pkgutil --forget %s\n' "$PKG_ID"
-  else
+  elif sudo_noninteractive_available; then
     sudo pkgutil --forget "$PKG_ID" >/dev/null 2>&1 || warn "No package receipt found for ${PKG_ID}"
+  else
+    manual_admin_cleanup_hint "package receipt ${PKG_ID}" "sudo pkgutil --forget ${PKG_ID}"
   fi
 }
 

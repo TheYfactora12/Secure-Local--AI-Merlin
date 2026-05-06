@@ -41,5 +41,11 @@ grep -q 'com.homeai.backup' "$PKG_UNINSTALL" \
   || fail "uninstaller does not remove backup launchd agent"
 grep -q 'com.homeai.merlin-status-api' "$PKG_UNINSTALL" \
   || fail "uninstaller does not remove Merlin status API launchd agent"
+grep -q 'sudo -n true' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not check sudo availability non-interactively"
+grep -q 'Skipped .*admin privileges are required' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not warn instead of hard-failing on sudo cleanup"
+grep -q 'Run manually if needed' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not print manual admin cleanup commands"
 
 echo "PASS: uninstaller is guarded and testable"
