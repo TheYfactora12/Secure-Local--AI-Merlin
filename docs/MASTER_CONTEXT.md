@@ -32,7 +32,13 @@ Raw `docker compose up` is now macOS-safe by default because macOS-incompatible 
 | SearXNG | 8080 | Google for AI search |
 | Qdrant | 6333 | Pinecone |
 | Ollama | 11434 | OpenAI API, local |
-| Merlin status API | 8765 | Live dashboard status bridge |
+| Merlin status API | 8765 | Read-only dashboard status bridge |
+| Merlin task API | 8766 | FastAPI task endpoint and Phase 2 status panels |
+
+Port 8765 and port 8766 are separate by design:
+
+- `scripts/merlin-status-api.py` serves port 8765. It is read-only, JSONL/status based, and must keep `execution_allowed=false`. Do not modify it for execution-aware features.
+- `merlin/task_endpoint.py` serves port 8766. It owns `POST /task` plus `/status/routes`, `/status/approvals`, `/status/traces`, and `/status/memory`.
 
 macOS:
 
@@ -67,6 +73,31 @@ Merlin control-plane status:
 - The status API is read-only: `GET /healthz`, `GET /status`, mutation methods rejected, `execution_allowed=false`.
 - Canonical config root is `configs/`; root `config/` is forbidden. Merlin config lives in `configs/merlin/`.
 
+## Phase 2 Complete
+
+Phase 2 is complete on `main` through commit `b4f35c8`, with 58 tests passing locally and CI green for the Phase 2F merge run.
+
+| Phase | Commit | Files |
+| --- | --- | --- |
+| 2A Config Loader | `99645ca` | `merlin/config_loader.py`, `tests/test_config_loader.py` |
+| 2B Policy Engine | `e6ffa8c` | `merlin/policy_engine.py`, `tests/test_policy_engine.py` |
+| Policy gate fix | `3c8222f` | explicit `secret_access` gate in policy |
+| 2C Native Router | `cbbd41c` | `merlin/router.py`, `tests/test_router.py` |
+| 2D Memory Manager | `dfcd500` | `merlin/memory_manager.py`, memory tests |
+| Router trace correction | `d608de0` | actual route schema fields |
+| 2E Persona + Task Endpoint | `1503dab` | `persona_injector.py`, `task_endpoint.py`, endpoint tests |
+| 2F Status Extension | `b4f35c8` | `status_extension.py`, status extension tests |
+
+Phase 2 runtime package:
+
+- `merlin/config_loader.py` validates the Merlin YAML config set.
+- `merlin/policy_engine.py` enforces 14 fail-closed approval gates.
+- `merlin/router.py` routes into the real 5 route IDs and carries approval gates.
+- `merlin/memory_manager.py` talks to local Ollama embeddings and Qdrant with dimension guards.
+- `merlin/persona_injector.py` builds Merlin system prompts with guardian ethos and Pi warmth.
+- `merlin/task_endpoint.py` exposes FastAPI on port 8766.
+- `merlin/status_extension.py` adds route, approval, trace, and memory status panels to the FastAPI app.
+
 ## RAM Tiers
 
 Do not change these without a dedicated issue and validation run.
@@ -94,39 +125,44 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Extend memory through a real Qdrant adapter only after the simulator contract remains stable and live restore/backup coverage is updated.
-2. Keep signed package/notarization work deferred until the installer and local validation remain green.
+1. Review and commit Issue #22 local support tooling: additive `wizard doctor` Merlin Core checks plus sanitized `wizard report-bug`.
+2. Keep signed package/notarization work deferred until installer, Phase 2 API, and support tooling remain green.
 3. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
-4. Add dashboard-side polling polish only after the read-only API contract stays stable.
+4. Add dashboard-side polling polish only after both status contracts are stable: 8765 read-only, 8766 execution-aware.
 
 ## Reasoning Summary
 
 The current architecture keeps the default user path local-first and low-friction while preserving Linux server security options through explicit profiles. macOS avoids Docker Ollama conflicts by using native Ollama; Linux can still run Ollama in Docker when profiles are enabled.
 
-The next engineering priority is live-safe memory persistence design: define the real Qdrant adapter behind the simulator contract, including backup/restore coverage and low-memory behavior. Signed release work can wait until the local core loop remains green.
+The next engineering priority is supportability: diagnostics, sanitized bug reports, and drift-proof docs so another AI or human can continue without breaking the installer or crossing security boundaries. Signed release work can wait until the local core loop and support loop remain green.
 
 ## Risks / Unknowns
 
 - Native macOS Ollama availability depends on the host service staying up.
 - `host.docker.internal` plus `host-gateway` must be retested on future Docker Desktop and Linux Docker engine changes.
 - The status API is intentionally read-only and must not become a privileged control plane without a separate policy-gated execution layer.
+- The FastAPI task API is intentionally separate on port 8766. Do not bridge it into `scripts/merlin-status-api.py`.
 - The v0 execution layer only allows `merlin_status`; approval alone must not unlock shell, file, network, memory write, service, model download, cloud, or OpenHands actions.
 - Magic Mode is plan-only: steps can be drafted and audited, but no step adapter can execute until separately implemented and tested.
 - Memory write simulation is not persistence. It stores only redacted audit metadata and must not be treated as learned memory.
 - launchd starts the core profile through `wizard start core` and runs the read-only status API as a separate foreground LaunchAgent. Do not rely on a short-lived launchd shell to daemonize the API.
-- n8n is still a Phase 1 workflow/execution surface and must be treated as a single point of failure until the Python Merlin control plane owns routing, policy, and memory recall.
+- n8n is still a Phase 1 workflow/execution surface and remains parallel to the Phase 2 Python control plane. Do not decommission it until replacements are proven route by route.
 - Optional live profile tests still need hardware/time validation.
 - Memory quality and regression safety still need stronger test coverage before Magic Mode writes memory.
 
 ## Next Actions
 
-1. Keep validating the read-only Merlin status API during each startup-related change.
-2. Add policy-controlled memory recall to Magic Mode planning so retrieved context can inform plans without executing steps or bypassing approval policy.
+1. Commit Issue #22 support tooling after review, then push only with explicit approval.
+2. Keep validating the read-only Merlin status API and the port 8766 FastAPI status panels during each startup/API change.
 3. Continue updating roadmap/docs/tests with every milestone before signing/notarization work.
 
 ## Validation
 
 Last verified: 2026-05-06.
+
+- Phase 2F merged at `b4f35c8`; local Phase 2 Python suite reported 58 passing tests.
+- CI was green for the Phase 2F merge run.
+- Issue #22 support tooling is implemented locally and smoke-tested: additive doctor checks, redaction helper, sanitized report generator, wizard wiring, and doctor/report-bug/redaction smokes.
 
 - Current local validation for the Qdrant memory adapter work:
   - `bash tests/merlin-memory-write-smoke.sh`

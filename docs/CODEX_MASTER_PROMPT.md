@@ -36,7 +36,7 @@ You are a builder with a specific codebase, a specific roadmap, and specific ope
 | CLI | `cli/wizard` |
 | Dashboard | `dashboard/index.html` (static, localhost:8888) |
 | Status API | `scripts/merlin-status-api.py` (localhost:8765, read-only) |
-| Config | `configs/merlin/*.yaml` — declarative, not yet all runtime-parsed |
+| Config | `configs/merlin/*.yaml` — runtime-validated by Phase 2 |
 | Tests | `tests/*.sh` — static smoke tests, run in CI |
 | CI | `.github/workflows/ci.yml` |
 
@@ -58,11 +58,16 @@ You are a builder with a specific codebase, a specific roadmap, and specific ope
 | Dashboard | 8888 | Static HTML, nginx |
 | Ollama | 11434 | Always native (not Docker) |
 | Merlin Status API | 8765 | Read-only Python server |
+| Merlin Task API | 8766 | FastAPI `POST /task` plus Phase 2 status panels |
 
 **Critical rule:** `QDRANT_URL` and `OLLAMA_BASE_URL` in `.env.example` MUST use
 `http://localhost:*` — not Docker-internal hostnames (`qdrant`, `ollama`). Host-shell
 scripts source `.env` from outside the Docker network. This was a P1 bug (Codex-flagged)
 already fixed on `main` in commit `12de379`. Do NOT revert.
+
+**Critical port split:** `scripts/merlin-status-api.py` owns port 8765 and must stay
+read-only with `execution_allowed=false`. `merlin/task_endpoint.py` owns port 8766 and
+serves execution-aware Phase 2 routes/status panels. Do not merge these servers.
 
 ---
 
@@ -93,39 +98,25 @@ already fixed on `main` in commit `12de379`. Do NOT revert.
 - `scripts/merlin-status-api.py` — localhost:8765 read-only HTTP status JSON
 - `dashboard/index.html` — status panel wired to API
 
-### 🔴 Phase 2 — Policy Executor: STARTED, STILL LIMITED
-The first boundary exists, but Merlin is not yet autonomous.
+### ✅ Phase 2 — Merlin Staff Core (DONE)
+Phase 2 is complete on `main` through commit `b4f35c8`; local Phase 2 Python tests reported
+58 passed and CI was green for the Phase 2F merge run.
 
-Current v0 boundary:
-- `wizard merlin config validate`
-- `wizard merlin execute plan --action merlin_status`
-- `wizard merlin execute execute --action merlin_status`
-- `wizard merlin magic plan "goal"`
-- `wizard merlin memory simulate --memory-type preference --text "..." --approval-id <id>`
-- `wizard merlin memory write --memory-type preference --text "..." --approval-id <id>`
-- `wizard merlin memory search --query "..." --memory-type preference`
-- Writes redacted local execution audit records to `logs/merlin-executions.jsonl`
-- Writes redacted plan records to `logs/merlin-magic-plans.jsonl` only with `--write-plan`
-- Writes redacted memory audit records to `logs/merlin-memory-writes.jsonl` only after approved `memory_write`
-- Real memory write is local Qdrant only, requires an existing canonical collection and local Ollama embeddings, and must not pull models, start services, call cloud APIs, or log raw memory text
-- Memory search is local Qdrant only, requires local Ollama embeddings, writes redacted read audit records to `logs/merlin-memory-reads.jsonl`, and must not write memory or log raw query/memory text
-- Refuses shell, file, git, network, cloud, API key, service control, model download, and OpenHands actions even after approval
+Delivered:
+- 2A `99645ca`: `merlin/config_loader.py` validates Merlin config at startup.
+- 2B `e6ffa8c`: `merlin/policy_engine.py` enforces 14 fail-closed approval gates.
+- Policy gate fix `3c8222f`: `secret_access` is explicit in policy.
+- 2C `cbbd41c`: `merlin/router.py` routes real route IDs and carries approval gates.
+- 2D `dfcd500`: `merlin/memory_manager.py` writes/searches/deletes local Qdrant memory with dimension guards and degraded mode.
+- Router schema correction `d608de0`: route decisions match the actual `routes.yaml` schema.
+- 2E `1503dab`: `merlin/persona_injector.py` and `merlin/task_endpoint.py` add persona injection and `POST /task`.
+- 2F `b4f35c8`: `merlin/status_extension.py` adds FastAPI status panels.
 
-Needed: `scripts/merlin-core.py`
-- Reads `configs/merlin/policy.yaml` and `configs/merlin/routes.yaml` at runtime
-- Evaluates task input → selects route → checks approval gates
-- If gates clear: calls LiteLLM (`http://localhost:4000`) with correct model alias
-- Writes redacted JSONL trace to `logs/merlin-route-decisions.jsonl`
-- If gates require approval: writes pending record to `logs/merlin-approvals.jsonl` and STOPS
-- NO execution of shell, file, git, or network actions — those are Phase 3+
-- Must be testable without a running LiteLLM (use `--dry-run` flag)
-
-Acceptance criteria:
-```
-wizard ask "explain my codebase" → routes to general → calls qwen7b → returns answer
-wizard ask --task-type code "debug install.sh" → requires approval → prints approval request, stops
-wizard ask --task-type memory "remember I prefer local models" → requires approval → stops
-```
+Current Phase 2 API:
+- FastAPI app lives in `merlin/task_endpoint.py`.
+- It must run on `127.0.0.1:8766`.
+- `POST /task` validates input, routes, blocks approval-required routes with 403, injects persona, calls local LiteLLM, and writes memory only through the `memory_write` policy gate.
+- `/status/routes`, `/status/approvals`, `/status/traces`, and `/status/memory` are provided by `merlin/status_extension.py`.
 
 ### 🟡 Phase 3 — Memory Layer (Issue #4)
 - Qdrant session bridge: inject top-5 memories into every new chat session
@@ -168,11 +159,11 @@ Branch: `installer-hardening`
 |---|---|---|---|---|
 | #1 | v1.0 Signed Release | 9 | OPEN | Release blocker |
 | #3 | n8n Ollama retry logic | 3 | OPEN | Silent workflow failures |
-| #4 | Qdrant memory schema + session bridge | 3 | OPEN | AI amnesia — no cross-session memory |
+| #4 | Qdrant memory schema + session bridge | 3 | PARTIAL | Phase 2 manager exists; chat/session bridge still needs product wiring |
 | #6 | ModelRouter n8n workflow | 4 | OPEN | All tasks go local regardless of complexity |
 | #7 | Memory benchmark harness | 5 | OPEN | No proof memory is improving |
 | #8 | Langfuse observability | 5 | OPEN | Zero trace visibility |
-| #22 | sanitized failure reporting | hardening | OPEN | No structured bug reports |
+| #22 | sanitized failure reporting | hardening | LOCAL REVIEW | Additive doctor checks and `wizard report-bug` implemented locally; commit/push requires approval |
 | #5 | Hardware guide docs | docs | OPEN | Low urgency |
 
 ---
@@ -188,7 +179,7 @@ These are non-negotiable. Any code you write must honor them:
 5. **Protect the installer** — `install.sh` is the golden path. Do not replace it. Do not change its core behavior without a specific defect and a tested fix
 6. **Small reviewable slices** — No single commit should change >5 files unless it is a mechanical rename or a tested migration
 7. **Tests before merge** — Every new script needs a corresponding `tests/*-smoke.sh` that runs in CI
-8. **`execution_allowed: false` until Phase 3** — merlin-core.py Phase 2 must never execute shell, file, git, or external network actions
+8. **Keep status separation** — port 8765 remains read-only; port 8766 is the FastAPI task/status API
 9. **No hardcoded paths** — Always use `STACK_DIR` derived from script location, never `$HOME/home-ai-elite`
 10. **Truthfulness contract** — If something is not implemented, say it is not implemented. Do not claim a feature works if it does not
 
@@ -205,14 +196,23 @@ These are non-negotiable. Any code you write must honor them:
 ├── dashboard/index.html              # ✅ Static dashboard
 ├── scripts/
 │   ├── doctor.sh                     # ✅ 43-check preflight
+│   ├── report-bug.sh                 # 🔄 Issue #22 sanitized report helper
+│   ├── redact.sh                     # 🔄 Issue #22 shared redaction helper
 │   ├── merlin-dry-run.sh             # ✅ Route decision dry-run (no execution)
 │   ├── merlin-status.sh              # ✅ Read-only status
 │   ├── merlin-approvals.sh           # ✅ Approval review + audit
-│   ├── merlin-status-api.py          # ✅ localhost:8765 read-only HTTP API
-│   └── merlin-core.py                # ❌ DOES NOT EXIST — Phase 2 target
+│   └── merlin-status-api.py          # ✅ localhost:8765 read-only HTTP API — DO NOT MODIFY
+├── merlin/
+│   ├── config_loader.py              # ✅ Phase 2A
+│   ├── policy_engine.py              # ✅ Phase 2B
+│   ├── router.py                     # ✅ Phase 2C
+│   ├── memory_manager.py             # ✅ Phase 2D
+│   ├── persona_injector.py           # ✅ Phase 2E
+│   ├── task_endpoint.py              # ✅ Phase 2E, FastAPI on 8766
+│   └── status_extension.py           # ✅ Phase 2F status panels
 ├── configs/merlin/
-│   ├── policy.yaml                   # ✅ Declared, NOT runtime-parsed
-│   ├── routes.yaml                   # ✅ Declared, NOT runtime-parsed
+│   ├── policy.yaml                   # ✅ Runtime-validated and policy-enforced
+│   ├── routes.yaml                   # ✅ Runtime-validated and used by router
 │   ├── trace.yaml                    # ✅ Declared, NOT runtime-parsed
 │   ├── persona.yaml                  # ✅ Identity contract
 │   ├── profiles.yaml                 # ✅ Profile definitions

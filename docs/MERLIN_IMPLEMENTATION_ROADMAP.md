@@ -8,6 +8,38 @@
 - Do not make heavy services mandatory.
 - Do not silently learn into memory.
 - Do not add a heavy agent framework before core is stable.
+- Do not merge port 8766 FastAPI execution-aware behavior into the port 8765 read-only status server.
+- Do not auto-push, auto-PR, or auto-merge; user approval is required.
+
+## Current Checkpoint
+
+Last updated: 2026-05-06.
+
+Phase 2 is complete on `main` through `b4f35c8`.
+
+| Phase | Status | Commit |
+| --- | --- | --- |
+| 2A Config Loader | Done | `99645ca` |
+| 2B Policy Engine | Done | `e6ffa8c` |
+| 2B secret gate fix | Done | `3c8222f` |
+| 2C Native Router | Done | `cbbd41c` |
+| 2D Memory Manager | Done | `dfcd500` |
+| 2C schema correction | Done | `d608de0` |
+| 2E Persona + Task Endpoint | Done | `1503dab` |
+| 2F Status Extension | Done | `b4f35c8` |
+
+Current active implementation work is Issue #22:
+
+- Additive `scripts/doctor.sh` Merlin Core checks only.
+- `scripts/redact.sh` shared redaction helper.
+- `scripts/report-bug.sh` sanitized bug report generator.
+- `wizard doctor` and `wizard report-bug` wiring.
+- Smoke tests for doctor/report-bug/redaction.
+
+Port contract:
+
+- `scripts/merlin-status-api.py` serves 8765 and stays read-only forever unless a dedicated security review changes that contract.
+- `merlin/task_endpoint.py` serves 8766 and owns `POST /task` plus `/status/routes`, `/status/approvals`, `/status/traces`, and `/status/memory`.
 
 ## Milestone 0: Protect Working Installer and Document Current State
 
@@ -68,14 +100,15 @@ Acceptance criteria:
 
 Tasks:
 
-- Add a thin Merlin command/API facade.
-- Read current `.env`, hardware tier, and service state.
-- Expose status and route decision dry-run.
-- Do not replace Open WebUI or LiteLLM.
+- [x] Add Python Merlin package without replacing Open WebUI or LiteLLM.
+- [x] Add config loader, policy engine, router, memory manager, persona injector, task endpoint, and status extension.
+- [x] Expose `POST /task` through FastAPI on port 8766.
+- [x] Keep legacy status API on port 8765 read-only.
 
 Risks:
 
 - Duplicating `wizard` CLI responsibilities.
+- Accidentally merging the read-only status API with execution-aware task behavior.
 
 Tests:
 
@@ -85,14 +118,14 @@ Tests:
 
 Acceptance criteria:
 
-- Merlin can report system state without changing runtime behavior.
+- Merlin can report system state and route tasks without changing the working installer or defaulting to cloud calls.
 
 ## Milestone 3: Add Model Router
 
 Tasks:
 
 - Keep LiteLLM as gateway.
-- Add Merlin route decision logic.
+- [x] Add Merlin route decision logic in `merlin/router.py`.
 - Route by task type, privacy, hardware tier, online mode, and model availability.
 - Log route decisions.
 
@@ -109,16 +142,16 @@ Tests:
 
 Acceptance criteria:
 
-- Router chooses correct backend in dry-run and live local calls.
+- Router chooses correct route IDs and model aliases from actual config, with raw input hashed before logging.
 
 ## Milestone 4: Add Memory Layer
 
 Tasks:
 
 - Define canonical Qdrant collections.
-- Add memory write approval flow.
-- Add memory deletion.
-- Add audit trail.
+- [x] Add memory write/search/delete interface in `merlin/memory_manager.py`.
+- [x] Enforce Qdrant dimension guards before writes.
+- [x] Add degraded mode when Qdrant is unreachable.
 - Align backup/restore with canonical collections.
 
 Risks:
@@ -136,6 +169,7 @@ Tests:
 Acceptance criteria:
 
 - Memory is explicit, auditable, and restorable.
+- Dimension mismatch fails closed; `documents` remains 1536 dimensions and `merlin-session` remains 768 dimensions.
 
 ## Milestone 5: Add Magic Mode Planner
 

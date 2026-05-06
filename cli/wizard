@@ -5,6 +5,7 @@
 # ============================================================
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WIZARD_DIR="${WIZARD_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
+SCRIPTS_DIR="${WIZARD_DIR}/scripts"
 MEMORY_COLLECTIONS_FILE="${MERLIN_MEMORY_COLLECTIONS_FILE:-${WIZARD_DIR}/configs/merlin/memory-collections.env}"
 CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 RED='\033[0;31m'; NC='\033[0m'; BOLD='\033[1m'; DIM='\033[2m'
@@ -244,6 +245,8 @@ cat << 'EOF'
   Debug:
     wizard debug              Generate sanitized debug report
                                → saves to ~/.wizard-debug-YYYY-MM-DD.txt
+    wizard report-bug [command] [exit-code] [--create-issue]
+                              Generate sanitized Merlin bug report in logs/
 
   Info:
     wizard help               Show this help
@@ -321,7 +324,13 @@ case "$1" in
     ;;
 
   doctor)
-    bash "$WIZARD_DIR/scripts/doctor.sh"
+    shift
+    exec bash "$SCRIPTS_DIR/doctor.sh" "$@"
+    ;;
+
+  report-bug)
+    shift
+    exec bash "$SCRIPTS_DIR/report-bug.sh" "$@"
     ;;
 
   merlin)

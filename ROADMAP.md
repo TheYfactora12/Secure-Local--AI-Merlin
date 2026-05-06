@@ -6,7 +6,12 @@ This roadmap tracks what is actually verified, what is only scaffolded, and what
 
 Home AI Elite has a broad prototype stack, but it is not yet a laptop-stable v1.0 product. The main architecture problem is that the "full stack" became the default startup path. On a normal Mac or PC, that creates too much install friction, memory pressure, port usage, and failure surface.
 
-The next milestone is not more features. The next milestone is a reliable laptop-first core that can run before optional services are enabled. From there, the same repo should scale up based on hardware tier and install profile.
+The laptop-first core is now the protected path. Phase 2 Merlin Staff Core is complete on `main` through `b4f35c8` with 58 Python tests passing and CI green. The next milestone is not more planning; it is supportability and verification: diagnostics, sanitized bug reports, real milestone checks, and continued profile validation without breaking the installer.
+
+Port contract:
+
+- Port 8765: `scripts/merlin-status-api.py`, legacy read-only status server, `execution_allowed=false`, never merge execution-aware endpoints into it.
+- Port 8766: `merlin/task_endpoint.py`, FastAPI `POST /task` plus Phase 2 `/status/*` panels.
 
 ## Architecture Direction
 
@@ -204,10 +209,28 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Add local-only Merlin memory search adapter with redacted read audit logs
 - [x] Consolidate all root configuration into canonical `configs/` tree before Phase 2 loader work
 - [x] Add Phase 2A Merlin config validator for `configs/merlin` startup contracts
+- [x] Add Phase 2A Python config loader with Pydantic validation for Merlin configs
+- [x] Add Phase 2B policy engine with 14 fail-closed approval gates
+- [x] Add Phase 2C native router against the actual `routes.yaml` route IDs
+- [x] Add Phase 2D memory manager with Qdrant/Ollama integration, dimension guards, and degraded mode
+- [x] Add Phase 2E persona injector and FastAPI `POST /task` endpoint on port 8766
+- [x] Add Phase 2F FastAPI status extension: routes, approvals, traces, memory
 - [x] Add Qdrant vector dimension guard before local memory search/upsert
 - [x] Add canonical/legacy memory schema and runtime Qdrant collection manifest
 - [x] Align `cli/wizard` memory commands with the runtime collection manifest
 - [ ] Connect Magic Mode to shared Qdrant memory only after memory approval/audit is implemented
+
+### 3A. Supportability and Drift Control
+
+- [x] Keep `scripts/doctor.sh` additive only; do not rewrite its existing sections or thresholds
+- [x] Add `wizard doctor --help`
+- [x] Add Merlin Core checks to `doctor.sh` for Phase 2 configs, gitleaks hook, ports 8765/8766, logs, and a separate 10GB critical disk check
+- [x] Add `scripts/redact.sh` with BSD-sed-safe redaction helpers
+- [x] Add `scripts/report-bug.sh` for sanitized local bug reports
+- [x] Wire `wizard report-bug`
+- [x] Add smoke coverage for doctor/report-bug/redaction
+- [ ] Commit Issue #22 support tooling after review
+- [ ] Push Issue #22 only after explicit user approval
 
 ### 4. Fix Backup/Restore
 

@@ -16,6 +16,12 @@ WARN=0
 FAIL=0
 NEXT_COMMAND=""
 
+if [[ "${1:-}" == "--help" ]]; then
+  echo "Usage: bash scripts/doctor.sh [--help]"
+  echo "Read-only diagnostic. Zero side effects. Exit 1 if failures found."
+  exit 0
+fi
+
 pass() { echo -e "  ${GREEN}✓${NC} $*"; PASS=$((PASS + 1)); }
 warn() { echo -e "  ${YELLOW}!${NC} $*"; WARN=$((WARN + 1)); }
 fail() { echo -e "  ${RED}✗${NC} $*"; FAIL=$((FAIL + 1)); }
@@ -205,6 +211,15 @@ echo -e "${BOLD}Repository${NC}"
 [[ -f "${STACK_DIR}/configs/merlin/model-tiers.env" ]] && pass "Merlin model tier runtime manifest present" || warn "Merlin model tier runtime manifest missing"
 [[ -f "${STACK_DIR}/configs/merlin/memory.yaml" ]] && pass "Merlin memory schema config present" || warn "Merlin memory schema config missing"
 [[ -f "${STACK_DIR}/configs/merlin/memory-collections.env" ]] && pass "Merlin memory runtime manifest present" || warn "Merlin memory runtime manifest missing"
+[[ -f "${STACK_DIR}/configs/merlin/persona.yaml" ]] && pass "persona.yaml present" || warn "persona.yaml missing"
+[[ -f "${STACK_DIR}/configs/merlin/policy.yaml" ]] && pass "policy.yaml present" || warn "policy.yaml missing"
+[[ -f "${STACK_DIR}/configs/merlin/routes.yaml" ]] && pass "routes.yaml present" || warn "routes.yaml missing"
+[[ -f "${STACK_DIR}/.gitleaks.toml" ]] && pass ".gitleaks.toml present" || warn ".gitleaks.toml missing — run: pre-commit install"
+if [[ -f "${STACK_DIR}/.git/hooks/pre-commit" ]] && grep -q "gitleaks" "${STACK_DIR}/.git/hooks/pre-commit" 2>/dev/null; then
+  pass "gitleaks pre-commit hook installed"
+else
+  warn "gitleaks pre-commit hook missing — run: pre-commit install"
+fi
 
 echo -e "\n${BOLD}System${NC}"
 OS="$(uname -s)"
@@ -340,6 +355,8 @@ check_http "Dashboard" "http://localhost:8888"
 check_http "Open WebUI" "http://localhost:3000"
 check_http "LiteLLM" "http://localhost:4000/health/readiness"
 check_http "Qdrant" "http://localhost:6333/healthz"
+check_http "Merlin Status API" "http://localhost:8765/healthz"
+check_http "Merlin Task API" "http://localhost:8766/status/routes"
 if has_capability "search" "$ACTIVE_CAPABILITIES"; then
   check_http "SearXNG" "http://localhost:8080"
   check_http "Perplexica" "http://localhost:3002"
@@ -356,6 +373,31 @@ if has_capability "coding" "$ACTIVE_CAPABILITIES"; then
 else
   info "Coding profile disabled; skipping OpenHands health check"
 fi
+
+echo -e "\n${BOLD}Merlin Core${NC}"
+for port in 8765 8766; do
+  if lsof -ti :"$port" >/dev/null 2>&1 || nc -z localhost "$port" 2>/dev/null; then
+    pass "Port $port is open"
+  else
+    warn "Port $port is closed"
+  fi
+done
+LOG_ERROR_COUNT=0
+if [[ -d "${STACK_DIR}/logs" ]]; then
+  while IFS= read -r logfile; do
+    count=$(tail -50 "$logfile" 2>/dev/null | grep -cE "ERROR|CRITICAL" || true)
+    LOG_ERROR_COUNT=$((LOG_ERROR_COUNT + count))
+  done < <(find "${STACK_DIR}/logs" -maxdepth 1 \( -name "*.log" -o -name "*.jsonl" \) 2>/dev/null || true)
+  if (( LOG_ERROR_COUNT == 0 )); then
+    pass "Log scan: 0 errors found"
+  else
+    warn "Log scan: ${LOG_ERROR_COUNT} ERROR/CRITICAL lines found"
+  fi
+else
+  info "No logs directory found"
+fi
+MERLIN_DISK_GB="$(df -k "$STACK_DIR" | awk 'NR==2 {printf "%d", $4/1024/1024}')"
+(( MERLIN_DISK_GB < 10 )) && warn "Disk critically low: ${MERLIN_DISK_GB}GB (Merlin Core needs 10GB min)" || true
 
 echo -e "\n${BOLD}Profile Safety${NC}"
 if ensure_docker_cli && docker info >/dev/null 2>&1; then
@@ -378,6 +420,7 @@ fi
 
 echo -e "\n${BOLD}Summary${NC}"
 echo -e "  Passed: ${GREEN}${PASS}${NC}  Warnings: ${YELLOW}${WARN}${NC}  Failures: ${RED}${FAIL}${NC}"
+echo "doctor: ${PASS} checks passed, ${WARN} warnings, ${FAIL} failures"
 
 echo -e "\n${BOLD}Next Command${NC}"
 if [[ -n "$NEXT_COMMAND" ]]; then
