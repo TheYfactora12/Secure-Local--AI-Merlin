@@ -11,6 +11,9 @@ Home AI Elite is a local-first AI operating system. The central AI brain is Merl
 Merlin ethos:
 Merlin is here to help, protect, and improve. Merlin should be truthful, humble, protective, and guided by love, service, and care for humanity. Merlin must not lie, fabricate capability, hide uncertainty, or claim incomplete work is complete. If Merlin cannot do something, it says why and offers the safest next path. Merlin is a product assistant, not an authority over the user; it must preserve consent, evidence, safety policy, and user control.
 
+Merlin Staff — Core:
+The six team modes declared in configs/merlin/persona.yaml are the Staff. The Python runtime that activates them is the Core. The six modes are: Architect (system design), AI Engineer (model/embedding ops), Software Engineer (code/tests), Security Reviewer (policy/threat model), Product Designer (UX/dashboard), and Operator (install/infra). Every request is routed to the appropriate team mode by persona_injector.py at runtime. The 14 policy gates in policy.yaml enforce approval requirements for all execution actions and fail closed. The Pi Emotional Intelligence milestone — follow-up questions and within-session recall — is implemented inside persona_injector.py reading the pi_eq section of persona.yaml. It is not a separate system. See docs/MERLIN_STAFF_CORE.md for the full architecture.
+
 Non-negotiable engineering rules:
 1. Protect the working installer. Do not rewrite or replace it without a specific defect and a tested migration path.
 2. Do not make broad refactors in one pass.
@@ -22,6 +25,7 @@ Non-negotiable engineering rules:
 8. Do not remove existing functionality unless clearly obsolete and documented.
 9. Update roadmap/docs/tests with every meaningful milestone.
 10. Push completed work to GitHub and verify CI before calling a milestone complete.
+11. Update docs/MERLIN_STAFF_CORE.md whenever any of the following change: team modes, policy gates, Qdrant collection dimensions, build phase boundaries, Pi EQ behavior flags, key file references, or architecture topology. No milestone is complete without this update.
 
 Current architecture baseline:
 - Default install path: `bash install.sh`.
@@ -51,6 +55,9 @@ Current Merlin control-plane state:
 - launchd runs the read-only status API as its own foreground job: `com.homeai.merlin-status-api`.
 - The dashboard reads `http://localhost:8765/status` when the status API is running.
 - No Merlin endpoint may execute approvals, shell commands, file writes, model downloads, service controls, Magic Mode steps, or cloud calls. The CLI-only `merlin_status` allowlist action is the only general execution path. Memory write and memory search are separate local-only adapters that must fail closed and never log raw memory text.
+
+Dimension safety rule:
+- The `documents` Qdrant collection uses 1536 dimensions. All other Merlin collections (merlin-session, merlin-longterm, merlin-skills, merlin-context) use 768 dimensions (nomic-embed-text). Never write to `documents` with nomic-embed-text — it causes silent vector corruption. memory_manager.py must validate dimensions on every write and raise DimensionMismatchError on mismatch.
 
 Current status API contract:
 - `GET /healthz` and `GET /status` only.
@@ -89,7 +96,16 @@ Important files:
 - `configs/merlin/orchestration.yaml`
 - `configs/merlin/trace.yaml`
 - `configs/merlin/memory.yaml`
+- `merlin/config_loader.py`
+- `merlin/policy_engine.py`
+- `merlin/router.py`
+- `merlin/memory_manager.py`
+- `merlin/persona_injector.py`
+- `merlin/trace_manager.py`
+- `merlin/swarm_coordinator.py`
+- `merlin/task_endpoint.py`
 - `ROADMAP.md`
+- `docs/MERLIN_STAFF_CORE.md`
 - `docs/MASTER_CONTEXT.md`
 - `docs/MERLIN_IMPLEMENTATION_ROADMAP.md`
 - `docs/DASHBOARD_PRODUCT_SPEC.md`
@@ -126,4 +142,10 @@ Before final response:
 
 ## Current Next Recommendation
 
-Issue #25 Layer 1 is green. Choose the next narrow slice deliberately: either deeper SAST planning for Issue #25, or Pi Emotional Intelligence prompt/session work. Keep installer behavior untouched.
+Phase 2A (`merlin/config_loader.py`) is the active build target. It is one day of zero-risk work that unlocks every other phase. Start there. The moment Pydantic validates all 7 YAML files cleanly on startup, the entire Merlin Staff — Core architecture becomes operational.
+
+After Phase 2A is green and CI passes:
+- Phase 2B: `merlin/policy_engine.py` — 14 gate enforcement
+- Phase 2E: `merlin/persona_injector.py` — Pi EQ activation (4 lines in persona.yaml)
+
+See `docs/MERLIN_STAFF_CORE.md` for the full architecture, team modes, policy gates, Pi EQ implementation, and dimension safety rule.
