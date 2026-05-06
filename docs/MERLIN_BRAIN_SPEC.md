@@ -193,6 +193,8 @@ Pending approval requests can be reviewed with `wizard merlin approvals list`. T
 
 Approval decisions can be recorded with `wizard merlin approvals approve <id>` and `wizard merlin approvals deny <id>`. These commands append a decision record to the local approval JSONL log and update the latest-state list view. They still set `execution_allowed: false` and must not execute actions, start services, call models, write memory, or expose raw prompt text. Runtime execution requires a later, separate execution layer with its own policy checks.
 
+`wizard merlin status` provides a read-only control-plane summary for the active profile, hardware tier, local/cloud mode, trace log path/count, approval log counts, and core service reachability. It is intentionally observational: it does not start missing services, approve requests, call models, write memory, or execute tools.
+
 ## Memory Design
 
 Merlin memory must be explicit and auditable. It should not silently learn every prompt.

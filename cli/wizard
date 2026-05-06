@@ -172,6 +172,7 @@ cat << 'EOF'
     wizard brain start       Start native Ollama brain
     wizard brain stop        Stop native Ollama and unload hot runners
     wizard brain cooldown    Alias for brain stop when CPU is running hot
+    wizard merlin status     Show read-only Merlin control-plane status
     wizard merlin dry-run "goal"
                               Preview Merlin route, model, profile, and approvals
     wizard merlin approvals list
@@ -293,6 +294,10 @@ case "$1" in
 
   merlin)
     case "${2:-}" in
+      status)
+        shift 2
+        bash "$WIZARD_DIR/scripts/merlin-status.sh" "$@"
+        ;;
       dry-run)
         shift 2
         bash "$WIZARD_DIR/scripts/merlin-dry-run.sh" "$@"
@@ -302,7 +307,7 @@ case "$1" in
         bash "$WIZARD_DIR/scripts/merlin-approvals.sh" "$@"
         ;;
       *)
-        echo "Usage: wizard merlin [dry-run|approvals] ..."
+        echo "Usage: wizard merlin [status|dry-run|approvals] ..."
         exit 1
         ;;
     esac
