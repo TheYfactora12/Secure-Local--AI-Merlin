@@ -36,6 +36,7 @@ Current architecture baseline:
 
 Current Merlin control-plane state:
 - `wizard merlin dry-run "goal"` previews route/model/profile/approval decisions without side effects.
+- `wizard merlin config validate` validates Phase 2A Merlin config startup contracts from `configs/merlin/`.
 - `wizard merlin approvals list|approve|deny` records/read approval audit state but still does not execute actions.
 - `wizard merlin status` reports profile, hardware tier, privacy mode, approval counts, and service state.
 - `wizard merlin execute plan|execute --action merlin_status` is the v0 policy-gated execution boundary; it only allows read-only status and audits execute calls.
@@ -119,4 +120,4 @@ Before final response:
 
 ## Current Next Recommendation
 
-Design policy-controlled memory recall for Magic Mode planning. It may read approved local Qdrant memory through the search adapter, but it must not execute steps, write memory, start services, call cloud APIs, or bypass approval gates.
+Design policy-controlled memory recall for Magic Mode planning. Run `wizard merlin config validate` first. Memory recall may read approved local Qdrant memory through the search adapter, but it must not execute steps, write memory, start services, call cloud APIs, or bypass approval gates.

@@ -203,6 +203,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Live-validate approved local Qdrant memory writes on the low-memory core profile
 - [x] Add local-only Merlin memory search adapter with redacted read audit logs
 - [x] Consolidate all root configuration into canonical `configs/` tree before Phase 2 loader work
+- [x] Add Phase 2A Merlin config validator for `configs/merlin` startup contracts
 - [x] Add Qdrant vector dimension guard before local memory search/upsert
 - [x] Add canonical/legacy memory schema and runtime Qdrant collection manifest
 - [x] Align `cli/wizard` memory commands with the runtime collection manifest

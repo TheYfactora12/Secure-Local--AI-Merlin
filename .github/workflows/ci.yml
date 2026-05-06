@@ -110,6 +110,7 @@ jobs:
         run: |
           bash tests/profile-selection-smoke.sh
           bash tests/config-root-smoke.sh
+          bash tests/merlin-config-validate-smoke.sh
           bash tests/memory-config-smoke.sh
           bash tests/wizard-memory-config-smoke.sh
           bash tests/doctor-model-smoke.sh

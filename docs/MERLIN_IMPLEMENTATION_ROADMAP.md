@@ -364,5 +364,6 @@ Next implementation slice:
 - Live-validate approved local Qdrant memory write on the low-memory core profile after explicit canonical collection initialization and explicit `nomic-embed-text` install. `Done: merlin_user point 640cc4bb-5dc9-3c68-8a44-5d2560a15ab5, redacted audit mem_20260506_040805_654553`
 - Add local-only Qdrant memory search adapter with local Ollama embeddings, raw results only in user output, redacted read audit logs, no memory writes, and CLI routing. `Done: scripts/merlin-memory-read.sh, cli/wizard, tests/merlin-memory-read-smoke.sh`
 - Consolidate the repo to one canonical `configs/` root before Phase 2 config loader work. `Done: configs/merlin, configs/models, configs/mcp, tests/config-root-smoke.sh`
+- Add Phase 2A Merlin config startup validator with no new runtime dependency. `Done: scripts/merlin-config-validate.py, wizard merlin config validate, tests/merlin-config-validate-smoke.sh`
 - Add Qdrant vector dimension validation before local memory search/upsert so 768-dimensional Merlin memory cannot accidentally target the legacy 1536-dimensional `documents` collection. `Done: DimensionMismatchError guard in scripts/merlin-memory-read.sh and scripts/merlin-memory-write.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.

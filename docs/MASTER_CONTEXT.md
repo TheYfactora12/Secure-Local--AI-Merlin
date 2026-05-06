@@ -51,6 +51,7 @@ docker compose --profile docker-ollama --profile linux-security up -d
 Merlin control-plane status:
 
 - `wizard merlin dry-run "goal"` previews routing, model, profile, and approval requirements with no side effects.
+- `wizard merlin config validate` validates Phase 2A Merlin config startup contracts from `configs/merlin/` with no new runtime YAML dependency.
 - `wizard merlin approvals list|approve|deny` records approval audit state but still does not execute actions.
 - `wizard merlin status` reports local profile, hardware tier, privacy mode, approvals, and services.
 - `wizard merlin execute plan|execute --action merlin_status` is the v0 policy-gated execution boundary. It only allows read-only Merlin status and writes a redacted execution audit record on execute.
@@ -154,6 +155,7 @@ Last verified: 2026-05-06.
 - `tests/merlin-memory-write-smoke.sh` verifies approved `memory_write` gate validation, fail-closed denial, no raw audit logging, no Qdrant/embedding calls during plan/simulate/denial, and a fake local Qdrant/Ollama write path for approved `write`.
 - `wizard merlin memory search --query "..." --memory-type preference` can retrieve approved memory from local Qdrant with local Ollama embeddings. It writes redacted read audit records to `logs/merlin-memory-reads.jsonl` and performs no memory writes, cloud calls, service starts, or tool execution.
 - `tests/merlin-memory-read-smoke.sh` verifies local embedding search, Qdrant read behavior, CLI routing, no memory writes, and no raw query or raw memory text in read audit logs.
+- `tests/merlin-config-validate-smoke.sh` verifies the Phase 2A config validator, route/policy cross-checks, memory dimension contract checks, and rejection of the legacy root `config/` directory.
 - Live memory validation on 2026-05-06 initialized canonical Qdrant collections with `MERLIN_CREATE_CANONICAL_COLLECTIONS=true bash scripts/init-qdrant.sh`, explicitly installed local `nomic-embed-text`, approved `approval_dryrun_20260506_040756_17686`, wrote point `640cc4bb-5dc9-3c68-8a44-5d2560a15ab5` into `merlin_user`, and verified the JSONL audit record `mem_20260506_040805_654553` stayed redacted.
 - Live memory search validation on 2026-05-06 ran `wizard merlin memory search --query "local-first profile-aware" --memory-type preference --limit 3`, retrieved point `640cc4bb-5dc9-3c68-8a44-5d2560a15ab5`, and verified read audit record `mread_20260506_041535_472003` stored hashes only.
 - PR #10 / `installer-hardening` is closed and `origin/installer-hardening` is an ancestor of `origin/main`; it is not an active blocker.

@@ -82,6 +82,7 @@ already fixed on `main` in commit `12de379`. Do NOT revert.
 - `configs/merlin/routes.yaml` — route map, NOT yet runtime-parsed
 - `configs/merlin/trace.yaml` — trace schema, NOT yet runtime-parsed
 - `configs/merlin/persona.yaml` — identity + guardian ethos
+- `scripts/merlin-config-validate.py` — Phase 2A config startup contract validator
 - `scripts/merlin-dry-run.sh` — reads routes/policy, prints decisions, NO execution
 - `scripts/merlin-status.sh` — read-only status summary
 - `scripts/merlin-approvals.sh` — read-only approval review + audit log writes
@@ -96,6 +97,7 @@ already fixed on `main` in commit `12de379`. Do NOT revert.
 The first boundary exists, but Merlin is not yet autonomous.
 
 Current v0 boundary:
+- `wizard merlin config validate`
 - `wizard merlin execute plan --action merlin_status`
 - `wizard merlin execute execute --action merlin_status`
 - `wizard merlin magic plan "goal"`

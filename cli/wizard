@@ -188,6 +188,8 @@ cat << 'EOF'
     wizard merlin status-api Start/manage read-only Merlin status API
     wizard merlin dry-run "goal"
                               Preview Merlin route, model, profile, and approvals
+    wizard merlin config validate
+                              Validate Merlin Phase 2A config contracts
     wizard merlin approvals list
                               Review pending Merlin approval requests
     wizard merlin approvals approve <id>
@@ -336,6 +338,18 @@ case "$1" in
         shift 2
         bash "$WIZARD_DIR/scripts/merlin-dry-run.sh" "$@"
         ;;
+      config)
+        case "${3:-}" in
+          validate)
+            shift 3
+            python3 "$WIZARD_DIR/scripts/merlin-config-validate.py" "$@"
+            ;;
+          *)
+            echo "Usage: wizard merlin config validate"
+            exit 1
+            ;;
+        esac
+        ;;
       approvals)
         shift 2
         bash "$WIZARD_DIR/scripts/merlin-approvals.sh" "$@"
@@ -373,7 +387,7 @@ case "$1" in
         esac
         ;;
       *)
-        echo "Usage: wizard merlin [status|status-api|dry-run|approvals|execute|magic|memory] ..."
+        echo "Usage: wizard merlin [status|status-api|dry-run|config|approvals|execute|magic|memory] ..."
         exit 1
         ;;
     esac
