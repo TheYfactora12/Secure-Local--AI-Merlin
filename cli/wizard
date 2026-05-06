@@ -200,6 +200,10 @@ cat << 'EOF'
                               Execute v0 read-only Merlin status action
     wizard merlin magic plan "goal"
                               Draft plan-only Magic Mode steps
+    wizard merlin memory plan --memory-type preference --text "..."
+                              Preview approved memory-write boundary
+    wizard merlin memory simulate --memory-type preference --text "..." --approval-id <id>
+                              Simulate approved memory write without Qdrant writes
     wizard ask "question"     Ask a quick question (swarm-tiny, fastest)
     wizard route "task"       Alias for wizard swarm (full coordinator)
     wizard models             List loaded Ollama models
@@ -348,8 +352,12 @@ case "$1" in
             ;;
         esac
         ;;
+      memory)
+        shift 2
+        bash "$WIZARD_DIR/scripts/merlin-memory-write.sh" "$@"
+        ;;
       *)
-        echo "Usage: wizard merlin [status|status-api|dry-run|approvals|execute|magic] ..."
+        echo "Usage: wizard merlin [status|status-api|dry-run|approvals|execute|magic|memory] ..."
         exit 1
         ;;
     esac

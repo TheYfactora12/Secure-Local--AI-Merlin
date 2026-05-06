@@ -199,6 +199,8 @@ Approval decisions can be recorded with `wizard merlin approvals approve <id>` a
 
 `wizard merlin magic plan "goal"` is the first Magic Mode runner. It calls the existing route dry-run, converts the route decision into visible steps, shows pause/stop support, marks every step `execution_allowed: false`, and can append a redacted plan record to `logs/merlin-magic-plans.jsonl`. It may create route trace and pending approval audit records when `--write-plan` is used, but it must not execute steps, call models, start services, write memory, run tools, use cloud, or log the raw user goal.
 
+`wizard merlin memory plan|simulate --memory-type <type> --text <text>` is the approved memory-write simulator. Plan mode writes nothing. Simulate mode requires an approved approval id whose latest approval record includes the `memory_write` gate. It writes only a redacted JSONL simulation record with memory hash, redacted preview token, target canonical collection, approval metadata, and explicit `qdrant_write: none` / `embedding_calls: none`. It must not store raw memory text, contact Qdrant, call embedding models, or treat the simulated record as learned memory.
+
 ## Memory Design
 
 Merlin memory must be explicit and auditable. It should not silently learn every prompt.
@@ -215,6 +217,7 @@ Required v1 behavior:
 
 - Memory writes require approval unless explicitly configured otherwise.
 - Memory entries have source, timestamp, type, owner, and deletion status.
+- Simulator records are audit-only and are not retrieval memory.
 - User can delete memories.
 - Dashboard can show recent memory writes.
 - RAG retrieval is local by default.

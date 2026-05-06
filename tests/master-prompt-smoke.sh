@@ -13,6 +13,7 @@ grep -q "Merlin ethos" "$PROMPT_FILE"
 grep -q "wizard merlin status-api start|status|stop" "$PROMPT_FILE"
 grep -q "wizard merlin execute plan|execute --action merlin_status" "$PROMPT_FILE"
 grep -q "wizard merlin magic plan" "$PROMPT_FILE"
+grep -q "wizard merlin memory plan|simulate" "$PROMPT_FILE"
 grep -q "execution_allowed.*false" "$PROMPT_FILE"
 grep -q "Before final response" "$PROMPT_FILE"
 

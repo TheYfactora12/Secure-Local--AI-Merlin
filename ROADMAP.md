@@ -198,6 +198,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Run the dashboard status API through a dedicated read-only Merlin LaunchAgent
 - [x] Add v0 policy-gated execution boundary with only read-only `merlin_status` allowed
 - [x] Add plan-only Magic Mode runner with auditable steps and no execution
+- [x] Add approved memory-write simulator before real Qdrant writes
 - [x] Add canonical/legacy memory schema and runtime Qdrant collection manifest
 - [x] Align `cli/wizard` memory commands with the runtime collection manifest
 - [ ] Connect Magic Mode to shared Qdrant memory only after memory approval/audit is implemented
@@ -319,12 +320,12 @@ Only after the laptop core is stable:
 
 ### v1.6 — Pi Emotional Intelligence Layer
 
-**Goal:** Make Merlin feel like a personal relationship, not a query/response loop. Steal what Pi (Inflection AI) got right — 33-minute average sessions, 1M daily users — and out-execute it with local memory, zero cloud, and full autonomy Pi never had.
+**Goal:** Make Merlin feel like a trusted personal relationship, not a query/response loop. Learn from what Pi (Inflection AI) did well — sustained conversational engagement, follow-up questions, and emotionally aware pacing — then differentiate with local-first memory, user consent, privacy, and optional automation.
 
-**Why Pi won emotionally:**
+**Why Pi worked emotionally:**
 - Pi asked follow-up questions instead of just answering. The conversation kept moving.
 - Pi remembered within a session — context carried forward, making the session feel like talking to someone who was actually listening.
-- Pi never had persistent memory across sessions, never ran code locally, and never did automation. That is the gap Merlin closes completely.
+- Pi did not offer local persistent memory, local code execution, or local automation. Merlin can close that gap only if consent, privacy, and auditability remain stronger than the engagement layer.
 
 **Implementation path (all config and workflow, no new infrastructure required):**
 
@@ -336,7 +337,7 @@ Only after the laptop core is stable:
 - [ ] Add smoke test: `tests/merlin-session-bridge-smoke.sh` — verifies session collection exists, write succeeds, read returns the written point.
 - [ ] Add smoke test: `tests/merlin-followup-prompt-smoke.sh` — verifies follow-up behavior block is present in persona.yaml and injected into active workflow system prompts.
 
-**Competitive outcome:** Merlin will be warmer AND smarter AND local AND free. Everything Pi promised and never delivered.
+**Competitive outcome:** Merlin should become warmer, more useful, local-first, and consent-driven without compromising truthfulness, privacy, or user control.
 
 ---
 
