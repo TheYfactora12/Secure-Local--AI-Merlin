@@ -165,6 +165,22 @@ Minimum route trace fields:
 
 Route traces must never log raw API keys, auth headers, cookies, private keys, full documents, or raw sensitive prompts.
 
+## Read-Only Dry-Run Control Plane
+
+The first runtime control-plane slice is `scripts/merlin-dry-run.sh`, exposed through `wizard merlin dry-run "goal"`. It reads the declarative route, policy, and trace contracts and prints a route decision preview.
+
+Dry-run behavior:
+
+- classify the user goal into general, search, code, automation, or memory
+- select the route, agent, required profile, and preferred local model alias
+- detect the active install profile and hardware tier
+- keep online mode and cloud access disabled by default
+- show approval gates and pending approval state for risky routes
+- report trace-compatible fields without writing a trace log yet
+- perform no service starts, model calls, memory writes, downloads, API calls, file writes, shell actions, or tool execution
+
+This keeps the product path aligned with the installer: Merlin can reason about the existing stack before it is allowed to operate the stack.
+
 ## Memory Design
 
 Merlin memory must be explicit and auditable. It should not silently learn every prompt.

@@ -172,6 +172,8 @@ cat << 'EOF'
     wizard brain start       Start native Ollama brain
     wizard brain stop        Stop native Ollama and unload hot runners
     wizard brain cooldown    Alias for brain stop when CPU is running hot
+    wizard merlin dry-run "goal"
+                              Preview Merlin route, model, profile, and approvals
     wizard ask "question"     Ask a quick question (swarm-tiny, fastest)
     wizard route "task"       Alias for wizard swarm (full coordinator)
     wizard models             List loaded Ollama models
@@ -281,6 +283,19 @@ case "$1" in
 
   doctor)
     bash "$WIZARD_DIR/scripts/doctor.sh"
+    ;;
+
+  merlin)
+    case "${2:-}" in
+      dry-run)
+        shift 2
+        bash "$WIZARD_DIR/scripts/merlin-dry-run.sh" "$@"
+        ;;
+      *)
+        echo "Usage: wizard merlin dry-run \"goal\""
+        exit 1
+        ;;
+    esac
     ;;
 
   brain)
