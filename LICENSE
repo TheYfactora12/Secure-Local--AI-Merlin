@@ -1,6 +1,12 @@
 MIT License
 
-Copyright (c) 2026 TheYfactora12
+Copyright (c) 2026 TheYfactora12 (GitHub). All rights reserved.
+
+IMPORTANT — READ BEFORE USE:
+This software and all associated files, scripts, configurations, workflows,
+documentation, and design artifacts ("the Software") are the original work of
+the author. Unauthorized commercial use, resale, or rebranding of this Software
+without explicit written permission from the copyright holder is prohibited.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -9,8 +15,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
+
+2. Any distribution of this Software or derivative works must clearly credit
+   the original author (TheYfactora12) and link to the original repository:
+   https://github.com/TheYfactora12/home-ai-elite
+
+3. The name "Merlin", "Wizard AI", "home-ai-elite", and associated branding
+   may not be used to endorse or promote derivative products without prior
+   written permission from the copyright holder.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -19,3 +33,15 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+PRODUCTION NOTE:
+This license will be updated with the author's full legal name and a formal
+NOTICE file (listing all third-party component licenses) prior to wide public
+distribution or commercialization. At that point, the copyright holder reserves
+the right to re-license under AGPL-3.0 or a Business Source License (BSL) to
+protect against unauthorized commercial exploitation.
+
+For licensing inquiries: open an issue at
+https://github.com/TheYfactora12/home-ai-elite/issues
