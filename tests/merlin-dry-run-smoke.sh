@@ -66,12 +66,17 @@ cleanup() {
 trap cleanup EXIT
 
 TRACE_LOG="${TMP}/merlin-route-decisions.jsonl"
-TRACE_OUTPUT="$(HOME_AI_PROFILE=core bash "${STACK_DIR}/scripts/merlin-dry-run.sh" --write-trace --trace-log "$TRACE_LOG" "debug token sk-test installer")"
+APPROVAL_LOG="${TMP}/merlin-approvals.jsonl"
+TRACE_OUTPUT="$(HOME_AI_PROFILE=core bash "${STACK_DIR}/scripts/merlin-dry-run.sh" --write-trace --trace-log "$TRACE_LOG" --approval-log "$APPROVAL_LOG" "debug token sk-test installer")"
 require_output "$TRACE_OUTPUT" '^trace_written: true$' "write-trace should report trace_written"
 require_output "$TRACE_OUTPUT" '^approval_required: true$' "write-trace route should require approval"
 require_output "$TRACE_OUTPUT" "^trace_log: ${TRACE_LOG}$" "write-trace should report trace path"
+require_output "$TRACE_OUTPUT" '^approval_written: true$' "write-trace should report approval_written"
+require_output "$TRACE_OUTPUT" "^approval_log: ${APPROVAL_LOG}$" "write-trace should report approval path"
 [[ -s "$TRACE_LOG" ]] || fail "write-trace should append JSONL record"
 [[ "$(wc -l < "$TRACE_LOG" | tr -d ' ')" == "1" ]] || fail "write-trace should append one line"
+[[ -s "$APPROVAL_LOG" ]] || fail "write-trace should append approval JSONL record"
+[[ "$(wc -l < "$APPROVAL_LOG" | tr -d ' ')" == "1" ]] || fail "write-trace should append one approval line"
 
 TRACE_LOG="$TRACE_LOG" python3 - <<'PY' || fail "trace JSONL record failed validation"
 import json
@@ -126,5 +131,53 @@ if not str(record["user_goal_hash"]).startswith("sha256:"):
 if "shell_command" not in record["approval_gates"]:
     raise SystemExit("code trace missing shell approval gate")
 PY
+
+APPROVAL_LOG="$APPROVAL_LOG" python3 - <<'PY' || fail "approval JSONL record failed validation"
+import json
+import os
+from pathlib import Path
+
+line = Path(os.environ["APPROVAL_LOG"]).read_text(encoding="utf-8").strip()
+record = json.loads(line)
+
+required = [
+    "approval_request_id",
+    "timestamp",
+    "status",
+    "execution_allowed",
+    "user_goal_hash",
+    "route_id",
+    "task_type",
+    "approval_gates",
+    "policy_decision",
+    "decision_reason",
+    "redaction_applied",
+]
+missing = [field for field in required if field not in record]
+if missing:
+    raise SystemExit(f"missing approval fields: {missing}")
+if not str(record["approval_request_id"]).startswith("approval_dryrun_"):
+    raise SystemExit("approval record should contain approval request id")
+if record["status"] != "required_pending":
+    raise SystemExit("approval record should be pending")
+if record["execution_allowed"] is not False:
+    raise SystemExit("approval record must not allow execution")
+if record["route_id"] != "code":
+    raise SystemExit("approval record should match route")
+if "shell_command" not in record["approval_gates"]:
+    raise SystemExit("approval record missing shell gate")
+if "sk-test" in line or "debug token" in line:
+    raise SystemExit("approval record must not contain raw goal or secret-like prompt text")
+if not str(record["user_goal_hash"]).startswith("sha256:"):
+    raise SystemExit("approval record must contain goal hash")
+PY
+
+GENERAL_TRACE_LOG="${TMP}/general-route-decisions.jsonl"
+GENERAL_APPROVAL_LOG="${TMP}/general-approvals.jsonl"
+GENERAL_TRACE_OUTPUT="$(HOME_AI_PROFILE=core bash "${STACK_DIR}/scripts/merlin-dry-run.sh" --write-trace --trace-log "$GENERAL_TRACE_LOG" --approval-log "$GENERAL_APPROVAL_LOG" "plan a local install")"
+require_output "$GENERAL_TRACE_OUTPUT" '^approval_required: false$' "general trace should not require approval"
+require_output "$GENERAL_TRACE_OUTPUT" '^approval_written: false$' "general trace should not write approval record"
+[[ -s "$GENERAL_TRACE_LOG" ]] || fail "general write-trace should still append route trace"
+[[ ! -e "$GENERAL_APPROVAL_LOG" ]] || fail "general write-trace should not create approval log"
 
 echo "PASS: Merlin dry-run control plane is read-only and approval-gated"

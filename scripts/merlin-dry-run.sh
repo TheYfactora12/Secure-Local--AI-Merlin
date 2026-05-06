@@ -24,10 +24,13 @@ Options:
   --task-type <type>  Force task type: general, search, code, automation, memory
   --write-trace       Append a redacted JSONL route trace
   --trace-log <path>  Override trace log path for --write-trace
+  --approval-log <path>
+                       Override pending approval JSONL path for --write-trace
 
 By default this command is read-only. It does not call models, start services,
 write memory, download models, use API keys, or execute tools. With
---write-trace it only appends redacted route metadata to a local JSONL log.
+--write-trace it appends redacted route metadata and pending approval metadata
+to local JSONL logs. It still does not approve or execute anything.
 EOF
 }
 
@@ -47,6 +50,7 @@ source "$PROFILE_LIB"
 TASK_TYPE=""
 WRITE_TRACE=false
 TRACE_LOG_OVERRIDE=""
+APPROVAL_LOG_OVERRIDE=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -62,6 +66,11 @@ while [[ $# -gt 0 ]]; do
     --trace-log)
       TRACE_LOG_OVERRIDE="${2:-}"
       [[ -n "$TRACE_LOG_OVERRIDE" ]] || fail "--trace-log requires a path"
+      shift 2
+      ;;
+    --approval-log)
+      APPROVAL_LOG_OVERRIDE="${2:-}"
+      [[ -n "$APPROVAL_LOG_OVERRIDE" ]] || fail "--approval-log requires a path"
       shift 2
       ;;
     --help|-h)
@@ -203,6 +212,10 @@ default_trace_log_path() {
   fi
 }
 
+default_approval_log_path() {
+  echo "${STACK_DIR}/logs/merlin-approvals.jsonl"
+}
+
 json_escape() {
   python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'
 }
@@ -268,6 +281,40 @@ write_trace_record() {
     "$(printf '%s' "$APPROVAL_STATUS" | json_escape)" \
     "$(printf '%s' "$POLICY_DECISION" | json_escape)" \
     "$decision_reason_json" >> "$trace_log"
+}
+
+write_approval_record() {
+  local approval_log="$1"
+  local timestamp="$2"
+  local approval_gates_json
+  local decision_reason_json
+  local user_goal_hash_json
+
+  [[ "$APPROVAL_REQUIRED" == true ]] || return 0
+
+  approval_gates_json="$(json_array_from_csv "$APPROVAL_GATES")"
+  decision_reason_json="$(printf '%s' "$DECISION_REASON" | json_escape)"
+  user_goal_hash_json="$(printf '%s' "$USER_GOAL_HASH" | json_escape)"
+
+  mkdir -p "$(dirname "$approval_log")"
+  printf '{"approval_request_id":%s,"timestamp":%s,"status":"required_pending","execution_allowed":false,"user_goal_hash":%s,"route_id":%s,"task_type":%s,"selected_agent":%s,"required_profile":%s,"active_profile":%s,"hardware_tier":%s,"privacy_mode":%s,"online_mode":%s,"cloud_allowed":%s,"selected_model_alias":%s,"provider":%s,"approval_gates":%s,"policy_decision":%s,"decision_reason":%s,"redaction_applied":true,"side_effects":"none","model_calls":"none","memory_writes":"none","service_starts":"none","tool_execution":"none"}\n' \
+    "$(printf '%s' "$APPROVAL_REQUEST_ID" | json_escape)" \
+    "$(printf '%s' "$timestamp" | json_escape)" \
+    "$user_goal_hash_json" \
+    "$(printf '%s' "$ROUTE_ID" | json_escape)" \
+    "$(printf '%s' "$TASK_TYPE" | json_escape)" \
+    "$(printf '%s' "$AGENT" | json_escape)" \
+    "$(printf '%s' "$REQUIRED_PROFILE" | json_escape)" \
+    "$(printf '%s' "$ACTIVE_PROFILE" | json_escape)" \
+    "$(printf '%s' "$HARDWARE_TIER" | json_escape)" \
+    "$(printf '%s' "$PRIVACY_MODE" | json_escape)" \
+    "$(json_bool "$ONLINE_MODE")" \
+    "$(json_bool "$CLOUD_ALLOWED")" \
+    "$(printf '%s' "$MODEL_ALIAS" | json_escape)" \
+    "$(printf '%s' "ollama" | json_escape)" \
+    "$approval_gates_json" \
+    "$(printf '%s' "$POLICY_DECISION" | json_escape)" \
+    "$decision_reason_json" >> "$approval_log"
 }
 
 profile_has_capability() {
@@ -339,9 +386,15 @@ if [[ "$APPROVAL_REQUIRED" == true ]]; then
 fi
 
 TRACE_LOG_PATH="${TRACE_LOG_OVERRIDE:-$(default_trace_log_path)}"
+APPROVAL_LOG_PATH="${APPROVAL_LOG_OVERRIDE:-$(default_approval_log_path)}"
+APPROVAL_WRITTEN=false
 
 if [[ "$WRITE_TRACE" == true ]]; then
   write_trace_record "$TRACE_LOG_PATH" "$TRACE_TIMESTAMP"
+  if [[ "$APPROVAL_REQUIRED" == true ]]; then
+    write_approval_record "$APPROVAL_LOG_PATH" "$TRACE_TIMESTAMP"
+    APPROVAL_WRITTEN=true
+  fi
 fi
 
 cat <<EOF
@@ -377,6 +430,8 @@ service_starts: none
 tool_execution: none
 trace_written: ${WRITE_TRACE}
 trace_log: ${TRACE_LOG_PATH}
+approval_written: ${APPROVAL_WRITTEN}
+approval_log: ${APPROVAL_LOG_PATH}
 
 approval_request:
   id: ${APPROVAL_REQUEST_ID}
