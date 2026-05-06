@@ -91,6 +91,7 @@ class ApprovalGate(StrictModel):
     default: str
     requires_approval: bool
     reason: str
+    audit_log: bool | None = None
 
 
 class TaskRoutingRule(StrictModel):

@@ -86,7 +86,8 @@ approval_gates:
     risk: critical
     default: deny
     requires_approval: true
-    reason: "Secrets, tokens, credentials, and private keys require explicit user approval before access."
+    reason: "Direct access to secrets, API keys, or credentials requires explicit approval"
+    audit_log: true
   memory_write:
     risk: medium
     default: deny
