@@ -187,6 +187,8 @@ cat << 'EOF'
     wizard brain cooldown    Alias for brain stop when CPU is running hot
     wizard merlin status     Show read-only Merlin control-plane status
     wizard merlin status-api Start/manage read-only Merlin status API
+    wizard merlin ask "question"
+                              Ask Merlin through the local task endpoint
     wizard merlin dry-run "goal"
                               Preview Merlin route, model, profile, and approvals
     wizard merlin config validate
@@ -343,6 +345,10 @@ case "$1" in
         shift 2
         bash "$WIZARD_DIR/scripts/merlin-status-api.sh" "$@"
         ;;
+      ask)
+        shift 2
+        bash "$WIZARD_DIR/scripts/merlin-ask.sh" "$@"
+        ;;
       dry-run)
         shift 2
         bash "$WIZARD_DIR/scripts/merlin-dry-run.sh" "$@"
@@ -396,7 +402,7 @@ case "$1" in
         esac
         ;;
       *)
-        echo "Usage: wizard merlin [status|status-api|dry-run|config|approvals|execute|magic|memory] ..."
+        echo "Usage: wizard merlin [status|status-api|ask|dry-run|config|approvals|execute|magic|memory] ..."
         exit 1
         ;;
     esac

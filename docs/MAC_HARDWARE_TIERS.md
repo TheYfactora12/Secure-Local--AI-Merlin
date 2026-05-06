@@ -1,191 +1,83 @@
 # Mac Hardware Tiers
 
-Home AI Elite should scale from small Apple Silicon laptops to high-memory workstations. The installer should detect hardware and choose conservative defaults, while still allowing explicit user override.
+Last updated: 2026-05-06
 
-## Tier Summary
+The 8GB Mac is the design floor. If v1 works there, it will scale up. If it assumes workstation resources, it will fail the users who need safe defaults most.
 
-| Tier | Machine | Goal | Default model size | Quantization | Services enabled | Background limits | Fallback behavior |
-|---|---|---|---|---|---|---|---|
-| Tier 1 | M1/M2 Mac, 8 GB RAM | Lightweight local AI | 3B-7B | Q4 preferred | core only | no heavy background services | ask before search/coding/automation; suggest cloud only if user enabled |
-| Tier 2 | 16-24 GB Mac | Better local chat/code, light RAG | 7B-14B | Q4/Q5 | core, optional search | one active model runner; limited RAG | route heavy work to smaller model or ask for cloud/profile enablement |
-| Tier 3 | 32-64 GB Mac | Stronger local models and Magic Mode | 14B-32B | Q4/Q5/Q6 | core + search + optional automation/coding | limited parallel agents | allow local heavier model with status warnings |
-| Tier 4 | 96 GB+ Mac | Advanced local models and parallel agents | 32B-70B | Q4/Q5 or higher where practical | most profiles available | controlled parallel agents | local-first; cloud fallback rarely needed |
+## Tier Table
 
-## Detailed Recommendations
+| Tier | RAM | Mode | Default Models | Quantization | Services | Magic Mode | Warnings |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Tier 1 | 8-15GB | Light | 7B or smaller plus embeddings | Q4 preferred | Core only | Plan-only | Avoid OpenHands, n8n, full search, 14B+ |
+| Tier 2 | 16-24GB | Standard | 7B-13B | Q4/Q5 | Core plus optional search | Plan-only; limited agents | One heavy task at a time |
+| Tier 3 | 32-64GB | Pro | 14B-32B | Q4/Q5/Q6 | Core, search, automation, limited coding | Supervised execution can be tested | Watch parallel memory/model load |
+| Tier 4 | 96GB+ | Elite | 32B-70B where practical | Q4/Q5+ | Full stack intentional | Parallel supervised workflows | Still approval-gated |
 
-### Tier 1: M1/M2 Mac with 8 GB RAM
+## Tier 1: M1/M2 8GB
 
-Goal: lightweight local AI and safe first-run success.
+- Safe default: `core`.
+- One model active at a time.
+- No automatic large downloads.
+- No heavy background services.
+- No parallel agents.
+- Light memory only.
+- Magic Mode plan-only.
+- Fallback: degraded message plus next command.
 
-Defaults:
+Test cases:
 
-- Install profile: `core`
-- Model size: 3B-7B
-- Quantization: Q4
-- Context: small/medium context; avoid very long prompts
-- Services enabled:
-  - native Ollama
-  - Open WebUI
-  - LiteLLM
-  - Qdrant only if memory is explicitly enabled or low-footprint
-  - dashboard
-- Services disabled by default:
-  - OpenHands
-  - n8n
-  - Perplexica
-  - SearXNG
-  - nginx
-  - watchtower
-  - fail2ban
+- Core install completes without model pulls.
+- Doctor reports low tier.
+- Full/coding profiles warn before start.
+- Large model pull requires confirmation.
+- Memory write does not auto-run.
 
-Dashboard warnings:
+## Tier 2: 16GB-24GB
 
-- "Low-memory mode: coding agents and full search stack are disabled by default."
-- "Use 7B-class local models. Large models may cause swap and poor performance."
+- Safe default: `core`.
+- Optional search.
+- 7B-13B quantized models.
+- Limited RAG.
+- Limited supervised agents after approval.
+- Fallback: warn when multiple heavy services are active.
 
-Fallback behavior:
+Test cases:
 
-- Ask before enabling cloud.
-- Ask before pulling any model larger than 7B.
-- Ask before starting coding or automation profiles.
+- Search profile can start with warnings.
+- OpenHands remains opt-in.
+- Router avoids high-memory model aliases.
 
-### Tier 2: 16 GB to 24 GB Mac
+## Tier 3: 32GB-64GB
 
-Goal: local chat/code, light RAG, and optional search.
+- Safe default: `core`, with search/automation recommended by user intent.
+- Stronger local models.
+- Heavier RAG.
+- Limited parallel agents after approval.
+- Supervised execution can be introduced after v1.
 
-Defaults:
+Test cases:
 
-- Install profile: `core`
-- Optional suggested profile: `search`
-- Model size: 7B-14B
-- Quantization: Q4/Q5
-- Context: moderate, with summarization for long tasks
-- Services enabled:
-  - native Ollama
-  - Open WebUI
-  - LiteLLM
-  - Qdrant
-  - dashboard
-- Optional:
-  - SearXNG/Perplexica
-  - n8n only after user chooses automation
-  - OpenHands only with warning
+- Automation profile starts independently.
+- Memory indexing warns on large jobs.
+- Magic Mode still asks before execution.
 
-Dashboard warnings:
+## Tier 4: 96GB+
 
-- "Developer laptop tier: run one heavy model or agent task at a time."
-- "OpenHands can be memory-intensive; enable only when needed."
+- Full stack available intentionally.
+- Larger local models and memory indexes are practical.
+- Parallel workflows can be tested.
+- Approval gates remain mandatory.
 
-Fallback behavior:
+Test cases:
 
-- Prefer local 7B coder/general models.
-- If a task is too large, ask to enable cloud or defer to a larger local model.
+- Full profile can run with explicit user selection.
+- Parallel agents never start without approval.
+- Cloud remains off by default.
 
-### Tier 3: 32 GB to 64 GB Mac
+## Dashboard Behavior
 
-Goal: stronger local models, better RAG, and controlled Magic Mode.
-
-Defaults:
-
-- Install profile: `workstation`
-- Model size: 14B-32B
-- Quantization: Q4/Q5/Q6 depending on RAM
-- Context: larger local context, but still summarize long documents
-- Services enabled:
-  - core
-  - search
-  - optional automation
-- Services optional:
-  - OpenHands
-  - nginx/security
-  - watchtower/ops
-
-Dashboard warnings:
-
-- "Workstation tier: Magic Mode can run, but file/shell/network actions still require approval."
-- "Parallel agents may slow local inference."
-
-Fallback behavior:
-
-- Route most tasks locally.
-- Ask before cloud fallback.
-- Allow larger model pull after confirmation.
-
-### Tier 4: 96 GB+ Mac
-
-Goal: advanced local AI, heavier RAG, and stronger local agents.
-
-Defaults:
-
-- Install profile: `server` or `workstation`, user-selected
-- Model size: 32B-70B
-- Quantization: Q4/Q5 and higher where practical
-- Context: large local context, still avoid unbounded prompts
-- Services enabled:
-  - core
-  - search
-  - automation
-  - optional coding
-  - optional ops/security
-
-Dashboard warnings:
-
-- "High-memory tier: full stack is available, but approval gates still apply."
-- "Watchtower and launchd are operational choices, not required for local chat."
-
-Fallback behavior:
-
-- Prefer local models.
-- Cloud only for user-approved tasks or unavailable capabilities.
-
-## Config Recommendations
-
-Future config should express tier behavior explicitly:
-
-```yaml
-hardware_tiers:
-  low:
-    ram_gb_min: 8
-    ram_gb_max: 15
-    default_profile: core
-    max_model_class: 7b
-    allow_background_agents: false
-  base:
-    ram_gb_min: 16
-    ram_gb_max: 24
-    default_profile: core
-    suggested_profiles: [search]
-    max_model_class: 14b
-  mid:
-    ram_gb_min: 32
-    ram_gb_max: 64
-    default_profile: workstation
-    suggested_profiles: [search, automation]
-    max_model_class: 32b
-  high:
-    ram_gb_min: 96
-    default_profile: server
-    suggested_profiles: [search, automation, coding, ops]
-    max_model_class: 70b
-```
-
-## Installer Behavior
-
-Required:
-
-- Detect RAM.
-- Detect macOS version.
-- Detect Apple Silicon vs Intel.
-- Detect Docker Desktop.
-- Detect native Ollama.
-- Recommend profile and models.
-- Ask before pulling large models.
-- Ask before enabling heavy profiles.
-- Write chosen tier/profile to `.env` or future `configs/merlin/profiles.yaml`.
-
-Do not:
-
-- Start OpenHands by default on Tier 1.
-- Pull 14B+ models on Tier 1.
-- Start full stack by default on low-memory machines.
-- Enable cloud fallback without explicit user choice.
+- Always show tier.
+- Explain why services are disabled.
+- Warn before model pulls.
+- Warn before starting optional heavy profiles.
+- Show degraded mode without blaming the user.

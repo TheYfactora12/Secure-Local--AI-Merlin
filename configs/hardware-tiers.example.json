@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "source": "example-only",
+  "note": "Runtime config remains under configs/merlin/*.yaml and *.env until a migration is approved.",
+  "tiers": {
+    "tier_1_low": {
+      "ram_gb_min": 8,
+      "ram_gb_max": 15,
+      "mode": "light",
+      "default_profile": "core",
+      "default_model_size": "7b",
+      "quantization": "q4",
+      "max_active_models": 1,
+      "max_background_heavy_services": 0,
+      "rag_limit": "small_explicit_batches",
+      "magic_mode": "plan_only",
+      "safe_defaults": [
+        "no_large_model_downloads",
+        "no_parallel_agents",
+        "no_openhands_by_default",
+        "no_full_profile_by_default"
+      ],
+      "dashboard_warnings": [
+        "Low-memory mode: keep one model active at a time.",
+        "OpenHands, automation, and full search can overwhelm this machine."
+      ],
+      "fallback_behavior": "degraded_message_and_next_command"
+    },
+    "tier_2_standard": {
+      "ram_gb_min": 16,
+      "ram_gb_max": 24,
+      "mode": "standard",
+      "default_profile": "core",
+      "default_model_size": "7b_to_13b",
+      "quantization": "q4_or_q5",
+      "max_active_models": 1,
+      "max_background_heavy_services": 1,
+      "rag_limit": "limited",
+      "magic_mode": "plan_only_with_limited_supervised_agents",
+      "fallback_behavior": "warn_before_heavy_profile"
+    },
+    "tier_3_pro": {
+      "ram_gb_min": 32,
+      "ram_gb_max": 64,
+      "mode": "pro",
+      "default_profile": "core",
+      "default_model_size": "14b_to_32b",
+      "quantization": "q4_q5_or_q6",
+      "max_active_models": 2,
+      "max_background_heavy_services": 2,
+      "rag_limit": "moderate_to_heavy",
+      "magic_mode": "supervised_execution_after_approval",
+      "fallback_behavior": "warn_on_parallel_load"
+    },
+    "tier_4_elite": {
+      "ram_gb_min": 96,
+      "mode": "elite",
+      "default_profile": "core",
+      "default_model_size": "32b_to_70b",
+      "quantization": "q4_or_better_when_practical",
+      "max_active_models": 3,
+      "max_background_heavy_services": 4,
+      "rag_limit": "large_local_indexes",
+      "magic_mode": "parallel_supervised_workflows_after_approval",
+      "fallback_behavior": "approval_gates_remain_required"
+    }
+  }
+}

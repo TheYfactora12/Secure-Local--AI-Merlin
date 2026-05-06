@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "source": "example-only",
+  "mode": "local_only",
+  "hardware_tier": {
+    "detection": "auto",
+    "override_allowed": true,
+    "low_memory_behavior": "core_only"
+  },
+  "default_model": {
+    "alias": "qwen7b",
+    "provider": "ollama",
+    "fallback_alias": "local-small"
+  },
+  "providers": {
+    "local": {
+      "enabled": true,
+      "gateway": "litellm",
+      "runtime": "ollama"
+    },
+    "external": {
+      "enabled": false,
+      "require_per_action_approval": true,
+      "providers": []
+    }
+  },
+  "memory": {
+    "enabled": true,
+    "backend": "qdrant",
+    "requires_approval": true,
+    "delete_requires_confirmation": true,
+    "embedding_provider": "ollama",
+    "embedding_model": "nomic-embed-text",
+    "default_dimensions": 768,
+    "audit_required": true
+  },
+  "agents": {
+    "enabled": false,
+    "mode": "supervised_only",
+    "background_agents": false,
+    "permissions": {
+      "read_files": "approval_required",
+      "write_files": "approval_required",
+      "run_shell": "approval_required",
+      "use_network": "approval_required",
+      "use_browser": "approval_required",
+      "call_external_api": "approval_required",
+      "write_memory": "approval_required",
+      "install_dependencies": "approval_required",
+      "modify_security_settings": "deny"
+    }
+  },
+  "magic_mode": {
+    "enabled": true,
+    "execution": "plan_only",
+    "requires_approval_for_execution": true,
+    "allow_pause_stop": true,
+    "audit_plan": true
+  },
+  "dashboard": {
+    "enabled": true,
+    "bind": "127.0.0.1",
+    "show_local_only_badge": true,
+    "show_hardware_warnings": true,
+    "advanced_controls_default": "hidden"
+  },
+  "security": {
+    "shell_access": "approval_required",
+    "file_write_access": "approval_required",
+    "cloud_calls": "disabled",
+    "telemetry": false,
+    "secrets_in_logs": "redact",
+    "fail_closed_on_policy_error": true
+  },
+  "logging": {
+    "audit_enabled": true,
+    "store_raw_input": false,
+    "hash_user_input": true,
+    "redact_secrets": true
+  },
+  "external_providers": {
+    "enabled": false,
+    "openai": { "enabled": false },
+    "anthropic": { "enabled": false },
+    "perplexity": { "enabled": false }
+  }
+}

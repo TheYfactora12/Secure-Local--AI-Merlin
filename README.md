@@ -193,6 +193,7 @@ wizard brain status                 # Show API, loaded models, installed models
 wizard brain stop                   # Cool down local model runners
 wizard brain start                  # Start native Ollama again
 wizard doctor                       # Diagnose install, Docker, Ollama, ports, and profile safety
+wizard merlin ask "explain RAG"     # Ask Merlin through the local task endpoint
 ```
 
 See `docs/MODEL_OPERATIONS.md` for model efficiency and cooldown notes.

@@ -1,224 +1,218 @@
 # Test Strategy
 
-## Goals
+Last updated: 2026-05-06
 
-Testing must protect the working installer while Merlin evolves. Tests should prove that local-only behavior remains default, low-memory machines avoid heavy services, secrets are not exposed, and profile changes do not break existing startup paths.
+## Goal
 
-## Manual Tests
+Keep the working installer safe while Merlin evolves into a local-first command center.
 
-### Installer Baseline
+## Test Layers
 
-- Fresh clone.
-- `bash install.sh --help`.
-- `HOME_AI_NON_INTERACTIVE=true HOME_AI_SKIP_MODEL_PULLS=true bash install.sh --non-interactive --skip-model-pulls`.
-- `bash tests/core-install-budget-smoke.sh` completes inside the current 10 minute budget when Docker Desktop is already installed and running.
-- Confirm `.env` exists and permissions are `600`.
-- Confirm secrets are not default values.
-- Confirm service URLs print.
-- Confirm failure report is generated on controlled failure.
+| Layer | Purpose | Examples |
+| --- | --- | --- |
+| Static shell tests | Catch syntax and contract drift | `bash -n`, smoke scripts |
+| Config tests | Validate canonical config and safe defaults | config loader, config-root smoke |
+| Python unit tests | Validate Merlin core modules | policy, router, memory, task endpoint |
+| Security tests | Prevent secret and policy regressions | gitleaks, redaction, no raw input |
+| Integration tests | Validate live local services when opted in | Qdrant/Ollama/LiteLLM live tests |
+| Manual tests | Validate real install and UX | clean install, dashboard, doctor |
+| Release tests | Validate packaging/upgrade/rollback | package smoke, uninstall, backup/restore |
 
-### macOS Native Ollama
+## Installer Regression
 
-- Confirm Docker Ollama is not started by default on macOS.
-- Confirm `http://localhost:11434` responds.
-- Confirm containers use `host.docker.internal`.
-- Confirm `scripts/add-model.sh <model>` uses native Ollama.
-
-### Service Start/Stop
-
-- `bash scripts/status.sh`.
-- `bash scripts/restart.sh`.
-- `bash scripts/stop.sh`.
-- `wizard status`.
-- `wizard brain status/start/stop`.
-
-### Profile Behavior Future Tests
-
-- Core profile starts only core services.
-- Search profile adds Perplexica/SearXNG.
-- Automation profile adds n8n.
-- Coding profile adds OpenHands.
-- Full profile requires explicit confirmation.
-
-## Automated Tests
-
-### Static Tests
+Automated:
 
 - `bash -n install.sh`
-- `bash -n scripts/*.sh`
-- `bash -n launchd/*.sh`
-- `bash -n pkg/scripts/*`
-- `bash tests/pkg-readiness-smoke.sh`
-- `bash tests/pkg-signing-preflight-smoke.sh`
-- `bash tests/release-workflow-smoke.sh`
-- CI runs the static smoke suite on every push and pull request.
-- Unsigned local package build with `bash pkg/build-pkg.sh`.
-- Package payload check confirms `.env`, generated certs, and package artifacts are not bundled.
-- `bash -n cli/wizard`
 - `docker compose config --quiet`
-- JSON validation for `n8n-workflows/*.json`
-- YAML validation for configs
+- profile selection smoke tests
+- model pull policy smoke tests
+- package readiness smoke tests
 
-### Smoke Tests
+Manual:
 
-Core:
+- Clean core install.
+- Non-interactive core install with model pulls skipped.
+- Re-run installer after partial failure.
+- Confirm `.env` secrets generated and not printed.
 
-- Docker running.
-- Ollama API reachable.
-- Open WebUI reachable.
-- LiteLLM reachable.
-- Qdrant reachable.
-- Dashboard reachable.
-- `tests/core-live-smoke.sh` verifies the laptop-safe core path end to end without model pulls, cloud calls, or secret output.
-- `tests/core-install-budget-smoke.sh` reruns the laptop-safe installer path and then calls the live core smoke test.
-- If a local model is installed, core smoke verifies both direct Ollama generation and LiteLLM routing.
-- `wizard start` starts the same profile as `bash scripts/start-core.sh`.
+## Hardware Detection
 
-Search:
+Automated:
 
-- SearXNG reachable.
-- Perplexica frontend reachable.
-- Perplexica backend reachable.
+- Doctor smoke reports tier.
+- 8GB low tier mapping test.
+- Profile warnings for heavy services.
 
-Automation:
+Manual:
 
-- n8n reachable.
-- Workflow import handles missing API key gracefully.
-- Workflow JSON validates.
+- Validate on M1/M2 8GB.
+- Validate on 16GB-24GB.
+- Validate on 32GB+ if available.
 
-Coding:
+## Doctor Command
 
-- OpenHands reachable only when coding profile enabled.
-- Docker socket warning is present.
+Automated:
 
-## Security Tests
+- `tests/doctor-smoke.sh`
+- syntax checks
+- log grep set-e guards
 
-- `.env` is not tracked.
-- `.env` permissions are `600`.
-- No hardcoded live-looking API keys.
-- Dashboard never displays secret values.
-- `*_BIND=0.0.0.0` produces warning.
-- No cloud provider selected unless online mode and API key are enabled.
-- Sensitive tasks route local-only.
+Manual:
+
+- Run `wizard doctor` with Docker down.
+- Run with Docker up.
+- Run with task/status APIs down.
+
+## Dashboard
+
+Automated:
+
+- dashboard smoke tests
+- no-secret string scans
+- status API degraded tests
+
+Manual:
+
+- Open dashboard with all services stopped.
+- Open with core profile running.
+- Confirm local-only, hardware tier, model, memory, approval, and trace states.
+
+## Services Start/Stop
+
+Automated:
+
+- profile start script smoke tests.
+- launchd smoke tests.
+
+Manual:
+
+- `wizard start core`
+- `wizard start search`
+- `wizard start automation`
+- `wizard start coding`
+- `wizard stop`
+
+Low-memory machines should warn before optional heavy profiles.
+
+## Local-Only Mode
+
+Automated:
+
+- No cloud calls by default.
+- External provider disabled state.
+- LiteLLM local alias tests.
+
+Manual:
+
+- Remove cloud keys and confirm core still works.
+- Confirm dashboard says cloud disabled.
+
+## Secret Handling
+
+Automated:
+
+- gitleaks.
+- regex secret scan.
+- redaction smoke tests.
+- report-bug smoke tests.
+
+Manual:
+
+- Generate report with fake secrets.
+- Confirm no API keys are printed in doctor/dashboard/logs.
+
+## Memory Approval
+
+Automated:
+
 - Memory write requires approval.
-- Magic Mode file/shell/network actions require approval.
-- OpenHands is disabled unless coding profile is enabled.
+- Denied writes nothing.
+- Qdrant unreachable degrades.
+- Dimension mismatch raises.
+- Delete path tests.
 
-## Performance Tests
+Manual:
 
-Tier 1:
+- Remember a preference.
+- Deny a memory request.
+- Delete a memory item.
+- Search memory after approval.
 
-- Does not start OpenHands by default.
-- Does not pull 14B+ models by default.
-- Installer does not pull recommended models unless the user confirms or sets `HOME_AI_PULL_RECOMMENDED_MODELS=true`.
-- Does not start n8n/search unless selected.
+## Magic Mode
 
-Tier 2:
+Automated:
 
-- Starts core within target time.
-- Runs one local 7B model.
-- Light Qdrant retrieval works.
+- Plan-only smoke tests.
+- Assert no shell/file/git/n8n/OpenHands execution.
+- Approval gates present in plan.
 
-Tier 3:
+Manual:
 
-- Search profile works.
-- Optional automation works.
-- Magic Mode plan-only mode works.
+- Plan a multi-step goal.
+- Confirm every risky step is blocked.
+- Confirm stop/pause language is visible.
 
-Tier 4:
+## Model Router
 
-- Larger models are allowed after confirmation.
-- Parallel agent warnings appear.
+Automated:
 
-## Regression Tests for Installer
+- Route all configured route IDs.
+- Unknown input fallback.
+- Risky routes return gates.
+- Low-memory fallback/warning tests.
 
-Required before merging installer-adjacent changes:
+Manual:
 
-- `install.sh --help` works.
-- Non-interactive install with skipped model pulls works.
-- Non-interactive install defaults to no model pulls unless explicitly opted in.
-- macOS native Ollama path remains intact.
-- Linux Docker Ollama profile remains intact.
-- `tests/update-upgrade-profile-smoke.sh` confirms update/upgrade stay profile-aware and do not start Docker Ollama on macOS core.
-- `.env` creation and secret rotation work.
-- `N8N_SECURE_COOKIE=false` remains set for local HTTP unless user changes it.
-- `PERPLEXICA_CONFIG_FILE` runtime config behavior remains intact.
-- `wizard` CLI symlink install still works or fails with actionable message.
-- Bootstrap remains idempotent.
-- Failure report does not include secret values.
+- Ask general, code, search, automation, memory prompts.
+- Confirm route and model alias make sense.
 
-## No-Cloud-By-Default Tests
+## Agent Permissions
 
-- Empty provider keys in `.env`.
-- Offline/local mode enabled.
-- Ask a general question.
-- Assert no request is made to OpenAI, Anthropic, Perplexity, or other external provider.
-- Assert LiteLLM route is local Ollama.
+Automated:
 
-Implementation options:
+- Policy gate tests for all permissions.
+- Fail-closed config tests.
 
-- Run in a network-restricted test environment.
-- Add proxy/log capture around outbound requests.
-- Add route-decision dry-run tests before live calls.
+Manual:
 
-## Magic Mode Approval Tests
+- Attempt shell/file/git/OpenHands/n8n action.
+- Confirm approval required and no action happens.
 
-Plan-only:
+## Audit Logging
 
-- User asks "clean up my repo".
-- Merlin returns plan.
-- No files changed.
-- Approval required before any write.
+Automated:
 
-File write:
+- No raw input in traces.
+- Hash fields present.
+- Redaction tests.
 
-- Proposed file write returns approval request.
-- Deny leaves file unchanged.
-- Approve writes only scoped file.
+Manual:
 
-Shell:
+- Review route, approval, and memory audit records.
 
-- Proposed shell command returns approval request.
-- Deny does not execute.
-- Approve logs command and output.
+## Performance
 
-Network:
+Automated:
 
-- External URL request requires approval.
-- Localhost service checks allowed by policy.
+- Core install budget smoke.
+- Low-memory start profile checks.
 
-Memory:
+Manual:
 
-- Proposed memory write shows content and source.
-- Deny does not write.
-- Approve writes to canonical collection and audit log.
+- On 8GB: core only, one 7B model, Qdrant small memory.
+- On 16GB+: optional search.
+- On 32GB+: automation/coding explicit tests.
 
-## Release Readiness Tests
+## Release Readiness Checklist
 
-- Clean Mac install.
-- Clean Linux install.
-- Package install.
-- Package uninstall.
-- Volume backup.
-- Merlin memory backup.
-- Merlin memory restore dry-run.
-- Merlin memory restore against a disposable Qdrant collection.
-- `tests/qdrant-restore-live-smoke.sh` verifies a disposable Qdrant collection can be backed up and restored without touching production memory.
-- Upgrade.
-- Rollback.
-- Core profile.
-- Full profile.
-- Low-memory profile simulation.
-
-## Acceptance Criteria
-
-Merlin v1 cannot be called stable until:
-
-- Installer regression tests pass.
-- Core services pass smoke tests.
-- No-cloud-by-default test passes.
-- Low-memory tier avoids heavy services.
-- Memory write approval test passes.
-- Magic Mode approval tests pass in plan-only or simulated mode.
-- Dashboard shows state without exposing secrets.
-- Backup/restore test passes for canonical memory collections.
+- [ ] CI green.
+- [ ] Secret scans green.
+- [ ] Installer syntax and compose validation green.
+- [ ] Python tests green.
+- [ ] Static smoke tests green.
+- [ ] Core install manual validation.
+- [ ] Doctor manual validation.
+- [ ] Dashboard manual validation.
+- [ ] Backup/restore validation.
+- [ ] Uninstall validation.
+- [ ] Release notes updated.
