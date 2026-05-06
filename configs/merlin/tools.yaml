@@ -1,0 +1,78 @@
+# Merlin tool catalog.
+#
+# Tools are policy-described here. The loader validates the contract but does
+# not grant access or execute tools.
+
+version: 1
+
+defaults:
+  deny_external_network_by_default: true
+  require_approval_for_shell: true
+  require_approval_for_file_write: true
+
+tools:
+  model:
+    description: "Call an approved local or user-enabled model backend."
+    enabled_by_default: true
+    local_only: true
+    approval_gates: []
+    risk: low
+  approved_memory_read:
+    description: "Read approved local Qdrant memory."
+    enabled_by_default: true
+    local_only: true
+    approval_gates: []
+    risk: low
+  approved_memory_write:
+    description: "Write user-approved local Qdrant memory."
+    enabled_by_default: false
+    local_only: true
+    approval_gates:
+      - memory_write
+    risk: medium
+  approved_repo_read:
+    description: "Read files inside approved repository scope."
+    enabled_by_default: false
+    local_only: true
+    approval_gates:
+      - file_read
+    risk: medium
+  qdrant:
+    description: "Use local Qdrant for vector memory."
+    enabled_by_default: true
+    local_only: true
+    approval_gates: []
+    risk: low
+  searxng:
+    description: "Use local SearXNG metasearch when search profile is enabled."
+    enabled_by_default: false
+    local_only: false
+    approval_gates:
+      - service_start
+      - external_network
+    risk: high
+  perplexica:
+    description: "Use local Perplexica search workflow when search profile is enabled."
+    enabled_by_default: false
+    local_only: false
+    approval_gates:
+      - service_start
+      - external_network
+    risk: high
+  n8n:
+    description: "Use local n8n workflow automation."
+    enabled_by_default: false
+    local_only: true
+    approval_gates:
+      - service_start
+    risk: high
+  openhands:
+    description: "Use OpenHands coding environment after explicit approval."
+    enabled_by_default: false
+    local_only: true
+    approval_gates:
+      - service_start
+      - openhands_task
+      - shell_command
+      - file_write
+    risk: critical

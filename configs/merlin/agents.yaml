@@ -1,0 +1,86 @@
+# Merlin agent catalog.
+#
+# Agents describe allowed behavior for future Merlin orchestration. They do not
+# execute independently and remain gated by policy.
+
+version: 1
+
+defaults:
+  planner: planner
+  require_approval_for_risky_agents: true
+  parallel_agents_by_default: false
+
+agents:
+  planner:
+    description: "Break goals into safe, reviewable steps."
+    enabled_by_default: true
+    allowed_tools:
+      - model
+      - approved_memory_read
+    allowed_model_classes:
+      - general
+    approval_gates: []
+    can_write_memory: false
+    can_execute_shell: false
+  researcher:
+    description: "Research with local search tools when enabled."
+    enabled_by_default: false
+    allowed_tools:
+      - model
+      - searxng
+      - perplexica
+      - approved_memory_read
+    allowed_model_classes:
+      - general
+    approval_gates:
+      - service_start
+      - external_network
+    can_write_memory: false
+    can_execute_shell: false
+  coding:
+    description: "Reason about code and use approved coding tools."
+    enabled_by_default: false
+    allowed_tools:
+      - model
+      - approved_repo_read
+      - openhands
+    allowed_model_classes:
+      - code
+      - general
+    approval_gates:
+      - file_read
+      - file_write
+      - shell_command
+      - git_operation
+      - openhands_task
+    can_write_memory: false
+    can_execute_shell: false
+  operator:
+    description: "Plan local service and workflow operations."
+    enabled_by_default: false
+    allowed_tools:
+      - model
+      - n8n
+      - approved_memory_read
+    allowed_model_classes:
+      - general
+    approval_gates:
+      - service_start
+      - service_stop
+      - api_key_use
+    can_write_memory: false
+    can_execute_shell: false
+  memory:
+    description: "Read, write, and audit user-approved memory."
+    enabled_by_default: true
+    allowed_tools:
+      - qdrant
+      - approved_memory_read
+      - approved_memory_write
+    allowed_model_classes:
+      - embedding
+    approval_gates:
+      - memory_write
+      - file_delete
+    can_write_memory: true
+    can_execute_shell: false

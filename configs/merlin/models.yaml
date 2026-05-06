@@ -1,0 +1,41 @@
+# Merlin model catalog.
+#
+# This file is declarative only. It does not download models or enable cloud
+# providers by default.
+
+version: 1
+
+defaults:
+  local_first: true
+  cloud_by_default: false
+  require_approval_for_cloud: true
+  require_approval_for_downloads: true
+  default_chat_model: qwen7b
+  default_embedding_model: local-embedding
+
+models:
+  qwen7b:
+    provider: ollama
+    model: qwen2.5:7b
+    model_class: general
+    local: true
+    enabled_by_default: true
+    context_window: 8192
+    requires_api_key: false
+  qwen-coder:
+    provider: ollama
+    model: qwen2.5-coder:7b
+    model_class: code
+    local: true
+    enabled_by_default: false
+    context_window: 8192
+    requires_api_key: false
+  local-embedding:
+    provider: ollama
+    model: nomic-embed-text
+    model_class: embedding
+    local: true
+    enabled_by_default: true
+    context_window: 8192
+    embedding_dimensions: 768
+    requires_api_key: false
