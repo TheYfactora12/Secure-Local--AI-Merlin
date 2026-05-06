@@ -53,7 +53,7 @@ echo "$running_services" | grep -qx "n8n" \
 
 check_http "http://localhost:5678/healthz" "n8n health"
 
-N8N_API_KEY= bash "${STACK_DIR}/scripts/import-n8n-workflows.sh" >/tmp/home-ai-n8n-import-smoke.log
+N8N_API_KEY='' bash "${STACK_DIR}/scripts/import-n8n-workflows.sh" >/tmp/home-ai-n8n-import-smoke.log
 grep -q "N8N_API_KEY is not set" /tmp/home-ai-n8n-import-smoke.log \
   && pass "Workflow import safely skips without API key" \
   || fail "Workflow import did not safely skip without API key"
