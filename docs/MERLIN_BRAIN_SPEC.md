@@ -201,6 +201,8 @@ Approval decisions can be recorded with `wizard merlin approvals approve <id>` a
 
 `wizard merlin memory plan|simulate|write --memory-type <type> --text <text>` is the approved memory-write boundary. Plan mode writes nothing. Simulate mode requires an approved approval id whose latest approval record includes the `memory_write` gate and writes only a redacted JSONL audit record. Write mode also requires that same approval gate, requires the target canonical Qdrant collection to already exist, calls only the local Ollama embedding endpoint, and then upserts the approved memory into local Qdrant. Audit logs must never store raw memory text; the Qdrant payload may store the raw approved text because retrieval memory needs it.
 
+`wizard merlin memory search --query <query> --memory-type <type>` is the local-only memory retrieval boundary. It embeds the explicit query with local Ollama only, searches the selected canonical Qdrant collection, prints retrieved memory text to the requesting user, and appends a redacted JSONL read audit record. The audit log stores query hash, result count, and result hashes only; it must not store raw query text, raw memory text, call cloud APIs, start services, write memory, or execute tools.
+
 ## Memory Design
 
 Merlin memory must be explicit and auditable. It should not silently learn every prompt.
@@ -219,6 +221,7 @@ Required v1 behavior:
 - Memory entries have source, timestamp, type, owner, and deletion status.
 - Simulator records are audit-only and are not retrieval memory.
 - Real local memory writes require canonical Qdrant collections, local embeddings, redacted audit logging, and fail-closed denial on missing dependencies.
+- Real local memory reads require canonical Qdrant collections, local embeddings, redacted read audit logging, and no memory writes.
 - User can delete memories.
 - Dashboard can show recent memory writes.
 - RAG retrieval is local by default.

@@ -201,6 +201,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Add approved memory-write simulator before real Qdrant writes
 - [x] Add approved local Qdrant memory write adapter with fail-closed consent, collection, and embedding checks
 - [x] Live-validate approved local Qdrant memory writes on the low-memory core profile
+- [x] Add local-only Merlin memory search adapter with redacted read audit logs
 - [x] Add canonical/legacy memory schema and runtime Qdrant collection manifest
 - [x] Align `cli/wizard` memory commands with the runtime collection manifest
 - [ ] Connect Magic Mode to shared Qdrant memory only after memory approval/audit is implemented

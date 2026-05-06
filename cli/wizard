@@ -206,6 +206,8 @@ cat << 'EOF'
                               Simulate approved memory write without Qdrant writes
     wizard merlin memory write --memory-type preference --text "..." --approval-id <id>
                               Write approved memory to local Qdrant with local embeddings
+    wizard merlin memory search --query "..." --memory-type preference
+                              Search approved local Qdrant memory with local embeddings
     wizard ask "question"     Ask a quick question (swarm-tiny, fastest)
     wizard route "task"       Alias for wizard swarm (full coordinator)
     wizard models             List loaded Ollama models
@@ -355,8 +357,20 @@ case "$1" in
         esac
         ;;
       memory)
-        shift 2
-        bash "$WIZARD_DIR/scripts/merlin-memory-write.sh" "$@"
+        case "${3:-}" in
+          plan|simulate|write)
+            shift 2
+            bash "$WIZARD_DIR/scripts/merlin-memory-write.sh" "$@"
+            ;;
+          search)
+            shift 2
+            bash "$WIZARD_DIR/scripts/merlin-memory-read.sh" "$@"
+            ;;
+          *)
+            echo "Usage: wizard merlin memory [plan|simulate|write|search] ..."
+            exit 1
+            ;;
+        esac
         ;;
       *)
         echo "Usage: wizard merlin [status|status-api|dry-run|approvals|execute|magic|memory] ..."

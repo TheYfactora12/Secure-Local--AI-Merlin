@@ -56,6 +56,7 @@ Merlin control-plane status:
 - `wizard merlin execute plan|execute --action merlin_status` is the v0 policy-gated execution boundary. It only allows read-only Merlin status and writes a redacted execution audit record on execute.
 - `wizard merlin magic plan "goal"` drafts plan-only Magic Mode steps from the existing route dry-run. With `--write-plan`, it writes redacted plan JSONL and route/approval audit records; it still executes nothing.
 - `wizard merlin memory plan|simulate|write --memory-type <type> --text <text>` is the approved memory-write boundary. Simulate writes redacted JSONL only. Write requires an approved `memory_write` approval id, an existing canonical Qdrant collection, and local Ollama embeddings before it upserts approved memory to local Qdrant.
+- `wizard merlin memory search --query "..." --memory-type <type>` is the local-only memory-read boundary. It searches Qdrant with local Ollama embeddings and writes a redacted read audit record.
 - `wizard merlin status-api start|status|stop` manages the localhost-only read-only status API.
 - `wizard start` starts the selected profile, then starts the read-only Merlin status API if profile startup succeeds.
 - `wizard stop` stops the status API before stopping Docker services.
@@ -117,7 +118,7 @@ The next engineering priority is live-safe memory persistence design: define the
 ## Next Actions
 
 1. Keep validating the read-only Merlin status API during each startup-related change.
-2. Add the memory retrieval/read adapter so Merlin can safely recall approved local Qdrant memory without exposing secrets or bypassing approval policy.
+2. Add policy-controlled memory recall to Magic Mode planning so retrieved context can inform plans without executing steps or bypassing approval policy.
 3. Continue updating roadmap/docs/tests with every milestone before signing/notarization work.
 
 ## Validation
@@ -149,7 +150,10 @@ Last verified: 2026-05-06.
 - `wizard merlin memory simulate --memory-type preference --text "..." --approval-id <id>` writes only redacted simulated memory audit records to `logs/merlin-memory-writes.jsonl`.
 - `wizard merlin memory write --memory-type preference --text "..." --approval-id <id>` can upsert approved memory to local Qdrant with local Ollama embeddings. It does not create collections, pull models, start services, call cloud APIs, or store raw text in the JSONL audit log.
 - `tests/merlin-memory-write-smoke.sh` verifies approved `memory_write` gate validation, fail-closed denial, no raw audit logging, no Qdrant/embedding calls during plan/simulate/denial, and a fake local Qdrant/Ollama write path for approved `write`.
+- `wizard merlin memory search --query "..." --memory-type preference` can retrieve approved memory from local Qdrant with local Ollama embeddings. It writes redacted read audit records to `logs/merlin-memory-reads.jsonl` and performs no memory writes, cloud calls, service starts, or tool execution.
+- `tests/merlin-memory-read-smoke.sh` verifies local embedding search, Qdrant read behavior, CLI routing, no memory writes, and no raw query or raw memory text in read audit logs.
 - Live memory validation on 2026-05-06 initialized canonical Qdrant collections with `MERLIN_CREATE_CANONICAL_COLLECTIONS=true bash scripts/init-qdrant.sh`, explicitly installed local `nomic-embed-text`, approved `approval_dryrun_20260506_040756_17686`, wrote point `640cc4bb-5dc9-3c68-8a44-5d2560a15ab5` into `merlin_user`, and verified the JSONL audit record `mem_20260506_040805_654553` stayed redacted.
+- Live memory search validation on 2026-05-06 ran `wizard merlin memory search --query "local-first profile-aware" --memory-type preference --limit 3`, retrieved point `640cc4bb-5dc9-3c68-8a44-5d2560a15ab5`, and verified read audit record `mread_20260506_041535_472003` stored hashes only.
 
 Earlier live validation on 2026-05-05:
 
