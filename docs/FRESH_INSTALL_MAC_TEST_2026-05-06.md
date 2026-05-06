@@ -50,6 +50,7 @@ Status update after fixes:
 - #43 and #45 fixed in `1055522`.
 - #46 fixed in `71e2bf3`.
 - #48 found during rerun from `bb04e1a`; fixed in `73e56f2`.
+- #49 found during unsigned package validation; fixed after package postinstall was changed to use a filtered runtime-template copy.
 - A full fresh-install rerun from `73e56f2` completed successfully for the `core` profile on the 8GB Mac.
 
 ### 1. Uninstaller Fails In Non-Interactive Shell On Sudo Cleanup
@@ -236,18 +237,53 @@ Recommended fix:
 
 ## Current Release Assessment
 
-The installer is close but not yet a stable v1.0 release.
+The installer and unsigned package path are close but not yet a stable v1.0 release.
+
+## Unsigned Package Validation
+
+Package tested: `home-ai-elite-0.8.6.pkg`.
+
+Package build/preflight status:
+
+- `bash tests/pkg-readiness-smoke.sh` passed.
+- `bash tests/pkg-signing-preflight-smoke.sh` passed.
+- `bash tests/release-workflow-smoke.sh` passed.
+- `bash pkg/release-preflight.sh` passed for unsigned builds and warned that signing/notarization credentials are not configured on this Mac.
+- `bash pkg/build-pkg.sh` produced an unsigned package.
+- Payload scan found no `.env`, `.wizard-bootstrapped`, `certs/`, `logs/`, nested `.pkg` artifacts, `pkg/build/`, caches, or `node_modules`.
+- `pkgutil --check-signature` correctly reported `Status: no signature`.
+
+Initial unsigned package install found #49:
+
+- A stale `/usr/local/home-ai-elite/.wizard-bootstrapped` marker could be copied into `~/home-ai-elite`.
+- That caused first-boot bootstrap to be skipped even after user-level uninstall removed `~/home-ai-elite` and Docker volumes.
+
+Fix applied:
+
+- Package payload excludes runtime markers and logs.
+- Package postinstall copies from `/usr/local/home-ai-elite` to `~/home-ai-elite` with filtered `rsync`, not raw `cp -R`.
+- Static package readiness checks now require the filtered copy and runtime-marker exclusions.
+
+Rerun result after #49 fix:
+
+- Unsigned `.pkg` install succeeded.
+- Package receipt registered as `com.homeai.elite` version `0.8.6`.
+- First-boot bootstrap ran correctly.
+- Qdrant collections initialized from the memory manifest.
+- `wizard doctor` exited with zero failures.
+- Expected warnings remain: missing local gitleaks hook, low-tier caution, Task API manual on port 8766.
 
 Release blockers from this test, after fixes:
 
 1. Core fresh uninstall/install on this 8GB Mac is green after #41 through #48.
-2. Signed/notarized package release gate remains separate.
-3. Upgrade/backup/restore release verification remains required before v1.0.
-4. Optional launchd persistence should be tested separately from non-interactive core install.
+2. Unsigned `.pkg` install path is green after #49.
+3. Signed/notarized package release gate remains separate.
+4. Upgrade/backup/restore release verification remains required before v1.0.
+5. Optional launchd persistence should be tested separately from non-interactive core install.
 
 ## Recommended Next Fix Order
 
-1. Run package/release smoke and decide whether to test the unsigned `.pkg`.
-2. Run backup/restore and upgrade verification against the fresh install.
+1. Run backup/restore verification against the package-installed stack.
+2. Run upgrade verification.
 3. Test optional launchd persistence for the read-only status API.
-4. Move to signed/notarized package release gate once package and recovery checks are green.
+4. Move to signed/notarized package release gate once recovery and upgrade checks are green.

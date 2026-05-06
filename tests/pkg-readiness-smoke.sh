@@ -32,8 +32,17 @@ grep -q 'Install log writable by' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall does not hand log ownership to the installing user"
 grep -q 'run_as_user' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall does not use a dedicated user command runner"
+grep -q 'rsync -a' "${STACK_DIR}/pkg/scripts/postinstall" \
+  || fail "postinstall must use filtered rsync copy, not raw cp -R"
+grep -q -- "--exclude='.wizard-bootstrapped'" "${STACK_DIR}/pkg/scripts/postinstall" \
+  || fail "postinstall user copy does not exclude bootstrap marker"
+grep -q -- "--exclude='logs/'" "${STACK_DIR}/pkg/scripts/postinstall" \
+  || fail "postinstall user copy does not exclude logs"
 if grep -q 'su -' "${STACK_DIR}/pkg/scripts/postinstall"; then
   fail "postinstall still uses login su for user commands"
+fi
+if grep -q 'cp -R "$INSTALL_DIR" "$USER_INSTALL_DIR"' "${STACK_DIR}/pkg/scripts/postinstall"; then
+  fail "postinstall still uses raw cp -R for user install copy"
 fi
 if grep -q 'DOCKER_CONFIG=' "${STACK_DIR}/pkg/scripts/postinstall"; then
   fail "postinstall should not override Docker Desktop config"
@@ -53,8 +62,12 @@ fi
 
 grep -q -- "--exclude='.env'" "${STACK_DIR}/pkg/build-pkg.sh" \
   || fail "package builder does not exclude .env"
+grep -q -- "--exclude='.wizard-bootstrapped'" "${STACK_DIR}/pkg/build-pkg.sh" \
+  || fail "package builder does not exclude bootstrap marker"
 grep -q -- "--exclude='certs/'" "${STACK_DIR}/pkg/build-pkg.sh" \
   || fail "package builder does not exclude generated certs"
+grep -q -- "--exclude='logs/'" "${STACK_DIR}/pkg/build-pkg.sh" \
+  || fail "package builder does not exclude runtime logs"
 grep -Fq -- "--exclude='*.pkg'" "${STACK_DIR}/pkg/build-pkg.sh" \
   || fail "package builder does not exclude pkg artifacts"
 grep -q 'APPLE_APP_PASSWORD must be set for notarization' "${STACK_DIR}/pkg/build-pkg.sh" \

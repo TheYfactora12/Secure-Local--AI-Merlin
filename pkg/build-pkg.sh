@@ -134,11 +134,15 @@ stage_payload() {
   rsync -a \
     --exclude='.git' \
     --exclude='.env' \
+    --exclude='.venv/' \
+    --exclude='.wizard-bootstrapped' \
     --exclude='certs/' \
+    --exclude='logs/' \
     --exclude='backups/' \
     --exclude='pkg/build/' \
     --exclude='*.pkg' \
     --exclude='node_modules/' \
+    --exclude='__pycache__/' \
     --exclude='*.log' \
     "${ROOT_DIR}/" \
     "${BUILD_DIR}/payload${INSTALL_DIR}/"
