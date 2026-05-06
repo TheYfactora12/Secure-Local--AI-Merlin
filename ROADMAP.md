@@ -189,7 +189,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Remove stale `$HOME/wizard-ai` path
 - [x] Back up current `.env` from repo root
 - [x] Back up actual configured Qdrant collections
-- [ ] Back up n8n only when automation profile is enabled
+- [x] Back up n8n only when automation profile is enabled
 - [x] Add restore dry-run mode
 - [x] Test restore from a real generated backup
 
@@ -202,6 +202,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Core live smoke test: Ollama, Open WebUI, LiteLLM, Qdrant, dashboard
 - [x] Qdrant live restore smoke test with a disposable collection
 - [x] Update/upgrade profile smoke test
+- [x] Backup profile selection smoke test
 - [x] Installer model-pull policy smoke test
 - [x] Core install budget smoke test
 - [x] Package readiness smoke test

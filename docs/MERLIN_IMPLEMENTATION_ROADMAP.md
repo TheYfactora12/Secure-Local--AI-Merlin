@@ -333,4 +333,5 @@ Next implementation slice:
 - Update GitHub release action to the Node 24-compatible major version. `Done: .github/workflows/release.yml, tests/release-workflow-smoke.sh`
 - Make launchd auto-start use the laptop-safe core profile instead of raw full-stack Compose. `Done: launchd/com.homeai.stack.plist, tests/launchd-core-smoke.sh`
 - Validate same-machine unsigned package install through macOS Installer. `Done: v0.8.6 package receipt, postinstall, doctor, and core-live smoke`
+- Make Docker-volume backup profile-aware so core backups stay lightweight and optional n8n/search data is included only when selected. `Done: scripts/backup.sh, tests/backup-profile-smoke.sh`
 - Add live Docker validation for optional `search` profile on a machine with enough memory.
