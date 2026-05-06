@@ -1,0 +1,148 @@
+# Merlin Magic Mode task routing.
+#
+# Declarative route map for future Merlin/Magic Mode orchestration. Runtime
+# scripts do not parse this file yet. It defines route classes, agents,
+# required profiles, approval gates, and trace fields before execution exists.
+
+version: 1
+
+defaults:
+  backend_preference: local
+  online_mode_required: false
+  cloud_allowed: false
+  route_logging_required: true
+  approval_summary_required: true
+
+routes:
+  general:
+    description: "General local reasoning, explanation, planning, and chat."
+    agent: planner
+    task_types:
+      - general
+      - summarize
+      - explain
+      - plan
+    required_profile: core
+    model_class: general
+    preferred_model_alias: qwen7b
+    tools_allowed:
+      - model
+      - approved_memory_read
+    approval_gates: []
+    default_risk: low
+
+  search:
+    description: "Research tasks that need local metasearch or Perplexica."
+    agent: researcher
+    task_types:
+      - search
+      - research
+      - current_info
+      - citation
+    required_profile: search
+    model_class: general
+    preferred_model_alias: qwen7b
+    tools_allowed:
+      - model
+      - searxng
+      - perplexica
+      - approved_memory_read
+    approval_gates:
+      - service_start
+      - external_network
+    default_risk: high
+
+  code:
+    description: "Code reasoning and optional OpenHands execution."
+    agent: coding
+    task_types:
+      - code
+      - debug
+      - refactor
+      - test
+    required_profile: coding
+    model_class: code
+    preferred_model_alias: qwen-coder
+    tools_allowed:
+      - model
+      - approved_repo_read
+      - openhands
+    approval_gates:
+      - service_start
+      - file_read
+      - file_write
+      - shell_command
+      - git_operation
+      - openhands_task
+    default_risk: critical
+
+  automation:
+    description: "n8n workflow planning and optional workflow execution."
+    agent: operator
+    task_types:
+      - automation
+      - workflow
+      - webhook
+      - schedule
+    required_profile: automation
+    model_class: general
+    preferred_model_alias: qwen7b
+    tools_allowed:
+      - model
+      - n8n
+      - approved_memory_read
+    approval_gates:
+      - service_start
+      - api_key_use
+      - external_network
+      - memory_write
+    default_risk: high
+
+  memory:
+    description: "User-approved memory read, write, audit, deletion, and document recall."
+    agent: memory
+    task_types:
+      - memory_read
+      - memory_write
+      - memory_delete
+      - document_recall
+    required_profile: core
+    model_class: embedding
+    preferred_model_alias: local-embedding
+    tools_allowed:
+      - qdrant
+      - approved_memory_read
+      - approved_memory_write
+    approval_gates:
+      - memory_write
+      - file_read
+      - file_delete
+    default_risk: medium
+
+trace:
+  required_fields:
+    - route_id
+    - task_type
+    - selected_agent
+    - required_profile
+    - selected_model_alias
+    - privacy_mode
+    - online_mode
+    - approval_gates
+    - decision_reason
+  redact_fields:
+    - api_key
+    - token
+    - password
+    - secret
+
+fallbacks:
+  no_required_profile:
+    action: ask_approval_to_start_profile
+    never_auto_start: true
+  low_memory_tier:
+    action: warn_and_ask
+    disable_parallel_agents: true
+  cloud_requested:
+    action: require_online_mode_and_provider_approval
+    default: deny

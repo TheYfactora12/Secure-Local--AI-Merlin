@@ -121,6 +121,7 @@ jobs:
           bash tests/coding-profile-smoke.sh
           bash tests/merlin-persona-smoke.sh
           bash tests/merlin-policy-smoke.sh
+          bash tests/merlin-routing-smoke.sh
           bash tests/uninstall-smoke.sh
           bash tests/launchd-core-smoke.sh
           bash tests/container-image-policy-smoke.sh

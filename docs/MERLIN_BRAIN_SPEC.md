@@ -112,6 +112,7 @@ Recommended v1 implementation:
 - Add a Merlin route decision object before LiteLLM calls.
 - Store route metadata in logs.
 - Keep cloud providers disabled unless `.env` has keys and user enables online mode.
+- Use `config/merlin/routes.yaml` as the declarative route map for Magic Mode task classes.
 
 Example route decision:
 
@@ -126,6 +127,18 @@ fallbacks:
   - ollama/qwen2.5:7b
 approval_required: false
 ```
+
+Magic Mode route classes:
+
+| Route | Agent | Required profile | Default risk | Required approvals |
+|---|---|---|---|---|
+| `general` | planner | core | low | none |
+| `search` | researcher | search | high | service start, external network |
+| `code` | coding | coding | critical | service start, file read/write, shell, git, OpenHands task |
+| `automation` | operator | automation | high | service start, API key use, external network, memory write |
+| `memory` | memory | core | medium | memory write, file read, file delete |
+
+Routes must emit trace fields for route id, task type, selected agent, required profile, selected model alias, privacy mode, online mode, approval gates, and decision reason.
 
 ## Memory Design
 
