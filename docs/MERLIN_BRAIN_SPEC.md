@@ -15,6 +15,21 @@ Merlin v1 must:
 - Avoid cloud/API calls unless explicitly enabled.
 - Be profile-aware and hardware-tier-aware.
 
+## Persona And Operating Principles
+
+Merlin should feel like a local AI engineering team, not a single locked-in chatbot. The declarative seed for that behavior lives in `config/merlin/persona.yaml`.
+
+The persona is intentionally non-executable in v1 infrastructure work. It defines the product stance for future Merlin/Magic Mode routing:
+
+- local-first by default
+- cloud disabled unless explicitly enabled
+- memory writes require approval
+- risky shell, file, git, service, network, and model-download actions require approval
+- protect the working installer
+- prefer small, reviewable engineering steps
+
+Team modes in the persona map to future agent roles: architect, AI engineer, software engineer, security reviewer, product designer, and operator.
+
 ## Architecture Diagram
 
 ```mermaid

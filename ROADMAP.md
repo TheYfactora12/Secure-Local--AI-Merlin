@@ -176,6 +176,7 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 ### 3. Define Merlin/Magic Mode Architecture
 
 - [ ] Keep agent orchestration optional until core mode is stable
+- [x] Add Merlin persona seed for local-first AI engineering team behavior
 - [ ] Define Magic Mode task routing: general, search, code, automation, memory
 - [ ] Define approval rules for code execution, shell commands, file writes, and network access
 - [ ] Decide whether orchestration lives in n8n, a Python controller, LangGraph-style graphs, or a hybrid
@@ -213,7 +214,9 @@ v1.0 means a normal laptop can install, start, stop, update, and recover the sys
 - [x] Static smoke tests run in CI
 - [x] Search static test: Perplexica + SearXNG profile wiring
 - [ ] Search live test: Perplexica, SearXNG
-- [ ] Automation test: n8n health and workflow import
+- [x] Automation static test: n8n and workflow import safety
+- [x] Merlin persona smoke test
+- [ ] Automation live test: n8n health and workflow import
 - [ ] Coding test: OpenHands startup and LiteLLM connection
 - [ ] Upgrade test: backup, pull, restart, health check, rollback path
 

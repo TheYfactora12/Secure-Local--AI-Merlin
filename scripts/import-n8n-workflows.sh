@@ -148,8 +148,10 @@ main() {
     exit 0
   fi
 
-  local files
-  mapfile -t files < <(find "$WORKFLOW_DIR" -maxdepth 2 -name '*.json' | sort)
+  local files=()
+  while IFS= read -r file; do
+    [[ -n "$file" ]] && files+=("$file")
+  done < <(find "$WORKFLOW_DIR" -maxdepth 2 -name '*.json' | sort)
 
   if [[ ${#files[@]} -eq 0 ]]; then
     warn "No .json workflow files found in $WORKFLOW_DIR"
