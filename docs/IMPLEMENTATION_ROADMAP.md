@@ -10,6 +10,12 @@ Ship Merlin as a useful local-first product before expanding into supervised exe
 
 Goal: Make the current working baseline explicit.
 
+Fresh Mac installer validation:
+
+- First fresh 8GB Mac core install completed on 2026-05-06 and produced issues #41 through #46.
+- Follow-up fixes landed for uninstall sudo behavior, Open WebUI local-first startup, Merlin API startup policy, CLI fallback messaging, and low-tier model recommendations.
+- A second full fresh uninstall/install rerun is required before marking v1.0 stable installer complete.
+
 Tasks:
 
 - Maintain baseline installer review.

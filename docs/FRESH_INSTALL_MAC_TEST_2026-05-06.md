@@ -43,10 +43,19 @@ Working after install:
 
 ## Fresh Install Findings
 
+Status update after fixes:
+
+- #41 fixed in `1d97eac`.
+- #42 and #44 fixed in `c496614`.
+- #43 and #45 fixed in `1055522`.
+- #46 fixed in `71e2bf3`.
+- A full fresh-install rerun is still required before marking the v1.0 stable installer milestone complete.
+
 ### 1. Uninstaller Fails In Non-Interactive Shell On Sudo Cleanup
 
 Severity: High for package/release cleanup.
 GitHub issue: #41.
+Status: fixed in `1d97eac`; rerun fresh uninstall before release sign-off.
 
 Evidence:
 
@@ -74,6 +83,7 @@ Recommended fix:
 
 Severity: High for local-only-by-default claim.
 GitHub issue: #42.
+Status: fixed in `c496614`; Open WebUI now runs with offline/HF-offline/local-first defaults. Clean Open WebUI volume was recreated and reached healthy state.
 
 Evidence:
 
@@ -100,6 +110,7 @@ Recommended fix:
 
 Severity: Medium.
 GitHub issue: #44.
+Status: fixed in `c496614`; clean Open WebUI volume reached healthy state and HTTP `:3000` responded after local-first defaults were applied.
 
 Evidence:
 
@@ -131,6 +142,7 @@ Recommended fix:
 
 Severity: Medium for Merlin v1.
 GitHub issue: #43.
+Status: fixed in `1055522`; installer starts read-only port 8765 status API when available and explicitly keeps port 8766 task API manual.
 
 Evidence:
 
@@ -160,6 +172,7 @@ Recommended fix:
 
 Severity: Medium for user onboarding.
 GitHub issue: #45.
+Status: fixed in `1055522`; installer prints the direct CLI path when the `wizard` symlink is unavailable.
 
 Evidence:
 
@@ -186,6 +199,7 @@ Recommended fix:
 
 Severity: Low.
 GitHub issue: #46.
+Status: fixed in `71e2bf3`; low-tier required/recommended set is now `qwen2.5:7b` plus `nomic-embed-text`.
 
 Evidence:
 
@@ -209,18 +223,15 @@ Recommended fix:
 
 The installer is close but not yet a stable v1.0 release.
 
-Release blockers from this test:
+Release blockers from this test, after fixes:
 
-1. Non-interactive uninstall leaves sudo-only cleanup failure.
-2. Open WebUI first boot performs external Hugging Face fetch despite local-only defaults.
-3. Installer can report success while Open WebUI is unhealthy.
-4. Merlin APIs are not started or clearly surfaced after fresh install.
-5. `wizard` command instructions are inaccurate when symlink creation is skipped.
+1. Full fresh uninstall/install rerun required to verify #41 through #46 together.
+2. Signed/notarized package release gate remains separate.
+3. Upgrade/backup/restore release verification remains required before v1.0.
 
 ## Recommended Next Fix Order
 
-1. Fix non-interactive uninstall sudo behavior.
-2. Decide and enforce Open WebUI local-only startup behavior.
-3. Improve installer readiness messaging for Open WebUI warm-up/unhealthy state.
-4. Add explicit Merlin API start command and installer messaging.
-5. Fix CLI post-install instructions when `wizard` symlink is skipped.
+1. Rerun fresh uninstall/install on this Mac from current `main`.
+2. Run `wizard doctor`, endpoint checks, Open WebUI, LiteLLM, Qdrant, Ollama checks.
+3. Run package/release smoke and decide whether to test the unsigned `.pkg`.
+4. Move to signed/notarized package release gate once fresh install is green.
