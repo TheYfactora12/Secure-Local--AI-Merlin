@@ -30,6 +30,22 @@ models:
     enabled_by_default: false
     context_window: 8192
     requires_api_key: false
+  deepseek:
+    provider: ollama
+    model: deepseek-r1:7b
+    model_class: reasoning
+    local: true
+    enabled_by_default: false
+    context_window: 8192
+    requires_api_key: false
+  mistral:
+    provider: ollama
+    model: qwen2.5:7b
+    model_class: general
+    local: true
+    enabled_by_default: false
+    context_window: 8192
+    requires_api_key: false
   local-embedding:
     provider: ollama
     model: nomic-embed-text

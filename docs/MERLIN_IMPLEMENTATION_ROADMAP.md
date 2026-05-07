@@ -94,7 +94,7 @@ Issue #1 latest package validation is complete through `64096f4`; GitHub Actions
 - `pkgutil --check-signature` can validate current-user trust after the local cert is trusted in the login keychain.
 - Privileged `installer` still rejects the self-signed package without System keychain trust or Developer ID Installer notarization. Do not spend more engineering cycles trying to bypass this macOS trust model.
 
-Next work should be selected as a narrow slice: close or split #1 based on the release policy decision, then continue #53 or #60 under v2.0.
+Next work should be selected as a narrow slice: close or split #1 based on the release policy decision, then continue #53 or #60 under v2.0. The follow-on Phase 3 learning sequence is documented in `docs/MERLIN_PHASE3_LEARNING_PLAN.md`: outcome observer first, then retrieval scoring, preference extraction, session reflection, and skill scores.
 
 Port contract:
 

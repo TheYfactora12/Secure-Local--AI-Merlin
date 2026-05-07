@@ -13,6 +13,16 @@ defaults:
   route_logging_required: true
   approval_summary_required: true
 
+staff_model_aliases:
+  architect: deepseek
+  ai_engineer: qwen-coder
+  software_engineer: qwen-coder
+  security_reviewer: deepseek
+  product_designer: qwen7b
+  operator: mistral
+
+low_memory_fallback_model_alias: mistral
+
 routes:
   general:
     description: "General local reasoning, explanation, planning, and chat."

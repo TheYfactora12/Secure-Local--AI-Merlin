@@ -60,6 +60,8 @@ canonical:
       - approval_id
       - actor
       - created_at
+      - route_id
+      - outcome_status
 
 legacy:
   home_ai_memory:

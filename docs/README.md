@@ -27,6 +27,7 @@
 | [`MASTER_CONTEXT.md`](./MASTER_CONTEXT.md) | Full project context for Codex and team orientation |
 | [`MASTER_PROMPT.md`](./MASTER_PROMPT.md) | Active Codex agent config and rules |
 | [`MERLIN_IMPLEMENTATION_ROADMAP.md`](./MERLIN_IMPLEMENTATION_ROADMAP.md) | Active v1→v2 build roadmap — updated each sprint |
+| [`MERLIN_PHASE3_LEARNING_PLAN.md`](./MERLIN_PHASE3_LEARNING_PLAN.md) | Phase 3 review-first learning contracts and build order |
 
 ### 📁 product/ — What we are building and why
 | File | Purpose |

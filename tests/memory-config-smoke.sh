@@ -6,6 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 MANIFEST="${STACK_DIR}/configs/merlin/memory-collections.env"
 RESTORE="${STACK_DIR}/backup/restore.sh"
+MEMORY_YAML="${STACK_DIR}/configs/merlin/memory.yaml"
 TMP="$(mktemp -d)"
 
 cleanup() {
@@ -38,6 +39,7 @@ require_backup_collection() {
 
 [[ -f "$MANIFEST" ]] || fail "Missing manifest: ${MANIFEST}"
 [[ -f "$RESTORE" ]] || fail "Missing restore script: ${RESTORE}"
+[[ -f "$MEMORY_YAML" ]] || fail "Missing memory schema: ${MEMORY_YAML}"
 
 # shellcheck disable=SC1090
 source "$MANIFEST"
@@ -53,6 +55,11 @@ require_backup_collection "merlin_user"
 require_backup_collection "merlin_documents"
 require_backup_collection "merlin_tools"
 require_backup_collection "merlin_audit"
+
+awk '/^  merlin_audit:/,/^legacy:/' "$MEMORY_YAML" | grep -q -- '- route_id' \
+  || fail "merlin_audit missing route_id payload index"
+awk '/^  merlin_audit:/,/^legacy:/' "$MEMORY_YAML" | grep -q -- '- outcome_status' \
+  || fail "merlin_audit missing outcome_status payload index"
 
 BACKUP_ROOT="${TMP}/wizard_backup_test"
 mkdir -p "$BACKUP_ROOT"

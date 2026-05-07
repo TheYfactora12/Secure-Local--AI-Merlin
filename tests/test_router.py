@@ -115,7 +115,41 @@ def test_trace_fields_are_present_on_every_decision() -> None:
         "task_type",
         "selected_agent",
         "required_profile",
+        "preferred_model_alias",
+        "selected_model_alias",
         "approval_gates",
         "decision_reason",
     ]:
         assert getattr(decision, field_name) is not None
+
+
+def test_staff_modes_select_configured_model_aliases_on_non_low_memory(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.router._detect_ram_gb", lambda: 32)
+
+    cases = [
+        ("design the system architecture for a new microservice", "architect", "deepseek"),
+        ("train a fine-tuned model on this dataset", "ai_engineer", "qwen-coder"),
+        ("write a python function to parse JSON", "software_engineer", "qwen-coder"),
+        ("scan this code for SQL injection vulnerabilities", "security_reviewer", "deepseek"),
+        ("design the user onboarding flow", "product_designer", "qwen7b"),
+        ("set up an n8n automation for daily reports", "operator", "mistral"),
+    ]
+
+    for text, staff_mode, model_alias in cases:
+        decision = classify_task(text)
+        assert decision.staff_mode == staff_mode
+        assert decision.preferred_model_alias == model_alias
+        assert decision.selected_model_alias == model_alias
+        assert decision.model_fallback_applied is False
+
+
+def test_low_memory_tier_falls_back_to_safe_local_alias(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.router._detect_ram_gb", lambda: 8)
+
+    decision = classify_task("design the system architecture for a new microservice")
+
+    assert decision.staff_mode == "architect"
+    assert decision.preferred_model_alias == "deepseek"
+    assert decision.selected_model_alias == "mistral"
+    assert decision.model_fallback_applied is True
+    assert decision.model_fallback_reason is not None

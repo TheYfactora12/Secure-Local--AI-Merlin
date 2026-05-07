@@ -10,6 +10,8 @@ from __future__ import annotations
 import hashlib
 import io
 import logging
+import platform
+import subprocess
 from contextlib import redirect_stdout
 from datetime import UTC, datetime
 from typing import Literal
@@ -36,6 +38,9 @@ class RouteDecision(BaseModel):
     selected_agent: str
     required_profile: str
     selected_model_alias: str
+    preferred_model_alias: str
+    model_fallback_applied: bool = False
+    model_fallback_reason: str | None = None
     approval_gates: list[str]
     decision_reason: str
 
@@ -151,6 +156,60 @@ def _requires_approval(route: RouteSpec) -> bool:
     return bool(route.approval_gates)
 
 
+def _detect_ram_gb() -> int:
+    if platform.system() == "Darwin":
+        try:
+            output = subprocess.check_output(["sysctl", "-n", "hw.memsize"], text=True, timeout=2).strip()
+            return int(round(int(output) / 1024 / 1024 / 1024))
+        except (OSError, subprocess.SubprocessError, ValueError):
+            return 0
+
+    try:
+        with open("/proc/meminfo", "r", encoding="utf-8") as handle:
+            for line in handle:
+                if line.startswith("MemTotal:"):
+                    kb = int(line.split()[1])
+                    return int(round(kb / 1024 / 1024))
+    except (OSError, ValueError):
+        return 0
+    return 0
+
+
+def _hardware_tier(ram_gb: int) -> str:
+    if ram_gb >= 48:
+        return "high"
+    if ram_gb >= 24:
+        return "mid"
+    if ram_gb >= 16:
+        return "base"
+    if ram_gb > 0:
+        return "low"
+    return "unknown"
+
+
+def _staff_model_alias(config: MerlinConfig, staff_mode: str, route: RouteSpec) -> str:
+    return config.routes.staff_model_aliases.get(staff_mode, route.preferred_model_alias)
+
+
+def _select_model_alias(
+    config: MerlinConfig,
+    staff_mode: str,
+    route: RouteSpec,
+) -> tuple[str, str, bool, str | None]:
+    preferred = _staff_model_alias(config, staff_mode, route)
+    preferred_model = config.models.models[preferred]
+    tier = _hardware_tier(_detect_ram_gb())
+    fallback = config.routes.low_memory_fallback_model_alias
+    if tier == "low" and preferred != fallback and not preferred_model.enabled_by_default:
+        return (
+            preferred,
+            fallback,
+            True,
+            f"Low-memory hardware tier selected {fallback} instead of {preferred}.",
+        )
+    return preferred, preferred, False, None
+
+
 def _decision_from_rule(
     config: MerlinConfig,
     rule: _RouteRule,
@@ -159,18 +218,24 @@ def _decision_from_rule(
     reason: str,
 ) -> RouteDecision:
     route = _route_spec(config, rule.route_id)
+    preferred_model, selected_model, fallback_applied, fallback_reason = _select_model_alias(
+        config, rule.staff_mode, route
+    )
     return RouteDecision(
         route_id=rule.route_id,
         task_type=rule.task_type,
         staff_mode=rule.staff_mode,
         agent_target=rule.agent_target,
-        model_hint=route.preferred_model_alias,
+        model_hint=preferred_model,
         requires_approval=_requires_approval(route),
         confidence=confidence,
         matched_keywords=matches,
         selected_agent=route.agent,
         required_profile=route.required_profile,
-        selected_model_alias=route.preferred_model_alias,
+        selected_model_alias=selected_model,
+        preferred_model_alias=preferred_model,
+        model_fallback_applied=fallback_applied,
+        model_fallback_reason=fallback_reason,
         approval_gates=list(route.approval_gates),
         decision_reason=reason,
     )
@@ -178,18 +243,22 @@ def _decision_from_rule(
 
 def _default_decision(config: MerlinConfig) -> RouteDecision:
     route = _route_spec(config, "general")
+    preferred_model, selected_model, fallback_applied, fallback_reason = _select_model_alias(config, "operator", route)
     return RouteDecision(
         route_id="general",
         task_type="general",
         staff_mode="operator",
         agent_target="litellm",
-        model_hint=route.preferred_model_alias,
+        model_hint=preferred_model,
         requires_approval=_requires_approval(route),
         confidence=0.0,
         matched_keywords=[],
         selected_agent=route.agent,
         required_profile=route.required_profile,
-        selected_model_alias=route.preferred_model_alias,
+        selected_model_alias=selected_model,
+        preferred_model_alias=preferred_model,
+        model_fallback_applied=fallback_applied,
+        model_fallback_reason=fallback_reason,
         approval_gates=list(route.approval_gates),
         decision_reason="No route keywords matched; using general fallback.",
     )
@@ -235,12 +304,16 @@ def route_task(user_input: str) -> RouteDecision:
 
     decision = classify_task(user_input)
     logger.info(
-        "route_decision timestamp=%s input_hash=%s route_id=%s staff_mode=%s agent_target=%s confidence=%.2f",
+        "route_decision timestamp=%s input_hash=%s route_id=%s staff_mode=%s agent_target=%s "
+        "preferred_model=%s selected_model=%s fallback=%s confidence=%.2f",
         datetime.now(UTC).isoformat(),
         _input_hash(user_input),
         decision.route_id,
         decision.staff_mode,
         decision.agent_target,
+        decision.preferred_model_alias,
+        decision.selected_model_alias,
+        decision.model_fallback_applied,
         decision.confidence,
     )
     return decision

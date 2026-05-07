@@ -154,6 +154,8 @@ class RouteFallback(StrictModel):
 class RoutesConfig(StrictModel):
     version: int
     defaults: dict[str, Any]
+    staff_model_aliases: dict[str, str]
+    low_memory_fallback_model_alias: str
     routes: dict[str, RouteSpec]
     trace: RouteTrace
     fallbacks: dict[str, RouteFallback]
@@ -353,6 +355,15 @@ class MerlinConfig(StrictModel):
             unknown_gates = sorted(set(route.approval_gates) - gates)
             if unknown_gates:
                 raise ValueError(f"routes.{route_name}.approval_gates unknown gates: {', '.join(unknown_gates)}")
+
+        for staff_mode, alias in self.routes.staff_model_aliases.items():
+            if alias not in models:
+                raise ValueError(f"routes.staff_model_aliases.{staff_mode} references unknown model: {alias}")
+        if self.routes.low_memory_fallback_model_alias not in models:
+            raise ValueError(
+                "routes.low_memory_fallback_model_alias references unknown model: "
+                f"{self.routes.low_memory_fallback_model_alias}"
+            )
 
         for agent_name, agent in self.agents.agents.items():
             unknown_tools = sorted(set(agent.allowed_tools) - tools)
