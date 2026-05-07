@@ -407,4 +407,5 @@ Follow-up fixed during this validation:
 - A normal self-signed Code Signing cert was not enough for `productsign`; it failed with `An installer signing identity (not an application signing identity) is required for signing flat-style products.`
 - A self-signed installer certificate using extended key usage OID `1.2.840.113635.100.6.1.14`, imported into a temporary keychain and trusted with `security add-trusted-cert`, successfully signed `home-ai-elite-v0.8.6.pkg`.
 - The temporary keychain must be unlocked before signing: `security unlock-keychain -p homeai-build /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain`.
+- To make `pkgutil --check-signature` report trusted outside the temporary signing context, the same certificate was trusted in the current user's login keychain with `security add-trusted-cert -r trustRoot -k "$HOME/Library/Keychains/login.keychain-db" ...`.
 - `pkgutil --check-signature home-ai-elite-v0.8.6.pkg` reported `Status: signed by a certificate trusted for current user`.

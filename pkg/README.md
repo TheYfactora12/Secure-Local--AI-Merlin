@@ -102,6 +102,11 @@ security import /private/tmp/home-ai-elite-installer-signing/home-ai-installer-s
 security add-trusted-cert -r trustRoot \
   -k /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain \
   /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.crt
+
+# Trust it for current-user package verification on this Mac.
+security add-trusted-cert -r trustRoot \
+  -k "$HOME/Library/Keychains/login.keychain-db" \
+  /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.crt
 ```
 
 Then build and sign:
