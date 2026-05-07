@@ -87,6 +87,17 @@ wizard benchmark run --suite epbench --profile offline
 wizard benchmark run --suite all --profile offline
 ```
 
+7-day local quality trend:
+
+```bash
+wizard score
+wizard score --days 7
+```
+
+`wizard score` reads local JSONL only. It reports outcome counts, success rate,
+benchmark recall, low-confidence successes, approval-required trace counts, and
+a blended quality score when enough data exists. It does not require Langfuse.
+
 Runtime health:
 
 ```bash
@@ -106,6 +117,12 @@ wizard merlin task-api status
 - Docker Compose has no default Langfuse service,
 - any future Langfuse service must be profile-gated and not use port `3000`,
 - the roadmap points to #36 as the design parent and #8 as optional child work.
+
+`tests/merlin-score-smoke.sh` proves the JSONL baseline is operational:
+
+- `scripts/merlin-score.sh` reads local outcome, trace, and benchmark JSONL,
+- `wizard score` works without Langfuse,
+- no external telemetry or live services are required.
 
 ## Rollback
 

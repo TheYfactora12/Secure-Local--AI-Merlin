@@ -80,6 +80,9 @@ left behind.
 - Next active milestone is `v1.6`; open issues: #36 and #8. #36 is the
   design-first parent issue. #8 is a valid optional self-hosted Langfuse child
   only after #36 is satisfied.
+- #8 starts with a JSONL baseline command, `wizard score`, before optional
+  Langfuse service wiring. This keeps observability useful on 8GB low/core
+  installs.
 - #28 closed under `v2.0`. #50–#60 closed under `v2.0`.
 - #30, #39 open under `v2.1`. #33, #34 open under `v2.2`. #37 open under `v3.0`.
 

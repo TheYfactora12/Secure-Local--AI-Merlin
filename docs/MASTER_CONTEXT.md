@@ -36,6 +36,9 @@ Current milestone position:
 - Next in order: `v1.6 — Pi Intelligence + Observability`, with #36 and #8
   open. #36 is the design-first parent. #8 is blocked until #36 is satisfied
   and must remain optional/profile-gated.
+- #8 implementation order: local JSONL `wizard score` first, optional
+  self-hosted Langfuse profile later. Do not add Langfuse to the default
+  Compose stack.
 - #35 is the canonical n8n ModelRouter rewrite issue. #6 is closed as
   stale/duplicate because it required automatic cloud escalation, which violates
   current local-first approval-gated policy.

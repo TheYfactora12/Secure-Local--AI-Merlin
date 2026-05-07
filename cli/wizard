@@ -224,6 +224,7 @@ cat << 'EOF'
                               Write explicitly approved preference to local Qdrant
     wizard skills             Show Merlin skill scores from approved outcomes
     wizard benchmark run      Run offline Merlin memory benchmark harness
+    wizard score              Show 7-day quality trend from local JSONL
     wizard ask "question"     Ask a quick question (swarm-tiny, fastest)
     wizard route "task"       Alias for wizard swarm (full coordinator)
     wizard models             List loaded Ollama models
@@ -504,6 +505,11 @@ print(report.as_table())
         exit 1
         ;;
     esac
+    ;;
+
+  score)
+    shift
+    exec bash "$SCRIPTS_DIR/merlin-score.sh" "$@"
     ;;
 
   preferences)

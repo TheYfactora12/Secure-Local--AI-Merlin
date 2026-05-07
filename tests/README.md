@@ -240,3 +240,16 @@ must be profile-gated.
 ```bash
 bash tests/observability-design-smoke.sh
 ```
+
+---
+
+## merlin-score-smoke.sh
+
+This test validates `wizard score` using temporary local JSONL fixtures. It
+does not require Langfuse, Qdrant, Ollama, LiteLLM, n8n, Docker, cloud keys, or
+network access.
+
+```bash
+bash tests/merlin-score-smoke.sh
+wizard score
+```
