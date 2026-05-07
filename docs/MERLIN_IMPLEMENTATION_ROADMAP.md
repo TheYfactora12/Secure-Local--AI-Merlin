@@ -23,6 +23,7 @@ Ship Merlin as a useful local-first product before expanding into supervised exe
 | `v2.1 — Dashboard Command Center` | Read-only/user-facing control center | No privileged mutation in dashboard v1 |
 | `v2.2 — Magic Mode` | Supervised orchestration | Plan-first, approval-gated |
 | `v3.0 — Public Product Release` | Public packaging/onboarding polish | Only after stable lower milestones |
+| `v3.x — Native Automation Runtime` | Commercial replacement/supplement for n8n | Last-mile milestone after Merlin workflows prove the owned runtime shape |
 
 Stress-test result: keep this ladder explicit. Do not jump from v1.0 to v1.3; v1.1 and v1.2 are now real GitHub milestones.
 
@@ -93,6 +94,13 @@ left behind.
 - #86 adds `wizard observability export --dry-run` as the JSONL-to-Langfuse
   bridge. Dry-run is offline; live export is explicit, localhost-only, and
   refuses hosted Langfuse URLs.
+- #87 adds `n8n-workflows/07-local-langfuse-trace-emitter.json`, an inactive
+  opt-in n8n workflow that emits redacted trace metadata only to local Langfuse
+  when the observability profile is active. Existing workflows remain unchanged.
+- `docs/architecture/AUTOMATION_RUNTIME_STRATEGY.md` captures the future
+  commercial path for a Merlin-native automation runtime. This is a last-mile
+  milestone after n8n usage proves which patterns are worth owning, not a v1.6
+  rebuild.
 - #28 closed under `v2.0`. #50–#60 closed under `v2.0`.
 - #30, #39 open under `v2.1`. #33, #34 open under `v2.2`. #37 open under `v3.0`.
 

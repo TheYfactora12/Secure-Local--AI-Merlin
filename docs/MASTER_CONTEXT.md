@@ -49,6 +49,14 @@ Current milestone position:
 - #86 adds `wizard observability export --dry-run` for local JSONL export
   planning. Live export must be explicit, localhost-only, and must refuse hosted
   Langfuse/cloud URLs.
+- #87 adds an inactive optional n8n trace emitter workflow for local Langfuse:
+  `n8n-workflows/07-local-langfuse-trace-emitter.json`. It emits only redacted
+  metadata when the observability profile is active and leaves existing n8n
+  workflows unchanged by default.
+- Future commercial direction: `docs/architecture/AUTOMATION_RUNTIME_STRATEGY.md`
+  captures a last-mile `v3.x — Native Automation Runtime` milestone to
+  supplement or replace n8n after Merlin workflows prove the right owned
+  runtime shape. Do not rebuild n8n inside v1.6.
 - #35 is the canonical n8n ModelRouter rewrite issue. #6 is closed as
   stale/duplicate because it required automatic cloud escalation, which violates
   current local-first approval-gated policy.

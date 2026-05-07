@@ -1,0 +1,200 @@
+{
+  "name": "Merlin Local Langfuse Trace Emitter",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "swarm/observability/trace",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "local-trace-webhook",
+      "name": "Local Trace Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "local-langfuse-trace-emitter"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst envActive = ($env.HOME_AI_OBSERVABILITY_PROFILE_ACTIVE || '').toLowerCase() === 'true';\nconst bodyActive = body.observability_active === true || String(body.observability_active || '').toLowerCase() === 'true';\nconst observabilityActive = envActive || bodyActive;\n\nconst traceId = body.trace_id || body.task_id || body.execution_id || `n8n_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;\nconst status = body.status || (body.error_type ? 'failure' : 'success');\nconst defaultUrl = 'http://langfuse-web:3000';\nconst langfuseUrl = (body.langfuse_url || $env.LANGFUSE_URL || defaultUrl).replace(/\\/$/, '');\n\nconst allowedPrefixes = [\n  'http://langfuse-web:3000',\n  'http://localhost:3010',\n  'http://127.0.0.1:3010'\n];\nconst hostedBlocked = /cloud\\.langfuse\\.com|api\\.langfuse\\.com|https?:\\/\\/[^/]*langfuse\\.com/i.test(langfuseUrl);\nconst localAllowed = allowedPrefixes.some(prefix => langfuseUrl.startsWith(prefix));\n\nconst allowedMetadataKeys = [\n  'workflow_id',\n  'workflow_name',\n  'execution_id',\n  'route_id',\n  'agent_target',\n  'selected_model_alias',\n  'status',\n  'error_type',\n  'duration_ms',\n  'user_goal_hash',\n  'approval_required',\n  'approval_gates',\n  'source'\n];\nconst forbiddenKey = /prompt|completion|input|output|raw|text|document|content|api[_-]?key|authorization|cookie|password|secret|token|private/i;\nconst metadata = {};\nfor (const key of allowedMetadataKeys) {\n  if (Object.prototype.hasOwnProperty.call(body, key) && !forbiddenKey.test(key)) {\n    metadata[key] = body[key];\n  }\n}\nmetadata.trace_id = traceId;\nmetadata.status = status;\nmetadata.source = metadata.source || 'n8n-local-trace-emitter';\nmetadata.raw_payload_exported = false;\nmetadata.external_telemetry = false;\n\nif (!observabilityActive) {\n  return {\n    emit_trace: false,\n    trace_id: traceId,\n    status: 'skipped',\n    reason: 'observability profile inactive',\n    metadata\n  };\n}\n\nif (hostedBlocked || !localAllowed) {\n  return {\n    emit_trace: false,\n    trace_id: traceId,\n    status: 'refused',\n    reason: 'Langfuse URL must be local-only',\n    langfuse_url: langfuseUrl,\n    metadata\n  };\n}\n\nconst publicKey = $env.LANGFUSE_PUBLIC_KEY || '';\nconst writeKey = $env.LANGFUSE_WRITE_KEY || '';\nif (!publicKey || !writeKey) {\n  return {\n    emit_trace: false,\n    trace_id: traceId,\n    status: 'skipped',\n    reason: 'Langfuse write keys not configured',\n    langfuse_url: langfuseUrl,\n    metadata\n  };\n}\n\nconst auth = Buffer.from(`${publicKey}:${writeKey}`).toString('base64');\nconst timestamp = body.timestamp || new Date().toISOString();\nconst eventId = `${traceId}-trace-create`;\n\nreturn {\n  emit_trace: true,\n  trace_id: traceId,\n  status: 'planned',\n  langfuse_url: langfuseUrl,\n  auth_header: `Basic ${auth}`,\n  ingestion_body: {\n    batch: [\n      {\n        id: eventId,\n        timestamp,\n        type: 'trace-create',\n        body: {\n          id: traceId,\n          timestamp,\n          name: `n8n.${metadata.workflow_name || metadata.workflow_id || 'workflow'}.${status}`,\n          metadata\n        }\n      }\n    ]\n  }\n};"
+      },
+      "id": "validate-and-redact-trace",
+      "name": "Validate + Redact Trace",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.emit_trace }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "observability-active",
+      "name": "Observability Active?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.langfuse_url + '/api/public/ingestion' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $json.auth_header }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.ingestion_body) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "post-local-langfuse",
+      "name": "Post to Local Langfuse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        940,
+        200
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: $json.error ? 'degraded' : 'emitted', trace_id: $('Validate + Redact Trace').first().json.trace_id, local_only: true, raw_payload_exported: false, external_telemetry: false, warning: $json.error ? 'Local Langfuse unavailable — workflow continues without trace UI' : null }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-emitted",
+      "name": "Respond: Emitted",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1180,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: $json.status, trace_id: $json.trace_id, reason: $json.reason, local_only: true, raw_payload_exported: false, external_telemetry: false }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-skipped",
+      "name": "Respond: Skipped",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        940,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "Local Trace Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate + Redact Trace",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate + Redact Trace": {
+      "main": [
+        [
+          {
+            "node": "Observability Active?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Observability Active?": {
+      "main": [
+        [
+          {
+            "node": "Post to Local Langfuse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: Skipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Local Langfuse": {
+      "main": [
+        [
+          {
+            "node": "Respond: Emitted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "errorWorkflow": ""
+  },
+  "versionId": "1.0.0",
+  "meta": {
+    "instanceId": "home-ai-elite-local-langfuse-trace-v1"
+  },
+  "tags": [
+    {
+      "name": "observability"
+    },
+    {
+      "name": "langfuse"
+    },
+    {
+      "name": "local-only"
+    },
+    {
+      "name": "issue-87"
+    }
+  ]
+}

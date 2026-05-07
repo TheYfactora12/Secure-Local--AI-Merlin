@@ -134,6 +134,7 @@ jobs:
           bash tests/observability-design-smoke.sh
           bash tests/langfuse-observability-profile-smoke.sh
           bash tests/merlin-observability-export-smoke.sh
+          bash tests/n8n-local-langfuse-trace-smoke.sh
           bash tests/merlin-score-smoke.sh
           bash tests/merlin-trace-view-smoke.sh
           bash tests/merlin-dry-run-smoke.sh

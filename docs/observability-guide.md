@@ -161,6 +161,44 @@ wizard observability export --live \
 The exporter refuses hosted/cloud Langfuse URLs and exports only redacted
 metadata. It skips gracefully if local Langfuse is not reachable.
 
+## Optional n8n Trace Emission
+
+`n8n-workflows/07-local-langfuse-trace-emitter.json` is an importable workflow
+for n8n execution traces. It ships with `active: false` and does nothing unless
+a user imports and activates it manually.
+
+Webhook path:
+
+```text
+POST /webhook/swarm/observability/trace
+```
+
+Trace emission is allowed only when the observability profile is active. The
+workflow checks `HOME_AI_OBSERVABILITY_PROFILE_ACTIVE=true` or an explicit
+`observability_active: true` request field before attempting to post. When the
+profile is inactive, it returns a skipped response and the calling workflow can
+continue normally.
+
+Allowed trace metadata is limited to operational fields such as workflow ID,
+execution ID, route ID, agent target, selected model alias, status, duration,
+approval gates, and `user_goal_hash`. Raw prompts, raw inputs, outputs,
+documents, secrets, credentials, API keys, and tokens are not exported.
+
+The trace emitter posts only to local Langfuse endpoints:
+
+- `http://langfuse-web:3000`
+- `http://localhost:3010`
+- `http://127.0.0.1:3010`
+
+Hosted Langfuse URLs are refused. If local Langfuse is unavailable, the HTTP node
+uses `continueOnFail: true` and returns a degraded response instead of failing
+the workflow. Langfuse write credentials are read from the n8n environment only;
+they are not accepted in webhook request bodies.
+
+Longer-term automation runtime strategy lives in
+`docs/architecture/AUTOMATION_RUNTIME_STRATEGY.md`. The native runtime is a
+last-mile commercial milestone, not part of the v1.6 trace-emission work.
+
 ## Test Contract
 
 `tests/observability-design-smoke.sh` proves the v1.6 design boundary:
@@ -204,6 +242,15 @@ safe:
 - hosted/cloud Langfuse URLs are refused,
 - unreachable localhost Langfuse is skipped gracefully in explicit live mode,
 - `wizard observability export --dry-run` works without live services.
+
+`tests/n8n-local-langfuse-trace-smoke.sh` proves n8n trace emission is optional
+and local-only:
+
+- `07-local-langfuse-trace-emitter.json` ships inactive,
+- emission is gated on the observability profile,
+- hosted Langfuse URLs are refused,
+- local Langfuse failure degrades gracefully,
+- raw payloads and secrets are not exported.
 
 ## Rollback
 

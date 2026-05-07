@@ -14,7 +14,7 @@ fail() {
 command -v jq >/dev/null 2>&1 || fail "jq is required for workflow validation"
 
 workflow_count="$(find "$WORKFLOW_DIR" -maxdepth 1 -name "*.json" -print | wc -l | tr -d ' ')"
-[[ "$workflow_count" == "5" ]] || fail "expected 5 n8n workflow JSON files, found $workflow_count"
+[[ "$workflow_count" == "6" ]] || fail "expected 6 n8n workflow JSON files, found $workflow_count"
 
 ollama_count=0
 while IFS= read -r workflow; do

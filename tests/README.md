@@ -256,6 +256,19 @@ wizard score
 
 ---
 
+## n8n-local-langfuse-trace-smoke.sh
+
+This test validates the optional n8n local Langfuse trace emitter workflow
+without starting n8n or Langfuse. It proves the workflow ships inactive,
+requires the observability profile, refuses hosted Langfuse URLs, and excludes
+raw payload fields from trace metadata.
+
+```bash
+bash tests/n8n-local-langfuse-trace-smoke.sh
+```
+
+---
+
 ## merlin-trace-view-smoke.sh
 
 This test validates `wizard trace <id>` using temporary local JSONL fixtures.
