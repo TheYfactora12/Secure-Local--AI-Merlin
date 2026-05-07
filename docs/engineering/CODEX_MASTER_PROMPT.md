@@ -25,7 +25,7 @@ Do not solve a stale prompt without checking what is already built. Read the cur
 
 - #60 staff router integration is closed.
 - #53 session memory bridge adds `n8n-workflows/06-session-memory-bridge.json`.
-- The session memory bridge is approval-gated and targets only `merlin_session`.
+- The session memory bridge ships inactive, is approval-gated by `approved_by: user_explicit`, and targets only `merlin_session`.
 - Follow-up Phase 3 learning must build on this approval-gated memory path, not bypass it.
 
 ## Before Calling Work Done

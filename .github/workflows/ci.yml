@@ -289,6 +289,7 @@ jobs:
             tests/test_memory_manager.py \
             tests/test_policy_engine.py \
             tests/test_router.py \
+            tests/test_session_memory_bridge.py \
             tests/test_status_extension.py \
             tests/test_task_endpoint.py \
             --ignore=tests/test_memory_manager_integration.py \

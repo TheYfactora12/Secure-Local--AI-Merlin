@@ -21,7 +21,7 @@ Approved session memory payloads include:
 
 - `session_id`
 - `user_id`
-- `text`
+- `context_summary`
 - `approval_id`
 - `privacy_level`
 - `route_id`
@@ -31,18 +31,45 @@ Approved session memory payloads include:
 - `ttl_kind`
 - `source`
 
-The n8n bridge workflow is `n8n-workflows/06-session-memory-bridge.json`.
+## Session Memory Bridge (MSC-4)
+
+**File:** `n8n-workflows/06-session-memory-bridge.json`
+**Collection:** `merlin_session` (768 dimensions, `nomic-embed-text`, Cosine distance)
+**Status:** Importable, ships as `active: false` and must be manually activated in n8n.
+
+The prompt and some issue text may refer to `merlin-session`; the current Qdrant manifest and bootstrap scripts use the canonical collection name `merlin_session`. Do not rename it without a migration.
+
+### What it does
+
+Writes approved session context to the `merlin_session` Qdrant collection at session end or explicit approval, and reads recent session vectors at session start to provide a context prefix.
 
 Bridge rules:
 
 - Recall can run without writing memory.
-- Writes require `memory_write_approved=true` and a non-empty `approval_id`.
+- Writes require `approved_by: "user_explicit"` in the request body.
 - Writes target only `merlin_session`.
 - Embeddings use local Ollama `nomic-embed-text`.
 - Expected vector size is 768.
-- `ttl_kind=working` expires in about 4 hours.
-- `ttl_kind=episodic` expires in about 30 days.
+- Working memory TTL is 4 hours (`14400` seconds).
+- Episodic memory TTL is 30 days (`2592000` seconds).
 - Qdrant or Ollama failure returns degraded status and continues the session.
+
+### Approval requirement
+
+Every write requires `approved_by: "user_explicit"`. The validation node throws if this field is absent or has another value. Automatic session memory writes are not permitted.
+
+### Activation
+
+1. Import `n8n-workflows/06-session-memory-bridge.json` into n8n.
+2. Verify Qdrant is running with `wizard status`.
+3. Activate the workflow manually in the n8n UI.
+4. Test write with `POST http://localhost:5678/webhook/swarm/session/memory`.
+5. Use body `{"action":"write","session_id":"test-001","user_input_hash":"test-hash","context_summary":"test context","approved_by":"user_explicit"}`.
+6. Verify Qdrant collection `merlin_session` shows one point.
+
+### Rollback
+
+Disable or delete `06-session-memory-bridge.json` in n8n. No runtime behavior changes to any other workflow, Python module, or installer script.
 
 ## Long-Term Memory
 

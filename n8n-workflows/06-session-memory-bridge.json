@@ -4,7 +4,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "merlin/session-memory",
+        "path": "swarm/session/memory",
         "responseMode": "responseNode",
         "options": {}
       },
@@ -12,15 +12,15 @@
       "name": "Session Memory Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [220, 300],
-      "webhookId": "merlin-session-memory-bridge"
+      "position": [240, 300],
+      "webhookId": "session-memory-bridge"
     },
     {
       "parameters": {
-        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst action = String(body.action || 'recall').toLowerCase();\nconst sessionId = String(body.session_id || '').trim();\nconst userId = String(body.user_id || 'local-user').trim();\nconst text = String(body.text || body.context || '').trim();\nconst approvalId = String(body.approval_id || '').trim();\nconst memoryWriteApproved = body.memory_write_approved === true;\nconst now = new Date();\nconst ttlKind = String(body.ttl_kind || 'working').toLowerCase();\nconst ttlHours = ttlKind === 'episodic' ? 24 * 30 : 4;\nconst expiresAt = new Date(now.getTime() + ttlHours * 60 * 60 * 1000).toISOString();\n\nif (!sessionId) throw new Error('session_id is required');\nif (!['recall', 'write', 'end'].includes(action)) throw new Error('action must be recall, write, or end');\n\nconst wantsWrite = action === 'write' || action === 'end';\nconst writeAllowed = wantsWrite && memoryWriteApproved && approvalId.length > 0;\nconst deniedReason = wantsWrite && !writeAllowed\n  ? 'memory_write approval required; send memory_write_approved=true with approval_id'\n  : null;\n\nreturn {\n  action,\n  wants_write: wantsWrite,\n  write_allowed: writeAllowed,\n  denied_reason: deniedReason,\n  session_id: sessionId,\n  user_id: userId,\n  text,\n  query: String(body.query || text || sessionId).trim(),\n  approval_id: approvalId,\n  privacy_level: String(body.privacy_level || 'local_only'),\n  ttl_kind: ttlKind,\n  expires_at: expiresAt,\n  created_at: now.toISOString(),\n  route_id: String(body.route_id || 'general'),\n  staff_mode: String(body.staff_mode || 'operator'),\n  source: 'n8n-session-memory-bridge',\n  collection: 'merlin_session',\n  embedding_model: 'nomic-embed-text',\n  expected_dimensions: 768\n};"
+        "jsCode": "// Validate payload and enforce memory_write approval gate\nconst body = $input.first().json.body || $input.first().json;\nconst action = body.action || 'write';\n\nif (action === 'write') {\n  const required = ['session_id', 'user_input_hash', 'context_summary', 'approved_by'];\n  for (const field of required) {\n    if (!body[field]) throw new Error(`Missing required field: ${field}`);\n  }\n\n  if (body.approved_by !== 'user_explicit') {\n    throw new Error('memory_write gate: approved_by must be user_explicit. Automatic writes are not permitted.');\n  }\n\n  const sessionId = body.session_id;\n  const timestamp = new Date().toISOString();\n  const memoryId = `sess_${sessionId}_${Date.now()}`;\n  const memoryType = body.memory_type || 'working';\n  const ttlSeconds = memoryType === 'episodic' ? 2592000 : 14400;\n  const contextTruncated = (body.context_summary || '').substring(0, 1500);\n\n  return {\n    action: 'write',\n    memory_id: memoryId,\n    session_id: sessionId,\n    user_input_hash: body.user_input_hash,\n    context_summary: contextTruncated,\n    memory_type: memoryType,\n    ttl_seconds: ttlSeconds,\n    approved_by: body.approved_by,\n    timestamp,\n    source: 'session-memory-bridge',\n    collection: 'merlin_session',\n    embedding_model: 'nomic-embed-text',\n    embedding_prompt: `${sessionId} ${contextTruncated.substring(0, 500)}`\n  };\n} else if (action === 'read') {\n  if (!body.session_id && !body.query) {\n    throw new Error('Read action requires session_id or query field');\n  }\n  const query = body.query || body.session_id;\n  return {\n    action: 'read',\n    session_id: body.session_id || null,\n    query,\n    top_k: body.top_k || 3,\n    timestamp: new Date().toISOString(),\n    collection: 'merlin_session',\n    embedding_model: 'nomic-embed-text',\n    embedding_prompt: query\n  };\n} else {\n  throw new Error(`Unknown action: ${action}. Use 'write' or 'read'.`);\n}"
       },
-      "id": "prepare-session-request",
-      "name": "Prepare Session Request",
+      "id": "validate-gate-check",
+      "name": "Validate + Gate Check",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [460, 300]
@@ -28,58 +28,25 @@
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict"
-          },
-          "conditions": [
+          "string": [
             {
-              "id": "session-write-allowed",
-              "leftValue": "={{ $json.write_allowed }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
+              "value1": "={{ $json.action }}",
+              "operation": "equal",
+              "value2": "write"
             }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "write-approved",
-      "name": "memory_write Approved?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [700, 300]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://ollama:11434/api/embeddings",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "Content-Type", "value": "application/json" }
           ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: $('Prepare Session Request').first().json.embedding_model, prompt: $('Prepare Session Request').first().json.text }) }}",
-        "options": { "timeout": 30000 }
+        }
       },
-      "id": "embed-session-text",
-      "name": "Embed Approved Session Text",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [940, 160],
-      "continueOnFail": true
+      "id": "route-action",
+      "name": "Route: Write or Read",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 300]
     },
     {
       "parameters": {
         "method": "PUT",
-        "url": "http://qdrant:6333/collections/merlin_session/points?wait=true",
+        "url": "http://qdrant:6333/collections/merlin_session",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -88,25 +55,15 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ points: [{ id: `session_${Date.now()}`, vector: $json.embedding, payload: { session_id: $('Prepare Session Request').first().json.session_id, user_id: $('Prepare Session Request').first().json.user_id, text: $('Prepare Session Request').first().json.text, approval_id: $('Prepare Session Request').first().json.approval_id, privacy_level: $('Prepare Session Request').first().json.privacy_level, route_id: $('Prepare Session Request').first().json.route_id, staff_mode: $('Prepare Session Request').first().json.staff_mode, created_at: $('Prepare Session Request').first().json.created_at, expires_at: $('Prepare Session Request').first().json.expires_at, ttl_kind: $('Prepare Session Request').first().json.ttl_kind, source: $('Prepare Session Request').first().json.source } }] }) }}",
-        "options": { "timeout": 15000 }
+        "jsonBody": "{\"vectors\":{\"size\":768,\"distance\":\"Cosine\"}}",
+        "options": { "timeout": 10000 }
       },
-      "id": "write-merlin-session",
-      "name": "Write merlin_session Point",
+      "id": "ensure-collection",
+      "name": "Ensure merlin_session Collection",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1180, 160],
+      "position": [900, 160],
       "continueOnFail": true
-    },
-    {
-      "parameters": {
-        "jsCode": "const request = $('Prepare Session Request').first().json;\nconst raw = $input.first().json || {};\nconst failed = Boolean(raw.error || raw.message?.includes?.('ECONNREFUSED'));\nreturn {\n  status: failed ? 'degraded' : 'stored',\n  action: request.action,\n  collection: 'merlin_session',\n  session_id: request.session_id,\n  memory_written: !failed,\n  degraded: failed,\n  warning: failed ? 'Qdrant or Ollama unavailable; session continued without memory write' : null,\n  approval_id: request.approval_id,\n  expires_at: request.expires_at\n};"
-      },
-      "id": "format-write-result",
-      "name": "Format Write Result",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1420, 160]
     },
     {
       "parameters": {
@@ -120,14 +77,58 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: $('Prepare Session Request').first().json.embedding_model, prompt: $('Prepare Session Request').first().json.query }) }}",
+        "jsonBody": "={{ JSON.stringify({ model: $('Validate + Gate Check').first().json.embedding_model, prompt: $('Validate + Gate Check').first().json.embedding_prompt }) }}",
         "options": { "timeout": 30000 }
       },
-      "id": "embed-session-query",
-      "name": "Embed Session Query",
+      "id": "generate-write-embedding",
+      "name": "Generate Write Embedding",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [940, 460],
+      "position": [1120, 160],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://qdrant:6333/collections/merlin_session/points",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ points: [{ id: $('Validate + Gate Check').first().json.memory_id, vector: $json.embedding, payload: { session_id: $('Validate + Gate Check').first().json.session_id, user_input_hash: $('Validate + Gate Check').first().json.user_input_hash, context_summary: $('Validate + Gate Check').first().json.context_summary, memory_type: $('Validate + Gate Check').first().json.memory_type, ttl_seconds: $('Validate + Gate Check').first().json.ttl_seconds, approved_by: $('Validate + Gate Check').first().json.approved_by, timestamp: $('Validate + Gate Check').first().json.timestamp, source: $('Validate + Gate Check').first().json.source } }] }) }}",
+        "options": { "timeout": 15000 }
+      },
+      "id": "upsert-to-qdrant",
+      "name": "Upsert to merlin_session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 160],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/embeddings",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: $('Validate + Gate Check').first().json.embedding_model, prompt: $('Validate + Gate Check').first().json.embedding_prompt }) }}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "generate-query-embedding",
+      "name": "Generate Query Embedding",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 460],
       "continueOnFail": true
     },
     {
@@ -142,82 +143,70 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ vector: $json.embedding, limit: 5, with_payload: true, with_vectors: false, filter: { must: [{ key: 'session_id', match: { value: $('Prepare Session Request').first().json.session_id } }] } }) }}",
+        "jsonBody": "={{ JSON.stringify({ vector: $json.embedding, limit: $('Validate + Gate Check').first().json.top_k, with_payload: true }) }}",
         "options": { "timeout": 15000 }
       },
-      "id": "search-merlin-session",
-      "name": "Search merlin_session",
+      "id": "query-qdrant",
+      "name": "Query merlin_session",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1180, 460],
+      "position": [1340, 460],
       "continueOnFail": true
     },
     {
       "parameters": {
-        "jsCode": "const request = $('Prepare Session Request').first().json;\nif (request.denied_reason) {\n  return {\n    status: 'denied',\n    action: request.action,\n    collection: 'merlin_session',\n    session_id: request.session_id,\n    memory_written: false,\n    degraded: false,\n    warning: request.denied_reason,\n    context_prefix: '',\n    memories: []\n  };\n}\n\nconst raw = $input.first().json || {};\nif (raw.error || !raw.result) {\n  return {\n    status: 'degraded',\n    action: request.action,\n    collection: 'merlin_session',\n    session_id: request.session_id,\n    memory_written: false,\n    degraded: true,\n    warning: 'Qdrant or Ollama unavailable; session continued without recall',\n    context_prefix: '',\n    memories: []\n  };\n}\n\nconst memories = (raw.result || []).map((item, index) => ({\n  rank: index + 1,\n  score: Math.round((item.score || 0) * 1000) / 1000,\n  text: item.payload?.text || '',\n  created_at: item.payload?.created_at || '',\n  expires_at: item.payload?.expires_at || ''\n}));\nconst contextPrefix = memories.map((m) => `[Session Memory ${m.rank} | score:${m.score}] ${m.text.substring(0, 500)}`).join('\\n');\nreturn {\n  status: 'recalled',\n  action: request.action,\n  collection: 'merlin_session',\n  session_id: request.session_id,\n  memory_written: false,\n  degraded: false,\n  warning: null,\n  context_prefix: contextPrefix,\n  memories\n};"
-      },
-      "id": "format-recall-result",
-      "name": "Format Recall Result",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1420, 460]
-    },
-    {
-      "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify($json) }}",
+        "responseBody": "={{ JSON.stringify($('Validate + Gate Check').first().json.action === 'write' ? { status: $json.error ? 'degraded' : 'stored', warning: $json.error ? 'Qdrant unavailable — session continues without memory' : null, memory_id: $('Validate + Gate Check').first().json.memory_id, collection: 'merlin_session', ttl_seconds: $('Validate + Gate Check').first().json.ttl_seconds } : { status: $json.error ? 'degraded' : 'recalled', warning: $json.error ? 'Qdrant unavailable — session continues without memory' : null, results: $json.result || [], collection: 'merlin_session' }) }}",
         "options": { "responseCode": 200 }
       },
       "id": "session-memory-response",
-      "name": "Return Session Memory Result",
+      "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1660, 300]
+      "position": [1580, 300]
     }
   ],
   "connections": {
     "Session Memory Webhook": {
-      "main": [[{ "node": "Prepare Session Request", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Validate + Gate Check", "type": "main", "index": 0 }]]
     },
-    "Prepare Session Request": {
-      "main": [[{ "node": "memory_write Approved?", "type": "main", "index": 0 }]]
+    "Validate + Gate Check": {
+      "main": [[{ "node": "Route: Write or Read", "type": "main", "index": 0 }]]
     },
-    "memory_write Approved?": {
+    "Route: Write or Read": {
       "main": [
-        [{ "node": "Embed Approved Session Text", "type": "main", "index": 0 }],
-        [{ "node": "Embed Session Query", "type": "main", "index": 0 }]
+        [{ "node": "Ensure merlin_session Collection", "type": "main", "index": 0 }],
+        [{ "node": "Generate Query Embedding", "type": "main", "index": 0 }]
       ]
     },
-    "Embed Approved Session Text": {
-      "main": [[{ "node": "Write merlin_session Point", "type": "main", "index": 0 }]]
+    "Ensure merlin_session Collection": {
+      "main": [[{ "node": "Generate Write Embedding", "type": "main", "index": 0 }]]
     },
-    "Write merlin_session Point": {
-      "main": [[{ "node": "Format Write Result", "type": "main", "index": 0 }]]
+    "Generate Write Embedding": {
+      "main": [[{ "node": "Upsert to merlin_session", "type": "main", "index": 0 }]]
     },
-    "Format Write Result": {
-      "main": [[{ "node": "Return Session Memory Result", "type": "main", "index": 0 }]]
+    "Upsert to merlin_session": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
     },
-    "Embed Session Query": {
-      "main": [[{ "node": "Search merlin_session", "type": "main", "index": 0 }]]
+    "Generate Query Embedding": {
+      "main": [[{ "node": "Query merlin_session", "type": "main", "index": 0 }]]
     },
-    "Search merlin_session": {
-      "main": [[{ "node": "Format Recall Result", "type": "main", "index": 0 }]]
-    },
-    "Format Recall Result": {
-      "main": [[{ "node": "Return Session Memory Result", "type": "main", "index": 0 }]]
+    "Query merlin_session": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1",
-    "saveManualExecutions": true
+    "saveManualExecutions": true,
+    "errorWorkflow": ""
   },
   "versionId": "1.0.0",
-  "meta": { "instanceId": "home-ai-elite-session-memory-bridge-v1" },
+  "meta": { "instanceId": "home-ai-elite-session-memory-v1" },
   "tags": [
-    { "name": "merlin" },
-    { "name": "memory" },
     { "name": "session" },
-    { "name": "phase-2" }
+    { "name": "memory" },
+    { "name": "phase-2e" },
+    { "name": "msc-4" }
   ]
 }
