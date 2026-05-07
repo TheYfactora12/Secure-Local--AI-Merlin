@@ -409,3 +409,5 @@ Follow-up fixed during this validation:
 - The temporary keychain must be unlocked before signing: `security unlock-keychain -p homeai-build /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain`.
 - To make `pkgutil --check-signature` report trusted outside the temporary signing context, the same certificate was trusted in the current user's login keychain with `security add-trusted-cert -r trustRoot -k "$HOME/Library/Keychains/login.keychain-db" ...`.
 - `pkgutil --check-signature home-ai-elite-v0.8.6.pkg` reported `Status: signed by a certificate trusted for current user`.
+- A privileged CLI install with `installer -pkg home-ai-elite-v0.8.6.pkg -target /` still rejected the self-signed package as untrusted.
+- A privileged CLI install with `installer -allowUntrusted -pkg home-ai-elite-v0.8.6.pkg -target /` also failed during Installer preflight with the component package reported as untrusted. This means the remaining self-signed install validation must be done through the intended user path, Finder right-click -> Open, or by installing the local cert into the system trust store for test machines only.
