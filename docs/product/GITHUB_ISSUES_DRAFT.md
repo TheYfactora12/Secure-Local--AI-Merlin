@@ -26,7 +26,7 @@ Recent normalization:
 - #41 through #46 are closed under `v1.0` and normalized with `v1.0`, `release`, and `priority: critical` labels.
 - #48 and #49 are closed under `v1.0`.
 - #61 is closed under `v1.0` after fixing optional Compose service profile gating exposed by live core upgrade.
-- #1 remains open under `v1.0`; live launchd and clean uninstall/reinstall validation passed on the 8GB Mac. Signing/notarization is the remaining separate release gate.
+- #1 remains open under `v1.0`; live launchd, clean uninstall/reinstall, unsigned package install, and signed package builder fixes passed on the 8GB Mac. Self-signed `.pkg` install remains blocked by macOS privileged installer trust unless the certificate is trusted at the System level or the release uses Developer ID Installer/notarization.
 - #47 is open under `v1.1`.
 - #5 is open under `v1.2`.
 - #28 is closed under `v2.0`.

@@ -261,8 +261,9 @@ Package signing:
 
 - Local/trusted testing can use a self-signed package identity named `Home AI Elite Local Signing`.
 - Build unsigned with `bash pkg/build-pkg.sh`, then sign with `bash scripts/sign-pkg.sh --version <version>`.
-- macOS may still show an unidentified-developer warning; right-click the `.pkg` and choose Open for trusted local installs.
-- Apple Developer ID notarization is a future public distribution gate, not required for the local v1.0 path.
+- The package builder signs both the component package and final distribution package when signing is enabled.
+- macOS privileged installs do not trust a current-user self-signed installer certificate by default. Self-signed `.pkg` testing needs System keychain trust, `installer -allowUntrusted` in controlled local tests, or a future Developer ID Installer/notarized release path.
+- Apple Developer ID notarization is a future public distribution gate, not required for the local script-based v1.0 path.
 
 ---
 
@@ -271,7 +272,7 @@ Package signing:
 - [x] v0.1 — Core scaffold exists and the laptop-safe core path is verified
 - [~] v0.2 — Full stack prototype exists, but optional profiles still need separate validation
 - [~] v0.3 — First-boot automation is partial; n8n import still depends on API key setup
-- [~] v0.4 — macOS unsigned `.pkg`, live Qdrant backup/restore, core upgrade, launchd, and clean reinstall are validated; signing remains separate
+- [~] v0.4 — macOS unsigned `.pkg`, live Qdrant backup/restore, core upgrade, launchd, clean reinstall, and package signing mechanics are validated; public trust remains separate
 - [ ] v1.0 — Stable laptop-first release with profiles, doctor checks, tests, backup/restore, upgrade path, and guarded uninstall
 
 ---

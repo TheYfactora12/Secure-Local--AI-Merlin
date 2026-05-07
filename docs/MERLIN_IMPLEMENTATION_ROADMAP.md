@@ -29,7 +29,7 @@ Stress-test result: keep this ladder explicit. Do not jump from v1.0 to v1.3; v1
 ## Current Issue Alignment (2026-05-06)
 
 - #41–#46, #48, #49, and #61 closed under `v1.0` with `release` + `priority: critical` labels.
-- #1 remains open under `v1.0`; fresh install, unsigned package, backup/restore, core upgrade, launchd persistence, and clean reinstall are validated on the 8GB Mac. Signing/notarization remains a separate distribution gate.
+- #1 remains open under `v1.0`; fresh install, unsigned package, backup/restore, core upgrade, launchd persistence, clean reinstall, and same-machine package builder fixes are validated on the 8GB Mac. The local self-signed package path now signs both the component package and final distribution package, but macOS privileged install still requires System-level certificate trust or a real Developer ID Installer certificate. Treat signing/notarization as a distribution policy gate, not an installer runtime defect.
 - #47 open under `v1.1`. #5 open under `v1.2`.
 - #28 closed under `v2.0`. #50–#52, #54–#59 closed under `v2.0`.
 - #53 and #60 open under `v2.0`.
@@ -87,7 +87,14 @@ Issue #25 Layer 1 is complete and pushed at `d4ece3d`; GitHub Actions run `25454
 - Add `tests/sast-gitleaks-smoke.sh`.
 - Require `gitleaks-scan` in `ci-success.needs`.
 
-Next work should be selected as a narrow slice: deeper SAST design for Issue #25 or Pi Emotional Intelligence prompt/session work.
+Issue #1 latest package validation is complete through `64096f4`; GitHub Actions run `25470059874` passed:
+
+- `pkg/build-pkg.sh --sign` now signs the `pkgbuild` component package and the final `productbuild` distribution package.
+- Local self-signed signing supports an explicit keychain and `PACKAGE_SIGNING_TIMESTAMP=none` for private tests.
+- `pkgutil --check-signature` can validate current-user trust after the local cert is trusted in the login keychain.
+- Privileged `installer` still rejects the self-signed package without System keychain trust or Developer ID Installer notarization. Do not spend more engineering cycles trying to bypass this macOS trust model.
+
+Next work should be selected as a narrow slice: close or split #1 based on the release policy decision, then continue #53 or #60 under v2.0.
 
 Port contract:
 
