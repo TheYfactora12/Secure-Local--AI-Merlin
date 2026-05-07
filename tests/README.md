@@ -253,3 +253,16 @@ network access.
 bash tests/merlin-score-smoke.sh
 wizard score
 ```
+
+---
+
+## merlin-trace-view-smoke.sh
+
+This test validates `wizard trace <id>` using temporary local JSONL fixtures.
+It does not require Langfuse, Qdrant, Ollama, LiteLLM, n8n, Docker, cloud keys,
+or network access.
+
+```bash
+bash tests/merlin-trace-view-smoke.sh
+wizard trace <trace_id>
+```

@@ -39,6 +39,9 @@ Current milestone position:
 - #8 implementation order: local JSONL `wizard score` first, optional
   self-hosted Langfuse profile later. Do not add Langfuse to the default
   Compose stack.
+- #8 JSONL trace inspection now follows the same baseline-first rule:
+  `wizard trace <id>` reads local trace, approval, and outcome JSONL before
+  any optional trace UI is introduced.
 - #35 is the canonical n8n ModelRouter rewrite issue. #6 is closed as
   stale/duplicate because it required automatic cloud escalation, which violates
   current local-first approval-gated policy.

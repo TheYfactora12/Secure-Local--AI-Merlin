@@ -98,6 +98,18 @@ wizard score --days 7
 benchmark recall, low-confidence successes, approval-required trace counts, and
 a blended quality score when enough data exists. It does not require Langfuse.
 
+Local trace inspection:
+
+```bash
+wizard trace <trace_id>
+wizard trace <approval_request_id>
+wizard trace <user_goal_hash>
+```
+
+`wizard trace` reads local route, approval, and outcome JSONL records. It prints
+redacted metadata only, supports direct trace/approval IDs and hashed user-goal
+lookups, and does not require Langfuse or live services.
+
 Runtime health:
 
 ```bash
@@ -122,6 +134,13 @@ wizard merlin task-api status
 
 - `scripts/merlin-score.sh` reads local outcome, trace, and benchmark JSONL,
 - `wizard score` works without Langfuse,
+- no external telemetry or live services are required.
+
+`tests/merlin-trace-view-smoke.sh` proves the local trace viewer is operational:
+
+- `scripts/merlin-trace-view.sh` reads local trace, approval, and outcome JSONL,
+- `wizard trace <id>` works without Langfuse,
+- hash-based lookup can connect route, approval, and outcome records,
 - no external telemetry or live services are required.
 
 ## Rollback
