@@ -9,11 +9,15 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
 import logging
+import math
+import os
 import platform
 import subprocess
 from contextlib import redirect_stdout
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -23,6 +27,9 @@ from merlin.memory_manager import MemoryManager
 
 
 logger = logging.getLogger(__name__)
+OUTCOME_LOG_PATH = Path("logs/merlin-outcomes.jsonl")
+OUTCOME_DECAY_DAYS = 30
+OUTCOME_SAMPLE_LIMIT = 50
 
 AgentTarget = Literal["openhands", "n8n", "litellm", "merlin-core"]
 
@@ -35,6 +42,9 @@ class RouteDecision(BaseModel):
     model_hint: str
     requires_approval: bool
     confidence: float = Field(ge=0.0, le=1.0)
+    keyword_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    retrieval_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    retrieval_sample_count: int = 0
     matched_keywords: list[str]
     selected_agent: str
     required_profile: str
@@ -138,6 +148,83 @@ def _confidence(match_count: int, keyword_count: int) -> float:
     return min(1.0, 0.5 + (match_count / max(keyword_count, 1)))
 
 
+def _outcome_log_path() -> Path:
+    return Path(os.environ.get("MERLIN_OUTCOME_LOG", str(OUTCOME_LOG_PATH)))
+
+
+def _parse_created_at(value: object) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
+def _approved_outcomes(route_id: str, now: datetime | None = None) -> list[dict]:
+    path = _outcome_log_path()
+    if not path.exists():
+        return []
+
+    matched: list[dict] = []
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return []
+
+    for line in reversed(lines):
+        if len(matched) >= OUTCOME_SAMPLE_LIMIT:
+            break
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if record.get("event_type") != "task_outcome":
+            continue
+        if record.get("route_id") != route_id:
+            continue
+        if not record.get("approval_id"):
+            continue
+        created_at = _parse_created_at(record.get("created_at"))
+        if created_at is None:
+            continue
+        matched.append(record)
+    return list(reversed(matched))
+
+
+def _retrieval_score(route_id: str, now: datetime | None = None) -> tuple[float, int]:
+    now = now or datetime.now(UTC)
+    outcomes = _approved_outcomes(route_id, now)
+    if not outcomes:
+        return 0.0, 0
+
+    weighted_success = 0.0
+    total_weight = 0.0
+    for outcome in outcomes:
+        created_at = _parse_created_at(outcome.get("created_at"))
+        if created_at is None:
+            continue
+        age = max(timedelta(0), now - created_at)
+        days_since_outcome = age.total_seconds() / 86400
+        weight = math.exp(-days_since_outcome / OUTCOME_DECAY_DAYS)
+        success = 1.0 if outcome.get("outcome_status") == "success" else 0.0
+        weighted_success += success * weight
+        total_weight += weight
+
+    if total_weight == 0:
+        return 0.0, 0
+    return max(0.0, min(1.0, weighted_success / total_weight)), len(outcomes)
+
+
+def _final_confidence(keyword_score: float, retrieval_score: float, retrieval_sample_count: int) -> float:
+    if retrieval_sample_count == 0:
+        return keyword_score
+    return max(0.0, min(1.0, (0.6 * keyword_score) + (0.4 * retrieval_score)))
+
+
 def _load_config_quietly() -> MerlinConfig:
     with redirect_stdout(io.StringIO()):
         config = load_all_configs()
@@ -223,6 +310,9 @@ def _decision_from_rule(
     rule: _RouteRule,
     matches: list[str],
     confidence: float,
+    keyword_score: float,
+    retrieval_score: float,
+    retrieval_sample_count: int,
     reason: str,
 ) -> RouteDecision:
     route = _route_spec(config, rule.route_id)
@@ -240,6 +330,9 @@ def _decision_from_rule(
         model_hint=preferred_model,
         requires_approval=bool(approval_gates),
         confidence=confidence,
+        keyword_score=keyword_score,
+        retrieval_score=retrieval_score,
+        retrieval_sample_count=retrieval_sample_count,
         matched_keywords=matches,
         selected_agent=route.agent,
         required_profile=route.required_profile,
@@ -263,6 +356,9 @@ def _default_decision(config: MerlinConfig) -> RouteDecision:
         model_hint=preferred_model,
         requires_approval=_requires_approval(route),
         confidence=0.0,
+        keyword_score=0.0,
+        retrieval_score=0.0,
+        retrieval_sample_count=0,
         matched_keywords=[],
         selected_agent=route.agent,
         required_profile=route.required_profile,
@@ -281,32 +377,72 @@ def classify_task(user_input: str) -> RouteDecision:
     config = _load_config_quietly()
     best_rule: _RouteRule | None = None
     best_matches: list[str] = []
+    best_keyword_score = 0.0
+    best_retrieval_score = 0.0
+    best_retrieval_sample_count = 0
+    best_final_score = 0.0
 
     for rule in STAFF_ROUTE_RULES:
         matches = _matched_keywords(user_input, rule.keywords)
         if not matches:
             continue
+        keyword_score = _confidence(len(matches), len(rule.keywords))
+        retrieval_score, retrieval_sample_count = _retrieval_score(rule.route_id)
+        final_score = _final_confidence(keyword_score, retrieval_score, retrieval_sample_count)
         if best_rule is None:
             best_rule = rule
             best_matches = matches
+            best_keyword_score = keyword_score
+            best_retrieval_score = retrieval_score
+            best_retrieval_sample_count = retrieval_sample_count
+            best_final_score = final_score
             continue
-        if len(matches) > len(best_matches):
+        if final_score > best_final_score:
             best_rule = rule
             best_matches = matches
+            best_keyword_score = keyword_score
+            best_retrieval_score = retrieval_score
+            best_retrieval_sample_count = retrieval_sample_count
+            best_final_score = final_score
             continue
-        if len(matches) == len(best_matches) and len(rule.keywords) > len(best_rule.keywords):
+        if final_score == best_final_score and len(matches) > len(best_matches):
             best_rule = rule
             best_matches = matches
+            best_keyword_score = keyword_score
+            best_retrieval_score = retrieval_score
+            best_retrieval_sample_count = retrieval_sample_count
+            best_final_score = final_score
+            continue
+        if (
+            final_score == best_final_score
+            and len(matches) == len(best_matches)
+            and len(rule.keywords) > len(best_rule.keywords)
+        ):
+            best_rule = rule
+            best_matches = matches
+            best_keyword_score = keyword_score
+            best_retrieval_score = retrieval_score
+            best_retrieval_sample_count = retrieval_sample_count
+            best_final_score = final_score
 
     if best_rule is None:
         return _default_decision(config)
 
+    reason = f"Matched route keywords: {', '.join(best_matches)}."
+    if best_retrieval_sample_count:
+        reason = (
+            f"{reason} Retrieval score {best_retrieval_score:.2f} from "
+            f"{best_retrieval_sample_count} approved outcome(s)."
+        )
     return _decision_from_rule(
         config=config,
         rule=best_rule,
         matches=best_matches,
-        confidence=_confidence(len(best_matches), len(best_rule.keywords)),
-        reason=f"Matched route keywords: {', '.join(best_matches)}.",
+        confidence=best_final_score,
+        keyword_score=best_keyword_score,
+        retrieval_score=best_retrieval_score,
+        retrieval_sample_count=best_retrieval_sample_count,
+        reason=reason,
     )
 
 
@@ -319,6 +455,9 @@ def _write_route_audit(decision: RouteDecision, input_hash: str, timestamp: str)
         "staff_mode": decision.staff_mode,
         "agent_target": decision.agent_target,
         "confidence_at_routing": decision.confidence,
+        "keyword_score": decision.keyword_score,
+        "retrieval_score": decision.retrieval_score,
+        "retrieval_sample_count": decision.retrieval_sample_count,
         "keyword_matches": list(decision.matched_keywords),
         "approval_gates": list(decision.approval_gates),
         "requires_approval": decision.requires_approval,

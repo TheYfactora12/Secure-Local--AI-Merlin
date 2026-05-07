@@ -5,6 +5,8 @@ import os
 import subprocess
 import sys
 from dataclasses import FrozenInstanceError
+from datetime import UTC, datetime, timedelta
+import json
 from pathlib import Path
 from typing import Any
 
@@ -329,6 +331,143 @@ def test_default_fallback_route() -> None:
 
     assert decision.route_id == "general"
     assert decision.confidence == 0.0
+    assert decision.keyword_score == 0.0
+    assert decision.retrieval_score == 0.0
+
+
+def test_cold_start_preserves_keyword_confidence(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("MERLIN_OUTCOME_LOG", str(tmp_path / "missing-outcomes.jsonl"))
+
+    decision = classify_task("explain how Qdrant works")
+
+    assert decision.keyword_score == decision.confidence
+    assert decision.retrieval_score == 0.0
+    assert decision.retrieval_sample_count == 0
+
+
+def test_approved_success_outcomes_boost_retrieval_score(monkeypatch, tmp_path) -> None:
+    outcome_log = tmp_path / "outcomes.jsonl"
+    created_at = datetime.now(UTC).isoformat()
+    outcome_log.write_text(
+        "\n".join(
+            [
+                json.dumps(
+                    {
+                        "event_type": "task_outcome",
+                        "route_id": "general",
+                        "outcome_status": "success",
+                        "approval_id": "approval-1",
+                        "created_at": created_at,
+                    }
+                ),
+                json.dumps(
+                    {
+                        "event_type": "task_outcome",
+                        "route_id": "general",
+                        "outcome_status": "success",
+                        "approval_id": "approval-2",
+                        "created_at": created_at,
+                    }
+                ),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("MERLIN_OUTCOME_LOG", str(outcome_log))
+
+    decision = classify_task("explain Qdrant")
+
+    assert decision.retrieval_sample_count == 2
+    assert decision.retrieval_score > 0.99
+    assert decision.confidence > decision.keyword_score
+    assert "Retrieval score" in decision.decision_reason
+
+
+def test_approved_failure_outcomes_penalize_final_score(monkeypatch, tmp_path) -> None:
+    outcome_log = tmp_path / "outcomes.jsonl"
+    outcome_log.write_text(
+        json.dumps(
+            {
+                "event_type": "task_outcome",
+                "route_id": "general",
+                "outcome_status": "failure",
+                "approval_id": "approval-1",
+                "created_at": datetime.now(UTC).isoformat(),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("MERLIN_OUTCOME_LOG", str(outcome_log))
+
+    decision = classify_task("explain Qdrant")
+
+    assert decision.retrieval_sample_count == 1
+    assert decision.retrieval_score == 0.0
+    assert decision.confidence < decision.keyword_score
+
+
+def test_unapproved_outcomes_do_not_affect_routing(monkeypatch, tmp_path) -> None:
+    outcome_log = tmp_path / "outcomes.jsonl"
+    outcome_log.write_text(
+        json.dumps(
+            {
+                "event_type": "task_outcome",
+                "route_id": "general",
+                "outcome_status": "success",
+                "approval_id": None,
+                "created_at": datetime.now(UTC).isoformat(),
+                "raw_input": "explain Qdrant",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("MERLIN_OUTCOME_LOG", str(outcome_log))
+
+    decision = classify_task("explain Qdrant")
+
+    assert decision.retrieval_sample_count == 0
+    assert decision.retrieval_score == 0.0
+    assert decision.confidence == decision.keyword_score
+
+
+def test_retrieval_scoring_uses_recency_decay(monkeypatch, tmp_path) -> None:
+    outcome_log = tmp_path / "outcomes.jsonl"
+    now = datetime.now(UTC)
+    outcome_log.write_text(
+        "\n".join(
+            [
+                json.dumps(
+                    {
+                        "event_type": "task_outcome",
+                        "route_id": "general",
+                        "outcome_status": "success",
+                        "approval_id": "approval-new",
+                        "created_at": now.isoformat(),
+                    }
+                ),
+                json.dumps(
+                    {
+                        "event_type": "task_outcome",
+                        "route_id": "general",
+                        "outcome_status": "failure",
+                        "approval_id": "approval-old",
+                        "created_at": (now - timedelta(days=90)).isoformat(),
+                    }
+                ),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("MERLIN_OUTCOME_LOG", str(outcome_log))
+
+    decision = classify_task("explain Qdrant")
+
+    assert decision.retrieval_sample_count == 2
+    assert decision.retrieval_score > 0.9
 
 
 def test_wizard_mode_status_uses_swarm_context() -> None:

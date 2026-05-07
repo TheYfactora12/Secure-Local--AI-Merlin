@@ -14,6 +14,8 @@ Phase 3 adds review-first learning loops on top of the Phase 2 Merlin Staff Core
    - Blend keyword routing with approved outcome retrieval.
    - Formula: `final_score = (0.6 * keyword_score) + (0.4 * retrieval_score)`.
    - Keyword score stays dominant so retrieval improves routing without taking over.
+   - Status: implemented in #66 with approved-outcome JSONL reads, recency
+     decay, cold-start preservation, trace fields, and no memory writes.
 3. `Phase 3C` — `merlin/preference_extractor.py`
    - Extract explicit or strongly implied user preferences for review.
    - Do not write preferences automatically.

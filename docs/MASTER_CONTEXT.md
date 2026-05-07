@@ -157,6 +157,14 @@ outcomes, and writes to `merlin_audit` only when an explicit approval id is
 provided. `merlin/task_endpoint.py` now records success, rejected, and degraded
 outcomes without changing routing behavior.
 
+#66 adds Phase 3B retrieval-augmented routing. The router reads approved
+outcome history from `logs/merlin-outcomes.jsonl` or `MERLIN_OUTCOME_LOG`,
+ignores records without `approval_id`, applies 30-day recency decay, and blends
+`final_score = 0.6 * keyword_score + 0.4 * retrieval_score` only when approved
+history exists. Cold-start routing remains unchanged, unknown input still
+falls back to `general` at confidence `0.0`, and no memory writes or config
+edits occur during classification.
+
 The next engineering priority is supportability: diagnostics, sanitized bug reports, and drift-proof docs so another AI or human can continue without breaking the installer or crossing security boundaries. Signed release work can wait until the local core loop and support loop remain green.
 
 ## Risks / Unknowns
