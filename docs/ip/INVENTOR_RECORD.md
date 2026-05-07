@@ -16,7 +16,7 @@
 Portions of the source code in this repository were authored with AI coding assistance (including but not limited to LLM-based code generation tools). Per USPTO guidance on AI-assisted inventions:
 
 - All **architectural decisions** were made by the human inventor.
-- All **claim-relevant algorithm parameters** (e.g., `suppression_weight = 0.15`, `token_window = 5`, `KEYWORD_WEIGHT = 0.6`, `RETRIEVAL_WEIGHT = 0.4`, `OUTCOME_DECAY_DAYS = 30`) were selected and validated by the human inventor.
+- All **claim-relevant algorithm parameters** (e.g., `suppression_weight = 0.15`, `token_window = 5`, blending weights `0.6`/`0.4` in `_final_confidence()`, `OUTCOME_DECAY_DAYS = 30`) were selected and validated by the human inventor.
 - The choice to implement consent gates, approval pipelines, and no-retraining constraints as **mandatory architectural controls** rather than optional UI features was a deliberate inventive decision by the human inventor.
 - AI tools were used as implementation assistants, not as inventors.
 
@@ -41,29 +41,49 @@ On 2026-04-30, I conceived of and implemented a system in which no behavioral pr
 ### Element 2 — Retrieval-Augmented Routing with Time-Decay Outcome Weighting
 
 **Conception Date:** 2026-04-30
-**First Committed Evidence:** `merlin/router.py` establishing the blending formula and no-retraining constraint for the implemented local JSONL outcome-retrieval path.
+**First Committed Evidence:** `merlin/router.py` — `route_task()` routing dispatch and `_final_confidence()` blending formula. `configs/merlin/routes.yaml` — `cloud_allowed: false` local-first constraint.
 **Related Issues:** #81, #83, #29
 **Related Files:** `merlin/router.py`, `configs/merlin/routes.yaml`
 **Patent Candidates:** Candidate 2 (Routing with Decay)
 
-On 2026-04-30, I conceived of and implemented a routing method in which AI agent task routing decisions are improved over time by blending real-time keyword match confidence with time-decay-weighted historical routing outcome confidence, using the formula:
+#### Currently Implemented (code matches claim as of 2026-04-30)
 
-`C_final = keyword_weight × C_keyword + (1 − keyword_weight) × C_retrieval`
+On 2026-04-30, I conceived of and implemented a routing method in which AI agent task routing decisions improve over time by blending real-time keyword match confidence with time-decay-weighted historical routing outcome confidence.
 
-where the implemented `C_retrieval` is a time-decayed average of approved historical outcomes for the selected route, decayed by `exp(-days_since_outcome / OUTCOME_DECAY_DAYS)` with `OUTCOME_DECAY_DAYS = 30`. I directed all key design decisions, including the specific blending formula (`KEYWORD_WEIGHT = 0.6`, `RETRIEVAL_WEIGHT = 0.4`) and the deliberate architectural constraint that routing accuracy improves **only** via retrieval feedback (zero gradient descent, zero model retraining). This constraint is enforced by the module-level constant `NO_RETRAINING_CONSTRAINT = True`.
+**Implemented formula in `_final_confidence()`:**
 
-**Planned claim-hardening extension:** The broader claim target is to replace the current route-id-scoped JSONL outcome retrieval with Qdrant vector retrieval keyed by task-signature embeddings, while preserving the same no-retraining constraint and local-only execution. Until that implementation lands, Qdrant task-signature retrieval is a design target, not current code evidence.
+```
+C_final = 0.6 × C_keyword + 0.4 × C_retrieval
+```
+
+where `C_retrieval` is the weighted average of approved historical outcomes for the matched route, decayed by `exp(−days_since_outcome / OUTCOME_DECAY_DAYS)` with `OUTCOME_DECAY_DAYS = 30`. Historical outcomes are stored in local JSONL files keyed by `route_id`. Routing executes entirely on local hardware; `configs/merlin/routes.yaml` enforces `cloud_allowed: false`.
+
+**Implemented architectural constraints:**
+- No model retraining occurs — routing improves only via JSONL outcome feedback. This constraint is currently behavioral (enforced by architecture, not yet a named constant).
+- All routing decisions are local. `cloud_allowed: false` in `routes.yaml` is the current enforcement.
+
+**Specific Technical Improvement:** Routing confidence improves on repeated approved task patterns without any model retraining, on hardware-constrained local devices, with full decision traceability through local JSONL outcome records rather than opaque model weights.
 
 **Differentiation from Kount US12335276B2:** Kount's exponential decay is applied to fraud and network access control variables using cloud-based telemetry. This system applies time-decay weighting exclusively to AI agent task routing decisions on local hardware with no cloud transmission and no model retraining. The domain, architecture, purpose, and hardware constraint are all distinct.
 
-**Specific Technical Improvement:** Routing confidence improves on repeated approved task patterns without any model retraining, on hardware-constrained local devices, with full decision traceability through local outcome records rather than opaque model weights.
+#### Design Targets — Conceived, Not Yet Implemented
+
+The following elements are part of the conceived invention but are **not yet present in committed code**. They are claim-hardening targets tracked in issue #81. Do not cite these as implemented evidence until the corresponding commit SHA is recorded here.
+
+- **`NO_RETRAINING_CONSTRAINT = True`** — named module-level constant making the no-retraining guarantee explicit and independently auditable. Currently behavioral only.
+- **`KEYWORD_WEIGHT = 0.6` / `RETRIEVAL_WEIGHT = 0.4`** — named constants for the blending weights currently hardcoded in `_final_confidence()`.
+- **`LAMBDA_DECAY`** — named constant for the decay parameter, currently expressed as `OUTCOME_DECAY_DAYS = 30`.
+- **Qdrant vector retrieval of task signatures** — the current retrieval source is JSONL outcomes keyed by `route_id`. The design target is Qdrant vector embeddings of full task signatures as the retrieval key, enabling semantic similarity matching rather than exact `route_id` lookup. **Not yet implemented.**
+- **`telemetry: disabled`** — `routes.yaml` currently uses `cloud_allowed: false`. Design target is an explicit `telemetry: disabled` field for stronger evidentiary value.
+
+**Patent filing note:** Claims based on currently implemented code (JSONL outcome feedback, time-decay weighting, local-only constraint, `_final_confidence()` blending formula) are supportable today. Claims requiring Qdrant vector retrieval or named constants must await implementation before the nonprovisional is filed. The provisional may describe both as conceived and partially implemented.
 
 ---
 
 ### Element 3 — Negation-Aware Confidence Suppression Function
 
 **Conception Date:** 2026-05-07
-**First Committed Evidence:** Issue #82 filed 2026-05-07 specifying `negation_suppressed_confidence()` with exact parameters.
+**First Committed Evidence:** `merlin/preference_extractor.py` commit dab3271 (2026-05-07) adding `negation_suppressed_confidence()` with `NEGATION_SUPPRESSION_WEIGHT = 0.15` and `NEGATION_TOKEN_WINDOW = 5` as named module-level constants.
 **Related Issues:** #82, #83
 **Related Files:** `merlin/preference_extractor.py`
 **Patent Candidates:** Candidate 1 (Claim 3)
@@ -125,6 +145,7 @@ On 2026-05-07, I conceived of a system in which an AI agent observes its own LLM
 - **Alice §101 readiness**: All elements include explicit technical improvement language per USPTO 2019 Revised Guidance and 2025 Director Memorandum. See issue #83 for per-element Alice Step 2B language.
 - **SMED readiness**: Inventor should be prepared to submit a Subject Matter Eligibility Declaration confirming the claimed limitations cannot practically be performed in the human mind.
 - **Prior art citations to include in nonprovisional spec:** Kount US12335276B2, Kount US20250274461A1, Microsoft US20250200475A1, ServiceNow US20250265521A1, Cumulus Digital US20250156783A1, UiPath US12204295B2, FlowMind arxiv 2602.11782.
+- **Claim hardening required before nonprovisional for Element 2:** Add `NO_RETRAINING_CONSTRAINT`, `KEYWORD_WEIGHT`, `RETRIEVAL_WEIGHT`, `LAMBDA_DECAY` named constants to `router.py`. Qdrant vector retrieval is a separate, later milestone. See issue #81.
 
 ---
 
@@ -134,4 +155,5 @@ On 2026-05-07, I conceived of a system in which an AI agent observes its own LLM
 |------|--------|--------|
 | 2026-05-07 | Initial creation — all five elements documented; conception dates established | TheYfactora12 |
 | 2026-05-07 | Set inventor legal name: Kevin Paul Medeiros Jr | TheYfactora12 |
-| 2026-05-07 | Corrected Element 2 evidence to match current implementation: JSONL outcome retrieval is implemented; Qdrant task-signature retrieval remains planned claim-hardening work | TheYfactora12 |
+| 2026-05-07 | Corrected Element 2: split implemented vs. design target; removed overclaimed constants (NO_RETRAINING_CONSTRAINT, KEYWORD_WEIGHT, LAMBDA_DECAY, Qdrant retrieval); JSONL outcome retrieval confirmed as implemented baseline. Validated by external AI review. | TheYfactora12 |
+| 2026-05-07 | Updated AI Tool Disclosure to remove reference to non-existent named constants; updated Element 3 first-committed-evidence to cite commit dab3271 | TheYfactora12 |
