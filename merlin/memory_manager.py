@@ -8,11 +8,14 @@ import io
 import uuid
 from contextlib import redirect_stdout
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any
+from datetime import datetime, timezone
+from typing import TYPE_CHECKING, Any
 from urllib import error, request
 
 from merlin.config_loader import DimensionMismatchError, load_all_configs
+
+if TYPE_CHECKING:
+    from merlin.preference_extractor import PreferenceCandidate
 
 
 logger = logging.getLogger(__name__)
@@ -21,6 +24,13 @@ OLLAMA_EMBEDDINGS_URL = "http://localhost:11434/api/embeddings"
 DEFAULT_TIMEOUT_SECONDS = 5
 SKILL_OUTCOMES_COLLECTION = "skill_outcomes"
 SKILL_OUTCOMES_VECTOR_SIZE = 384
+SWARM_MEMORY_COLLECTION = "swarm_memory"
+SWARM_MEMORY_VECTOR_SIZE = 384
+
+
+def _utc_now() -> str:
+    """Return current UTC time as ISO 8601 string."""
+    return datetime.now(tz=timezone.utc).isoformat()
 
 
 @dataclass(frozen=True)
@@ -44,6 +54,138 @@ class MemoryManager:
         self.collections = self._build_collection_specs()
         self.degraded = False
         self._check_qdrant()
+
+    # ------------------------------------------------------------------
+    # Phase 3C: PreferenceStore methods
+    # ------------------------------------------------------------------
+
+    def write_approved_preference(
+        self,
+        candidate: "PreferenceCandidate",
+        approval_id: str,
+    ) -> str | None:
+        """Persist an approved PreferenceCandidate to swarm_memory.
+
+        ONLY call after explicit human approval. Never auto-write.
+        Deduplication: skips write if a semantically identical record exists
+        (exact preference_text match — full semantic dedup is Phase 3D).
+
+        Returns point_id str or None on failure.
+        """
+        # Exact-text dedup guard before write
+        existing = self.search_preferences_by_text(candidate.preference_text)
+        if existing:
+            logger.info("preference_dedup_skip text=%r", candidate.preference_text[:60])
+            return None
+
+        point_id = str(uuid.uuid4())
+        payload = {
+            "memory_type": "preference",
+            "preference_text": candidate.preference_text,
+            "category": candidate.category,
+            "confidence": candidate.confidence,
+            "evidence": candidate.evidence,
+            "approval_id": approval_id,
+            "source": "auto_extracted",
+            "created_at": _utc_now(),
+        }
+        body = {
+            "points": [
+                {
+                    "id": point_id,
+                    "vector": [0.0] * SWARM_MEMORY_VECTOR_SIZE,
+                    "payload": payload,
+                }
+            ]
+        }
+        try:
+            self._request_json(
+                "PUT",
+                f"/collections/{SWARM_MEMORY_COLLECTION}/points?wait=true",
+                body,
+            )
+            logger.info(
+                "preference_written point_id=%s category=%s",
+                point_id,
+                candidate.category,
+            )
+            return point_id
+        except OSError as exc:
+            logger.warning("preference_write_failed error=%s", exc)
+            return None
+
+    def get_preferences_by_category(
+        self,
+        category: str,
+        limit: int = 10,
+    ) -> list[dict]:
+        """Retrieve approved preferences from swarm_memory filtered by category.
+
+        Returns list of payload dicts, newest first.
+        Returns empty list if Qdrant is unavailable — never raises.
+        """
+        body = {
+            "filter": {
+                "must": [
+                    {"key": "memory_type", "match": {"value": "preference"}},
+                    {"key": "category", "match": {"value": category}},
+                ]
+            },
+            "limit": limit,
+            "with_payload": True,
+            "with_vectors": False,
+        }
+        try:
+            response = self._request_json(
+                "POST",
+                f"/collections/{SWARM_MEMORY_COLLECTION}/points/scroll",
+                body,
+            )
+            result = response.get("result", {})
+            points = result.get("points", []) if isinstance(result, dict) else []
+            payloads = [p.get("payload", {}) for p in points if p.get("payload")]
+            payloads.sort(key=lambda p: p.get("created_at", ""), reverse=True)
+            return payloads
+        except OSError as exc:
+            logger.warning("get_preferences_failed category=%s error=%s", category, exc)
+            return []
+
+    def search_preferences_by_text(
+        self,
+        preference_text: str,
+        limit: int = 5,
+    ) -> list[dict]:
+        """Search swarm_memory for preferences matching exact text (dedup guard).
+
+        Returns matching payload dicts or empty list.
+        """
+        body = {
+            "filter": {
+                "must": [
+                    {"key": "memory_type", "match": {"value": "preference"}},
+                    {"key": "preference_text", "match": {"value": preference_text}},
+                ]
+            },
+            "limit": limit,
+            "with_payload": True,
+            "with_vectors": False,
+        }
+        try:
+            response = self._request_json(
+                "POST",
+                f"/collections/{SWARM_MEMORY_COLLECTION}/points/scroll",
+                body,
+            )
+            result = response.get("result", {})
+            points = result.get("points", []) if isinstance(result, dict) else []
+            return [p.get("payload", {}) for p in points if p.get("payload")]
+        except OSError as exc:
+            logger.warning("search_preferences_failed error=%s", exc)
+            return []
+
+    # ------------------------------------------------------------------
+    # Existing methods below — unchanged
+    # ------------------------------------------------------------------
 
     def write(self, collection: str, text: str, metadata: dict[str, Any]) -> str | None:
         spec = self._collection_spec(collection)
