@@ -257,6 +257,13 @@ Optional profiles:
 - `wizard start automation` → enables n8n `:5678`.
 - `wizard start coding` → enables OpenHands `:3003`; avoid this on 8 GB machines.
 
+Package signing:
+
+- Local/trusted testing can use a self-signed package identity named `Home AI Elite Local Signing`.
+- Build unsigned with `bash pkg/build-pkg.sh`, then sign with `bash scripts/sign-pkg.sh --version <version>`.
+- macOS may still show an unidentified-developer warning; right-click the `.pkg` and choose Open for trusted local installs.
+- Apple Developer ID notarization is a future public distribution gate, not required for the local v1.0 path.
+
 ---
 
 ## 📍 Roadmap

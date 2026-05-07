@@ -26,7 +26,10 @@ bash pkg/release-preflight.sh
 # Unsigned (local testing)
 bash pkg/build-pkg.sh
 
-# Signed with Developer ID (no Gatekeeper warning)
+# Local self-signed package (trusted/private testing)
+bash scripts/sign-pkg.sh --version <version>
+
+# Signed with Developer ID (no Gatekeeper warning; future public distribution)
 bash pkg/build-pkg.sh --sign
 
 # Signed + notarized (ready for public distribution)
@@ -59,7 +62,34 @@ shell symlinks, the installer uses Docker's bundled CLI at:
 /Applications/Docker.app/Contents/Resources/bin/docker
 ```
 
-## Signing & Notarization
+## Local Self-Signed Package
+
+The v1.0 path supports local/self-signed packages for trusted private testing.
+This avoids requiring a paid Apple Developer Program account before the product
+is ready for broad public distribution.
+
+Create the local signing identity in Keychain Access:
+
+1. Open Keychain Access.
+2. Certificate Assistant -> Create a Certificate.
+3. Name: `Home AI Elite Local Signing`.
+4. Identity Type: Self Signed Root.
+5. Certificate Type: Code Signing.
+6. Enable "Let me override defaults", then ensure Key Usage includes Signing.
+
+Then build and sign:
+
+```bash
+bash pkg/build-pkg.sh
+bash scripts/sign-pkg.sh --version <version>
+pkgutil --check-signature home-ai-elite-v<version>.pkg
+```
+
+macOS may still show an unidentified-developer warning for self-signed
+packages. For trusted local testing, right-click the `.pkg`, choose Open, and
+confirm the prompt. This is expected for the self-signed path.
+
+## Developer ID Signing & Notarization
 
 Requires an Apple Developer account ($99/year).
 

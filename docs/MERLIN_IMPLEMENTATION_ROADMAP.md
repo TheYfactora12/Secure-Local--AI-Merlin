@@ -411,6 +411,7 @@ Next implementation slice:
 - Document and enforce core install time budget. `Done: tests/core-install-budget-smoke.sh`
 - Align package postinstall with laptop-safe core install. `Done: pkg/scripts/postinstall, tests/pkg-readiness-smoke.sh`
 - Add signed/notarized release preflight checks. `Done: pkg/release-preflight.sh, tests/pkg-signing-preflight-smoke.sh`
+- Add a local self-signed package wrapper for trusted/private v1.0 testing. `Done: scripts/sign-pkg.sh, tests/pkg-local-sign-smoke.sh`
 - Gate GitHub release creation on tags/manual dispatch and package artifact checks. `Done: .github/workflows/release.yml, tests/release-workflow-smoke.sh`
 - Run static smoke tests in CI. `Done: .github/workflows/ci.yml`
 - Document floating container image tags and gate new ones with a static smoke test. `Done: docs/CONTAINER_IMAGE_POLICY.md, tests/container-image-policy-smoke.sh`

@@ -403,3 +403,5 @@ Follow-up fixed during this validation:
 
 - A loaded launchd status API agent could remain alive if `launchctl bootout` failed while the plist removal succeeded. The uninstaller now warns with the exact manual `launchctl bootout gui/<uid>/<label>` command when unload fails.
 - `bash tests/uninstall-smoke.sh` covers launchd loaded-agent detection and the warning/manual-command behavior.
+- The pasted `security create-certificate` path was checked on this Mac; `security` does not provide a `create-certificate` subcommand here, and `security find-identity -v -p basic` reported `0 valid identities found`.
+- Local self-signed package signing is therefore documented through Keychain Access and wrapped in `scripts/sign-pkg.sh`, with static coverage in `tests/pkg-local-sign-smoke.sh`.
