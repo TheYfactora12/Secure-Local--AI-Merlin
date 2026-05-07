@@ -157,6 +157,14 @@ The current architecture keeps the default user path local-first and low-frictio
 - Bootstrap creates canonical Merlin collections by default.
 - Task API sends the local LiteLLM authorization header from environment or `.env` without logging secrets.
 
+#62 passed on 2026-05-07 after the separate launchd-managed task API was added.
+The fresh-data low/core release gate is documented in
+`docs/archive/WHOLE_STACK_RC_VALIDATION_2026-05-07.md`: uninstall with
+`--keep-files --remove-data`, non-interactive core reinstall with model pulls
+skipped, launchd reinstall, doctor, offline Python suite, session memory bridge
+static tests, core live smoke, 8765 read-only health, 8766 status panels, and
+live `/task` all passed.
+
 ## Phase 3A Started
 
 #65 starts Phase 3 with `merlin/outcome_observer.py`. The observer records

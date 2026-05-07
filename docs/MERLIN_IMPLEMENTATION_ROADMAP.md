@@ -46,6 +46,7 @@ left behind.
 
 - #41–#46, #48, #49, and #61 closed under `v1.0` with `release` + `priority: critical` labels.
 - #1 is closed under `v1.0`; installer runtime and package builder defects are resolved. Developer ID Installer/notarization is split to #64 under `v3.0`.
+- #62 passed under `v1.0` on 2026-05-07 after a fresh-data low/core reinstall and launchd validation; see `docs/archive/WHOLE_STACK_RC_VALIDATION_2026-05-07.md`.
 - #63 is closed under `v1.0`; whole-stack low/core release-candidate validation passed on the 8GB Mac after the fixes documented in `docs/archive/WHOLE_STACK_RC_VALIDATION_2026-05-06.md`.
 - #47 open under `v1.1`. #5 open under `v1.2`.
 - #28 closed under `v2.0`. #50–#60 closed under `v2.0`.
