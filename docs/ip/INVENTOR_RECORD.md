@@ -1,6 +1,6 @@
 # Inventor Record
 
-**Inventor:** [YOUR FULL LEGAL NAME — fill in before filing]
+**Inventor:** Kevin Paul Medeiros Jr
 **GitHub Username:** TheYfactora12
 **Repository:** TheYfactora12/home-ai-elite
 **Date of Initial Conception:** 2026-04-30 (first public commit establishing the core architecture)
@@ -131,3 +131,4 @@ On 2026-05-07, I conceived of a system in which an AI agent observes its own LLM
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-05-07 | Initial creation — all five elements documented; conception dates established | TheYfactora12 |
+| 2026-05-07 | Set inventor legal name: Kevin Paul Medeiros Jr | TheYfactora12 |
