@@ -31,7 +31,10 @@ Current milestone position:
 - `v1.3 — Reliability + Memory + Router` is closed after #3 added n8n Ollama
   retry contracts and #35 made the n8n ModelRouter starter local-first and
   approval-gated.
-- Next in order: `v1.5 — Memory Benchmarking`, with #7 open.
+- `v1.5 — Memory Benchmarking` is closed after #7 added the offline benchmark
+  harness and `wizard benchmark run`.
+- Next in order: `v1.6 — Pi Intelligence + Observability`, with #8 and #36
+  open.
 - #35 is the canonical n8n ModelRouter rewrite issue. #6 is closed as
   stale/duplicate because it required automatic cloud escalation, which violates
   current local-first approval-gated policy.
@@ -40,9 +43,9 @@ Current milestone position:
   future, explicit, policy-gated implementation is approved.
 - #85 tracks the future question of whether Merlin should add staff skills
   beyond the current six modes. It belongs to v2.0 and must not expand v1.3.
-- v1.5 starts with #7: offline memory benchmark harness. Do not rename current
-  `merlin_*` canonical collections to stale `wizard_*` names without a
-  migration plan and restore tests.
+- v1.5 #7 intentionally used offline deterministic benchmark fixtures first.
+  Do not add live Qdrant/Ollama benchmark profiles without an explicit
+  integration-test gate such as `MERLIN_INTEGRATION_TESTS=1`.
 - Drift captured during v1.1: #80 tracks whether to add an explicit
   `webhook_execution` policy gate under `v1.7`.
 

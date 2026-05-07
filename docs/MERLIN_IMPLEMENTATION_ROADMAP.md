@@ -47,8 +47,9 @@ left behind.
 - GitHub milestones `v1.0 — Stable Installer Release`,
   `v1.1 — Mobile Access + Remote-Safe Entry Points`, and
   `v1.2 — Hardware Guide + Document Ingestion Planning`, and
-  `v1.3 — Reliability + Memory + Router` are closed as of 2026-05-07.
-  The next milestone in execution order is `v1.5 — Memory Benchmarking`.
+  `v1.3 — Reliability + Memory + Router`, and
+  `v1.5 — Memory Benchmarking` are closed as of 2026-05-07. The next
+  milestone in execution order is `v1.6 — Pi Intelligence + Observability`.
 - #41–#46, #48, #49, and #61 closed under `v1.0` with `release` + `priority: critical` labels.
 - #1 is closed under `v1.0`; installer runtime and package builder defects are resolved. Developer ID Installer/notarization is split to #64 under `v3.0`.
 - #62 passed under `v1.0` on 2026-05-07 after a fresh-data low/core reinstall and launchd validation; see `docs/archive/WHOLE_STACK_RC_VALIDATION_2026-05-07.md`.
@@ -73,9 +74,10 @@ left behind.
   `api_key_use`.
 - #85 captures the future v2.0 design question of whether to add more Merlin
   staff skills. It is intentionally not part of v1.3.
-- Next active milestone is `v1.5`; open issue: #7. The v1.5 scope is an
-  offline-safe benchmark harness first. Live Qdrant/Ollama benchmark profiles
-  remain future integration work behind explicit test flags.
+- #7 is closed under `v1.5`; it adds an offline-safe benchmark harness first.
+  Live Qdrant/Ollama benchmark profiles remain future integration work behind
+  explicit test flags.
+- Next active milestone is `v1.6`; open issues: #8 and #36.
 - #28 closed under `v2.0`. #50–#60 closed under `v2.0`.
 - #30, #39 open under `v2.1`. #33, #34 open under `v2.2`. #37 open under `v3.0`.
 
