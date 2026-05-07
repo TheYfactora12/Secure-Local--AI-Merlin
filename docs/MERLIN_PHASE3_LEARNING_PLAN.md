@@ -26,6 +26,10 @@ Phase 3 adds review-first learning loops on top of the Phase 2 Merlin Staff Core
 4. `Phase 3D` — `merlin/session_reflector.py`
    - Build short-lived session summaries for continuity.
    - Summaries expire by default; Merlin session memory is intentionally temporary.
+   - Status: implemented in #68 as a deterministic, offline, review-only
+     reflector. It summarizes existing outcome and preference records, produces
+     a 90-day expiry, redacts emitted strings, and performs no Qdrant writes,
+     model calls, cloud calls, or config edits.
 5. `Phase 3E` — skill scores in `memory_manager.py`
    - Compute local skill confidence from recent approved outcome history.
    - Skill scores inform routing visibility but never bypass approval gates.

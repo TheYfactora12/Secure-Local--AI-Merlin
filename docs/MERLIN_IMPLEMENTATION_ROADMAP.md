@@ -102,7 +102,14 @@ Issue #67 Phase 3C preference extraction is complete as the next narrow slice:
 - Return review-only preference candidates with category, confidence, redacted evidence, and write eligibility.
 - Do not write Qdrant memory, call models, call cloud APIs, start services, edit config, or touch the installer.
 
-After #67, continue with session reflection and skill scores.
+Issue #68 Phase 3D session reflection is complete:
+
+- Add `merlin/session_reflector.py`.
+- Summarize existing task outcomes and review-only preference candidates.
+- Track task counts, routes, low-confidence routes, staff modes, hardware tier, duration, and 90-day expiry.
+- Redact emitted strings and perform no Qdrant writes, model calls, cloud calls, service starts, config edits, or installer changes.
+
+After #68, continue with skill scores.
 
 Port contract:
 
