@@ -3,6 +3,12 @@
 This module intentionally does not call an LLM, write memory, touch Qdrant, or
 modify config. It creates structured preference candidates for human review.
 """
+# PATENT NOTICE — Element 3 (Negation-Aware Confidence Suppression Function)
+# Conception date: 2026-05-07 — Kevin Paul Medeiros Jr
+# Record: docs/ip/INVENTOR_RECORD.md
+# Issue: #82
+# The function negation_suppressed_confidence() below is a named, independently
+# testable implementation of Patent Provisional A, Claim 3.
 
 from __future__ import annotations
 
@@ -27,6 +33,20 @@ MAX_PREFERENCES_PER_SESSION = 3
 MAX_REVIEW_CANDIDATES = 8   # max candidates returned for human review
                              # MAX_PREFERENCES_PER_SESSION (3) is the auto-write cap only
 MAX_EVIDENCE_CHARS = 80
+
+# ---------------------------------------------------------------------------
+# Negation suppression constants (Patent Provisional A, Claim 3)
+# ---------------------------------------------------------------------------
+# These values were deliberately chosen by the inventor and are claim-relevant.
+# Do NOT change without updating docs/ip/INVENTOR_RECORD.md and issue #82.
+NEGATION_SUPPRESSION_WEIGHT: float = 0.15   # multiplied against raw confidence on negation hit
+NEGATION_TOKEN_WINDOW: int = 5              # tokens preceding candidate scanned for markers
+
+_NEGATION_MARKERS: frozenset[str] = frozenset({
+    "don't", "dont", "never", "avoid", "stop", "no",
+    "neither", "nor", "without", "refuse", "won't", "wont",
+    "cannot", "can't", "cant",
+})
 
 _SECRET_PATTERNS: tuple[tuple[re.Pattern[str], str | Callable[[re.Match[str]], str]], ...] = (
     (re.compile(r"AKIA[0-9A-Z]{16}"), "[REDACTED-AWS-KEY]"),
@@ -82,6 +102,70 @@ class PreferenceCandidate(BaseModel):
         if redacted != value:
             return redacted
         return value
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+def negation_suppressed_confidence(
+    raw_confidence: float,
+    evidence: str,
+    suppression_weight: float = NEGATION_SUPPRESSION_WEIGHT,
+    token_window: int = NEGATION_TOKEN_WINDOW,
+) -> float:
+    """Return confidence degraded by suppression_weight if a negation marker
+    precedes the candidate preference term within token_window tokens.
+
+    This is Patent Provisional A, Claim 3 (Element 3 in INVENTOR_RECORD.md).
+    Conception date: 2026-05-07 — Kevin Paul Medeiros Jr.
+
+    Design contract (do not change without updating the inventor record):
+    - Scans the ``token_window`` tokens immediately preceding the matched
+      candidate for membership in ``_NEGATION_MARKERS``.
+    - On a hit: returns ``raw_confidence * suppression_weight``.
+      Confidence is DEGRADED, not inverted. The candidate is preserved in
+      the staging queue for human review. This is the architectural
+      distinction from NLP negation-as-semantic-inversion approaches.
+    - No hit: returns ``raw_confidence`` unchanged.
+    - ``suppression_weight`` and ``token_window`` are configurable but
+      default to the claim-relevant values (0.15 and 5).
+
+    Args:
+        raw_confidence: The base confidence score from the pattern match.
+        evidence: The matched text from the session (the full match group(0)).
+        suppression_weight: Multiplier applied on negation detection.
+            Default NEGATION_SUPPRESSION_WEIGHT = 0.15.
+        token_window: Number of tokens preceding the first content word
+            to scan for negation markers.
+            Default NEGATION_TOKEN_WINDOW = 5.
+
+    Returns:
+        float: Adjusted confidence in [0.0, 1.0].
+    """
+    tokens = evidence.lower().split()
+    # Identify the first non-stopword content token as the "candidate anchor".
+    # We scan the token_window tokens that precede it.
+    _STOPWORDS = frozenset({"i", "to", "the", "a", "an", "my", "me", "you", "we", "it", "that"})
+    anchor_index: int | None = None
+    for idx, token in enumerate(tokens):
+        cleaned = re.sub(r"[^a-z']", "", token)
+        if cleaned and cleaned not in _STOPWORDS:
+            anchor_index = idx
+            break
+
+    if anchor_index is None:
+        return raw_confidence
+
+    window_start = max(0, anchor_index - token_window)
+    preceding_tokens = [
+        re.sub(r"[^a-z']", "", t) for t in tokens[window_start:anchor_index]
+    ]
+
+    if any(t in _NEGATION_MARKERS for t in preceding_tokens):
+        return round(raw_confidence * suppression_weight, 4)
+
+    return raw_confidence
 
 
 def extract_preferences(session_text: str) -> list[PreferenceCandidate]:
@@ -148,6 +232,10 @@ def redact_sensitive_text(text: str) -> str:
     return redacted
 
 
+# ---------------------------------------------------------------------------
+# Private helpers
+# ---------------------------------------------------------------------------
+
 def _preference_body(match: re.Match[str]) -> str:
     if len(match.groups()) >= 2 and "instead of" in match.group(0).casefold():
         return f"use {match.group(1).strip()} instead of {match.group(2).strip()}"
@@ -182,10 +270,25 @@ def _truncate_evidence(value: str) -> str:
 
 
 def _calibrated_confidence(base_confidence: float, evidence: str) -> float:
+    """Calibrate raw pattern confidence for a matched evidence string.
+
+    Call order (do not reorder):
+    1. negation_suppressed_confidence() — Patent Provisional A, Claim 3.
+       Must run FIRST. If a negation marker precedes the candidate within the
+       token window, confidence is degraded to base * 0.15. No further
+       boosting is applied to a suppressed candidate.
+    2. Hedging words — cap at 0.70.
+    3. Certainty amplifiers — boost by +0.02, cap at 1.0.
+    """
+    # Step 1: negation suppression (Claim 3) — first guard, no boosting after.
+    suppressed = negation_suppressed_confidence(base_confidence, evidence)
+    if suppressed != base_confidence:
+        # Negation was detected — return immediately, no further adjustment.
+        return suppressed
+
     lowered = evidence.casefold()
 
-    # Negation detection FIRST — before any boosting.
-    # These phrases indicate the speaker is hedging or negating — drop below write threshold.
+    # Step 2: legacy phrase-level negation (hedging / uncertainty markers).
     _NEGATION_PHRASES = (
         "don't strongly", "not necessarily", "don't really", "not really",
         "not sure", "not always", "doesn't matter", "either way",
@@ -194,10 +297,14 @@ def _calibrated_confidence(base_confidence: float, evidence: str) -> float:
     if any(phrase in lowered for phrase in _NEGATION_PHRASES):
         return min(base_confidence, 0.55)  # below WRITE_CONFIDENCE_THRESHOLD
 
+    # Step 3: hedging words.
     if any(m in lowered for m in ("maybe", "sometimes", "might", "could", "perhaps")):
         return min(base_confidence, 0.70)
+
+    # Step 4: certainty amplifiers.
     if any(m in lowered for m in ("always", "strongly", "must", "need", "never", "every")):
         return min(1.0, base_confidence + 0.02)
+
     return base_confidence
 
 
