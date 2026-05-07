@@ -260,26 +260,33 @@ Acceptance criteria:
 
 Tasks:
 
+- Make Merlin Chat the first-screen primary experience.
 - Show profile and hardware tier.
 - Show local-only/online mode.
 - Show installed models.
+- Show active route, staff mode, selected model, and fallback reason.
 - Show service groups by profile.
 - Add Magic Mode plan/status UI.
 - Add memory approval UI once backend exists.
+- Add Security Center summary for approval gates and cloud/API state.
 
 Risks:
 
 - Static UI attempts privileged actions without backend policy.
+- Dashboard remains a developer status page instead of the Merlin user experience.
+- Dashboard duplicates Open WebUI without adding Merlin-specific routing, memory, policy, and hardware context.
 
 Tests:
 
 - Dashboard never displays secrets.
 - Dashboard handles offline services gracefully.
 - Dashboard warnings match hardware tier.
+- Dashboard chat degraded state is clear when task API or LiteLLM is down.
+- Dashboard does not expose raw audit input or API key values.
 
 Acceptance criteria:
 
-- Non-technical user can understand system state and next steps.
+- Non-technical user can chat with Merlin, understand local/cloud state, see route/model/memory status, and preview Magic Mode without any privileged action executing.
 
 ## Milestone 7: Add Security Hardening and Approval Gates
 

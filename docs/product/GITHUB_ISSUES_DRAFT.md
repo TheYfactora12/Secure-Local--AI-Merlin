@@ -97,12 +97,36 @@ Status: implemented locally; ready for review once tests pass.
 - Goal: Show Merlin state in dashboard.
 - User value: Non-technical status and next steps.
 - Files likely touched: `dashboard/`, tests, docs.
-- Implementation notes: Read 8765 and 8766 only; no mutation controls.
-- Acceptance criteria: Shows local-only, tier, routes, gates, memory, traces.
+- Implementation notes: Read 8765 and 8766 only; no mutation controls. Keep the current dashboard safe while preparing the Merlin-native command center.
+- Acceptance criteria: Shows local-only, tier, routes, gates, memory, traces, selected staff mode, selected model, and fallback reason.
 - Manual tests: Open dashboard with services up/down.
 - Automated tests: dashboard smoke/no secret checks.
 - Risk: Medium.
 - Rollback: Revert dashboard panel.
+
+## Issue 5A: Make Merlin Chat the Dashboard First Screen
+
+- Goal: Move the dashboard from service-status-first to Merlin-chat-first.
+- User value: User gets a polished ChatGPT-class Merlin experience while still seeing local-first safety state.
+- Files likely touched: `dashboard/index.html`, dashboard smoke tests, docs.
+- Implementation notes: Use `POST /task` on port 8766 for Merlin Chat. Keep Open WebUI linked as an advanced/alternate chat surface. Show route, staff mode, selected model, approval gates, memory state, and degraded startup state inline.
+- Acceptance criteria: First viewport centers Merlin Chat; local-only/cloud-disabled state is visible; approval-required responses show gate names; degraded task API/LiteLLM state is graceful; no secrets or raw audit input appear.
+- Manual tests: Open dashboard with task API online/offline; ask a general task; ask a code task that requires approval; confirm UI does not imply auto-approval.
+- Automated tests: Static dashboard smoke checks for `localhost:8766`, local-only badge, no API key values, no privileged execution controls.
+- Risk: Medium.
+- Rollback: Revert dashboard HTML/CSS/JS changes.
+
+## Issue 5B: Add Wizard Theme Design System
+
+- Goal: Give Home AI Elite a strong, elegant Merlin visual identity.
+- User value: Product feels distinct, trustworthy, and premium instead of a generic Docker status page.
+- Files likely touched: `dashboard/index.html`, future dashboard assets, docs.
+- Implementation notes: Dark mode first; restrained wizard motifs; no cartoon art, decorative orbs, or marketing hero sections. Use green/yellow/red operational states and clear status chips.
+- Acceptance criteria: Dashboard has consistent typography, spacing, button states, status chips, and Merlin branding; mobile and desktop layouts do not overlap.
+- Manual tests: Desktop and mobile browser review.
+- Automated tests: Static smoke for required labels and no unsafe controls.
+- Risk: Low.
+- Rollback: Revert visual-only changes.
 
 ## Issue 6: Add Provider Registry Skeleton
 
