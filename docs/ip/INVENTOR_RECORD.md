@@ -1,0 +1,133 @@
+# Inventor Record
+
+**Inventor:** [YOUR FULL LEGAL NAME — fill in before filing]
+**GitHub Username:** TheYfactora12
+**Repository:** TheYfactora12/home-ai-elite
+**Date of Initial Conception:** 2026-04-30 (first public commit establishing the core architecture)
+**Date of Formal Inventor Record Creation:** 2026-05-07
+**Jurisdiction:** United States
+
+> **Legal Notice:** This document constitutes a contemporaneous inventor record establishing conception dates for the inventive elements described below. It is intended to support USPTO provisional and non-provisional patent filings. All architectural decisions, system design choices, claim-relevant algorithm parameters, and the choice to implement each gate, constraint, and pipeline stage as a mandatory architectural control rather than a UI advisory were made by the inventor named above. Portions of source code were written with AI coding assistance; all inventive direction, parameter selection, and system design choices were made by the inventor.
+
+---
+
+## AI Tool Usage Disclosure
+
+Portions of the source code in this repository were authored with AI coding assistance (including but not limited to LLM-based code generation tools). Per USPTO guidance on AI-assisted inventions:
+
+- All **architectural decisions** were made by the human inventor.
+- All **claim-relevant algorithm parameters** (e.g., `suppression_weight = 0.15`, `lambda_decay = 0.001`, `token_window = 5`, `keyword_weight = 0.6`) were selected and validated by the human inventor.
+- The choice to implement consent gates, approval pipelines, and no-retraining constraints as **mandatory architectural controls** rather than optional UI features was a deliberate inventive decision by the human inventor.
+- AI tools were used as implementation assistants, not as inventors.
+
+---
+
+## Inventive Elements
+
+### Element 1 — Consent-Gated Behavioral Preference Learning Pipeline
+
+**Conception Date:** 2026-04-30
+**First Committed Evidence:** Initial repository commit establishing `merlin/` module structure and `policy_engine.py` approval gate architecture.
+**Related Issues:** #82, #83, #31
+**Related Files:** `merlin/preference_extractor.py`, `merlin/policy_engine.py`, `configs/merlin/policy.yaml`
+**Patent Candidates:** Candidate 1 (Consent-Gated Loop), Candidate 3 (Negation Suppression)
+
+On 2026-04-30, I conceived of and implemented a system in which no behavioral preference extracted from user conversations can be stored in a persistent vector database until it has passed through: (a) a negation-aware confidence scoring function that degrades — but does not invert — confidence scores for negated preference statements, and (b) an explicit human approval gate enforced as a mandatory pipeline stage, not a UI control. I directed all key design decisions for this pipeline, including the choice to use confidence suppression rather than semantic inversion for negated statements, the specific default suppression weight of 0.15, the 5-token look-back window, and the architectural requirement that the gate be enforced at the write boundary of the vector store rather than as an advisory warning.
+
+**Specific Technical Improvement:** This pipeline-enforced consent gate achieves a specific technical improvement — eliminating false-positive preference persistence — by requiring explicit human approval before any vector store write. This is architecturally distinct from UI-based feedback mechanisms that update preference models without a mandatory write gate.
+
+---
+
+### Element 2 — Retrieval-Augmented Routing with Time-Decay Outcome Weighting
+
+**Conception Date:** 2026-04-30
+**First Committed Evidence:** `merlin/router.py` establishing the blending formula and no-retraining constraint.
+**Related Issues:** #81, #83, #29
+**Related Files:** `merlin/router.py`, `configs/merlin/routes.yaml`
+**Patent Candidates:** Candidate 2 (Routing with Decay)
+
+On 2026-04-30, I conceived of and implemented a routing method in which AI agent task routing decisions are improved over time by blending real-time keyword match confidence with time-decay-weighted historical routing outcome confidence, using the formula:
+
+`C_final = keyword_weight × C_keyword + (1 − keyword_weight) × C_retrieval`
+
+where `C_retrieval` is the retrieval-weighted average of historical outcomes for semantically similar past tasks, decayed by `exp(−λ × Δt)` with `λ = 0.001`. I directed all key design decisions, including the specific blending formula, the deliberate architectural constraint that routing accuracy improves **only** via retrieval feedback (zero gradient descent, zero model retraining), and the use of Qdrant vector embeddings of task signatures as the retrieval key rather than raw categorical labels. This constraint is enforced by the module-level constant `NO_RETRAINING_CONSTRAINT = True`.
+
+**Differentiation from Kount US12335276B2:** Kount's exponential decay is applied to fraud and network access control variables using cloud-based telemetry. This system applies time-decay weighting exclusively to AI agent task routing decisions on local hardware with no cloud transmission and no model retraining. The domain, architecture, purpose, and hardware constraint are all distinct.
+
+**Specific Technical Improvement:** Routing accuracy improves on repeated task patterns without any model retraining, on hardware-constrained local devices, with full decision traceability via vector retrieval rather than opaque model weights.
+
+---
+
+### Element 3 — Negation-Aware Confidence Suppression Function
+
+**Conception Date:** 2026-05-07
+**First Committed Evidence:** Issue #82 filed 2026-05-07 specifying `negation_suppressed_confidence()` with exact parameters.
+**Related Issues:** #82, #83
+**Related Files:** `merlin/preference_extractor.py`
+**Patent Candidates:** Candidate 1 (Claim 3)
+
+On 2026-05-07, I directed the design of a named, testable negation suppression function — `negation_suppressed_confidence()` — that scans a configurable token window preceding a candidate preference term for negation markers (e.g., "don't", "never", "avoid", "stop") and, upon detection, multiplies the raw confidence score by a configurable suppression weight (default: 0.15) rather than inverting the semantic meaning of the preference. I selected the specific default values — `suppression_weight = 0.15` and `token_window = 5` — and the architectural decision that suppression degrades confidence while preserving the candidate in the staging queue for human review. This is the implementation of Patent Provisional A, Claim 3.
+
+**Differentiation from negation-as-inversion approaches:** Standard NLP negation handling inverts the semantic polarity of a statement. This function instead reduces extraction confidence and defers the ambiguous case to human review, which is a distinct and specific technical improvement over silent semantic inversion.
+
+---
+
+### Element 4 — Four-Stage Session Reflection Pipeline with Human Promotion Gate
+
+**Conception Date:** 2026-04-30
+**First Committed Evidence:** `merlin/session_reflector.py` establishing the four-stage pipeline architecture.
+**Related Issues:** #83, #31, #32
+**Related Files:** `merlin/session_reflector.py`, `merlin/policy_engine.py`
+**Patent Candidates:** Candidate 4 (Session Reflector)
+
+On 2026-04-30, I conceived of and implemented a four-stage behavioral safety pipeline — extraction → candidate queue → human review → vector store write — in which no behavioral preference can propagate to the AI routing layer without traversing all four stages. I directed the key design decision that the staging queue is physically isolated from the live routing layer, such that a candidate preference cannot influence routing behavior until it has received an explicit human promotion token. This is architecturally distinct from real-time in-session implicit intent detection, which does not provide a staging queue or mandatory human promotion gate.
+
+**Specific Technical Improvement:** This pipeline achieves a concrete technical improvement to AI behavioral safety and auditability: the four-stage traversal requirement provides a measurable guarantee that no unreviewed behavioral signal can modify system routing behavior.
+
+---
+
+### Element 5 — MerlinFlow: Self-Generating Workflow Engine via Execute-Summarize Pattern
+
+**Conception Date:** 2026-05-07
+**First Committed Evidence:** Issue #84 filed 2026-05-07 specifying the MerlinFlow architecture, `workflow_synthesizer.py`, causal pruning algorithm, and prior art differentiation table.
+**Related Issues:** #84, #83, #81, #35
+**Related Files:** `merlin/workflow_synthesizer.py` (to be created), `merlin/workflow_store.py` (to be created), `configs/merlin/policy.yaml` (`workflow_write`, `workflow_execute` gates)
+**Patent Candidates:** Candidate 5 (MerlinFlow)
+
+On 2026-05-07, I conceived of a system in which an AI agent observes its own LLM execution traces and, via causal pruning and structural pattern extraction, proposes reusable structured workflow definitions — stored only after passing through the existing human approval gate (`policy_engine.py`, `workflow_write` gate) and never transmitted outside the local device. I directed all key design decisions, including:
+
+1. **Causal pruning:** The `synthesize_workflow_from_trace()` function removes steps whose `tool_name` contains markers in `CAUSAL_PRUNE_MARKERS` ("retry", "debug", "fallback", "error_handle") before proposing the workflow. This is the primary structural distinction from FlowMind (arxiv 2602.11782), which records full traces without pruning.
+2. **Type-only schema extraction:** Input and output schemas capture Python type names only (`str`, `int`, `list`, `dict`) — no user content, credentials, or personal data. This is enforced structurally at synthesis time, not by post-processing redaction.
+3. **Workflow confidence decay:** Stored workflows use `time_decay_weight()` (from Element 2). Confidence decaying below threshold downgrades the workflow to "pending re-approval" rather than deleting it, preventing stale workflows from executing without supervision.
+4. **Local-only hard constraint:** `ProposedWorkflow.local_only = True` is a struct-level constant, not a configuration option.
+5. **Approval-required hard constraint:** `ProposedWorkflow.requires_approval = True` is a struct-level constant. No workflow can execute without an `approval_token` from the policy engine write gate.
+
+**Differentiation from prior art:**
+
+| Prior Art | What It Covers | What It Does NOT Cover |
+|-----------|---------------|------------------------|
+| Microsoft US20250200475A1 | LLM generates workflow via 3-prompt method | Requires human-supplied prompts; no self-observation from agent trace |
+| ServiceNow US20250265521A1 | Templates from text input via workflow pattern clusters | Templates built from human-designed workflows, not agent execution traces |
+| Cumulus Digital US20250156783A1 | LLM workflow from schema-constrained prompts | Cloud-based; no local privacy constraint; no approval gate on persistence |
+| UiPath US12204295B2 | RPA digital assistant observes user actions | Observes human actions, not agent execution traces |
+| FlowMind arxiv 2602.11782 | Execute-Summarize academic framework | Academic only; no local privacy constraint; no consent gate; not filed |
+
+**The defensible gap:** No filed patent covers an AI agent that (a) observes its own LLM execution traces, (b) proposes a reusable workflow specification via causal pruning of those traces, (c) stores that workflow only after human consent via an existing approval gate, and (d) does all of this locally with no cloud training or transmission.
+
+---
+
+## Filing Strategy Notes
+
+- **Provisional A** (earliest priority): Covers Elements 1, 2, 3, 4. Target filing date: as soon as possible.
+- **Provisional B or CIP**: Covers Element 5 (MerlinFlow). Can be filed as continuation-in-part of Provisional A or as standalone Provisional B.
+- **Alice §101 readiness**: All elements include explicit technical improvement language per USPTO 2019 Revised Guidance and 2025 Director Memorandum. See issue #83 for per-element Alice Step 2B language.
+- **SMED readiness**: Inventor should be prepared to submit a Subject Matter Eligibility Declaration confirming the claimed limitations cannot practically be performed in the human mind.
+- **Prior art citations to include in nonprovisional spec:** Kount US12335276B2, Kount US20250274461A1, Microsoft US20250200475A1, ServiceNow US20250265521A1, Cumulus Digital US20250156783A1, UiPath US12204295B2, FlowMind arxiv 2602.11782.
+
+---
+
+## Revision History
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-05-07 | Initial creation — all five elements documented; conception dates established | TheYfactora12 |
