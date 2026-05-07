@@ -42,13 +42,17 @@
             { "name": "prompt", "value": "={{ $('Parse Recall Request').first().json.query }}" }
           ]
         },
-        "options": { "timeout": 30000 }
+        "options": { "timeout": 90000 }
       },
       "id": "embed-query",
       "name": "Embed Query (nomic)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [680, 300]
+      "position": [680, 300],
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {

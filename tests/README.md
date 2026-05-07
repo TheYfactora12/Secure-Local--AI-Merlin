@@ -171,3 +171,26 @@ stack.
 ```bash
 bash tests/launchd-core-smoke.sh
 ```
+
+---
+
+## n8n-ollama-retry-smoke.sh
+
+This test does not require live n8n, Ollama, Qdrant, Docker, or cloud keys. It
+statically validates every n8n workflow JSON file and requires each Ollama HTTP
+Request node to have:
+
+- timeout of at least 90 seconds
+- `retryOnFail: true`
+- `maxTries: 3` (initial try plus two retries)
+- positive `waitBetweenTries`
+- `continueOnFail: true` for graceful workflow degradation
+
+```bash
+bash tests/n8n-ollama-retry-smoke.sh
+wizard test-workflows
+```
+
+If a live workflow hits Ollama `context canceled` during model load, wait for
+the model to finish loading and rerun the workflow. The static retry contract
+means transient slow loads should retry instead of silently dropping the task.

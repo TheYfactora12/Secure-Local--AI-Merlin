@@ -67,13 +67,17 @@
             { "name": "prompt", "value": "={{ $('Prepare Memory Payload').first().json.task + ' ' + $('Prepare Memory Payload').first().json.result.substring(0, 500) }}" }
           ]
         },
-        "options": { "timeout": 30000 }
+        "options": { "timeout": 90000 }
       },
       "id": "generate-embedding",
       "name": "Generate Embedding (nomic)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [900, 300]
+      "position": [900, 300],
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {

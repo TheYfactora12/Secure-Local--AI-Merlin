@@ -78,14 +78,17 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ model: $('Validate + Gate Check').first().json.embedding_model, prompt: $('Validate + Gate Check').first().json.embedding_prompt }) }}",
-        "options": { "timeout": 30000 }
+        "options": { "timeout": 90000 }
       },
       "id": "generate-write-embedding",
       "name": "Generate Write Embedding",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [1120, 160],
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -122,14 +125,17 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ model: $('Validate + Gate Check').first().json.embedding_model, prompt: $('Validate + Gate Check').first().json.embedding_prompt }) }}",
-        "options": { "timeout": 30000 }
+        "options": { "timeout": 90000 }
       },
       "id": "generate-query-embedding",
       "name": "Generate Query Embedding",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [1120, 460],
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {

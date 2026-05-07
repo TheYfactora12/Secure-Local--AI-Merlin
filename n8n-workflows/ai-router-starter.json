@@ -82,13 +82,18 @@
         "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{\"model\": \"qwen3:32b\", \"prompt\": \"={{ $json.task }}\", \"stream\": false}"
+        "jsonBody": "{\"model\": \"qwen3:32b\", \"prompt\": \"={{ $json.task }}\", \"stream\": false}",
+        "options": { "timeout": 90000 }
       },
       "id": "node-6",
       "name": "Ollama Local",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [900, 440]
+      "position": [900, 440],
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     }
   ],
   "connections": {

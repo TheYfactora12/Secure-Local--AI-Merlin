@@ -42,14 +42,17 @@
             { "name": "prompt", "value": "={{ $('Classify & Route Task').first().json.task }}" }
           ]
         },
-        "options": { "timeout": 20000 }
+        "options": { "timeout": 90000 }
       },
       "id": "recall-embed",
       "name": "Recall: Embed Task",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [680, 300],
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -218,14 +221,17 @@
             { "name": "prompt", "value": "={{ $json.task + ' ' + $json.result.substring(0, 500) }}" }
           ]
         },
-        "options": { "timeout": 20000 }
+        "options": { "timeout": 90000 }
       },
       "id": "write-embed",
       "name": "Write: Embed Result",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [1940, 300],
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
