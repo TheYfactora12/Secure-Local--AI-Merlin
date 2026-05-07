@@ -35,7 +35,7 @@ require_output "$GENERAL_OUTPUT" '^service_starts: none$' "dry-run should not st
 require_output "$GENERAL_OUTPUT" '^tool_execution: none$' "dry-run should not execute tools"
 require_output "$GENERAL_OUTPUT" '^cloud_allowed: false$' "dry-run should keep cloud disabled"
 
-CODE_OUTPUT="$(HOME_AI_PROFILE=core bash "${STACK_DIR}/scripts/merlin-dry-run.sh" "debug the installer code")"
+CODE_OUTPUT="$(MERLIN_HARDWARE_TIER=low HOME_AI_PROFILE=core bash "${STACK_DIR}/scripts/merlin-dry-run.sh" "debug the installer code")"
 require_output "$CODE_OUTPUT" '^route_id: code$' "code task should route to code"
 require_output "$CODE_OUTPUT" '^selected_agent: coding$' "code task should select coding agent"
 require_output "$CODE_OUTPUT" '^required_profile: coding$' "code task should require coding profile"
@@ -76,7 +76,7 @@ trap cleanup EXIT
 
 TRACE_LOG="${TMP}/merlin-route-decisions.jsonl"
 APPROVAL_LOG="${TMP}/merlin-approvals.jsonl"
-TRACE_OUTPUT="$(HOME_AI_PROFILE=core bash "${STACK_DIR}/scripts/merlin-dry-run.sh" --write-trace --trace-log "$TRACE_LOG" --approval-log "$APPROVAL_LOG" "debug token sk-test installer")"
+TRACE_OUTPUT="$(MERLIN_HARDWARE_TIER=low HOME_AI_PROFILE=core bash "${STACK_DIR}/scripts/merlin-dry-run.sh" --write-trace --trace-log "$TRACE_LOG" --approval-log "$APPROVAL_LOG" "debug token sk-test installer")"
 require_output "$TRACE_OUTPUT" '^trace_written: true$' "write-trace should report trace_written"
 require_output "$TRACE_OUTPUT" '^approval_required: true$' "write-trace route should require approval"
 require_output "$TRACE_OUTPUT" "^trace_log: ${TRACE_LOG}$" "write-trace should report trace path"
