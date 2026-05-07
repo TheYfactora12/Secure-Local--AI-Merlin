@@ -88,7 +88,7 @@
 
 | Milestone | Status |
 |---|---|
-| **v1.0 — Stable Installer Release** | 🔵 In Progress — fresh install, unsigned package, backup/restore, core upgrade, launchd, clean reinstall, and package builder fixes verified; self-signed `.pkg` install still needs System trust or Developer ID |
-| **v2.0 — Merlin Staff Core** | 🔵 In Progress — Phase 2 core and #60 staff router integration complete; #53 remains open |
+| **v1.0 — Stable Installer Release** | 🔵 In Progress — installer path verified; #63 whole-stack release-candidate validation is now the final full-product test gate; self-signed `.pkg` install still needs System trust or Developer ID |
+| **v2.0 — Merlin Staff Core** | ✅ Complete — Phase 2 core, #53 session memory bridge, and #60 staff router integration closed with CI validation |
 
 See [GitHub Milestones](https://github.com/TheYfactora12/home-ai-elite/milestones) and [CHANGELOG.md](../CHANGELOG.md) for full release history.

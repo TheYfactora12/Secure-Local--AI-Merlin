@@ -101,7 +101,7 @@ Phase 2 runtime package:
 - `merlin/task_endpoint.py` exposes FastAPI on port 8766.
 - `merlin/status_extension.py` adds route, approval, trace, and memory status panels to the FastAPI app.
 
-Later GitHub roadmap normalization assigned the duplicate/new Phase 2 tracking issues #50 through #60 to `v2.0 — Merlin Staff Core`. Issues #50, #51, #52, #54, #55, #56, #57, #58, #59, and #60 were closed after verification against the implemented files, tests, and CI. #53 remains open v2.0 integration work. Do not create a duplicate `Merlin Staff — Core` milestone.
+Later GitHub roadmap normalization assigned the duplicate/new Phase 2 tracking issues #50 through #60 to `v2.0 — Merlin Staff Core`. Issues #50 through #60 are closed after verification against the implemented files, tests, and CI. Do not create a duplicate `Merlin Staff — Core` milestone.
 
 ## RAM Tiers
 
@@ -130,10 +130,11 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Finish remaining `v1.0 — Stable Installer Release` paperwork after the uninstaller launchd warning fix lands and CI is green.
-2. Keep signing/notarization deferred as a separate distribution gate; the unsigned functional installer path is now green on this 8GB Mac.
-3. #53 session memory bridge is the remaining v2.0 integration slice. It must stay approval-gated, local-only, and non-blocking if Qdrant or Ollama is unavailable.
+1. Finish remaining `v1.0 — Stable Installer Release` policy work on #1.
+2. Run #63 whole-stack release-candidate validation as the final full-product test gate before Phase 3 learning work.
+3. Keep signing/notarization deferred as a separate distribution gate; the unsigned functional installer path is now green on this 8GB Mac.
 4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
+5. Start the Phase 3 learning sequence only after v1.0 release policy and #63 are settled: outcome observer first, then retrieval scoring, preference extraction, session reflection, and skill scores.
 
 ## Reasoning Summary
 
