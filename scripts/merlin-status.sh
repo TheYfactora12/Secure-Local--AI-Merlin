@@ -106,6 +106,50 @@ jsonl_line_count() {
   fi
 }
 
+latest_route_summary() {
+  local trace_log="$1"
+  if [[ ! -f "$trace_log" ]]; then
+    echo "latest_route_id: none"
+    echo "latest_staff_mode: none"
+    echo "latest_selected_model_alias: none"
+    echo "latest_model_fallback_applied: false"
+    echo "latest_audit_written: false"
+    return
+  fi
+
+  TRACE_LOG="$trace_log" python3 - <<'PY'
+import json
+import os
+from pathlib import Path
+
+record = None
+for line in Path(os.environ["TRACE_LOG"]).read_text(encoding="utf-8").splitlines():
+    if not line.strip():
+        continue
+    try:
+        parsed = json.loads(line)
+    except json.JSONDecodeError:
+        continue
+    record = parsed
+
+if record is None:
+    print("latest_route_id: none")
+    print("latest_staff_mode: none")
+    print("latest_selected_model_alias: none")
+    print("latest_model_fallback_applied: false")
+    print("latest_audit_written: false")
+else:
+    print(f"latest_route_id: {record.get('route_id', 'unknown')}")
+    print(f"latest_staff_mode: {record.get('staff_mode', 'unknown')}")
+    print(f"latest_preferred_model_alias: {record.get('preferred_model_alias', record.get('selected_model_alias', 'unknown'))}")
+    print(f"latest_selected_model_alias: {record.get('selected_model_alias', 'unknown')}")
+    print(f"latest_model_fallback_applied: {str(bool(record.get('model_fallback_applied', False))).lower()}")
+    reason = record.get("model_fallback_reason") or "none"
+    print(f"latest_model_fallback_reason: {reason}")
+    print(f"latest_audit_written: {str(bool(record.get('audit_written', False))).lower()}")
+PY
+}
+
 approval_counts() {
   local approval_log="$1"
   if [[ ! -f "$approval_log" ]]; then
@@ -167,6 +211,7 @@ trace_count: ${TRACE_COUNT}
 approval_log: ${APPROVAL_LOG}
 EOF
 
+latest_route_summary "$TRACE_LOG"
 approval_counts "$APPROVAL_LOG"
 
 cat <<EOF

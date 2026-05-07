@@ -23,6 +23,11 @@ require_output "$GENERAL_OUTPUT" '^required_profile: core$' "general task should
 require_output "$GENERAL_OUTPUT" '^policy_decision: allow$' "general route should be allowed in dry-run"
 require_output "$GENERAL_OUTPUT" '^approval_required: false$' "general route should not require approval"
 require_output "$GENERAL_OUTPUT" '^approval_request_id: none$' "general route should not allocate approval id"
+require_output "$GENERAL_OUTPUT" '^staff_mode: operator$' "general route should report staff mode"
+require_output "$GENERAL_OUTPUT" '^preferred_model_alias: mistral$' "general route should report preferred staff model"
+require_output "$GENERAL_OUTPUT" '^selected_model_alias: mistral$' "general route should report selected staff model"
+require_output "$GENERAL_OUTPUT" '^model_fallback_applied: false$' "general route should report fallback status"
+require_output "$GENERAL_OUTPUT" '^audit_written: false$' "dry-run should not write audit"
 require_output "$GENERAL_OUTPUT" '^side_effects: none$' "dry-run should have no side effects"
 require_output "$GENERAL_OUTPUT" '^model_calls: none$' "dry-run should not call models"
 require_output "$GENERAL_OUTPUT" '^memory_writes: none$' "dry-run should not write memory"
@@ -36,6 +41,10 @@ require_output "$CODE_OUTPUT" '^selected_agent: coding$' "code task should selec
 require_output "$CODE_OUTPUT" '^required_profile: coding$' "code task should require coding profile"
 require_output "$CODE_OUTPUT" '^approval_required: true$' "code task should require approval"
 require_output "$CODE_OUTPUT" '^approval_request_id: approval_dryrun_' "code task should allocate approval id"
+require_output "$CODE_OUTPUT" '^staff_mode: software_engineer$' "code route should report software engineer mode"
+require_output "$CODE_OUTPUT" '^preferred_model_alias: qwen-coder$' "code route should prefer qwen-coder"
+require_output "$CODE_OUTPUT" '^selected_model_alias: mistral$' "low-memory code route should select fallback model"
+require_output "$CODE_OUTPUT" '^model_fallback_applied: true$' "low-memory code route should report fallback"
 require_output "$CODE_OUTPUT" '^approval_status: required_pending$' "code task should require pending approval"
 require_output "$CODE_OUTPUT" '^policy_decision: ask_to_start_profile$' "code route should not auto-start optional profile"
 require_output "$CODE_OUTPUT" 'shell_command' "code route should include shell approval gate"
@@ -99,7 +108,12 @@ required = [
     "privacy_mode",
     "online_mode",
     "cloud_allowed",
+    "staff_mode",
+    "preferred_model_alias",
     "selected_model_alias",
+    "model_fallback_applied",
+    "model_fallback_reason",
+    "audit_written",
     "provider",
     "approval_required",
     "approval_request_id",
@@ -114,6 +128,16 @@ if missing:
     raise SystemExit(f"missing fields: {missing}")
 if record["route_id"] != "code":
     raise SystemExit("expected code route")
+if record["staff_mode"] != "software_engineer":
+    raise SystemExit("expected software engineer staff mode")
+if record["preferred_model_alias"] != "qwen-coder":
+    raise SystemExit("expected qwen-coder preferred model")
+if record["selected_model_alias"] != "mistral":
+    raise SystemExit("expected low-memory fallback model")
+if record["model_fallback_applied"] is not True:
+    raise SystemExit("expected model fallback")
+if record["audit_written"] is not False:
+    raise SystemExit("dry-run trace must not claim audit was written")
 if record["policy_decision"] != "ask_to_start_profile":
     raise SystemExit("expected optional profile approval decision")
 if record["online_mode"] is not False or record["cloud_allowed"] is not False:

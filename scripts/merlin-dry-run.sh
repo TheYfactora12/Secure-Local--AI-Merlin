@@ -117,6 +117,40 @@ route_for_task_type() {
   esac
 }
 
+staff_mode_for_task_type() {
+  case "$1" in
+    code|debug|refactor|test) echo "software_engineer" ;;
+    *) echo "operator" ;;
+  esac
+}
+
+staff_model_alias() {
+  local staff_mode="$1"
+  awk -v staff_mode="$staff_mode" '
+    /^staff_model_aliases:/ { in_map=1; next }
+    in_map && /^[A-Za-z0-9_-]+:/ { exit }
+    in_map && $1 == staff_mode ":" {
+      sub(/^[^:]+:[[:space:]]*/, "")
+      gsub(/^"|"$/, "")
+      print
+      exit
+    }
+  ' "$ROUTES_FILE"
+}
+
+low_memory_fallback_alias() {
+  awk '$1 == "low_memory_fallback_model_alias:" { print $2; exit }' "$ROUTES_FILE"
+}
+
+model_enabled_by_default() {
+  local alias="$1"
+  awk -v alias="$alias" '
+    $0 ~ "^  " alias ":" { in_model=1; next }
+    in_model && /^  [A-Za-z0-9_-]+:/ { exit }
+    in_model && $1 == "enabled_by_default:" { print $2; exit }
+  ' "${STACK_DIR}/configs/merlin/models.yaml"
+}
+
 route_scalar() {
   local route="$1"
   local key="$2"
@@ -250,6 +284,7 @@ write_trace_record() {
   local user_goal_hash_json
   local online_mode_json
   local cloud_allowed_json
+  local model_fallback_applied_json
 
   approval_gates_json="$(json_array_from_csv "$APPROVAL_GATES")"
   approval_request_id_json="$(printf '%s' "$APPROVAL_REQUEST_ID" | json_escape)"
@@ -258,9 +293,10 @@ write_trace_record() {
   user_goal_hash_json="$(printf '%s' "$USER_GOAL_HASH" | json_escape)"
   online_mode_json="$(json_bool "$ONLINE_MODE")"
   cloud_allowed_json="$(json_bool "$CLOUD_ALLOWED")"
+  model_fallback_applied_json="$(json_bool "$MODEL_FALLBACK_APPLIED")"
 
   mkdir -p "$(dirname "$trace_log")"
-  printf '{"trace_id":%s,"timestamp":%s,"user_goal_hash":%s,"route_id":%s,"task_type":%s,"selected_agent":%s,"required_profile":%s,"active_profile":%s,"hardware_tier":%s,"privacy_mode":%s,"online_mode":%s,"cloud_allowed":%s,"selected_model_alias":%s,"provider":%s,"approval_required":%s,"approval_request_id":%s,"approval_gates":%s,"approval_status":%s,"policy_decision":%s,"decision_reason":%s,"redaction_applied":true,"side_effects":"none","model_calls":"none","memory_writes":"none","service_starts":"none","tool_execution":"none"}\n' \
+  printf '{"trace_id":%s,"timestamp":%s,"user_goal_hash":%s,"route_id":%s,"task_type":%s,"selected_agent":%s,"required_profile":%s,"active_profile":%s,"hardware_tier":%s,"privacy_mode":%s,"online_mode":%s,"cloud_allowed":%s,"staff_mode":%s,"preferred_model_alias":%s,"selected_model_alias":%s,"model_fallback_applied":%s,"model_fallback_reason":%s,"audit_written":false,"provider":%s,"approval_required":%s,"approval_request_id":%s,"approval_gates":%s,"approval_status":%s,"policy_decision":%s,"decision_reason":%s,"redaction_applied":true,"side_effects":"none","model_calls":"none","memory_writes":"none","service_starts":"none","tool_execution":"none"}\n' \
     "$(printf '%s' "$TRACE_ID" | json_escape)" \
     "$(printf '%s' "$timestamp" | json_escape)" \
     "$user_goal_hash_json" \
@@ -273,7 +309,11 @@ write_trace_record() {
     "$(printf '%s' "$PRIVACY_MODE" | json_escape)" \
     "$online_mode_json" \
     "$cloud_allowed_json" \
+    "$(printf '%s' "$STAFF_MODE" | json_escape)" \
+    "$(printf '%s' "$PREFERRED_MODEL_ALIAS" | json_escape)" \
     "$(printf '%s' "$MODEL_ALIAS" | json_escape)" \
+    "$model_fallback_applied_json" \
+    "$(printf '%s' "$MODEL_FALLBACK_REASON" | json_escape)" \
     "$(printf '%s' "ollama" | json_escape)" \
     "$approval_required_json" \
     "$approval_request_id_json" \
@@ -336,13 +376,13 @@ ROUTE_ID="$(route_for_task_type "$TASK_TYPE")"
 
 AGENT="$(route_scalar "$ROUTE_ID" "agent")"
 REQUIRED_PROFILE="$(route_scalar "$ROUTE_ID" "required_profile")"
-MODEL_ALIAS="$(route_scalar "$ROUTE_ID" "preferred_model_alias")"
+ROUTE_MODEL_ALIAS="$(route_scalar "$ROUTE_ID" "preferred_model_alias")"
 RISK="$(route_scalar "$ROUTE_ID" "default_risk")"
 APPROVAL_GATES="$(route_list_csv "$ROUTE_ID" "approval_gates")"
 
 [[ -n "$AGENT" ]] || fail "unable to read route agent for: $ROUTE_ID"
 [[ -n "$REQUIRED_PROFILE" ]] || fail "unable to read required profile for: $ROUTE_ID"
-[[ -n "$MODEL_ALIAS" ]] || fail "unable to read model alias for: $ROUTE_ID"
+[[ -n "$ROUTE_MODEL_ALIAS" ]] || fail "unable to read model alias for: $ROUTE_ID"
 
 ACTIVE_PROFILE="${HOME_AI_PROFILE:-core}"
 CUSTOM_PROFILES="${HOME_AI_CUSTOM_PROFILES:-}"
@@ -358,6 +398,22 @@ TRACE_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 USER_GOAL_HASH="$(goal_hash "$GOAL")"
 APPROVAL_REQUEST_ID="none"
 APPROVAL_REQUIRED=false
+STAFF_MODE="$(staff_mode_for_task_type "$TASK_TYPE")"
+PREFERRED_MODEL_ALIAS="$(staff_model_alias "$STAFF_MODE")"
+PREFERRED_MODEL_ALIAS="${PREFERRED_MODEL_ALIAS:-$ROUTE_MODEL_ALIAS}"
+MODEL_ALIAS="$PREFERRED_MODEL_ALIAS"
+MODEL_FALLBACK_APPLIED=false
+MODEL_FALLBACK_REASON=""
+
+if [[ "$HARDWARE_TIER" == "low" ]]; then
+  LOW_MEMORY_FALLBACK_ALIAS="$(low_memory_fallback_alias)"
+  MODEL_ENABLED_BY_DEFAULT="$(model_enabled_by_default "$PREFERRED_MODEL_ALIAS")"
+  if [[ -n "$LOW_MEMORY_FALLBACK_ALIAS" && "$PREFERRED_MODEL_ALIAS" != "$LOW_MEMORY_FALLBACK_ALIAS" && "$MODEL_ENABLED_BY_DEFAULT" != "true" ]]; then
+    MODEL_ALIAS="$LOW_MEMORY_FALLBACK_ALIAS"
+    MODEL_FALLBACK_APPLIED=true
+    MODEL_FALLBACK_REASON="Low-memory hardware tier selected ${MODEL_ALIAS} instead of ${PREFERRED_MODEL_ALIAS}."
+  fi
+fi
 
 POLICY_DECISION="allow"
 APPROVAL_STATUS="not_required"
@@ -412,7 +468,12 @@ ram_gb: ${RAM_GB}
 privacy_mode: ${PRIVACY_MODE}
 online_mode: ${ONLINE_MODE}
 cloud_allowed: ${CLOUD_ALLOWED}
+staff_mode: ${STAFF_MODE}
+preferred_model_alias: ${PREFERRED_MODEL_ALIAS}
 selected_model_alias: ${MODEL_ALIAS}
+model_fallback_applied: ${MODEL_FALLBACK_APPLIED}
+model_fallback_reason: ${MODEL_FALLBACK_REASON:-none}
+audit_written: false
 provider: ollama
 approval_required: ${APPROVAL_REQUIRED}
 approval_request_id: ${APPROVAL_REQUEST_ID}
