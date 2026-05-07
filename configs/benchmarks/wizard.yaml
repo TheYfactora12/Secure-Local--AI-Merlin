@@ -1,0 +1,33 @@
+# Offline benchmark defaults for Merlin memory evaluation.
+#
+# This file intentionally lives under configs/, not root config/, because
+# configs/ is the canonical configuration root for Home AI Elite.
+
+schema_version: 1
+profile: offline
+
+defaults:
+  top_k: 5
+  min_recall_at_5: 0.75
+  horizon_length: 10
+  noise_ratio: 0.0
+
+suites:
+  epbench:
+    enabled: true
+    required_for_memory_changes: true
+    min_recall_at_5: 0.75
+  memoryarena:
+    enabled: true
+    required_for_memory_changes: false
+  amabench:
+    enabled: true
+    required_for_memory_changes: false
+
+live_profiles:
+  qdrant:
+    enabled_by_default: false
+    requires_env: MERLIN_INTEGRATION_TESTS
+  ollama:
+    enabled_by_default: false
+    requires_env: MERLIN_INTEGRATION_TESTS

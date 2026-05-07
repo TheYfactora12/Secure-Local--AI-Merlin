@@ -73,7 +73,9 @@ left behind.
   `api_key_use`.
 - #85 captures the future v2.0 design question of whether to add more Merlin
   staff skills. It is intentionally not part of v1.3.
-- Next active milestone is `v1.5`; open issue: #7.
+- Next active milestone is `v1.5`; open issue: #7. The v1.5 scope is an
+  offline-safe benchmark harness first. Live Qdrant/Ollama benchmark profiles
+  remain future integration work behind explicit test flags.
 - #28 closed under `v2.0`. #50–#60 closed under `v2.0`.
 - #30, #39 open under `v2.1`. #33, #34 open under `v2.2`. #37 open under `v3.0`.
 

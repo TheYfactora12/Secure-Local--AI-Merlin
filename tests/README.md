@@ -214,3 +214,16 @@ as a local-first optional router starter:
 bash tests/n8n-model-router-policy-smoke.sh
 wizard test-workflows
 ```
+
+---
+
+## benchmark-smoke.sh
+
+This test does not require live Qdrant, Ollama, LiteLLM, n8n, Docker, cloud
+keys, or network access. It validates the offline memory benchmark harness and
+the `wizard benchmark run` command.
+
+```bash
+bash tests/benchmark-smoke.sh
+wizard benchmark run --suite all --profile offline
+```

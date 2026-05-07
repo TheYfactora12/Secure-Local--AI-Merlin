@@ -40,6 +40,9 @@ Current milestone position:
   future, explicit, policy-gated implementation is approved.
 - #85 tracks the future question of whether Merlin should add staff skills
   beyond the current six modes. It belongs to v2.0 and must not expand v1.3.
+- v1.5 starts with #7: offline memory benchmark harness. Do not rename current
+  `merlin_*` canonical collections to stale `wizard_*` names without a
+  migration plan and restore tests.
 - Drift captured during v1.1: #80 tracks whether to add an explicit
   `webhook_execution` policy gate under `v1.7`.
 

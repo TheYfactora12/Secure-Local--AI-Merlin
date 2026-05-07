@@ -113,6 +113,7 @@ jobs:
           bash tests/config-root-smoke.sh
           bash tests/merlin-config-validate-smoke.sh
           bash tests/memory-config-smoke.sh
+          bash tests/benchmark-smoke.sh
           bash tests/wizard-memory-config-smoke.sh
           bash tests/doctor-model-smoke.sh
           bash tests/installer-model-pull-policy-smoke.sh

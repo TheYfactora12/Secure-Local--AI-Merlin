@@ -223,6 +223,7 @@ cat << 'EOF'
     wizard preferences approve "text" category [approval-id]
                               Write explicitly approved preference to local Qdrant
     wizard skills             Show Merlin skill scores from approved outcomes
+    wizard benchmark run      Run offline Merlin memory benchmark harness
     wizard ask "question"     Ask a quick question (swarm-tiny, fastest)
     wizard route "task"       Alias for wizard swarm (full coordinator)
     wizard models             List loaded Ollama models
@@ -490,6 +491,19 @@ print()
 print(report.as_table())
 " 2>/dev/null || echo "[!] skill_scorer unavailable — is Qdrant running?"
     )
+    ;;
+
+  benchmark)
+    case "${2:-}" in
+      run)
+        shift 2
+        exec bash "$SCRIPTS_DIR/run-benchmarks.sh" "$@"
+        ;;
+      *)
+        echo "Usage: wizard benchmark run [--suite epbench|memoryarena|amabench|all] [--profile offline]"
+        exit 1
+        ;;
+    esac
     ;;
 
   preferences)

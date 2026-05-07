@@ -1,0 +1,2 @@
+"""AMA-Bench offline adapter."""
+
