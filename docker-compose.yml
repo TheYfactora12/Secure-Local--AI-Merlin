@@ -1,7 +1,8 @@
 # home-ai-elite — Full Stack Docker Compose v1.1
 # Services: Open WebUI, Perplexica, SearXNG, OpenHands, Qdrant, n8n, LiteLLM
 #           + Nginx (TLS reverse proxy), Watchtower (auto-updates), Fail2ban (brute-force)
-# Start:  docker compose up -d
+# Start core: docker compose up -d dashboard qdrant litellm open-webui
+# Optional capabilities use Compose profiles: search, automation, coding, security, ops.
 # Linux full-stack mode:
 #   docker compose --profile docker-ollama --profile linux-security up -d
 # Stop:   docker compose down
@@ -39,6 +40,7 @@ services:
   # Self-signed cert generated on first boot
   # ───────────────────────────────────────────
   nginx:
+    profiles: ["security"]
     image: nginx:alpine
     container_name: nginx
     restart: unless-stopped
@@ -53,8 +55,6 @@ services:
     depends_on:
       open-webui:
         condition: service_started
-      n8n:
-        condition: service_healthy
       qdrant:
         condition: service_started
       litellm:
@@ -95,6 +95,7 @@ services:
   # Runs daily at 3am
   # ───────────────────────────────────────────
   watchtower:
+    profiles: ["ops"]
     image: containrrr/watchtower:latest
     container_name: watchtower
     restart: unless-stopped
@@ -231,8 +232,6 @@ services:
     depends_on:
       litellm:
         condition: service_started
-      searxng:
-        condition: service_started
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
@@ -241,6 +240,7 @@ services:
   # Powers web search for Open WebUI + Perplexica
   # ───────────────────────────────────────────
   searxng:
+    profiles: ["search"]
     image: searxng/searxng:latest
     container_name: searxng
     restart: unless-stopped
@@ -269,6 +269,7 @@ services:
   # Uses host.docker.internal for native macOS Ollama and Linux host-gateway.
   # ───────────────────────────────────────────
   perplexica-backend:
+    profiles: ["search"]
     image: itzcrazykns1337/perplexica-backend:main
     container_name: perplexica-backend
     restart: unless-stopped
@@ -290,6 +291,7 @@ services:
       - "com.centurylinklabs.watchtower.enable=true"
 
   perplexica-frontend:
+    profiles: ["search"]
     image: itzcrazykns1337/perplexica-frontend:main
     container_name: perplexica-frontend
     restart: unless-stopped
@@ -313,6 +315,7 @@ services:
   #       OpenHands sandbox container execution
   # ───────────────────────────────────────────
   openhands:
+    profiles: ["coding"]
     image: ghcr.io/all-hands-ai/openhands:main
     container_name: openhands
     restart: unless-stopped
@@ -365,6 +368,7 @@ services:
   # change to :latest (breaks silently)
   # ───────────────────────────────────────────
   n8n:
+    profiles: ["automation"]
     image: n8nio/n8n:1.87.1
     container_name: n8n
     restart: unless-stopped
