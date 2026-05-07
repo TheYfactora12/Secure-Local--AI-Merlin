@@ -13,8 +13,9 @@
 #   4. Registers each agent in the current login session
 #
 # The stack agent intentionally starts only the laptop-safe core profile. The
-# read-only Merlin status API is a separate foreground LaunchAgent so launchd
-# owns its lifecycle directly. Optional profiles must be started explicitly.
+# read-only Merlin status API and Merlin task API are separate foreground
+# LaunchAgents so launchd owns their lifecycles directly. Optional profiles must
+# be started explicitly.
 #
 # Reference:
 #   https://gist.github.com/johndturn/09a5c055e6a56ab61212204607940fa0
@@ -39,6 +40,7 @@ PLISTS=(
   "com.homeai.docker.plist"
   "com.homeai.stack.plist"
   "com.homeai.merlin-status-api.plist"
+  "com.homeai.merlin-task-api.plist"
 )
 
 uninstall() {
@@ -100,7 +102,7 @@ install_plist() {
   fi
 
   # Patch the install path into repo-local plists
-  if [[ "$plist" == "com.homeai.stack.plist" || "$plist" == "com.homeai.merlin-status-api.plist" ]]; then
+  if [[ "$plist" == "com.homeai.stack.plist" || "$plist" == "com.homeai.merlin-status-api.plist" || "$plist" == "com.homeai.merlin-task-api.plist" ]]; then
     sed "s|\$HOME/home-ai-elite|${INSTALL_DIR}|g" "$src" > "$dest"
     # Also fix ProgramArguments paths.
     sed -i '' "s|cd \"\$HOME/home-ai-elite\"|cd \"${INSTALL_DIR}\"|g" "$dest" 2>/dev/null || true
@@ -148,12 +150,15 @@ main() {
   log "   1. Docker Desktop will open automatically (5s after login)"
   log "   2. The laptop-safe core profile will start automatically (30s after login)"
   log "   3. The read-only Merlin status API will run under its own LaunchAgent (35s after login)"
+  log "   4. The Merlin task API will run under its own LaunchAgent (40s after login)"
   log ""
   log "Verify:"
   log "   launchctl list | grep homeai"
   log "   tail -f /tmp/homeai-stack.log"
   log "   tail -f /tmp/homeai-merlin-status-api.log"
+  log "   tail -f /tmp/homeai-merlin-task-api.log"
   log "   wizard merlin status-api status"
+  log "   wizard merlin task-api status"
   log ""
   log "To uninstall:"
   log "   bash ${SCRIPT_DIR}/install-launchd.sh --uninstall"

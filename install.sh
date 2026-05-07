@@ -1039,7 +1039,7 @@ else
   echo -e "  ${YELLOW}! Merlin Status API:${NC}       not started; run: bash scripts/merlin-status-api.sh start"
   echo -e "  ${YELLOW}! Persistent Status API:${NC}   optional launchd setup: bash launchd/install-launchd.sh"
 fi
-echo -e "  ${YELLOW}! Merlin Task API:${NC}         not auto-started; supervised task execution stays manual"
+echo -e "  ${YELLOW}! Merlin Task API:${NC}         not directly started; run: bash scripts/merlin-task-api.sh start"
 if [[ " ${INSTALL_CAPABILITIES} " == *" search "* ]]; then
   echo -e "  ${CYAN}🔍 Search AI (Perplexica):${NC}  http://localhost:3002"
   echo -e "  ${CYAN}🔎 Private Search (SearXNG):${NC} http://localhost:8080"
@@ -1076,7 +1076,7 @@ else
   echo -e "  ${CYAN}${CLI_PATH} merlin status-api status${NC} → confirm read-only Merlin status API"
   echo -e "  ${CYAN}${CLI_PATH} open${NC}                 → open Wizard HQ in browser"
 fi
-echo -e "  ${CYAN}.venv/bin/python -m merlin.task_endpoint${NC}   → optional supervised Merlin Task API on :8766"
+echo -e "  ${CYAN}bash scripts/merlin-task-api.sh start${NC}       → optional supervised Merlin Task API on :8766"
 echo ""
 echo -e "  ${BOLD}First-time setup steps:${NC}"
 echo -e "  1. http://localhost:3000  → create your admin account"

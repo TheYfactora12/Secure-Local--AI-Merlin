@@ -162,6 +162,7 @@ remove_launchd_agents() {
     com.homeai.docker
     com.homeai.stack
     com.homeai.merlin-status-api
+    com.homeai.merlin-task-api
     com.homeai.backup
   )
 

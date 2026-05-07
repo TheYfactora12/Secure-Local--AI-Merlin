@@ -490,6 +490,7 @@ Next implementation slice:
 - Wire `wizard start|stop|restart` to the read-only Merlin status API while leaving launchd auto-start unchanged. `Done: cli/wizard, tests/wizard-start-status-api-smoke.sh`
 - Wire launchd core auto-start through `wizard start core` while keeping optional profiles explicit. `Done: launchd/com.homeai.stack.plist, tests/launchd-core-smoke.sh`
 - Run the read-only Merlin status API as a dedicated foreground launchd job so launchd owns restart/lifecycle behavior. `Done: launchd/com.homeai.merlin-status-api.plist, launchd/install-launchd.sh, tests/launchd-core-smoke.sh`
+- Run the execution-aware Merlin task API as a separate foreground launchd job on port 8766 while preserving the read-only port 8765 status API boundary. `Done: scripts/merlin-task-api.sh, launchd/com.homeai.merlin-task-api.plist, launchd/install-launchd.sh, tests/merlin-task-api-smoke.sh`
 - Add v0 policy-gated execution boundary with only read-only `merlin_status` allowed and risky actions denied even after approval. `Done: scripts/merlin-execute.sh, cli/wizard, tests/merlin-execute-smoke.sh`
 - Add plan-only Magic Mode runner that turns route dry-runs into auditable steps without executing any step. `Done: scripts/merlin-magic-plan.sh, cli/wizard, tests/merlin-magic-plan-smoke.sh`
 - Add approved memory-write simulator before real Qdrant writes so consent/audit behavior is stable first. `Done: scripts/merlin-memory-write.sh, cli/wizard, tests/merlin-memory-write-smoke.sh`

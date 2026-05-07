@@ -194,8 +194,8 @@ Last verified: 2026-05-07.
 - Phase 2F merged at `b4f35c8`; local Phase 2 Python suite reported 58 passing tests.
 - CI was green for the Phase 2F merge run.
 - Phase 3 live end-to-end validation is documented in `docs/archive/PHASE3_LIVE_E2E_VALIDATION_2026-05-07.md`: core stack, task API, local LiteLLM/Ollama `/task`, approval-gated memory skip, explicit approved `skill_outcomes` write, and `wizard skills` readback all passed.
-- launchd persistence validation is documented in `docs/archive/LAUNCHD_PERSISTENCE_VALIDATION_2026-05-07.md`: `com.homeai.stack` starts the core profile, `com.homeai.merlin-status-api` remains running on port 8765 with `execution_allowed=false`, and `tests/core-live-smoke.sh` passed with 18 checks and 0 failures.
-- Port 8766 is not launchd-managed yet. This is tracked in #75: add a separate Merlin Task API LaunchAgent/lifecycle manager without merging execution-aware behavior into the read-only status API on port 8765.
+- launchd persistence validation is documented in `docs/archive/LAUNCHD_PERSISTENCE_VALIDATION_2026-05-07.md`: `com.homeai.stack` starts the core profile, `com.homeai.merlin-status-api` remains running on port 8765 with `execution_allowed=false`, `com.homeai.merlin-task-api` remains running on port 8766, and `tests/core-live-smoke.sh` passed with 18 checks and 0 failures.
+- Issue #75 added a separate Merlin Task API LaunchAgent and lifecycle manager. Port 8766 is now launchd-managed without merging execution-aware behavior into the read-only status API on port 8765.
 - Fresh 8GB Mac core reinstall is green after #48; #48 fixed non-interactive status API startup messaging so the installer no longer implies persistent port 8765 without launchd or manual start.
 - Unsigned `.pkg` install is green after #49; #49 filtered package runtime copy so stale `.wizard-bootstrapped`, logs, caches, `.venv`, and build artifacts are not copied into the user runtime.
 - GitHub Actions run `25467394670` passed for commit `88d4f96`.

@@ -19,9 +19,9 @@ grep -q 'launchd/install-launchd.sh' "$INSTALLER" \
   || fail "installer should point users to launchd for persistent status API startup"
 grep -q 'Read-only Merlin status is separated from task execution' "$INSTALLER" \
   || fail "installer should explain status/task API separation"
-grep -q 'Merlin Task API.*not auto-started' "$INSTALLER" \
-  || fail "installer must not auto-start the execution-aware Merlin Task API"
-grep -q '.venv/bin/python -m merlin.task_endpoint' "$INSTALLER" \
+grep -q 'Merlin Task API.*not directly started' "$INSTALLER" \
+  || fail "installer must not directly start the execution-aware Merlin Task API"
+grep -q 'scripts/merlin-task-api.sh start' "$INSTALLER" \
   || fail "installer should print manual Merlin Task API start command"
 grep -q 'command -v wizard' "$INSTALLER" \
   || fail "installer should avoid printing unavailable wizard commands"

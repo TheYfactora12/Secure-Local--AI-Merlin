@@ -188,6 +188,7 @@ cat << 'EOF'
     wizard mode status       Show active Merlin staff mode and model selection
     wizard merlin status     Show read-only Merlin control-plane status
     wizard merlin status-api Start/manage read-only Merlin status API
+    wizard merlin task-api   Start/manage Merlin task API on port 8766
     wizard merlin ask "question"
                               Ask Merlin through the local task endpoint
     wizard merlin dry-run "goal"
@@ -387,6 +388,10 @@ print(f'Resolved At       : {ctx.resolved_at}')
         shift 2
         bash "$WIZARD_DIR/scripts/merlin-status-api.sh" "$@"
         ;;
+      task-api)
+        shift 2
+        bash "$WIZARD_DIR/scripts/merlin-task-api.sh" "$@"
+        ;;
       ask)
         shift 2
         bash "$WIZARD_DIR/scripts/merlin-ask.sh" "$@"
@@ -444,7 +449,7 @@ print(f'Resolved At       : {ctx.resolved_at}')
         esac
         ;;
       *)
-        echo "Usage: wizard merlin [status|status-api|ask|dry-run|config|approvals|execute|magic|memory] ..."
+        echo "Usage: wizard merlin [status|status-api|task-api|ask|dry-run|config|approvals|execute|magic|memory] ..."
         exit 1
         ;;
     esac
