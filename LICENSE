@@ -1,47 +1,109 @@
-MIT License
+Business Source License 1.1
 
-Copyright (c) 2026 TheYfactora12 (GitHub). All rights reserved.
+Licensor:             TheYfactora12
+Licensed Work:        home-ai-elite — Merlin AI System
+                      Copyright (c) 2026 TheYfactora12. All rights reserved.
+                      https://github.com/TheYfactora12/home-ai-elite
 
-IMPORTANT — READ BEFORE USE:
-This software and all associated files, scripts, configurations, workflows,
-documentation, and design artifacts ("the Software") are the original work of
-the author. Unauthorized commercial use, resale, or rebranding of this Software
-without explicit written permission from the copyright holder is prohibited.
+Additional Use Grant: You may use, copy, modify, and distribute the Licensed
+                      Work for any Non-Production Purpose free of charge,
+                      including personal use, research, evaluation, and
+                      non-commercial self-hosting.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+                      "Non-Production Purpose" means any use that does not
+                      involve offering the Licensed Work or a derivative of it
+                      as a commercial service, product, or SaaS offering to
+                      third parties, and does not generate direct or indirect
+                      revenue from the Licensed Work.
 
-1. The above copyright notice and this permission notice shall be included in
-   all copies or substantial portions of the Software.
+Change Date:          2030-05-07
 
-2. Any distribution of this Software or derivative works must clearly credit
-   the original author (TheYfactora12) and link to the original repository:
-   https://github.com/TheYfactora12/home-ai-elite
+Change License:       Apache License, Version 2.0
+                      https://www.apache.org/licenses/LICENSE-2.0
 
-3. The name "Merlin", "Wizard AI", "home-ai-elite", and associated branding
-   may not be used to endorse or promote derivative products without prior
-   written permission from the copyright holder.
+                      On the Change Date, or the fourth anniversary of the
+                      first publicly available distribution of this specific
+                      version of the Licensed Work, whichever comes first,
+                      the Licensor grants you rights under the terms of the
+                      Change License, and the rights granted in the paragraph
+                      below terminate.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+-------------------------------------------------------------------------------
 
----
+BUSINESS SOURCE LICENSE 1.1 — FULL TERMS
 
-PRODUCTION NOTE:
-This license will be updated with the author's full legal name and a formal
-NOTICE file (listing all third-party component licenses) prior to wide public
-distribution or commercialization. At that point, the copyright holder reserves
-the right to re-license under AGPL-3.0 or a Business Source License (BSL) to
-protect against unauthorized commercial exploitation.
+Parameters
 
-For licensing inquiries: open an issue at
+  Licensor:           TheYfactora12
+  Licensed Work:      home-ai-elite (the "Licensed Work") is (c) 2026
+                      TheYfactora12.
+  Additional Use Grant: See above.
+  Change Date:        2030-05-07
+  Change License:     Apache License, Version 2.0
+
+Terms
+
+The Licensor hereby grants you the right to copy, modify, create derivative
+works, redistribute, and make non-production use of the Licensed Work. The
+Licensor may make an Additional Use Grant, above, permitting limited production
+use.
+
+Effective on the Change Date, or the fourth anniversary of the first publicly
+available distribution of a specific version of the Licensed Work under this
+License, whichever comes first, the Licensor hereby grants you rights under
+the terms of the Change License, and the rights granted in the paragraph above
+terminate.
+
+If your use of the Licensed Work does not comply with the requirements
+currently in effect as described in this License, you must purchase a
+commercial license from the Licensor, its affiliated entities, or authorized
+resellers, or you must refrain from using the Licensed Work.
+
+All copies of the original and modified Licensed Work, and derivative works
+of the Licensed Work, are subject to this License. This License applies
+separately for each version of the Licensed Work, and the Change Date may vary
+for each version of the Licensed Work released by the Licensor.
+
+You must conspicuously display this License on each original or modified copy
+of the Licensed Work. If you receive the Licensed Work in original or modified
+form from a third party, the terms and conditions set forth in this License
+apply to your use of that work.
+
+Any use of the Licensed Work in violation of this License will automatically
+terminate your rights under this License for the current and all future
+versions of the Licensed Work.
+
+This License does not grant you any right in any trademark or logo of Licensor
+or its affiliates. The names "Merlin", "Wizard AI", and "home-ai-elite" are
+original designations of this project and may not be used to endorse or
+promote derivative products without prior written permission from the
+copyright holder.
+
+TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSED WORK IS PROVIDED ON
+AN "AS IS" BASIS. LICENSOR HEREBY DISCLAIMS ALL WARRANTIES AND CONDITIONS,
+EXPRESS OR IMPLIED, INCLUDING (WITHOUT LIMITATION) WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND
+TITLE. LICENSOR SHALL NOT BE LIABLE FOR ANY DAMAGES OF ANY KIND ARISING FROM
+OR RELATED TO THIS LICENSE OR THE LICENSED WORK, EVEN IF LICENSOR HAS BEEN
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+-------------------------------------------------------------------------------
+
+COMMERCIAL LICENSING
+
+To obtain a commercial license for production use of the Licensed Work,
+contact the Licensor by opening an issue at:
 https://github.com/TheYfactora12/home-ai-elite/issues
+
+-------------------------------------------------------------------------------
+
+PRODUCTION NOTE
+
+Prior to wide public distribution or commercialization, this file should be
+updated with the author's full legal name as the registered copyright holder.
+SPDX-License-Identifier: BUSL-1.1
+
+-------------------------------------------------------------------------------
+
+For the full text of the Business Source License 1.1, see:
+https://mariadb.com/bsl11/
