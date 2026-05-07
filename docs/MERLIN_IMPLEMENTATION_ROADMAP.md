@@ -109,7 +109,13 @@ Issue #68 Phase 3D session reflection is complete:
 - Track task counts, routes, low-confidence routes, staff modes, hardware tier, duration, and 90-day expiry.
 - Redact emitted strings and perform no Qdrant writes, model calls, cloud calls, service starts, config edits, or installer changes.
 
-After #68, continue with skill scores.
+Issue #69 Phase 3D hardening is complete:
+
+- Add `outcome_mix`, `reflection_quality`, and `review_recommended`.
+- Add explicit redacted preview logging through `write_reflection_preview()`.
+- Keep normal reflection side-effect free.
+
+After #69, continue with skill scores.
 
 Port contract:
 

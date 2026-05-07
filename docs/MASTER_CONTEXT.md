@@ -241,6 +241,7 @@ Last verified: 2026-05-06.
 - Phase 3B retrieval-augmented routing is complete in #66 at `1487176`; CI run `25473476135` passed. Routing now exposes keyword/retrieval scores and only approved outcome history can influence retrieval scoring.
 - Phase 3C preference extractor is complete in #67. It is review-only: `merlin/preference_extractor.py` returns candidate preferences with confidence, category, redacted evidence, and write eligibility, but performs no memory writes or model/cloud calls.
 - Phase 3D session reflector is complete in #68. It is review-only: `merlin/session_reflector.py` summarizes existing outcome/preference records with task counts, routes, low-confidence routes, staff modes, hardware tier, duration, and 90-day expiry, while performing no memory writes or model/cloud calls.
+- Phase 3D hardening is complete in #69. Session reflections now include outcome mix, reflection quality, review recommendation, and an explicit redacted JSONL preview writer; normal reflection remains side-effect free.
 
 Earlier live validation on 2026-05-05:
 

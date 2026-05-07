@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 from merlin.outcome_observer import TaskOutcome
 from merlin.preference_extractor import extract_preferences
-from merlin.session_reflector import SESSION_TTL_DAYS, reflect_session
+from merlin.session_reflector import DEFAULT_REFLECTION_LOG, SESSION_TTL_DAYS, reflect_session, write_reflection_preview
 
 
 def _outcome(
@@ -45,6 +45,8 @@ def test_reflection_counts_tasks_and_successes() -> None:
     assert reflection.tasks_attempted == 3
     assert reflection.tasks_succeeded == 2
     assert reflection.session_duration_s == 42
+    assert reflection.outcome_mix["success"] == 2
+    assert reflection.outcome_mix["failure"] == 1
 
 
 def test_routes_staff_modes_and_low_confidence_are_unique_in_order() -> None:
@@ -59,6 +61,8 @@ def test_routes_staff_modes_and_low_confidence_are_unique_in_order() -> None:
     assert reflection.routes_used == ["general", "code"]
     assert reflection.staff_modes_used == ["operator", "software_engineer"]
     assert reflection.low_confidence_routes == ["general"]
+    assert reflection.review_recommended is True
+    assert reflection.reflection_quality == "high_signal"
 
 
 def test_counts_only_write_eligible_preferences() -> None:
@@ -71,6 +75,8 @@ def test_counts_only_write_eligible_preferences() -> None:
 
     assert len(preferences) == 2
     assert reflection.preferences_extracted == 1
+    assert reflection.review_recommended is True
+    assert reflection.reflection_quality == "high_signal"
 
 
 def test_created_and_expires_at_are_utc_iso_with_90_day_ttl() -> None:
@@ -104,6 +110,8 @@ def test_empty_session_uses_safe_defaults() -> None:
     assert reflection.staff_modes_used == []
     assert reflection.hardware_tier == "unknown"
     assert reflection.session_duration_s == 0
+    assert reflection.reflection_quality == "empty"
+    assert reflection.review_recommended is False
 
 
 def test_summary_contains_human_readable_session_context() -> None:
@@ -117,6 +125,7 @@ def test_summary_contains_human_readable_session_context() -> None:
 
     assert "Session attempted 2 task(s)" in reflection.summary_text
     assert "Routes used: code, memory" in reflection.summary_text
+    assert "Outcome mix:" in reflection.summary_text
     assert "Low-confidence routes needing review: code" in reflection.summary_text
 
 
@@ -132,3 +141,55 @@ def test_summary_redacts_secret_shapes() -> None:
     assert "supersecret123" not in rendered
     assert "mytoken" not in rendered
     assert "[REDACTED]" in rendered
+
+
+def test_failure_degraded_and_rejected_outcomes_recommend_review() -> None:
+    reflection = reflect_session(
+        outcomes=[
+            _outcome(status="failure"),
+            _outcome(status="degraded"),
+            _outcome(status="rejected"),
+        ]
+    )
+
+    assert reflection.outcome_mix == {
+        "success": 0,
+        "failure": 1,
+        "timeout": 0,
+        "rejected": 1,
+        "degraded": 1,
+    }
+    assert reflection.review_recommended is True
+    assert reflection.reflection_quality == "weak"
+
+
+def test_single_clean_success_is_weak_without_review_signal() -> None:
+    reflection = reflect_session(outcomes=[_outcome()])
+
+    assert reflection.review_recommended is False
+    assert reflection.reflection_quality == "weak"
+
+
+def test_multiple_clean_successes_are_useful() -> None:
+    reflection = reflect_session(outcomes=[_outcome(), _outcome(route_id="code")])
+
+    assert reflection.review_recommended is False
+    assert reflection.reflection_quality == "useful"
+
+
+def test_write_reflection_preview_is_explicit_and_redacted(tmp_path) -> None:
+    reflection = reflect_session(
+        outcomes=[
+            _outcome(route_id="password=supersecret123", staff_mode="secret=mytoken"),
+        ],
+        session_id="session-preview",
+    )
+
+    log_path = write_reflection_preview(reflection, logs_dir=tmp_path)
+
+    assert log_path == tmp_path / DEFAULT_REFLECTION_LOG
+    content = log_path.read_text(encoding="utf-8")
+    assert "session-preview" in content
+    assert "supersecret123" not in content
+    assert "mytoken" not in content
+    assert "[REDACTED]" in content

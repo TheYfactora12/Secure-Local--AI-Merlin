@@ -30,6 +30,9 @@ Phase 3 adds review-first learning loops on top of the Phase 2 Merlin Staff Core
      reflector. It summarizes existing outcome and preference records, produces
      a 90-day expiry, redacts emitted strings, and performs no Qdrant writes,
      model calls, cloud calls, or config edits.
+   - Hardening in #69 adds `outcome_mix`, `reflection_quality`,
+     `review_recommended`, and the explicit `write_reflection_preview()` helper
+     for redacted local JSONL review logs.
 5. `Phase 3E` — skill scores in `memory_manager.py`
    - Compute local skill confidence from recent approved outcome history.
    - Skill scores inform routing visibility but never bypass approval gates.
@@ -135,9 +138,18 @@ Rules:
   "tasks_succeeded": 3,
   "routes_used": ["code", "general"],
   "low_confidence_routes": ["general"],
+  "outcome_mix": {
+    "success": 3,
+    "failure": 1,
+    "timeout": 0,
+    "rejected": 0,
+    "degraded": 0
+  },
   "preferences_extracted": 1,
   "staff_modes_used": ["software_engineer", "operator"],
   "hardware_tier": "low",
+  "reflection_quality": "high_signal",
+  "review_recommended": true,
   "session_duration_s": 847,
   "created_at": "...",
   "expires_at": "+90 days"
@@ -149,6 +161,12 @@ Rules:
 - `summary_text` is a two-to-four sentence natural language summary.
 - `low_confidence_routes` contains routes with confidence below `0.6`.
 - Session summaries are short-lived and deletable.
+- `reflection_quality` is one of `empty`, `weak`, `useful`, or `high_signal`.
+- `review_recommended` is true when failures, degraded/rejected outcomes,
+  low-confidence routes, or approved preference candidates are present.
+- `write_reflection_preview()` may write redacted local JSONL to
+  `logs/merlin-session-reflections.jsonl` only when explicitly called. It is
+  not a Qdrant memory write.
 
 ## Skill Score Memory Contract
 
