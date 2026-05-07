@@ -17,10 +17,18 @@ fail() {
 [[ -f "${STACK_DIR}/configs/models/models.json" ]] || fail "model manifest missing from configs/models"
 [[ -f "${STACK_DIR}/configs/mcp/mcp-claude-desktop.json" ]] || fail "MCP config missing from configs/mcp"
 
-if rg -n 'config/(merlin|models|mcp|security|qdrant)' "$STACK_DIR" \
-  --glob '!/.git/**' \
-  --glob '!logs/**'; then
-  fail "stale root config/ reference found"
+if command -v rg >/dev/null 2>&1; then
+  if rg -n 'config/(merlin|models|mcp|security|qdrant)' "$STACK_DIR" \
+    --glob '!/.git/**' \
+    --glob '!logs/**'; then
+    fail "stale root config/ reference found"
+  fi
+else
+  if grep -RInE 'config/(merlin|models|mcp|security|qdrant)' "$STACK_DIR" \
+    --exclude-dir=.git \
+    --exclude-dir=logs; then
+    fail "stale root config/ reference found"
+  fi
 fi
 
 echo "PASS: canonical configs root is enforced"

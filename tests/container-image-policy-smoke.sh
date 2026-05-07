@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-POLICY="${ROOT_DIR}/docs/CONTAINER_IMAGE_POLICY.md"
+POLICY="${ROOT_DIR}/docs/engineering/CONTAINER_IMAGE_POLICY.md"
 COMPOSE_FILES=(
   "${ROOT_DIR}/docker-compose.yml"
   "${ROOT_DIR}/docker-compose.base.yml"
@@ -34,7 +34,7 @@ floating_images="$(
 while IFS= read -r image; do
   [[ -n "$image" ]] || continue
   grep -Fq "\`${image}\`" "$POLICY" \
-    || fail "floating image is not documented in docs/CONTAINER_IMAGE_POLICY.md: ${image}"
+    || fail "floating image is not documented in docs/engineering/CONTAINER_IMAGE_POLICY.md: ${image}"
 done <<< "$floating_images"
 
 grep -Fq "Pinning Priority" "$POLICY" \
