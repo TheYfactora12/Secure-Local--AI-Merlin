@@ -30,6 +30,8 @@ INSTALL_DIR="/usr/local/home-ai-elite"
 SIGN=false
 NOTARIZE=false
 DEVELOPER_ID_INSTALLER="${DEVELOPER_ID_INSTALLER:-Developer ID Installer: Your Name (TEAMID)}"
+PACKAGE_SIGNING_KEYCHAIN="${PACKAGE_SIGNING_KEYCHAIN:-}"
+PACKAGE_SIGNING_TIMESTAMP="${PACKAGE_SIGNING_TIMESTAMP:-timestamp}"
 APPLE_ID="${APPLE_ID:-your@email.com}"
 APPLE_TEAM_ID="${APPLE_TEAM_ID:-YOURTEAMID}"
 APPLE_APP_PASSWORD="${APPLE_APP_PASSWORD:-}"
@@ -45,6 +47,8 @@ Options:
 
 Environment for signed/notarized release:
   DEVELOPER_ID_INSTALLER="Developer ID Installer: Name (TEAMID)"
+  PACKAGE_SIGNING_KEYCHAIN="/path/to/signing.keychain"   # optional
+  PACKAGE_SIGNING_TIMESTAMP="timestamp|none"             # default: timestamp
   APPLE_ID="apple-id@example.com"
   APPLE_TEAM_ID="TEAMID"
   APPLE_APP_PASSWORD="<app-specific-password>"
@@ -109,7 +113,21 @@ preflight() {
       echo "ERROR: DEVELOPER_ID_INSTALLER is still the placeholder value" >&2
       exit 1
     fi
-    if ! security find-identity -v -p basic | grep -Fq "$DEVELOPER_ID_INSTALLER"; then
+    if [[ "$PACKAGE_SIGNING_TIMESTAMP" != "timestamp" && "$PACKAGE_SIGNING_TIMESTAMP" != "none" ]]; then
+      echo "ERROR: PACKAGE_SIGNING_TIMESTAMP must be 'timestamp' or 'none'" >&2
+      exit 1
+    fi
+
+    local identity_check=(security find-identity -v -p basic)
+    if [[ -n "$PACKAGE_SIGNING_KEYCHAIN" ]]; then
+      [[ -f "$PACKAGE_SIGNING_KEYCHAIN" ]] || {
+        echo "ERROR: PACKAGE_SIGNING_KEYCHAIN not found: $PACKAGE_SIGNING_KEYCHAIN" >&2
+        exit 1
+      }
+      identity_check+=("$PACKAGE_SIGNING_KEYCHAIN")
+    fi
+
+    if ! "${identity_check[@]}" | grep -Fq "$DEVELOPER_ID_INSTALLER"; then
       echo "ERROR: Developer ID Installer identity not found in keychain: $DEVELOPER_ID_INSTALLER" >&2
       exit 1
     fi
@@ -185,6 +203,14 @@ build_component_pkg() {
   banner "Building Component Package"
 
   local component_pkg="${BUILD_DIR}/${PKG_NAME}-component.pkg"
+  local sign_args=()
+  if [[ "$SIGN" == true ]]; then
+    sign_args=(--sign "${DEVELOPER_ID_INSTALLER}" "--timestamp=${PACKAGE_SIGNING_TIMESTAMP}")
+    if [[ -n "$PACKAGE_SIGNING_KEYCHAIN" ]]; then
+      sign_args=(--keychain "${PACKAGE_SIGNING_KEYCHAIN}" "${sign_args[@]}")
+    fi
+    log "  Signing component with: ${DEVELOPER_ID_INSTALLER}"
+  fi
 
   pkgbuild \
     --root     "${BUILD_DIR}/payload" \
@@ -192,6 +218,7 @@ build_component_pkg() {
     --identifier "${PKG_ID}" \
     --version    "${PKG_VERSION}" \
     --install-location "/" \
+    "${sign_args[@]}" \
     "${component_pkg}" >&2
 
   [[ -f "$component_pkg" ]] || return 1
@@ -222,7 +249,10 @@ build_distribution_pkg() {
   # Build final distribution pkg with resources (welcome/readme/license)
   local sign_args=()
   if [[ "$SIGN" == true ]]; then
-    sign_args=(--sign "${DEVELOPER_ID_INSTALLER}" --timestamp)
+    sign_args=(--sign "${DEVELOPER_ID_INSTALLER}" "--timestamp=${PACKAGE_SIGNING_TIMESTAMP}")
+    if [[ -n "$PACKAGE_SIGNING_KEYCHAIN" ]]; then
+      sign_args=(--keychain "${PACKAGE_SIGNING_KEYCHAIN}" "${sign_args[@]}")
+    fi
     log "  Signing with: ${DEVELOPER_ID_INSTALLER}"
   fi
 

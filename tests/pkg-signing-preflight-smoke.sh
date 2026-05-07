@@ -19,6 +19,10 @@ echo "$HELP" | grep -q 'Usage: bash pkg/build-pkg.sh' \
   || fail "build-pkg help missing usage"
 echo "$HELP" | grep -q 'DEVELOPER_ID_INSTALLER=' \
   || fail "build-pkg help does not document signing identity env"
+echo "$HELP" | grep -q 'PACKAGE_SIGNING_KEYCHAIN=' \
+  || fail "build-pkg help does not document signing keychain env"
+echo "$HELP" | grep -q 'PACKAGE_SIGNING_TIMESTAMP=' \
+  || fail "build-pkg help does not document signing timestamp env"
 
 set +e
 UNKNOWN_OUTPUT="$(bash "$BUILDER" --definitely-not-real 2>&1)"
@@ -32,6 +36,12 @@ grep -q 'DEVELOPER_ID_INSTALLER is still the placeholder value' "$BUILDER" \
   || fail "build-pkg does not reject placeholder signing identity"
 grep -q 'Developer ID Installer identity not found' "$BUILDER" \
   || fail "build-pkg does not verify keychain signing identity"
+grep -q 'PACKAGE_SIGNING_KEYCHAIN not found' "$BUILDER" \
+  || fail "build-pkg does not validate explicit signing keychain path"
+grep -q 'PACKAGE_SIGNING_TIMESTAMP must be' "$BUILDER" \
+  || fail "build-pkg does not validate signing timestamp mode"
+grep -q 'Signing component with' "$BUILDER" \
+  || fail "build-pkg does not sign the component package"
 grep -q 'APPLE_APP_PASSWORD must be set for notarization' "$BUILDER" \
   || fail "build-pkg does not guard notarization password"
 
