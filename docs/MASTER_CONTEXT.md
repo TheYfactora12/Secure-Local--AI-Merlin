@@ -1,11 +1,20 @@
 # Wizard AI Master Context
 
-Last verified: 2026-05-06
+Last verified: 2026-05-07
 Repo: `TheYfactora12/home-ai-elite`
 Branch: `main`
 Installer: `install.sh` v1.6
 
 Use this file with `docs/MASTER_PROMPT.md` at the start of every Codex, Perplexity, or AI session to avoid drift.
+
+## Session Operating Rule
+
+Follow milestones in order. While working a milestone, also attack verified
+stale or drift issues when they directly relate to the active milestone, active
+issue, or files being changed. If the drift is real but belongs elsewhere, create
+or update the GitHub issue with evidence and keep the current session on track.
+Before marking a milestone complete, re-check related open issues and stale
+findings so the milestone closes cleanly.
 
 ## Decision
 

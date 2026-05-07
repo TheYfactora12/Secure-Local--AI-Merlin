@@ -26,6 +26,22 @@ Ship Merlin as a useful local-first product before expanding into supervised exe
 
 Stress-test result: keep this ladder explicit. Do not jump from v1.0 to v1.3; v1.1 and v1.2 are now real GitHub milestones.
 
+## Execution Governance
+
+Milestone order is the main execution track. Work the highest-priority open issue
+in the current milestone before jumping to future features.
+
+Drift/stale cleanup is part of the same work when it directly relates to the
+active milestone, active issue, or code being touched. If verified drift is
+aligned with the current milestone and can be fixed safely in the same small
+slice, fix it with tests and document the evidence.
+
+If drift is real but belongs to another milestone, capture or update a GitHub
+issue with the evidence, labels, milestone, risk, and acceptance criteria. Do
+not hijack the active session for unrelated cleanup. Before closing a milestone,
+review its related open issues and stale findings again so nothing relevant is
+left behind.
+
 ## Current Issue Alignment (2026-05-06)
 
 - #41–#46, #48, #49, and #61 closed under `v1.0` with `release` + `priority: critical` labels.
