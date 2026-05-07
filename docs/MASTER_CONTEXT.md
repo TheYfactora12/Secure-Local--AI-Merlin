@@ -33,9 +33,9 @@ Current milestone position:
   approval-gated.
 - `v1.5 — Memory Benchmarking` is closed after #7 added the offline benchmark
   harness and `wizard benchmark run`.
-- Next in order: `v1.6 — Pi Intelligence + Observability`, with #36 and #8
-  open. #36 is the design-first parent. #8 is blocked until #36 is satisfied
-  and must remain optional/profile-gated.
+- Next in order: `v1.6 — Pi Intelligence + Observability`. #36 is closed as
+  the design-first parent. #8 is the active optional/profile-gated Langfuse
+  parent and is unblocked by #36.
 - #8 implementation order: local JSONL `wizard score` first, optional
   self-hosted Langfuse profile later. Do not add Langfuse to the default
   Compose stack.
@@ -194,9 +194,10 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Start Phase 3 learning with the outcome observer first.
-2. Keep signing/notarization deferred to #64; the v1.0 low/core installer path is green on this 8GB Mac.
-3. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
+1. Finish the active `v1.6` observability queue: #88 first, then #89.
+2. Keep #8 open until the remaining v1.6 child work is complete and CI is green.
+3. Keep signing/notarization deferred to #64; the v1.0 low/core installer path is green on this 8GB Mac.
+4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 
 ## Reasoning Summary
 

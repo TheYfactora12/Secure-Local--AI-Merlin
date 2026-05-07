@@ -12,7 +12,7 @@ Merlin ethos:
 Merlin is here to help, protect, and improve. Merlin should be truthful, humble, protective, and guided by love, service, and care for humanity. Merlin must not lie, fabricate capability, hide uncertainty, or claim incomplete work is complete. If Merlin cannot do something, it says why and offers the safest next path. Merlin is a product assistant, not an authority over the user; it must preserve consent, evidence, safety policy, and user control.
 
 Merlin Staff — Core:
-The six team modes declared in configs/merlin/persona.yaml are the Staff. The Python runtime that activates them is the Core. The six modes are: Architect (system design), AI Engineer (model/embedding ops), Software Engineer (code/tests), Security Reviewer (policy/threat model), Product Designer (UX/dashboard), and Operator (install/infra). Every request is routed to the appropriate team mode by persona_injector.py at runtime. The 14 policy gates in policy.yaml enforce approval requirements for all execution actions and fail closed. The Pi Emotional Intelligence milestone — follow-up questions and within-session recall — is implemented inside persona_injector.py reading the pi_eq section of persona.yaml. It is not a separate system. See docs/MERLIN_STAFF_CORE.md for the full architecture.
+The six team modes declared in configs/merlin/persona.yaml are the Staff. The Python runtime that activates them is the Core. The six modes are: Architect (system design), AI Engineer (model/embedding ops), Software Engineer (code/tests), Security Reviewer (policy/threat model), Product Designer (UX/dashboard), and Operator (install/infra). Every request is routed to the appropriate team mode by persona_injector.py at runtime. The 14 policy gates in policy.yaml enforce approval requirements for all execution actions and fail closed. The Pi Emotional Intelligence milestone — follow-up questions and within-session recall — is implemented inside persona_injector.py reading the pi_eq section of persona.yaml. It is not a separate system. See docs/architecture/MERLIN_STAFF_CORE.md for the full architecture.
 
 Non-negotiable engineering rules:
 1. Protect the working installer. Do not rewrite or replace it without a specific defect and a tested migration path.
@@ -25,7 +25,7 @@ Non-negotiable engineering rules:
 8. Do not remove existing functionality unless clearly obsolete and documented.
 9. Update roadmap/docs/tests with every meaningful milestone.
 10. Push completed work to GitHub and verify CI before calling a milestone complete.
-11. Update docs/MERLIN_STAFF_CORE.md whenever any of the following change: team modes, policy gates, Qdrant collection dimensions, build phase boundaries, Pi EQ behavior flags, key file references, or architecture topology. No milestone is complete without this update.
+11. Update docs/architecture/MERLIN_STAFF_CORE.md whenever any of the following change: team modes, policy gates, Qdrant collection dimensions, build phase boundaries, Pi EQ behavior flags, key file references, or architecture topology. No milestone is complete without this update.
 
 Current architecture baseline:
 - Default install path: `bash install.sh`.
@@ -105,7 +105,7 @@ Important files:
 - `merlin/provider_registry.py`
 - `merlin/task_endpoint.py`
 - `ROADMAP.md`
-- `docs/MERLIN_STAFF_CORE.md`
+- `docs/architecture/MERLIN_STAFF_CORE.md`
 - `docs/MASTER_CONTEXT.md`
 - `docs/MERLIN_IMPLEMENTATION_ROADMAP.md`
 - `docs/DASHBOARD_PRODUCT_SPEC.md`
@@ -142,11 +142,11 @@ Before final response:
 
 ## Current Next Recommendation
 
-Phase 2A through 2F are implemented on `main`; do not restart them from stale prompts. The `v2.0 — Merlin Staff Core` GitHub integration work is closed:
+Phase 2A through 2F and Phase 3A through 3E are implemented on `main`; do not restart them from stale prompts. The `v2.0 — Merlin Staff Core` GitHub integration work is closed:
 
 - #53: Session memory bridge n8n workflow is closed after `n8n-workflows/06-session-memory-bridge.json`, offline static tests, privacy documentation, and CI validation.
 - #60: Staff router + swarm coordinator integration is closed after `merlin/swarm_coordinator.py`, `wizard mode status`, route audit/fallback coverage, and CI validation.
 
-The current release priority is Phase 3 learning, starting with the outcome observer. `v1.0 — Stable Installer Release` passed whole-stack low/core validation on the 8GB Mac; Developer ID Installer/notarization is deferred to #64.
+The current release priority is `v1.6 — Pi Intelligence + Observability`. #36 is closed as the design parent. #8 is the active optional/profile-gated Langfuse parent. #86 and #87 are complete; next in order is #88, then #89. `v1.0 — Stable Installer Release` passed whole-stack low/core validation on the 8GB Mac; Developer ID Installer/notarization is deferred to #64.
 
 See `docs/architecture/MERLIN_STAFF_CORE.md` for the staff router, swarm context boundary, team modes, policy gates, and dimension safety rule.
