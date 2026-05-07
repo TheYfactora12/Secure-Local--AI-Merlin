@@ -132,7 +132,7 @@ Recently verified closures:
 
 1. Finish remaining `v1.0 — Stable Installer Release` paperwork after the uninstaller launchd warning fix lands and CI is green.
 2. Keep signing/notarization deferred as a separate distribution gate; the unsigned functional installer path is now green on this 8GB Mac.
-3. Continue #53 only after the v1.0 release gates are green, unless the work is docs-only.
+3. #53 session memory bridge is the remaining v2.0 integration slice. It must stay approval-gated, local-only, and non-blocking if Qdrant or Ollama is unavailable.
 4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 
 ## Reasoning Summary
