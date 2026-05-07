@@ -33,8 +33,9 @@ Current milestone position:
   approval-gated.
 - `v1.5 — Memory Benchmarking` is closed after #7 added the offline benchmark
   harness and `wizard benchmark run`.
-- Next in order: `v1.6 — Pi Intelligence + Observability`, with #8 and #36
-  open.
+- Next in order: `v1.6 — Pi Intelligence + Observability`, with #36 and #8
+  open. #36 is the design-first parent. #8 is blocked until #36 is satisfied
+  and must remain optional/profile-gated.
 - #35 is the canonical n8n ModelRouter rewrite issue. #6 is closed as
   stale/duplicate because it required automatic cloud escalation, which violates
   current local-first approval-gated policy.

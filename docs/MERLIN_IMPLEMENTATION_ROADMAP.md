@@ -77,7 +77,9 @@ left behind.
 - #7 is closed under `v1.5`; it adds an offline-safe benchmark harness first.
   Live Qdrant/Ollama benchmark profiles remain future integration work behind
   explicit test flags.
-- Next active milestone is `v1.6`; open issues: #8 and #36.
+- Next active milestone is `v1.6`; open issues: #36 and #8. #36 is the
+  design-first parent issue. #8 is a valid optional self-hosted Langfuse child
+  only after #36 is satisfied.
 - #28 closed under `v2.0`. #50–#60 closed under `v2.0`.
 - #30, #39 open under `v2.1`. #33, #34 open under `v2.2`. #37 open under `v3.0`.
 

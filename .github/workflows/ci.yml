@@ -131,6 +131,7 @@ jobs:
           bash tests/merlin-routing-smoke.sh
           bash tests/merlin-orchestration-smoke.sh
           bash tests/merlin-trace-smoke.sh
+          bash tests/observability-design-smoke.sh
           bash tests/merlin-dry-run-smoke.sh
           bash tests/merlin-approvals-smoke.sh
           bash tests/merlin-status-smoke.sh

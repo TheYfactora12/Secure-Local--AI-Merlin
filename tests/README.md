@@ -227,3 +227,16 @@ the `wizard benchmark run` command.
 bash tests/benchmark-smoke.sh
 wizard benchmark run --suite all --profile offline
 ```
+
+---
+
+## observability-design-smoke.sh
+
+This test validates the v1.6 observability design boundary without starting
+services. It proves JSONL remains the default trace store, LiteLLM telemetry is
+disabled, no default Langfuse service exists, and any future Langfuse service
+must be profile-gated.
+
+```bash
+bash tests/observability-design-smoke.sh
+```
