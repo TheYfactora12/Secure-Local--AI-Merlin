@@ -63,6 +63,40 @@ class MemoryManager:
             return None
         return point_id
 
+    def write_audit_event(self, event_type: str, metadata: dict[str, Any]) -> str | None:
+        """Append an audit event without embedding user content.
+
+        Audit payloads are operational telemetry, not user memory. They use a
+        neutral vector so route/policy events can be indexed without calling
+        Ollama or storing raw prompts.
+        """
+
+        spec = self._collection_spec("merlin-audit")
+        self._validate_configured_embedding_dimension(spec)
+        if self.degraded:
+            self._log_degraded("write_audit_event", spec.name)
+            return None
+
+        point_id = str(uuid.uuid4())
+        payload = dict(metadata)
+        payload["event_type"] = event_type
+        body = {
+            "points": [
+                {
+                    "id": point_id,
+                    "vector": [0.0] * spec.dims,
+                    "payload": payload,
+                }
+            ]
+        }
+
+        try:
+            self._request_json("PUT", f"/collections/{spec.qdrant_name}/points?wait=true", body)
+        except OSError:
+            self._activate_degraded("write_audit_event", spec.name)
+            return None
+        return point_id
+
     def search(self, collection: str, query: str, top_k: int = 5) -> list[dict[str, Any]]:
         spec = self._collection_spec(collection)
         self._validate_configured_embedding_dimension(spec)

@@ -19,6 +19,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from merlin.config_loader import MerlinConfig, RouteSpec, load_all_configs
+from merlin.memory_manager import MemoryManager
 
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,8 @@ class RouteDecision(BaseModel):
     preferred_model_alias: str
     model_fallback_applied: bool = False
     model_fallback_reason: str | None = None
+    audit_point_id: str | None = None
+    audit_written: bool = False
     approval_gates: list[str]
     decision_reason: str
 
@@ -299,21 +302,59 @@ def classify_task(user_input: str) -> RouteDecision:
     )
 
 
+def _write_route_audit(decision: RouteDecision, input_hash: str, timestamp: str) -> str | None:
+    payload = {
+        "actor": "merlin.router",
+        "created_at": timestamp,
+        "route_id": decision.route_id,
+        "task_type": decision.task_type,
+        "staff_mode": decision.staff_mode,
+        "agent_target": decision.agent_target,
+        "confidence_at_routing": decision.confidence,
+        "keyword_matches": list(decision.matched_keywords),
+        "approval_gates": list(decision.approval_gates),
+        "requires_approval": decision.requires_approval,
+        "preferred_model_alias": decision.preferred_model_alias,
+        "selected_model_alias": decision.selected_model_alias,
+        "model_fallback_applied": decision.model_fallback_applied,
+        "model_fallback_reason": decision.model_fallback_reason,
+        "outcome_status": "routed",
+        "task_hash": input_hash,
+    }
+
+    try:
+        return MemoryManager(timeout=1).write_audit_event("route_decision", payload)
+    except Exception as exc:
+        logger.warning(
+            "route_audit_skipped input_hash=%s route_id=%s error=%s",
+            input_hash,
+            decision.route_id,
+            exc,
+        )
+        return None
+
+
 def route_task(user_input: str) -> RouteDecision:
     """Route a task and log the decision without storing raw input."""
 
     decision = classify_task(user_input)
+    timestamp = datetime.now(UTC).isoformat()
+    input_hash = _input_hash(user_input)
+    audit_point_id = _write_route_audit(decision, input_hash, timestamp)
+    decision.audit_point_id = audit_point_id
+    decision.audit_written = audit_point_id is not None
     logger.info(
         "route_decision timestamp=%s input_hash=%s route_id=%s staff_mode=%s agent_target=%s "
-        "preferred_model=%s selected_model=%s fallback=%s confidence=%.2f",
-        datetime.now(UTC).isoformat(),
-        _input_hash(user_input),
+        "preferred_model=%s selected_model=%s fallback=%s audit_written=%s confidence=%.2f",
+        timestamp,
+        input_hash,
         decision.route_id,
         decision.staff_mode,
         decision.agent_target,
         decision.preferred_model_alias,
         decision.selected_model_alias,
         decision.model_fallback_applied,
+        decision.audit_written,
         decision.confidence,
     )
     return decision

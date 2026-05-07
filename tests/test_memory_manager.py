@@ -73,3 +73,30 @@ def test_list_collections_returns_merlin_session(monkeypatch: pytest.MonkeyPatch
 
     collections = manager.list_collections()
     assert any(collection["name"] == "merlin-session" for collection in collections)
+
+
+def test_write_audit_event_uses_neutral_vector_without_embedding(monkeypatch: pytest.MonkeyPatch) -> None:
+    manager = _manager(monkeypatch)
+    calls: list[tuple[str, str, dict[str, Any] | None]] = []
+
+    def fail_embed(text: str) -> list[float]:
+        raise AssertionError("audit event writes must not call embeddings")
+
+    def fake_request(method: str, path: str, body: dict[str, Any] | None = None) -> dict[str, Any]:
+        calls.append((method, path, body))
+        return {"status": "ok"}
+
+    monkeypatch.setattr(manager, "_embed_text", fail_embed)
+    monkeypatch.setattr(manager, "_request_json", fake_request)
+
+    point_id = manager.write_audit_event("route_decision", {"route_id": "general", "actor": "router"})
+
+    assert point_id is not None
+    method, path, body = calls[0]
+    assert method == "PUT"
+    assert "/collections/merlin_audit/points" in path
+    assert body is not None
+    point = body["points"][0]
+    assert point["vector"] == [0.0] * 768
+    assert point["payload"]["event_type"] == "route_decision"
+    assert point["payload"]["route_id"] == "general"

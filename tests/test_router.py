@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from merlin.router import classify_task, route_task
 
@@ -153,3 +154,49 @@ def test_low_memory_tier_falls_back_to_safe_local_alias(monkeypatch) -> None:
     assert decision.selected_model_alias == "mistral"
     assert decision.model_fallback_applied is True
     assert decision.model_fallback_reason is not None
+
+
+def test_route_task_writes_audit_event_without_raw_input(monkeypatch) -> None:
+    writes: list[tuple[str, dict[str, Any]]] = []
+
+    class FakeMemoryManager:
+        def __init__(self, timeout: int = 1) -> None:
+            self.timeout = timeout
+
+        def write_audit_event(self, event_type: str, metadata: dict[str, Any]) -> str:
+            writes.append((event_type, metadata))
+            return "audit-point-1"
+
+    monkeypatch.setattr("merlin.router.MemoryManager", FakeMemoryManager)
+
+    raw_input = "explain how Qdrant works"
+    decision = route_task(raw_input)
+
+    assert decision.audit_point_id == "audit-point-1"
+    assert decision.audit_written is True
+    assert writes[0][0] == "route_decision"
+    metadata = writes[0][1]
+    assert metadata["route_id"] == decision.route_id
+    assert metadata["staff_mode"] == decision.staff_mode
+    assert metadata["selected_model_alias"] == decision.selected_model_alias
+    assert metadata["outcome_status"] == "routed"
+    assert "task_hash" in metadata
+    assert raw_input not in str(metadata)
+
+
+def test_route_task_continues_when_audit_write_fails(monkeypatch, caplog) -> None:
+    class FailingMemoryManager:
+        def __init__(self, timeout: int = 1) -> None:
+            self.timeout = timeout
+
+        def write_audit_event(self, event_type: str, metadata: dict[str, Any]) -> str:
+            raise OSError("qdrant unavailable")
+
+    monkeypatch.setattr("merlin.router.MemoryManager", FailingMemoryManager)
+    caplog.set_level(logging.WARNING, logger="merlin.router")
+
+    decision = route_task("explain how Qdrant works")
+
+    assert decision.audit_point_id is None
+    assert decision.audit_written is False
+    assert "route_audit_skipped" in "\n".join(record.getMessage() for record in caplog.records)
