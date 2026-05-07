@@ -1,5 +1,41 @@
 # Merlin Implementation Roadmap
 
+> **Canonical roadmap.** This file was updated 2026-05-06 to absorb the unique content from `IMPLEMENTATION_ROADMAP.md` (now deleted). All milestone strategy, GitHub ladder, and current checkpoint content lives here.
+
+---
+
+## Strategy
+
+Ship Merlin as a useful local-first product before expanding into supervised execution. The installer remains protected. The first implementation slices should be docs/config/health/CLI/dashboard layers, not broad service rewrites.
+
+## GitHub Milestone Ladder
+
+| Milestone | Purpose | Current rule |
+|---|---|---|
+| `v1.0 — Stable Installer Release` | Fresh install, package, backup/restore, upgrade, uninstall | Must finish before new runtime feature work |
+| `v1.1 — Mobile Access + Remote-Safe Entry Points` | Optional mobile/local-network entry point design | Opt-in only; no default LAN exposure |
+| `v1.2 — Hardware Guide + Document Ingestion Planning` | 8GB-first hardware guide and optional ingestion plan | Docs/planning before heavy dependencies |
+| `v1.3 — Reliability + Memory + Router` | Retry logic, memory reliability, router cleanup | Local-first and approval-gated |
+| `v1.5 — Memory Benchmarking` | Memory quality evaluation | After memory behavior is stable |
+| `v1.6 — Pi Intelligence + Observability` | Warmth/persona and local observability | No heavy default tracing dependency |
+| `v1.7 — Security Hardening` | SAST, red team, policy enforcement | Security gates stay fail-closed |
+| `v2.0 — Merlin Staff Core` | Python Merlin core and policy surfaces | No cloud default, no autonomous execution |
+| `v2.1 — Dashboard Command Center` | Read-only/user-facing control center | No privileged mutation in dashboard v1 |
+| `v2.2 — Magic Mode` | Supervised orchestration | Plan-first, approval-gated |
+| `v3.0 — Public Product Release` | Public packaging/onboarding polish | Only after stable lower milestones |
+
+Stress-test result: keep this ladder explicit. Do not jump from v1.0 to v1.3; v1.1 and v1.2 are now real GitHub milestones.
+
+## Current Issue Alignment (2026-05-06)
+
+- #41–#46, #48, #49 closed under `v1.0` with `release` + `priority: critical` labels.
+- #47 open under `v1.1`. #5 open under `v1.2`.
+- #28 closed under `v2.0`. #50–#52, #54–#59 closed under `v2.0`.
+- #53 and #60 open under `v2.0`.
+- #30, #39 open under `v2.1`. #33, #34 open under `v2.2`. #37 open under `v3.0`.
+
+---
+
 ## Guiding Rules
 
 - Protect the working installer.
@@ -65,7 +101,7 @@ Tasks:
 - Add baseline documentation.
 - Add regression checklist for installer.
 - Identify current service/profile assumptions.
-- Capture "do not break" list.
+- Capture “do not break” list.
 
 Risks:
 
