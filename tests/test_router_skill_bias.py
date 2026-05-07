@@ -52,6 +52,32 @@ def test_router_ignores_invalid_skill_bias_agent(monkeypatch) -> None:
     assert decision.skill_bias_agent is None
 
 
+def test_router_does_not_bias_safe_route_to_openhands_without_gates(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.router.MemoryManager", FakeMemoryManager)
+    monkeypatch.setattr("merlin.router.compute_skill_report", lambda memory=None: FakeReport("openhands"))
+
+    decision = route_task("explain how Qdrant works")
+
+    assert decision.route_id == "general"
+    assert decision.agent_target == "litellm"
+    assert decision.requires_approval is False
+    assert decision.skill_bias_applied is False
+    assert decision.skill_bias_agent is None
+
+
+def test_router_does_not_bias_safe_route_to_n8n_without_gates(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.router.MemoryManager", FakeMemoryManager)
+    monkeypatch.setattr("merlin.router.compute_skill_report", lambda memory=None: FakeReport("n8n"))
+
+    decision = route_task("explain how Qdrant works")
+
+    assert decision.route_id == "general"
+    assert decision.agent_target == "litellm"
+    assert decision.requires_approval is False
+    assert decision.skill_bias_applied is False
+    assert decision.skill_bias_agent is None
+
+
 def test_router_does_not_crash_when_skill_scorer_raises(monkeypatch) -> None:
     monkeypatch.setattr("merlin.router.MemoryManager", FakeMemoryManager)
 

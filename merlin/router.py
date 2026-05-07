@@ -34,6 +34,7 @@ OUTCOME_SAMPLE_LIMIT = 50
 
 AgentTarget = Literal["openhands", "n8n", "litellm", "merlin-core"]
 ALLOWED_AGENT_TARGETS = {"openhands", "n8n", "litellm", "merlin-core"}
+SKILL_BIAS_SAFE_TARGETS = {"litellm", "merlin-core"}
 SKILL_DOMAIN_HINTS: dict[str, str] = {
     "security": "security",
     "vulnerability": "security",
@@ -418,7 +419,25 @@ def _apply_skill_bias(decision: RouteDecision) -> RouteDecision:
         logger.warning("skill_scorer_unavailable error=%s route_id=%s", exc, decision.route_id)
         return decision
 
-    if preferred and preferred in ALLOWED_AGENT_TARGETS and preferred != decision.agent_target:
+    if preferred and preferred not in ALLOWED_AGENT_TARGETS:
+        logger.info(
+            "skill_bias_ignored invalid_agent=%s domain=%s route_id=%s",
+            preferred,
+            domain,
+            decision.route_id,
+        )
+        return decision
+
+    if preferred and preferred not in SKILL_BIAS_SAFE_TARGETS and preferred != decision.agent_target:
+        logger.info(
+            "skill_bias_ignored risky_agent=%s domain=%s route_id=%s",
+            preferred,
+            domain,
+            decision.route_id,
+        )
+        return decision
+
+    if preferred and preferred != decision.agent_target:
         logger.info(
             "skill_bias_applied original=%s preferred=%s domain=%s route_id=%s",
             decision.agent_target,
