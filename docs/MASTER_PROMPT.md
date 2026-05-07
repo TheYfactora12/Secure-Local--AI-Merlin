@@ -145,8 +145,8 @@ Before final response:
 Phase 2A through 2F are implemented on `main`; do not restart them from stale prompts. The remaining `v2.0 — Merlin Staff Core` GitHub work is integration, not initial scaffolding:
 
 - #53: Session memory bridge n8n workflow is still open.
-- #60: Staff router + swarm coordinator integration is still open because `merlin/swarm_coordinator.py` is not present yet.
+- #60: Staff router + swarm coordinator integration now has `merlin/swarm_coordinator.py`; close only after CI passes and the issue is updated with the final commit.
 
 The current release priority is `v1.0 — Stable Installer Release`: finish backup/restore verification, upgrade verification, launchd persistence validation, and package/signing readiness without changing the installer unless a specific defect is found.
 
-See `docs/MERLIN_STAFF_CORE.md` for the full architecture, team modes, policy gates, Pi EQ implementation, and dimension safety rule.
+See `docs/architecture/MERLIN_STAFF_CORE.md` for the staff router, swarm context boundary, team modes, policy gates, and dimension safety rule.

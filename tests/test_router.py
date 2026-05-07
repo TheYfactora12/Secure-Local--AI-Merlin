@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 import logging
+import os
+import subprocess
+import sys
+from dataclasses import FrozenInstanceError
+from pathlib import Path
 from typing import Any
 
 from merlin.router import classify_task, route_task
+from merlin.swarm_coordinator import build_swarm_context
 
 
 def test_code_routes_to_software_engineer_openhands() -> None:
@@ -200,3 +206,147 @@ def test_route_task_continues_when_audit_write_fails(monkeypatch, caplog) -> Non
     assert decision.audit_point_id is None
     assert decision.audit_written is False
     assert "route_audit_skipped" in "\n".join(record.getMessage() for record in caplog.records)
+
+
+def test_architect_mode(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.router._detect_ram_gb", lambda: 32)
+
+    decision = classify_task("design scalable microservice architecture")
+
+    assert decision.staff_mode == "architect"
+    assert "deepseek" in decision.selected_model_alias
+
+
+def test_ai_engineer_mode(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.router._detect_ram_gb", lambda: 32)
+
+    decision = classify_task("create embedding pipeline for RAG dataset")
+
+    assert decision.staff_mode == "ai_engineer"
+    assert "qwen-coder" in decision.selected_model_alias
+
+
+def test_software_engineer_mode(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.router._detect_ram_gb", lambda: 32)
+
+    decision = classify_task("refactor this Python function and add tests")
+
+    assert decision.staff_mode == "software_engineer"
+    assert "qwen-coder" in decision.selected_model_alias
+
+
+def test_security_reviewer_mode(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.router._detect_ram_gb", lambda: 32)
+
+    decision = classify_task("scan for credential exposure and sql injection vulnerabilities")
+
+    assert decision.staff_mode == "security_reviewer"
+    assert decision.requires_approval is True
+    assert "file_read" in decision.approval_gates
+    assert "secret_access" in decision.approval_gates
+
+
+def test_product_designer_mode(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.router._detect_ram_gb", lambda: 32)
+
+    decision = classify_task("design user onboarding flow for the dashboard")
+
+    assert decision.staff_mode == "product_designer"
+
+
+def test_operator_mode(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.router._detect_ram_gb", lambda: 32)
+
+    decision = classify_task("schedule daily reports n8n automation workflow")
+
+    assert decision.staff_mode == "operator"
+
+
+def test_low_memory_fallback(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.router._detect_ram_gb", lambda: 8)
+
+    decision = classify_task("design scalable microservice architecture")
+
+    assert decision.model_fallback_applied is True
+    assert decision.selected_model_alias == "mistral"
+
+
+def test_cloud_block_via_approval_gate() -> None:
+    decision = classify_task("search for recent AI guidance with citation")
+
+    assert "cloud_model_call" in decision.approval_gates
+    assert decision.requires_approval is True
+
+
+def test_audit_written_flag(monkeypatch) -> None:
+    class FakeMemoryManager:
+        def __init__(self, timeout: int = 1) -> None:
+            self.timeout = timeout
+
+        def write_audit_event(self, event_type: str, metadata: dict[str, Any]) -> str:
+            return "audit-point-uuid"
+
+    monkeypatch.setattr("merlin.router.MemoryManager", FakeMemoryManager)
+
+    decision = route_task("explain routing")
+
+    assert decision.audit_point_id == "audit-point-uuid"
+    assert decision.audit_written is True
+
+
+def test_swarm_context_immutable() -> None:
+    decision = classify_task("explain routing")
+    context = build_swarm_context(decision)
+
+    try:
+        context.staff_mode = "hacked"
+    except FrozenInstanceError:
+        pass
+    else:
+        raise AssertionError("SwarmContext should be immutable")
+
+
+def test_swarm_context_fields_match_decision() -> None:
+    decision = classify_task("refactor the Python router and add tests")
+    context = build_swarm_context(decision)
+
+    assert context.staff_mode == decision.staff_mode
+    assert context.selected_model_alias == decision.selected_model_alias
+    assert context.preferred_model_alias == decision.preferred_model_alias
+    assert context.model_fallback_applied == decision.model_fallback_applied
+    assert context.model_fallback_reason == decision.model_fallback_reason
+    assert context.agent_target == decision.agent_target
+    assert context.approval_gates == decision.approval_gates
+    assert context.requires_approval == decision.requires_approval
+    assert context.confidence == decision.confidence
+    assert context.route_id == decision.route_id
+    assert context.task_type == decision.task_type
+    assert context.resolved_at.endswith("+00:00")
+
+
+def test_default_fallback_route() -> None:
+    decision = classify_task("xyzzy abc 123")
+
+    assert decision.route_id == "general"
+    assert decision.confidence == 0.0
+
+
+def test_wizard_mode_status_uses_swarm_context() -> None:
+    repo_root = Path(__file__).resolve().parents[1]
+    env = os.environ.copy()
+    env["MERLIN_PYTHON"] = sys.executable
+
+    result = subprocess.run(
+        ["bash", "cli/wizard", "mode", "status"],
+        cwd=repo_root,
+        env=env,
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+
+    assert "=== Merlin Mode Status ===" in result.stdout
+    assert "Active Staff Mode :" in result.stdout
+    assert "Selected Model    :" in result.stdout
+    assert "Fallback Applied  :" in result.stdout

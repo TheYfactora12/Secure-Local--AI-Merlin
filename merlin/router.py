@@ -162,7 +162,12 @@ def _requires_approval(route: RouteSpec) -> bool:
 def _detect_ram_gb() -> int:
     if platform.system() == "Darwin":
         try:
-            output = subprocess.check_output(["sysctl", "-n", "hw.memsize"], text=True, timeout=2).strip()
+            output = subprocess.check_output(
+                ["sysctl", "-n", "hw.memsize"],
+                stderr=subprocess.DEVNULL,
+                text=True,
+                timeout=2,
+            ).strip()
             return int(round(int(output) / 1024 / 1024 / 1024))
         except (OSError, subprocess.SubprocessError, ValueError):
             return 0
@@ -224,13 +229,16 @@ def _decision_from_rule(
     preferred_model, selected_model, fallback_applied, fallback_reason = _select_model_alias(
         config, rule.staff_mode, route
     )
+    approval_gates = list(route.approval_gates)
+    if rule.staff_mode == "security_reviewer" and not approval_gates:
+        approval_gates = ["file_read", "secret_access"]
     return RouteDecision(
         route_id=rule.route_id,
         task_type=rule.task_type,
         staff_mode=rule.staff_mode,
         agent_target=rule.agent_target,
         model_hint=preferred_model,
-        requires_approval=_requires_approval(route),
+        requires_approval=bool(approval_gates),
         confidence=confidence,
         matched_keywords=matches,
         selected_agent=route.agent,
@@ -239,7 +247,7 @@ def _decision_from_rule(
         preferred_model_alias=preferred_model,
         model_fallback_applied=fallback_applied,
         model_fallback_reason=fallback_reason,
-        approval_gates=list(route.approval_gates),
+        approval_gates=approval_gates,
         decision_reason=reason,
     )
 

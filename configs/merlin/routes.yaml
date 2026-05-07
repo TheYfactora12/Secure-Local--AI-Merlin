@@ -60,6 +60,7 @@ routes:
     approval_gates:
       - service_start
       - external_network
+      - cloud_model_call
     default_risk: high
 
   code:

@@ -5,9 +5,13 @@ from __future__ import annotations
 import io
 import re
 from contextlib import redirect_stdout
+from typing import TYPE_CHECKING
 
 from merlin.config_loader import load_all_configs
 from merlin.router import RouteDecision
+
+if TYPE_CHECKING:
+    from merlin.swarm_coordinator import SwarmContext
 
 
 PI_WARMTH_BLOCK = (

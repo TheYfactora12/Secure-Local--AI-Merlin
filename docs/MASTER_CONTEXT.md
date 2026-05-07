@@ -77,7 +77,7 @@ Merlin control-plane status:
 
 ## Phase 2 Complete
 
-Phase 2 is complete on `main` through commit `b4f35c8`, with 58 tests passing locally and CI green for the Phase 2F merge run.
+Phase 2 is complete on `main` through commit `b4f35c8`, with the Merlin Staff Core offline pytest suite expanded to 80 tests locally after Issue #60 swarm-context wiring.
 
 | Phase | Commit | Files |
 | --- | --- | --- |
@@ -94,13 +94,14 @@ Phase 2 runtime package:
 
 - `merlin/config_loader.py` validates the Merlin YAML config set.
 - `merlin/policy_engine.py` enforces 14 fail-closed approval gates.
-- `merlin/router.py` routes into the real 5 route IDs and carries approval gates.
+- `merlin/router.py` routes into the real 5 route IDs, selects all 6 staff modes, carries approval gates, applies low-memory model fallback, and writes route audit events.
+- `merlin/swarm_coordinator.py` converts a `RouteDecision` into immutable `SwarmContext` for persona/staff prompt wiring.
 - `merlin/memory_manager.py` talks to local Ollama embeddings and Qdrant with dimension guards.
 - `merlin/persona_injector.py` builds Merlin system prompts with guardian ethos and Pi warmth.
 - `merlin/task_endpoint.py` exposes FastAPI on port 8766.
 - `merlin/status_extension.py` adds route, approval, trace, and memory status panels to the FastAPI app.
 
-Later GitHub roadmap normalization assigned the duplicate/new Phase 2 tracking issues #50 through #60 to `v2.0 — Merlin Staff Core`. Issues #50, #51, #52, #54, #55, #56, #57, #58, and #59 were closed after verification against the implemented files and tests. #53 and #60 remain open v2.0 integration work; do not create a duplicate `Merlin Staff — Core` milestone.
+Later GitHub roadmap normalization assigned the duplicate/new Phase 2 tracking issues #50 through #60 to `v2.0 — Merlin Staff Core`. Issues #50, #51, #52, #54, #55, #56, #57, #58, and #59 were closed after verification against the implemented files and tests. #53 remains open v2.0 integration work. #60 has staff router, audit, low-memory fallback, CLI mode status, and swarm context wiring implemented; close it only after CI passes and the GitHub issue has the final completion comment. Do not create a duplicate `Merlin Staff — Core` milestone.
 
 ## RAM Tiers
 

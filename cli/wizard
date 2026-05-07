@@ -185,6 +185,7 @@ cat << 'EOF'
     wizard brain start       Start native Ollama brain
     wizard brain stop        Stop native Ollama and unload hot runners
     wizard brain cooldown    Alias for brain stop when CPU is running hot
+    wizard mode status       Show active Merlin staff mode and model selection
     wizard merlin status     Show read-only Merlin control-plane status
     wizard merlin status-api Start/manage read-only Merlin status API
     wizard merlin ask "question"
@@ -333,6 +334,46 @@ case "$1" in
   report-bug)
     shift
     exec bash "$SCRIPTS_DIR/report-bug.sh" "$@"
+    ;;
+
+  mode)
+    case "${2:-status}" in
+      status)
+        echo "=== Merlin Mode Status ==="
+        (
+          cd "$WIZARD_DIR"
+          MERLIN_PYTHON_BIN="${MERLIN_PYTHON:-}"
+          if [[ -z "$MERLIN_PYTHON_BIN" && -x "$WIZARD_DIR/.venv/bin/python" ]]; then
+            MERLIN_PYTHON_BIN="$WIZARD_DIR/.venv/bin/python"
+          elif [[ -z "$MERLIN_PYTHON_BIN" && -x "$WIZARD_DIR/.venv-test/bin/python" ]]; then
+            MERLIN_PYTHON_BIN="$WIZARD_DIR/.venv-test/bin/python"
+          elif [[ -z "$MERLIN_PYTHON_BIN" ]]; then
+            MERLIN_PYTHON_BIN="python3"
+          fi
+          "$MERLIN_PYTHON_BIN" -c "
+from merlin.router import classify_task
+from merlin.swarm_coordinator import build_swarm_context
+
+decision = classify_task('status check')
+ctx = build_swarm_context(decision)
+print(f'Active Staff Mode : {ctx.staff_mode}')
+print(f'Selected Model    : {ctx.selected_model_alias}')
+print(f'Preferred Model   : {ctx.preferred_model_alias}')
+print(f'Fallback Applied  : {ctx.model_fallback_applied}')
+if ctx.model_fallback_reason:
+    print(f'Fallback Reason   : {ctx.model_fallback_reason}')
+print(f'Agent Target      : {ctx.agent_target}')
+print(f'Approval Required : {ctx.requires_approval}')
+print(f'Confidence        : {ctx.confidence:.2f}')
+print(f'Resolved At       : {ctx.resolved_at}')
+"
+        )
+        ;;
+      *)
+        echo "Usage: wizard mode status" >&2
+        exit 1
+        ;;
+    esac
     ;;
 
   merlin)
