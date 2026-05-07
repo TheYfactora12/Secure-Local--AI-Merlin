@@ -124,6 +124,16 @@ wizard trace <user_goal_hash>
 redacted metadata only, supports direct trace/approval IDs and hashed user-goal
 lookups, and does not require Langfuse or live services.
 
+Plan optional Langfuse export:
+
+```bash
+wizard observability export --dry-run
+```
+
+`wizard observability export --dry-run` reads route, approval, outcome, and
+benchmark JSONL records and prints planned export counts without network calls.
+It does not require Langfuse or live services.
+
 Runtime health:
 
 ```bash
@@ -138,6 +148,18 @@ After explicitly starting the optional profile, open:
 ```bash
 http://localhost:3010
 ```
+
+Live export is explicit and localhost-only:
+
+```bash
+wizard observability export --live \
+  --langfuse-url http://localhost:3010 \
+  --public-key "$LANGFUSE_PUBLIC_KEY" \
+  --secret-key "$LANGFUSE_SECRET_KEY"
+```
+
+The exporter refuses hosted/cloud Langfuse URLs and exports only redacted
+metadata. It skips gracefully if local Langfuse is not reachable.
 
 ## Test Contract
 
@@ -174,6 +196,14 @@ profile is gated:
 - Langfuse uses host port `3010`, not Open WebUI port `3000`,
 - the start script has a low-RAM guard and explicit override,
 - healthcheck skips Langfuse unless the profile is active.
+
+`tests/merlin-observability-export-smoke.sh` proves the optional exporter is
+safe:
+
+- dry-run reads local JSONL and performs no network calls,
+- hosted/cloud Langfuse URLs are refused,
+- unreachable localhost Langfuse is skipped gracefully in explicit live mode,
+- `wizard observability export --dry-run` works without live services.
 
 ## Rollback
 

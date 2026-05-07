@@ -228,6 +228,8 @@ cat << 'EOF'
     wizard benchmark run      Run offline Merlin memory benchmark harness
     wizard score              Show 7-day quality trend from local JSONL
     wizard trace <id>         Show local JSONL trace, approval, and outcome records
+    wizard observability export --dry-run
+                              Plan local JSONL export to optional Langfuse
     wizard ask "question"     Ask a quick question (swarm-tiny, fastest)
     wizard route "task"       Alias for wizard swarm (full coordinator)
     wizard models             List loaded Ollama models
@@ -521,6 +523,19 @@ print(report.as_table())
   trace)
     shift
     exec bash "$SCRIPTS_DIR/merlin-trace-view.sh" "$@"
+    ;;
+
+  observability)
+    case "${2:-}" in
+      export)
+        shift 2
+        exec bash "$SCRIPTS_DIR/merlin-observability-export.sh" export "$@"
+        ;;
+      *)
+        echo "Usage: wizard observability export [--dry-run|--live] ..."
+        exit 1
+        ;;
+    esac
     ;;
 
   preferences)

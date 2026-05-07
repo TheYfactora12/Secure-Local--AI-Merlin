@@ -46,6 +46,9 @@ Current milestone position:
   starts only through `wizard start observability`. It remains off by default,
   localhost-only, separate from Open WebUI port `3000`, and guarded against
   low-RAM startup unless explicitly overridden.
+- #86 adds `wizard observability export --dry-run` for local JSONL export
+  planning. Live export must be explicit, localhost-only, and must refuse hosted
+  Langfuse/cloud URLs.
 - #35 is the canonical n8n ModelRouter rewrite issue. #6 is closed as
   stale/duplicate because it required automatic cloud escalation, which violates
   current local-first approval-gated policy.

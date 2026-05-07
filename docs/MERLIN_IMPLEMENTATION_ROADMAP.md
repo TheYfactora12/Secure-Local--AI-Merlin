@@ -90,6 +90,9 @@ left behind.
   plus `wizard start observability`. It is off by default, localhost-only,
   blocked on low RAM unless explicitly overridden, and tested so it cannot slip
   into the default Compose stack.
+- #86 adds `wizard observability export --dry-run` as the JSONL-to-Langfuse
+  bridge. Dry-run is offline; live export is explicit, localhost-only, and
+  refuses hosted Langfuse URLs.
 - #28 closed under `v2.0`. #50–#60 closed under `v2.0`.
 - #30, #39 open under `v2.1`. #33, #34 open under `v2.2`. #37 open under `v3.0`.
 

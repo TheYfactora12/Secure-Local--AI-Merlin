@@ -279,3 +279,17 @@ low-RAM start guard.
 ```bash
 bash tests/langfuse-observability-profile-smoke.sh
 ```
+
+---
+
+## merlin-observability-export-smoke.sh
+
+This test validates `wizard observability export --dry-run` using temporary
+local JSONL fixtures. It proves dry-run performs no network export, hosted
+Langfuse URLs are refused, and explicit live mode skips gracefully when local
+Langfuse is unavailable.
+
+```bash
+bash tests/merlin-observability-export-smoke.sh
+wizard observability export --dry-run
+```
