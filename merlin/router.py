@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field
 
 from merlin.config_loader import MerlinConfig, RouteSpec, load_all_configs
 from merlin.memory_manager import MemoryManager
+from merlin.skill_scorer import compute_skill_report
 
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,29 @@ OUTCOME_DECAY_DAYS = 30
 OUTCOME_SAMPLE_LIMIT = 50
 
 AgentTarget = Literal["openhands", "n8n", "litellm", "merlin-core"]
+ALLOWED_AGENT_TARGETS = {"openhands", "n8n", "litellm", "merlin-core"}
+SKILL_DOMAIN_HINTS: dict[str, str] = {
+    "security": "security",
+    "vulnerability": "security",
+    "sql injection": "security",
+    "threat": "security",
+    "secret": "security",
+    "credential": "security",
+    "search": "research",
+    "research": "research",
+    "summarize": "research",
+    "explain": "research",
+    "code": "code",
+    "python": "code",
+    "function": "code",
+    "debug": "code",
+    "refactor": "code",
+    "test": "code",
+    "n8n": "automation",
+    "automation": "automation",
+    "workflow": "automation",
+    "schedule": "automation",
+}
 
 
 class RouteDecision(BaseModel):
@@ -56,6 +80,8 @@ class RouteDecision(BaseModel):
     audit_written: bool = False
     approval_gates: list[str]
     decision_reason: str
+    skill_bias_applied: bool = False
+    skill_bias_agent: str | None = None
 
 
 class _RouteRule(BaseModel):
@@ -371,6 +397,42 @@ def _default_decision(config: MerlinConfig) -> RouteDecision:
     )
 
 
+def _skill_domain_from_decision(decision: RouteDecision) -> str:
+    for keyword in decision.matched_keywords:
+        domain = SKILL_DOMAIN_HINTS.get(keyword.casefold())
+        if domain:
+            return domain
+    if decision.task_type in {"code", "security", "automation"}:
+        return decision.task_type
+    if decision.task_type in {"ai_engineering", "architecture", "product_design"}:
+        return "analysis"
+    return "general"
+
+
+def _apply_skill_bias(decision: RouteDecision) -> RouteDecision:
+    domain = _skill_domain_from_decision(decision)
+    try:
+        report = compute_skill_report(memory=MemoryManager(timeout=1))
+        preferred = report.best_agent_for(domain)
+    except Exception as exc:
+        logger.warning("skill_scorer_unavailable error=%s route_id=%s", exc, decision.route_id)
+        return decision
+
+    if preferred and preferred in ALLOWED_AGENT_TARGETS and preferred != decision.agent_target:
+        logger.info(
+            "skill_bias_applied original=%s preferred=%s domain=%s route_id=%s",
+            decision.agent_target,
+            preferred,
+            domain,
+            decision.route_id,
+        )
+        decision.agent_target = preferred  # type: ignore[assignment]
+        decision.skill_bias_applied = True
+        decision.skill_bias_agent = preferred
+        decision.decision_reason = f"{decision.decision_reason} Skill score bias selected {preferred} for {domain}."
+    return decision
+
+
 def classify_task(user_input: str) -> RouteDecision:
     """Classify input into a Merlin staff mode and execution target."""
 
@@ -465,6 +527,8 @@ def _write_route_audit(decision: RouteDecision, input_hash: str, timestamp: str)
         "selected_model_alias": decision.selected_model_alias,
         "model_fallback_applied": decision.model_fallback_applied,
         "model_fallback_reason": decision.model_fallback_reason,
+        "skill_bias_applied": decision.skill_bias_applied,
+        "skill_bias_agent": decision.skill_bias_agent,
         "outcome_status": "routed",
         "task_hash": input_hash,
     }
@@ -484,7 +548,7 @@ def _write_route_audit(decision: RouteDecision, input_hash: str, timestamp: str)
 def route_task(user_input: str) -> RouteDecision:
     """Route a task and log the decision without storing raw input."""
 
-    decision = classify_task(user_input)
+    decision = _apply_skill_bias(classify_task(user_input))
     timestamp = datetime.now(UTC).isoformat()
     input_hash = _input_hash(user_input)
     audit_point_id = _write_route_audit(decision, input_hash, timestamp)

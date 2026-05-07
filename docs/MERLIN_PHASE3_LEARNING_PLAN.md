@@ -36,6 +36,10 @@ Phase 3 adds review-first learning loops on top of the Phase 2 Merlin Staff Core
 5. `Phase 3E` — skill scores in `memory_manager.py`
    - Compute local skill confidence from recent approved outcome history.
    - Skill scores inform routing visibility but never bypass approval gates.
+   - Status: implemented in #70. Outcomes now carry `skill_domain` and
+     `outcome_rating`; approved outcomes may be written to `skill_outcomes`;
+     `skill_scorer.py` computes read-only skill reports; `route_task()` can
+     apply non-blocking skill bias; `wizard skills` prints the score table.
 
 ## Outcome Event Contract
 
@@ -186,6 +190,38 @@ Rules:
 - Compute from the last 50 approved outcome records.
 - `skill_key` is `staff_mode::task_type`.
 - Skill scores never authorize execution, cloud calls, shell commands, file writes, memory writes, or model downloads.
+- Phase 3E stores raw skill outcome events in `skill_outcomes` with neutral
+  384-dimension placeholder vectors. Scores are recomputed from those events;
+  no persistent score file is created.
+- Skill bias is advisory. If the scorer or Qdrant is unavailable, routing
+  continues with the original route decision.
+
+## Future Signal Audit
+
+Phase 3E intentionally uses signals that already exist in approved task outcome
+records. A follow-up design pass should evaluate these additional signals before
+making skill bias stronger:
+
+- Session reflection quality from `session_reflector.py`: useful for session
+  review, but it is session-level and should not be assigned to a single agent
+  without an attribution rule.
+- Router calibration from `confidence_at_routing` versus outcome rating:
+  high-confidence rejections should reduce future bias; low-confidence approvals
+  should surface routing keyword gaps.
+- Hardware-tier stratification: scores from `low`, `base`, `mid`, and `high`
+  tiers should be compared separately before using them for hardware-specific
+  routing decisions.
+- Model-aware scoring: once outcomes reliably include the selected model alias,
+  skill scores should distinguish model capability from agent target.
+- Preference affinity: explicit user preferences should outrank statistical
+  bias, but `preference_extractor.py` does not currently expose agent-domain
+  preferences.
+- Delegation correction: `swarm_coordinator.py` is currently a pure adapter and
+  does not record handoffs. If delegation is added later, the original agent
+  should receive a `corrected` rating rather than full approval.
+
+Do not invent these fields in runtime records until the source modules actually
+produce them.
 
 ## Memory Index Requirements
 

@@ -115,7 +115,15 @@ Issue #69 Phase 3D hardening is complete:
 - Add explicit redacted preview logging through `write_reflection_preview()`.
 - Keep normal reflection side-effect free.
 
-After #69, continue with skill scores.
+Issue #70 Phase 3E skill scores is complete:
+
+- Extend approved task outcomes with `skill_domain` and `outcome_rating`.
+- Add consent-gated `skill_outcomes` writes using neutral 384-dimension vectors.
+- Add read-only `skill_scorer.py` aggregation with recency weighting, confidence scaling, trend detection, and route-bias eligibility.
+- Add non-blocking skill bias in `route_task()` and `wizard skills`.
+- Preserve graceful degradation: if Qdrant or the scorer is unavailable, routing continues normally.
+
+After #70, continue with a review pass before adding any stronger learning behavior.
 
 Port contract:
 

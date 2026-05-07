@@ -242,6 +242,7 @@ Last verified: 2026-05-06.
 - Phase 3C preference extractor is complete in #67. It is review-only: `merlin/preference_extractor.py` returns candidate preferences with confidence, category, redacted evidence, and write eligibility, but performs no memory writes or model/cloud calls.
 - Phase 3D session reflector is complete in #68. It is review-only: `merlin/session_reflector.py` summarizes existing outcome/preference records with task counts, routes, low-confidence routes, staff modes, hardware tier, duration, and 90-day expiry, while performing no memory writes or model/cloud calls.
 - Phase 3D hardening is complete in #69. Session reflections now include outcome mix, reflection quality, review recommendation, and an explicit redacted JSONL preview writer; normal reflection remains side-effect free.
+- Phase 3E skill scores are complete in #70. `TaskOutcome` now includes skill domain/rating, approved outcomes can write consent-gated `skill_outcomes`, `skill_scorer.py` computes read-only reports, `route_task()` applies non-blocking skill bias, and `wizard skills` prints the local score table.
 
 Earlier live validation on 2026-05-05:
 
