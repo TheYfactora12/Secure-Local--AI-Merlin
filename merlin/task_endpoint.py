@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 import time
 import uuid
 from collections import deque
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -24,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 LITELLM_CHAT_COMPLETIONS_URL = "http://localhost:4000/v1/chat/completions"
 LITELLM_TIMEOUT_SECONDS = 90
+STACK_DIR = Path(__file__).resolve().parents[1]
 
 app = FastAPI(title="Merlin Task Endpoint")
 TASK_TRACE_BUFFER: deque[dict[str, Any]] = deque(maxlen=50)
@@ -104,10 +107,38 @@ def _call_litellm(system_prompt: str, user_input: str, model: str) -> str:
         ],
         "stream": False,
     }
-    response = httpx.post(LITELLM_CHAT_COMPLETIONS_URL, json=payload, timeout=LITELLM_TIMEOUT_SECONDS)
+    response = httpx.post(
+        LITELLM_CHAT_COMPLETIONS_URL,
+        json=payload,
+        headers=_litellm_headers(),
+        timeout=LITELLM_TIMEOUT_SECONDS,
+    )
     response.raise_for_status()
     data = response.json()
     return str(data["choices"][0]["message"]["content"])
+
+
+def _litellm_headers() -> dict[str, str]:
+    key = os.environ.get("LITELLM_MASTER_KEY") or _env_file_value("LITELLM_MASTER_KEY")
+    if not key:
+        return {}
+    return {"Authorization": f"Bearer {key}"}
+
+
+def _env_file_value(key: str) -> str | None:
+    env_file = STACK_DIR / ".env"
+    try:
+        with env_file.open("r", encoding="utf-8") as handle:
+            for line in handle:
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#") or "=" not in stripped:
+                    continue
+                name, value = stripped.split("=", 1)
+                if name == key:
+                    return value.strip().strip('"').strip("'") or None
+    except OSError:
+        return None
+    return None
 
 
 def _memory_write_allowed() -> bool:
@@ -218,4 +249,4 @@ from merlin import status_extension  # noqa: E402,F401  Register status routes a
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="127.0.0.1", port=8766)
+    uvicorn.run("merlin.task_endpoint:app", host="127.0.0.1", port=8766)

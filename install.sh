@@ -429,6 +429,35 @@ fi
 
 log_to_file "[PASS] STEP 2: Dependencies installed"
 
+# ── STEP 2B: Merlin Python Runtime ────────────────────────────────────
+step "Installing Merlin Python Runtime"
+log_to_file "[STEP 2B] Merlin Python Runtime"
+
+MERLIN_VENV="${SCRIPT_DIR}/.venv"
+MERLIN_REQUIREMENTS="${SCRIPT_DIR}/requirements-merlin.txt"
+
+if [[ -f "$MERLIN_REQUIREMENTS" ]]; then
+  if [[ ! -x "${MERLIN_VENV}/bin/python" ]]; then
+    log "Creating Merlin Python virtual environment..."
+    python3 -m venv "$MERLIN_VENV"
+  else
+    log "Merlin Python virtual environment already exists"
+  fi
+
+  if "${MERLIN_VENV}/bin/python" -c 'import yaml, pydantic, fastapi, httpx' >/dev/null 2>&1; then
+    log "Merlin Python dependencies already installed"
+  else
+    log "Installing Merlin Python dependencies..."
+    "${MERLIN_VENV}/bin/python" -m pip install --upgrade pip >/dev/null
+    "${MERLIN_VENV}/bin/python" -m pip install -r "$MERLIN_REQUIREMENTS"
+    log "Merlin Python dependencies installed"
+  fi
+else
+  warn "requirements-merlin.txt missing — Merlin Python runtime may not start"
+fi
+
+log_to_file "[PASS] STEP 2B: Merlin Python Runtime ready"
+
 # ── STEP 3: Environment Setup & Secret Hardening ──────────────────────
 step "Environment Setup & Secret Hardening"
 log_to_file "[STEP 3] Environment Setup"
@@ -816,7 +845,18 @@ step "First-Boot Initialization"
 log_to_file "[STEP 7] First-boot bootstrap"
 
 FIRST_BOOT_FLAG="${SCRIPT_DIR}/.wizard-bootstrapped"
+BOOTSTRAP_NEEDED=false
 if [[ ! -f "$FIRST_BOOT_FLAG" ]]; then
+  BOOTSTRAP_NEEDED=true
+elif ! curl -fsS --max-time 3 "http://localhost:6333/collections/home_ai_memory" >/dev/null 2>&1; then
+  warn "Bootstrap marker exists but Qdrant collections are missing — re-running bootstrap"
+  BOOTSTRAP_NEEDED=true
+elif ! curl -fsS --max-time 3 "http://localhost:6333/collections/merlin_session" >/dev/null 2>&1; then
+  warn "Bootstrap marker exists but Merlin canonical collections are missing — re-running bootstrap"
+  BOOTSTRAP_NEEDED=true
+fi
+
+if [[ "$BOOTSTRAP_NEEDED" == true ]]; then
   if [[ -f "scripts/bootstrap.sh" ]]; then
     log "Running first-boot bootstrap (Qdrant collections + n8n workflows)..."
     # BUG-18 FIX: Verbose failure messaging so user knows exactly what to do.
@@ -824,6 +864,7 @@ if [[ ! -f "$FIRST_BOOT_FLAG" ]]; then
       HOME_AI_PROFILE="${INSTALL_PROFILE}" \
       HOME_AI_PROFILES="${INSTALL_CAPABILITIES_CSV}" \
       HOME_AI_SKIP_MODEL_PULLS="${SKIP_MODEL_PULLS}" \
+      MERLIN_CREATE_CANONICAL_COLLECTIONS=true \
       bash "${SCRIPT_DIR}/scripts/bootstrap.sh"; then
       touch "$FIRST_BOOT_FLAG"
       log "Bootstrap complete"
@@ -1035,7 +1076,7 @@ else
   echo -e "  ${CYAN}${CLI_PATH} merlin status-api status${NC} → confirm read-only Merlin status API"
   echo -e "  ${CYAN}${CLI_PATH} open${NC}                 → open Wizard HQ in browser"
 fi
-echo -e "  ${CYAN}python3 merlin/task_endpoint.py${NC}   → optional supervised Merlin Task API on :8766"
+echo -e "  ${CYAN}.venv/bin/python -m merlin.task_endpoint${NC}   → optional supervised Merlin Task API on :8766"
 echo ""
 echo -e "  ${BOLD}First-time setup steps:${NC}"
 echo -e "  1. http://localhost:3000  → create your admin account"

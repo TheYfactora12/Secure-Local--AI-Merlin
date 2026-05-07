@@ -147,6 +147,6 @@ Phase 2A through 2F are implemented on `main`; do not restart them from stale pr
 - #53: Session memory bridge n8n workflow is closed after `n8n-workflows/06-session-memory-bridge.json`, offline static tests, privacy documentation, and CI validation.
 - #60: Staff router + swarm coordinator integration is closed after `merlin/swarm_coordinator.py`, `wizard mode status`, route audit/fallback coverage, and CI validation.
 
-The current release priority is `v1.0 — Stable Installer Release`: finish release policy on #1, then run #63 whole-stack release-candidate validation before Phase 3 learning work. Do not change the installer unless a specific defect is found.
+The current release priority is Phase 3 learning, starting with the outcome observer. `v1.0 — Stable Installer Release` passed whole-stack low/core validation on the 8GB Mac; Developer ID Installer/notarization is deferred to #64.
 
 See `docs/architecture/MERLIN_STAFF_CORE.md` for the staff router, swarm context boundary, team modes, policy gates, and dimension safety rule.

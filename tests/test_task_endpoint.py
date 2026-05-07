@@ -32,6 +32,22 @@ def test_post_task_with_valid_input_routes_correctly(monkeypatch) -> None:
     assert body["memory_written"] is False
 
 
+def test_litellm_call_includes_authorization_header(monkeypatch) -> None:
+    captured = {}
+
+    def fake_post(*args, **kwargs):
+        captured.update(kwargs)
+        return _FakeLiteLLMResponse()
+
+    monkeypatch.setenv("LITELLM_MASTER_KEY", "test-local-key")
+    monkeypatch.setattr("merlin.task_endpoint.httpx.post", fake_post)
+
+    response = client.post("/task", json={"input": "explain routing"})
+
+    assert response.status_code == 200
+    assert captured["headers"] == {"Authorization": "Bearer test-local-key"}
+
+
 def test_post_task_with_empty_string_returns_400() -> None:
     response = client.post("/task", json={"input": "   "})
     assert response.status_code == 400

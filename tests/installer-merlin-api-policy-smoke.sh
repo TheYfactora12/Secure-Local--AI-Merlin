@@ -21,7 +21,7 @@ grep -q 'Read-only Merlin status is separated from task execution' "$INSTALLER" 
   || fail "installer should explain status/task API separation"
 grep -q 'Merlin Task API.*not auto-started' "$INSTALLER" \
   || fail "installer must not auto-start the execution-aware Merlin Task API"
-grep -q 'python3 merlin/task_endpoint.py' "$INSTALLER" \
+grep -q '.venv/bin/python -m merlin.task_endpoint' "$INSTALLER" \
   || fail "installer should print manual Merlin Task API start command"
 grep -q 'command -v wizard' "$INSTALLER" \
   || fail "installer should avoid printing unavailable wizard commands"

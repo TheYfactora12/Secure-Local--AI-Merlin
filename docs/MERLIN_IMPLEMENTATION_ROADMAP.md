@@ -29,8 +29,8 @@ Stress-test result: keep this ladder explicit. Do not jump from v1.0 to v1.3; v1
 ## Current Issue Alignment (2026-05-06)
 
 - #41–#46, #48, #49, and #61 closed under `v1.0` with `release` + `priority: critical` labels.
-- #1 remains open under `v1.0`; fresh install, unsigned package, backup/restore, core upgrade, launchd persistence, clean reinstall, and same-machine package builder fixes are validated on the 8GB Mac. The local self-signed package path now signs both the component package and final distribution package, but macOS privileged install still requires System-level certificate trust or a real Developer ID Installer certificate. Treat signing/notarization as a distribution policy gate, not an installer runtime defect.
-- #63 is open under `v1.0` as the whole-stack release-candidate validation gate. This is the stage to test the whole product from a fresh install before starting Phase 3 learning work.
+- #1 is closed under `v1.0`; installer runtime and package builder defects are resolved. Developer ID Installer/notarization is split to #64 under `v3.0`.
+- #63 is closed under `v1.0`; whole-stack low/core release-candidate validation passed on the 8GB Mac after the fixes documented in `docs/archive/WHOLE_STACK_RC_VALIDATION_2026-05-06.md`.
 - #47 open under `v1.1`. #5 open under `v1.2`.
 - #28 closed under `v2.0`. #50–#60 closed under `v2.0`.
 - #30, #39 open under `v2.1`. #33, #34 open under `v2.2`. #37 open under `v3.0`.
@@ -94,7 +94,7 @@ Issue #1 latest package validation is complete through `64096f4`; GitHub Actions
 - `pkgutil --check-signature` can validate current-user trust after the local cert is trusted in the login keychain.
 - Privileged `installer` still rejects the self-signed package without System keychain trust or Developer ID Installer notarization. Do not spend more engineering cycles trying to bypass this macOS trust model.
 
-Next work should be selected as a narrow slice: close or split #1 based on the release policy decision, then run #63 whole-stack release-candidate validation. Only after that should the follow-on Phase 3 learning sequence begin: outcome observer first, then retrieval scoring, preference extraction, session reflection, and skill scores.
+Next work should be selected as a narrow slice: start the follow-on Phase 3 learning sequence with the outcome observer first, then retrieval scoring, preference extraction, session reflection, and skill scores.
 
 Port contract:
 

@@ -78,6 +78,7 @@
 |---|---|
 | [`ARCHITECTURE_CURRENT.md`](./archive/ARCHITECTURE_CURRENT.md) | Archived 2026-05-06 — superseded by `ARCHITECTURE.md` |
 | [`FRESH_INSTALL_MAC_TEST_2026-05-06.md`](./archive/FRESH_INSTALL_MAC_TEST_2026-05-06.md) | v1.0 fresh install test log |
+| [`WHOLE_STACK_RC_VALIDATION_2026-05-06.md`](./archive/WHOLE_STACK_RC_VALIDATION_2026-05-06.md) | v1.0 whole-stack release-candidate validation |
 | [`ROADMAP_STRESS_TEST_2026-05-06.md`](./archive/ROADMAP_STRESS_TEST_2026-05-06.md) | v1.0 roadmap stress test session output |
 | [`CODEX_BASELINE_REVIEW.md`](./archive/CODEX_BASELINE_REVIEW.md) | Pre-v1.0 Codex baseline review snapshot |
 | [`BASELINE_INSTALLER_REVIEW.md`](./archive/BASELINE_INSTALLER_REVIEW.md) | Pre-v1.0 installer review snapshot |
@@ -88,7 +89,7 @@
 
 | Milestone | Status |
 |---|---|
-| **v1.0 — Stable Installer Release** | 🔵 In Progress — installer path verified; #63 whole-stack release-candidate validation is now the final full-product test gate; self-signed `.pkg` install still needs System trust or Developer ID |
+| **v1.0 — Stable Installer Release** | ✅ Complete after #63 validation — low/core whole-stack release candidate passed on 8GB Mac; Developer ID/notarization moved to #64 |
 | **v2.0 — Merlin Staff Core** | ✅ Complete — Phase 2 core, #53 session memory bridge, and #60 staff router integration closed with CI validation |
 
 See [GitHub Milestones](https://github.com/TheYfactora12/home-ai-elite/milestones) and [CHANGELOG.md](../CHANGELOG.md) for full release history.

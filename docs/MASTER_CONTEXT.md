@@ -130,15 +130,23 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Finish remaining `v1.0 — Stable Installer Release` policy work on #1.
-2. Run #63 whole-stack release-candidate validation as the final full-product test gate before Phase 3 learning work.
-3. Keep signing/notarization deferred as a separate distribution gate; the unsigned functional installer path is now green on this 8GB Mac.
-4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
-5. Start the Phase 3 learning sequence only after v1.0 release policy and #63 are settled: outcome observer first, then retrieval scoring, preference extraction, session reflection, and skill scores.
+1. Start Phase 3 learning with the outcome observer first.
+2. Keep signing/notarization deferred to #64; the v1.0 low/core installer path is green on this 8GB Mac.
+3. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 
 ## Reasoning Summary
 
 The current architecture keeps the default user path local-first and low-friction while preserving Linux server security options through explicit profiles. macOS avoids Docker Ollama conflicts by using native Ollama; Linux can still run Ollama in Docker when profiles are enabled.
+
+## Whole-Stack RC Validation
+
+#63 passed on 2026-05-06 after fixing the release-candidate findings documented in `docs/archive/WHOLE_STACK_RC_VALIDATION_2026-05-06.md`:
+
+- Installer now creates `.venv` from `requirements-merlin.txt` for Merlin Python runtime dependencies.
+- Task API now starts through `merlin.task_endpoint:app` so `/status/*` routes are registered live.
+- Bootstrap re-runs when Qdrant collections are missing despite `.wizard-bootstrapped`.
+- Bootstrap creates canonical Merlin collections by default.
+- Task API sends the local LiteLLM authorization header from environment or `.env` without logging secrets.
 
 The next engineering priority is supportability: diagnostics, sanitized bug reports, and drift-proof docs so another AI or human can continue without breaking the installer or crossing security boundaries. Signed release work can wait until the local core loop and support loop remain green.
 
