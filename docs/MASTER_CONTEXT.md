@@ -24,8 +24,12 @@ Current milestone position:
 - `v1.1 — Mobile Access + Remote-Safe Entry Points` is closed after
   `docs/MOBILE_ACCESS_PLAN.md` documented localhost-only defaults and opt-in
   LAN/mobile design.
-- Next in order: `v1.2 — Hardware Guide + Document Ingestion Planning`, with
-  issue #5 open.
+- `v1.2 — Hardware Guide + Document Ingestion Planning` is closed after
+  `docs/hardware-guide.md`, `docs/free-stack-map.md`, and
+  `docs/DOCUMENT_INGESTION_PLAN.md` replaced the stale 16GB-minimum plan with
+  current 8GB-first guidance.
+- Next in order: `v1.3 — Reliability + Memory + Router`, with issues #3, #6,
+  and #35 open.
 - Drift captured during v1.1: #80 tracks whether to add an explicit
   `webhook_execution` policy gate under `v1.7`.
 

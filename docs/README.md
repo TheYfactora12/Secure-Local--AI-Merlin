@@ -94,7 +94,7 @@
 |---|---|
 | **v1.0 — Stable Installer Release** | ✅ Complete after #63 validation — low/core whole-stack release candidate passed on 8GB Mac; Developer ID/notarization moved to #64 |
 | **v1.1 — Mobile Access + Remote-Safe Entry Points** | ✅ Complete — docs-only opt-in mobile/LAN plan, no default LAN exposure |
-| **v1.2 — Hardware Guide + Document Ingestion Planning** | 🔵 Active — 8GB-first hardware guide, free stack map, document ingestion plan |
+| **v1.2 — Hardware Guide + Document Ingestion Planning** | ✅ Complete — 8GB-first hardware guide, free stack map, document ingestion plan |
 | **v2.0 — Merlin Staff Core** | ✅ Complete — Phase 2 core, #53 session memory bridge, and #60 staff router integration closed with CI validation |
 
 See [GitHub Milestones](https://github.com/TheYfactora12/home-ai-elite/milestones) and [CHANGELOG.md](../CHANGELOG.md) for full release history.

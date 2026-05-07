@@ -250,8 +250,8 @@ Keyword matching stays dominant (60%) so Merlin's routing is always explainable,
 |---|---|---|
 | **v1.0 — Stable Installer** | ✅ Complete | Rock-solid install, package, backup, restore, upgrade, uninstall on 8GB Mac |
 | **v1.1 — Mobile Access** | ✅ Complete | Optional local-network entry point design (opt-in, no default LAN exposure) |
-| **v1.2 — Hardware Guide + Doc Ingestion** | 🔵 Active | 8GB-first hardware guide, free stack map, optional document ingestion planning |
-| **v1.3 — Reliability + Memory + Router** | 📋 Planned | Retry logic, memory reliability, router cleanup |
+| **v1.2 — Hardware Guide + Doc Ingestion** | ✅ Complete | 8GB-first hardware guide, free stack map, optional document ingestion planning |
+| **v1.3 — Reliability + Memory + Router** | 🔵 Active | Retry logic, memory reliability, router cleanup |
 | **v2.0 — Merlin Staff Core** | ✅ Complete | Full Python control plane, 6 staff modes, 14 policy gates, memory manager |
 | **v2.1 — Dashboard Command Center** | 📋 Planned | Read-only/user-facing Merlin control center |
 | **v2.2 — Magic Mode** | 📋 Planned | Supervised multi-step orchestration — plan-first, approval-gated |
