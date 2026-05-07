@@ -87,7 +87,7 @@
 
 | Milestone | Status |
 |---|---|
-| **v1.0 — Merlin Core Baseline** | ✅ Complete — Issues #1–#49 closed |
-| **v2.0 — Merlin Staff Core** | 🔵 In Progress — Issues #56–#60 open |
+| **v1.0 — Stable Installer Release** | 🔵 In Progress — fresh install, unsigned package, backup/restore, and core upgrade verified; launchd/signing remain |
+| **v2.0 — Merlin Staff Core** | 🔵 In Progress — Phase 2 core implemented; #53 and #60 remain open |
 
 See [GitHub Milestones](https://github.com/TheYfactora12/home-ai-elite/milestones) and [CHANGELOG.md](../CHANGELOG.md) for full release history.

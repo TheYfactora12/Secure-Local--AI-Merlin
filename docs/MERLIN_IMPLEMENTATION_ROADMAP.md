@@ -28,7 +28,7 @@ Stress-test result: keep this ladder explicit. Do not jump from v1.0 to v1.3; v1
 
 ## Current Issue Alignment (2026-05-06)
 
-- #41–#46, #48, #49 closed under `v1.0` with `release` + `priority: critical` labels.
+- #41–#46, #48, #49, and #61 closed under `v1.0` with `release` + `priority: critical` labels.
 - #47 open under `v1.1`. #5 open under `v1.2`.
 - #28 closed under `v2.0`. #50–#52, #54–#59 closed under `v2.0`.
 - #53 and #60 open under `v2.0`.
@@ -405,6 +405,7 @@ Next implementation slice:
 - Add a reusable core model smoke test for Ollama and LiteLLM without exposing secrets. `Done: tests/core-live-smoke.sh`
 - Add a disposable live-Qdrant restore test. `Done: tests/qdrant-restore-live-smoke.sh`
 - Make update/upgrade profile-aware and macOS native-Ollama safe. `Done: scripts/update.sh, scripts/upgrade.sh, tests/update-upgrade-profile-smoke.sh`
+- Profile-gate optional Compose services so core upgrade does not start search, automation, coding, security, or ops services. `Done: docker-compose.yml, tests/compose-profile-gating-smoke.sh`
 - Make hardware-tier model pulls opt-in while preserving explicit override. `Done: install.sh, tests/installer-model-pull-policy-smoke.sh`
 - Document and enforce core install time budget. `Done: tests/core-install-budget-smoke.sh`
 - Align package postinstall with laptop-safe core install. `Done: pkg/scripts/postinstall, tests/pkg-readiness-smoke.sh`

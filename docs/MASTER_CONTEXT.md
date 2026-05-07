@@ -129,7 +129,7 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Finish remaining `v1.0 — Stable Installer Release` gates: upgrade verification, launchd persistence validation, and package signing/notarization readiness.
+1. Finish remaining `v1.0 — Stable Installer Release` gates: launchd persistence validation and package signing/notarization readiness.
 2. Keep signing/notarization deferred until the unsigned installer and package paths are functionally green.
 3. Continue #53 and #60 only after the v1.0 release gates are green, unless the work is docs-only.
 4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
@@ -156,10 +156,9 @@ The next engineering priority is supportability: diagnostics, sanitized bug repo
 
 ## Next Actions
 
-1. Run upgrade verification from the current package/main state.
-2. Validate launchd persistence and read-only status API behavior after login/startup.
-3. Keep verifying `ci-success` requires both `gitleaks-scan` and `merlin-staff-core-pytest`.
-4. Continue updating roadmap/docs/tests with every milestone before signing/notarization work.
+1. Validate launchd persistence and read-only status API behavior after login/startup.
+2. Keep verifying `ci-success` requires both `gitleaks-scan` and `merlin-staff-core-pytest`.
+3. Continue updating roadmap/docs/tests with every milestone before signing/notarization work.
 
 ## Validation
 
@@ -171,6 +170,7 @@ Last verified: 2026-05-06.
 - Unsigned `.pkg` install is green after #49; #49 filtered package runtime copy so stale `.wizard-bootstrapped`, logs, caches, `.venv`, and build artifacts are not copied into the user runtime.
 - GitHub Actions run `25467394670` passed for commit `88d4f96`.
 - Live backup/restore verification passed on the package-installed stack with `bash tests/qdrant-restore-live-smoke.sh`: disposable Qdrant collection backed up, deleted, restored, and vector payload verified with 8 checks and 0 failures.
+- Live core upgrade verification passed after #61. The first run exposed optional `searxng` startup in core mode; #61 profile-gated optional Compose services, removed the hard `open-webui` to `searxng` dependency, added `tests/compose-profile-gating-smoke.sh`, and closed with CI run `25468170156` passing. Rerun of `bash scripts/upgrade.sh --profile core` completed and kept running services core-only: `litellm`, `open-webui`, `qdrant`, and `dashboard`.
 - Issue #22 support tooling is merged and pushed at `47f30df`: additive doctor checks, redaction helper, sanitized report generator, wizard wiring, and doctor/report-bug/redaction smokes.
 - Issue #24 CI gate is merged and pushed at `c6f6652`; GitHub Actions run `25451110988` passed.
 - Issue #25 Layer 1 is merged and pushed at `d4ece3d`; GitHub Actions run `25454666989` passed with `gitleaks-scan` and `merlin-staff-core-pytest` both required by `ci-success`.

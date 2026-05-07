@@ -25,6 +25,7 @@ Recent normalization:
 
 - #41 through #46 are closed under `v1.0` and normalized with `v1.0`, `release`, and `priority: critical` labels.
 - #48 and #49 are closed under `v1.0`.
+- #61 is closed under `v1.0` after fixing optional Compose service profile gating exposed by live core upgrade.
 - #47 is open under `v1.1`.
 - #5 is open under `v1.2`.
 - #28 is closed under `v2.0`.
@@ -36,10 +37,9 @@ Recent normalization:
 
 Current next queue:
 
-1. Run upgrade verification.
-2. Validate launchd persistence and read-only status API behavior.
-3. Finish #1 only after fresh install, package, upgrade, backup, restore, launchd, and uninstall checks pass.
-4. Then take #47 or #5 as docs/planning work, not runtime behavior.
+1. Validate launchd persistence and read-only status API behavior.
+2. Finish #1 only after fresh install, package, upgrade, backup, restore, launchd, and uninstall checks pass.
+3. Then take #47 or #5 as docs/planning work, not runtime behavior.
 
 ## Issue 1: Document Current Installer Baseline And Do-Not-Break List
 
