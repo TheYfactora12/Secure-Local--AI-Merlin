@@ -8,6 +8,8 @@ Phase 3 adds review-first learning loops on top of the Phase 2 Merlin Staff Core
    - Capture task outcome events after routing and response attempts.
    - Store raw prompt only as `sha256` hash.
    - No memory writes without the existing `memory_write` approval gate.
+   - Status: started in #65 with JSONL outcome logging, optional approved
+     `merlin_audit` writes, routing-gap records, and Task API integration.
 2. `Phase 3B` — router retrieval upgrade
    - Blend keyword routing with approved outcome retrieval.
    - Formula: `final_score = (0.6 * keyword_score) + (0.4 * retrieval_score)`.

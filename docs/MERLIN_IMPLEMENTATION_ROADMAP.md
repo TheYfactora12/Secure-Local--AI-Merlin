@@ -94,7 +94,7 @@ Issue #1 latest package validation is complete through `64096f4`; GitHub Actions
 - `pkgutil --check-signature` can validate current-user trust after the local cert is trusted in the login keychain.
 - Privileged `installer` still rejects the self-signed package without System keychain trust or Developer ID Installer notarization. Do not spend more engineering cycles trying to bypass this macOS trust model.
 
-Next work should be selected as a narrow slice: start the follow-on Phase 3 learning sequence with the outcome observer first, then retrieval scoring, preference extraction, session reflection, and skill scores.
+Next work should be selected as a narrow slice: finish #65 Phase 3A outcome observer, then continue with retrieval scoring, preference extraction, session reflection, and skill scores.
 
 Port contract:
 

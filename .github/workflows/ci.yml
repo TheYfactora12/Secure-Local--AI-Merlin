@@ -292,6 +292,7 @@ jobs:
             tests/test_session_memory_bridge.py \
             tests/test_status_extension.py \
             tests/test_task_endpoint.py \
+            tests/test_outcome_observer.py \
             --ignore=tests/test_memory_manager_integration.py \
             -k "not integration and not live" \
             -v \

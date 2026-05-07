@@ -19,7 +19,21 @@ class _FakeLiteLLMResponse:
         return {"choices": [{"message": {"content": "Merlin response"}}]}
 
 
+def _noop_outcome_observer(**kwargs):
+    return None
+
+
+def test_task_endpoint_tests_do_not_write_outcome_logs_by_default(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.task_endpoint.observe_task_outcome", _noop_outcome_observer)
+    monkeypatch.setattr("merlin.task_endpoint.httpx.post", lambda *args, **kwargs: _FakeLiteLLMResponse())
+
+    response = client.post("/task", json={"input": "explain how RAG works"})
+
+    assert response.status_code == 200
+
+
 def test_post_task_with_valid_input_routes_correctly(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.task_endpoint.observe_task_outcome", _noop_outcome_observer)
     monkeypatch.setattr("merlin.task_endpoint.httpx.post", lambda *args, **kwargs: _FakeLiteLLMResponse())
 
     response = client.post("/task", json={"input": "explain how RAG works"})
@@ -40,6 +54,7 @@ def test_litellm_call_includes_authorization_header(monkeypatch) -> None:
         return _FakeLiteLLMResponse()
 
     monkeypatch.setenv("LITELLM_MASTER_KEY", "test-local-key")
+    monkeypatch.setattr("merlin.task_endpoint.observe_task_outcome", _noop_outcome_observer)
     monkeypatch.setattr("merlin.task_endpoint.httpx.post", fake_post)
 
     response = client.post("/task", json={"input": "explain routing"})
@@ -58,7 +73,9 @@ def test_post_task_with_input_exceeding_4000_chars_returns_400() -> None:
     assert response.status_code == 400
 
 
-def test_post_task_route_requiring_approval_returns_403_with_gates() -> None:
+def test_post_task_route_requiring_approval_returns_403_with_gates(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.task_endpoint.observe_task_outcome", _noop_outcome_observer)
+
     response = client.post("/task", json={"input": "write a python function"})
 
     assert response.status_code == 403
@@ -78,6 +95,7 @@ def test_post_task_when_litellm_unreachable_returns_degraded_response(monkeypatc
     def raise_connect_error(*args, **kwargs):
         raise httpx.ConnectError("unreachable")
 
+    monkeypatch.setattr("merlin.task_endpoint.observe_task_outcome", _noop_outcome_observer)
     monkeypatch.setattr("merlin.task_endpoint.httpx.post", raise_connect_error)
 
     response = client.post("/task", json={"input": "explain how Qdrant works"})

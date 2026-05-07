@@ -17,6 +17,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from merlin.memory_manager import MemoryManager
+from merlin.outcome_observer import observe_task_outcome
 from merlin.persona_injector import build_system_prompt
 from merlin.policy_engine import ApprovalRequiredError, requires_approval
 from merlin.router import RouteDecision, route_task
@@ -179,6 +180,7 @@ def task(request: TaskRequest) -> TaskResponse:
 
     route = route_task(user_input)
     if route.requires_approval:
+        latency_ms = int((time.perf_counter() - started) * 1000)
         record_task_trace(
             input_hash=input_hash,
             session_id=session_id,
@@ -186,7 +188,13 @@ def task(request: TaskRequest) -> TaskResponse:
             approved=False,
             memory_written=False,
             degraded=False,
-            latency_ms=int((time.perf_counter() - started) * 1000),
+            latency_ms=latency_ms,
+        )
+        observe_task_outcome(
+            user_input=user_input,
+            route_decision=route,
+            outcome_status="rejected",
+            latency_ms=latency_ms,
         )
         raise HTTPException(
             status_code=403,
@@ -202,6 +210,7 @@ def task(request: TaskRequest) -> TaskResponse:
         response_text = _call_litellm(system_prompt, user_input, route.selected_model_alias)
     except (httpx.ConnectError, httpx.TimeoutException, httpx.HTTPError, OSError):
         logger.warning("LiteLLM unavailable: input_hash=%s route_id=%s", input_hash, route.route_id)
+        latency_ms = int((time.perf_counter() - started) * 1000)
         record_task_trace(
             input_hash=input_hash,
             session_id=session_id,
@@ -209,7 +218,13 @@ def task(request: TaskRequest) -> TaskResponse:
             approved=False,
             memory_written=False,
             degraded=True,
-            latency_ms=int((time.perf_counter() - started) * 1000),
+            latency_ms=latency_ms,
+        )
+        observe_task_outcome(
+            user_input=user_input,
+            route_decision=route,
+            outcome_status="degraded",
+            latency_ms=latency_ms,
         )
         return TaskResponse(
             response="Merlin is starting up. Try again in 30 seconds.",
@@ -224,6 +239,7 @@ def task(request: TaskRequest) -> TaskResponse:
     if request.session_id:
         memory_written = _write_session_memory(session_id, user_input, response_text, route)
 
+    latency_ms = int((time.perf_counter() - started) * 1000)
     record_task_trace(
         input_hash=input_hash,
         session_id=session_id,
@@ -231,7 +247,13 @@ def task(request: TaskRequest) -> TaskResponse:
         approved=True,
         memory_written=memory_written,
         degraded=False,
-        latency_ms=int((time.perf_counter() - started) * 1000),
+        latency_ms=latency_ms,
+    )
+    observe_task_outcome(
+        user_input=user_input,
+        route_decision=route,
+        outcome_status="success",
+        latency_ms=latency_ms,
     )
 
     return TaskResponse(

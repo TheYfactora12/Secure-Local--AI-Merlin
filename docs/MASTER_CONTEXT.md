@@ -148,6 +148,15 @@ The current architecture keeps the default user path local-first and low-frictio
 - Bootstrap creates canonical Merlin collections by default.
 - Task API sends the local LiteLLM authorization header from environment or `.env` without logging secrets.
 
+## Phase 3A Started
+
+#65 starts Phase 3 with `merlin/outcome_observer.py`. The observer records
+task outcomes as redacted JSONL by default, stores only `task_hash` instead of
+raw user input, creates routing-gap review items for low-confidence successful
+outcomes, and writes to `merlin_audit` only when an explicit approval id is
+provided. `merlin/task_endpoint.py` now records success, rejected, and degraded
+outcomes without changing routing behavior.
+
 The next engineering priority is supportability: diagnostics, sanitized bug reports, and drift-proof docs so another AI or human can continue without breaking the installer or crossing security boundaries. Signed release work can wait until the local core loop and support loop remain green.
 
 ## Risks / Unknowns

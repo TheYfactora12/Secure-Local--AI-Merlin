@@ -69,6 +69,7 @@ def test_status_traces_returns_empty_list_on_fresh_start() -> None:
 
 
 def test_status_traces_returns_trace_after_post_task_succeeds(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.task_endpoint.observe_task_outcome", lambda **kwargs: None)
     monkeypatch.setattr("merlin.task_endpoint.httpx.post", lambda *args, **kwargs: _FakeLiteLLMResponse())
     task_response = client.post("/task", json={"input": "explain how RAG works", "session_id": "session-1"})
     assert task_response.status_code == 200
@@ -81,6 +82,7 @@ def test_status_traces_returns_trace_after_post_task_succeeds(monkeypatch) -> No
 
 def test_status_traces_never_contains_raw_input_text(monkeypatch) -> None:
     raw_input = "explain how RAG works"
+    monkeypatch.setattr("merlin.task_endpoint.observe_task_outcome", lambda **kwargs: None)
     monkeypatch.setattr("merlin.task_endpoint.httpx.post", lambda *args, **kwargs: _FakeLiteLLMResponse())
     client.post("/task", json={"input": raw_input, "session_id": "session-1"})
 
@@ -90,6 +92,7 @@ def test_status_traces_never_contains_raw_input_text(monkeypatch) -> None:
 
 
 def test_status_traces_latency_ms_is_positive_integer(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.task_endpoint.observe_task_outcome", lambda **kwargs: None)
     monkeypatch.setattr("merlin.task_endpoint.httpx.post", lambda *args, **kwargs: _FakeLiteLLMResponse())
     client.post("/task", json={"input": "explain how RAG works", "session_id": "session-1"})
 
