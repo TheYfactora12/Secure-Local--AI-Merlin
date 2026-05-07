@@ -16,6 +16,19 @@ or update the GitHub issue with evidence and keep the current session on track.
 Before marking a milestone complete, re-check related open issues and stale
 findings so the milestone closes cleanly.
 
+Current milestone position:
+
+- `v1.0 — Stable Installer Release` is closed after fresh-data low/core install
+  validation, launchd validation, package readiness, backup/restore, upgrade,
+  and uninstall coverage.
+- `v1.1 — Mobile Access + Remote-Safe Entry Points` is closed after
+  `docs/MOBILE_ACCESS_PLAN.md` documented localhost-only defaults and opt-in
+  LAN/mobile design.
+- Next in order: `v1.2 — Hardware Guide + Document Ingestion Planning`, with
+  issue #5 open.
+- Drift captured during v1.1: #80 tracks whether to add an explicit
+  `webhook_execution` policy gate under `v1.7`.
+
 ## Decision
 
 Wizard AI is a local-first AI platform: own Perplexity + Codex + Memory on user-owned hardware with zero required subscriptions.
