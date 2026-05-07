@@ -179,7 +179,7 @@ cat << 'EOF'
     wizard restart            Restart Wizard stack
     wizard status             Show health of all services
     wizard doctor             Run read-only install/profile diagnostic
-    wizard test-workflows     Validate n8n workflow retry contracts offline
+    wizard test-workflows     Validate n8n workflow retry and policy contracts offline
 
   Brain:
     wizard brain status      Show Ollama API, loaded models, installed models
@@ -347,7 +347,8 @@ case "$1" in
 
   test-workflows)
     shift
-    exec bash "$WIZARD_DIR/tests/n8n-ollama-retry-smoke.sh" "$@"
+    bash "$WIZARD_DIR/tests/n8n-ollama-retry-smoke.sh" "$@"
+    bash "$WIZARD_DIR/tests/n8n-model-router-policy-smoke.sh" "$@"
     ;;
 
   mode)

@@ -194,3 +194,23 @@ wizard test-workflows
 If a live workflow hits Ollama `context canceled` during model load, wait for
 the model to finish loading and rerun the workflow. The static retry contract
 means transient slow loads should retry instead of silently dropping the task.
+
+---
+
+## n8n-model-router-policy-smoke.sh
+
+This test does not require live n8n, Ollama, Qdrant, Docker, cloud keys, or
+network access. It statically validates `n8n-workflows/ai-router-starter.json`
+as a local-first optional router starter:
+
+- workflow ships inactive
+- no executable cloud provider HTTP Request nodes
+- local Ollama route remains present
+- cloud model paths expose `approval_required` metadata
+- required cloud gates are listed: `cloud_model_call`, `external_network`,
+  `api_key_use`
+
+```bash
+bash tests/n8n-model-router-policy-smoke.sh
+wizard test-workflows
+```
