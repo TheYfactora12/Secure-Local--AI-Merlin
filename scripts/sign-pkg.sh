@@ -9,6 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_DIR="${HOME_AI_STACK_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 
 IDENTITY="${HOME_AI_LOCAL_SIGNING_IDENTITY:-Home AI Elite Local Signing}"
+KEYCHAIN="${HOME_AI_LOCAL_SIGNING_KEYCHAIN:-}"
 VERSION=""
 INPUT_PKG=""
 OUTPUT_PKG=""
@@ -22,14 +23,16 @@ Options:
   --input <path>        Unsigned input .pkg. Defaults to home-ai-elite-<version>.pkg.
   --output <path>       Signed output .pkg. Defaults to home-ai-elite-v<version>.pkg.
   --identity <name>     Signing identity name. Defaults to "Home AI Elite Local Signing".
+  --keychain <path>     Optional keychain containing the local signing identity.
   -h, --help            Show this help.
 
 Create the local signing identity first:
   Keychain Access -> Certificate Assistant -> Create a Certificate
   Name: Home AI Elite Local Signing
   Identity Type: Self Signed Root
-  Certificate Type: Code Signing
-  Let me override defaults -> Key Usage: Signing
+  The identity must be usable by productsign as an installer-signing identity.
+  If a command-line identity is used, trust the self-signed certificate in the
+  signing keychain before running this script.
 
 Then build and sign:
   bash pkg/build-pkg.sh
@@ -60,6 +63,11 @@ while [[ $# -gt 0 ]]; do
       shift
       [[ -n "${1:-}" ]] || { echo "ERROR: --identity requires a value" >&2; exit 2; }
       IDENTITY="$1"
+      ;;
+    --keychain)
+      shift
+      [[ -n "${1:-}" ]] || { echo "ERROR: --keychain requires a path" >&2; exit 2; }
+      KEYCHAIN="$1"
       ;;
     -h|--help)
       usage
@@ -99,14 +107,28 @@ done
   exit 1
 }
 
-if ! security find-identity -v -p basic | grep -Fq "$IDENTITY"; then
+identity_check=(security find-identity -v -p basic)
+if [[ -n "$KEYCHAIN" ]]; then
+  [[ -f "$KEYCHAIN" ]] || {
+    echo "ERROR: signing keychain not found: $KEYCHAIN" >&2
+    exit 1
+  }
+  identity_check+=("$KEYCHAIN")
+fi
+
+if ! "${identity_check[@]}" | grep -Fq "$IDENTITY"; then
   echo "ERROR: signing identity not found in keychain: $IDENTITY" >&2
-  echo "Create it in Keychain Access as a self-signed Code Signing certificate." >&2
+  echo "Create or import a trusted self-signed installer-signing identity first." >&2
   exit 1
 fi
 
 rm -f "$OUTPUT_PKG"
-productsign --sign "$IDENTITY" "$INPUT_PKG" "$OUTPUT_PKG"
+sign_args=(--sign "$IDENTITY" --timestamp=none)
+if [[ -n "$KEYCHAIN" ]]; then
+  sign_args=(--keychain "$KEYCHAIN" "${sign_args[@]}")
+fi
+
+productsign "${sign_args[@]}" "$INPUT_PKG" "$OUTPUT_PKG"
 pkgutil --check-signature "$OUTPUT_PKG"
 
 echo "Signed package: $OUTPUT_PKG"

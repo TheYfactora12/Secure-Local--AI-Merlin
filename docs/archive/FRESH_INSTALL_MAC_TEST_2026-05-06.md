@@ -403,5 +403,8 @@ Follow-up fixed during this validation:
 
 - A loaded launchd status API agent could remain alive if `launchctl bootout` failed while the plist removal succeeded. The uninstaller now warns with the exact manual `launchctl bootout gui/<uid>/<label>` command when unload fails.
 - `bash tests/uninstall-smoke.sh` covers launchd loaded-agent detection and the warning/manual-command behavior.
-- The pasted `security create-certificate` path was checked on this Mac; `security` does not provide a `create-certificate` subcommand here, and `security find-identity -v -p basic` reported `0 valid identities found`.
-- Local self-signed package signing is therefore documented through Keychain Access and wrapped in `scripts/sign-pkg.sh`, with static coverage in `tests/pkg-local-sign-smoke.sh`.
+- The pasted `security create-certificate` path was checked on this Mac; `security` does not provide a `create-certificate` subcommand here, and `security find-identity -v -p basic` initially reported `0 valid identities found`.
+- A normal self-signed Code Signing cert was not enough for `productsign`; it failed with `An installer signing identity (not an application signing identity) is required for signing flat-style products.`
+- A self-signed installer certificate using extended key usage OID `1.2.840.113635.100.6.1.14`, imported into a temporary keychain and trusted with `security add-trusted-cert`, successfully signed `home-ai-elite-v0.8.6.pkg`.
+- The temporary keychain must be unlocked before signing: `security unlock-keychain -p homeai-build /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain`.
+- `pkgutil --check-signature home-ai-elite-v0.8.6.pkg` reported `Status: signed by a certificate trusted for current user`.

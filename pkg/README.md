@@ -68,20 +68,50 @@ The v1.0 path supports local/self-signed packages for trusted private testing.
 This avoids requiring a paid Apple Developer Program account before the product
 is ready for broad public distribution.
 
-Create the local signing identity in Keychain Access:
+The local identity must be usable by `productsign` as an installer-signing
+identity. A normal application Code Signing certificate is not enough for flat
+`.pkg` products.
 
-1. Open Keychain Access.
-2. Certificate Assistant -> Create a Certificate.
-3. Name: `Home AI Elite Local Signing`.
-4. Identity Type: Self Signed Root.
-5. Certificate Type: Code Signing.
-6. Enable "Let me override defaults", then ensure Key Usage includes Signing.
+One working command-line path is:
+
+```bash
+mkdir -p /private/tmp/home-ai-elite-installer-signing
+
+openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+  -keyout /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.key \
+  -out /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.crt \
+  -subj "/CN=Home AI Elite Local Signing/O=Home AI Elite/C=US" \
+  -addext "basicConstraints=critical,CA:TRUE" \
+  -addext "keyUsage=critical,digitalSignature" \
+  -addext "extendedKeyUsage=1.2.840.113635.100.6.1.14"
+
+openssl pkcs12 -legacy -export \
+  -inkey /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.key \
+  -in /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.crt \
+  -out /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.p12 \
+  -passout pass:homeai-local-import
+
+security create-keychain -p homeai-build \
+  /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain
+security unlock-keychain -p homeai-build \
+  /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain
+security import /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.p12 \
+  -k /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain \
+  -P homeai-local-import \
+  -T /usr/bin/productsign
+security add-trusted-cert -r trustRoot \
+  -k /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain \
+  /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.crt
+```
 
 Then build and sign:
 
 ```bash
 bash pkg/build-pkg.sh
-bash scripts/sign-pkg.sh --version <version>
+security unlock-keychain -p homeai-build \
+  /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain
+bash scripts/sign-pkg.sh --version <version> \
+  --keychain /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain
 pkgutil --check-signature home-ai-elite-v<version>.pkg
 ```
 

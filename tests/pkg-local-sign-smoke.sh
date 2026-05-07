@@ -17,10 +17,12 @@ bash -n "$SIGNER"
 HELP="$(bash "$SIGNER" --help)"
 echo "$HELP" | grep -q 'Home AI Elite Local Signing' \
   || fail "sign-pkg help does not document default local signing identity"
+echo "$HELP" | grep -q -- '--keychain <path>' \
+  || fail "sign-pkg help does not document keychain override"
 echo "$HELP" | grep -q 'right-click -> Open' \
   || fail "sign-pkg help does not document self-signed Gatekeeper behavior"
-echo "$HELP" | grep -q 'Keychain Access' \
-  || fail "sign-pkg help does not document Keychain identity creation"
+echo "$HELP" | grep -q 'installer-signing identity' \
+  || fail "sign-pkg help does not document installer-signing identity requirement"
 
 set +e
 UNKNOWN_OUTPUT="$(bash "$SIGNER" --definitely-not-real 2>&1)"
@@ -30,8 +32,12 @@ set -e
 echo "$UNKNOWN_OUTPUT" | grep -q 'Unknown option' \
   || fail "sign-pkg unknown option error is not actionable"
 
-grep -q 'productsign --sign "$IDENTITY"' "$SIGNER" \
+grep -q 'productsign "${sign_args\[@\]}" "$INPUT_PKG" "$OUTPUT_PKG"' "$SIGNER" \
   || fail "sign-pkg does not call productsign with the selected identity"
+grep -q -- '--timestamp=none' "$SIGNER" \
+  || fail "sign-pkg does not disable timestamping for local self-signed signing"
+grep -q -- '--keychain "$KEYCHAIN"' "$SIGNER" \
+  || fail "sign-pkg does not pass explicit keychain to productsign"
 grep -q 'pkgutil --check-signature "$OUTPUT_PKG"' "$SIGNER" \
   || fail "sign-pkg does not verify the signed package"
 grep -q 'security find-identity -v -p basic' "$SIGNER" \
