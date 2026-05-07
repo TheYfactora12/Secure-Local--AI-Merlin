@@ -60,7 +60,10 @@ left behind.
 - #5 is closed under `v1.2`: stale 16GB-minimum hardware guidance was replaced
   with the current 8GB-first guide, free stack map, and planning-only document
   ingestion scope.
-- Next active milestone is `v1.3`; open issues include #3, #6, and #35.
+- Next active milestone is `v1.3`; open issues include #3 and #35.
+- #6 is closed as stale/duplicate of #35 because its original acceptance
+  criteria required automatic cloud escalation, which conflicts with the
+  current local-first approval-gated policy.
 - #28 closed under `v2.0`. #50–#60 closed under `v2.0`.
 - #30, #39 open under `v2.1`. #33, #34 open under `v2.2`. #37 open under `v3.0`.
 

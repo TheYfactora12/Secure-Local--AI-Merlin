@@ -28,8 +28,11 @@ Current milestone position:
   `docs/hardware-guide.md`, `docs/free-stack-map.md`, and
   `docs/DOCUMENT_INGESTION_PLAN.md` replaced the stale 16GB-minimum plan with
   current 8GB-first guidance.
-- Next in order: `v1.3 — Reliability + Memory + Router`, with issues #3, #6,
-  and #35 open.
+- Next in order: `v1.3 — Reliability + Memory + Router`, with issues #3 and
+  #35 open.
+- #35 is the canonical n8n ModelRouter rewrite issue. #6 is closed as
+  stale/duplicate because it required automatic cloud escalation, which violates
+  current local-first approval-gated policy.
 - Drift captured during v1.1: #80 tracks whether to add an explicit
   `webhook_execution` policy gate under `v1.7`.
 
