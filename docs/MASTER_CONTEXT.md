@@ -101,7 +101,7 @@ Phase 2 runtime package:
 - `merlin/task_endpoint.py` exposes FastAPI on port 8766.
 - `merlin/status_extension.py` adds route, approval, trace, and memory status panels to the FastAPI app.
 
-Later GitHub roadmap normalization assigned the duplicate/new Phase 2 tracking issues #50 through #60 to `v2.0 — Merlin Staff Core`. Issues #50, #51, #52, #54, #55, #56, #57, #58, and #59 were closed after verification against the implemented files and tests. #53 remains open v2.0 integration work. #60 has staff router, audit, low-memory fallback, CLI mode status, and swarm context wiring implemented; close it only after CI passes and the GitHub issue has the final completion comment. Do not create a duplicate `Merlin Staff — Core` milestone.
+Later GitHub roadmap normalization assigned the duplicate/new Phase 2 tracking issues #50 through #60 to `v2.0 — Merlin Staff Core`. Issues #50, #51, #52, #54, #55, #56, #57, #58, #59, and #60 were closed after verification against the implemented files, tests, and CI. #53 remains open v2.0 integration work. Do not create a duplicate `Merlin Staff — Core` milestone.
 
 ## RAM Tiers
 
@@ -132,7 +132,7 @@ Recently verified closures:
 
 1. Finish remaining `v1.0 — Stable Installer Release` paperwork after the uninstaller launchd warning fix lands and CI is green.
 2. Keep signing/notarization deferred as a separate distribution gate; the unsigned functional installer path is now green on this 8GB Mac.
-3. Continue #53 and #60 only after the v1.0 release gates are green, unless the work is docs-only.
+3. Continue #53 only after the v1.0 release gates are green, unless the work is docs-only.
 4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 
 ## Reasoning Summary

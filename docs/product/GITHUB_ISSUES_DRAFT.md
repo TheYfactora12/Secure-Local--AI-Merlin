@@ -31,7 +31,7 @@ Recent normalization:
 - #5 is open under `v1.2`.
 - #28 is closed under `v2.0`.
 - #50, #51, #52, #54, #55, #56, #57, #58, and #59 are closed under `v2.0`.
-- #53 and #60 remain open under `v2.0`.
+- #53 remains open under `v2.0`; #60 is closed under `v2.0`.
 - #30 and #39 are open under `v2.1`.
 - #33 and #34 are open under `v2.2`.
 - #37 is open under `v3.0`.
