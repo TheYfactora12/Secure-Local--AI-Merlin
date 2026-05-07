@@ -247,4 +247,11 @@ def _categorize(evidence: str) -> PreferenceCategory:
 
 
 def _contains_any(value: str, needles: tuple[str, ...]) -> bool:
-    return any(needle in value for needle in needles)
+    for needle in needles:
+        if " " in needle or "'" in needle or "-" in needle:
+            if needle in value:
+                return True
+            continue
+        if re.search(rf"\b{re.escape(needle)}\b", value):
+            return True
+    return False
