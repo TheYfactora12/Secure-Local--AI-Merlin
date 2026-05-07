@@ -215,6 +215,12 @@ cat << 'EOF'
                               Write approved memory to local Qdrant with local embeddings
     wizard merlin memory search --query "..." --memory-type preference
                               Search approved local Qdrant memory with local embeddings
+    wizard preferences list [category]
+                              List approved preferences from local Qdrant
+    wizard preferences review
+                              Show recent extracted preference candidates
+    wizard preferences approve "text" category [approval-id]
+                              Write explicitly approved preference to local Qdrant
     wizard skills             Show Merlin skill scores from approved outcomes
     wizard ask "question"     Ask a quick question (swarm-tiny, fastest)
     wizard route "task"       Alias for wizard swarm (full coordinator)
@@ -477,6 +483,153 @@ print()
 print(report.as_table())
 " 2>/dev/null || echo "[!] skill_scorer unavailable — is Qdrant running?"
     )
+    ;;
+
+  preferences)
+    case "${2:-}" in
+      list)
+        (
+          cd "$WIZARD_DIR"
+          MERLIN_PYTHON_BIN="${MERLIN_PYTHON:-}"
+          if [[ -z "$MERLIN_PYTHON_BIN" && -x "$WIZARD_DIR/.venv/bin/python" ]]; then
+            MERLIN_PYTHON_BIN="$WIZARD_DIR/.venv/bin/python"
+          elif [[ -z "$MERLIN_PYTHON_BIN" && -x "$WIZARD_DIR/.venv-test/bin/python" ]]; then
+            MERLIN_PYTHON_BIN="$WIZARD_DIR/.venv-test/bin/python"
+          elif [[ -z "$MERLIN_PYTHON_BIN" ]]; then
+            MERLIN_PYTHON_BIN="python3"
+          fi
+          MERLIN_PREF_CATEGORY="${3:-}" "$MERLIN_PYTHON_BIN" - <<'PY'
+import os
+from merlin.memory_manager import MemoryManager
+
+categories = [
+    "coding_style",
+    "tool_preference",
+    "communication_style",
+    "workflow_pattern",
+    "domain_expertise",
+    "architecture_decision",
+]
+selected = os.environ.get("MERLIN_PREF_CATEGORY", "").strip()
+if selected:
+    categories = [selected]
+
+memory = MemoryManager()
+printed = 0
+for category in categories:
+    prefs = memory.get_preferences_by_category(category, limit=10)
+    if not prefs:
+        continue
+    print(f"\n{category}:")
+    for pref in prefs:
+        text = pref.get("preference_text", "")
+        created = pref.get("created_at", "")
+        confidence = pref.get("confidence", "")
+        print(f"  - {text}  [{confidence}] {created}")
+        printed += 1
+
+if printed == 0:
+    print("No approved preferences found.")
+PY
+        )
+        ;;
+      review)
+        (
+          cd "$WIZARD_DIR"
+          MERLIN_PYTHON_BIN="${MERLIN_PYTHON:-}"
+          if [[ -z "$MERLIN_PYTHON_BIN" && -x "$WIZARD_DIR/.venv/bin/python" ]]; then
+            MERLIN_PYTHON_BIN="$WIZARD_DIR/.venv/bin/python"
+          elif [[ -z "$MERLIN_PYTHON_BIN" && -x "$WIZARD_DIR/.venv-test/bin/python" ]]; then
+            MERLIN_PYTHON_BIN="$WIZARD_DIR/.venv-test/bin/python"
+          elif [[ -z "$MERLIN_PYTHON_BIN" ]]; then
+            MERLIN_PYTHON_BIN="python3"
+          fi
+          "$MERLIN_PYTHON_BIN" - <<'PY'
+import json
+from pathlib import Path
+
+path = Path("logs/merlin-preference-candidates.jsonl")
+if not path.exists():
+    print("No preference candidate log found.")
+    raise SystemExit(0)
+
+records = []
+with path.open("r", encoding="utf-8") as handle:
+    for line in handle:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            records.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+
+if not records:
+    print("No preference candidates found.")
+    raise SystemExit(0)
+
+for record in records[-5:]:
+    text = record.get("preference_text", "")
+    category = record.get("category", "")
+    confidence = record.get("confidence", "")
+    eligible = record.get("write_eligible", False)
+    print(f"- [{category}] confidence={confidence} write_eligible={eligible}")
+    print(f"  {text}")
+PY
+        )
+        ;;
+      approve)
+        [[ -z "${3:-}" || -z "${4:-}" ]] && {
+          echo "Usage: wizard preferences approve \"text\" category [approval-id]"
+          exit 1
+        }
+        (
+          cd "$WIZARD_DIR"
+          MERLIN_PYTHON_BIN="${MERLIN_PYTHON:-}"
+          if [[ -z "$MERLIN_PYTHON_BIN" && -x "$WIZARD_DIR/.venv/bin/python" ]]; then
+            MERLIN_PYTHON_BIN="$WIZARD_DIR/.venv/bin/python"
+          elif [[ -z "$MERLIN_PYTHON_BIN" && -x "$WIZARD_DIR/.venv-test/bin/python" ]]; then
+            MERLIN_PYTHON_BIN="$WIZARD_DIR/.venv-test/bin/python"
+          elif [[ -z "$MERLIN_PYTHON_BIN" ]]; then
+            MERLIN_PYTHON_BIN="python3"
+          fi
+          MERLIN_PREF_TEXT="$3" \
+          MERLIN_PREF_CATEGORY="$4" \
+          MERLIN_PREF_APPROVAL_ID="${5:-}" \
+          "$MERLIN_PYTHON_BIN" - <<'PY'
+import os
+from datetime import UTC, datetime
+
+from merlin.memory_manager import MemoryManager
+from merlin.preference_extractor import PreferenceCandidate
+
+text = os.environ["MERLIN_PREF_TEXT"].strip()
+category = os.environ["MERLIN_PREF_CATEGORY"].strip()
+approval_id = os.environ.get("MERLIN_PREF_APPROVAL_ID", "").strip()
+if not approval_id:
+    approval_id = "wizard_preferences_manual_" + datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+
+candidate = PreferenceCandidate(
+    preference_text=text,
+    category=category,
+    confidence=1.0,
+    evidence="manual approval via wizard preferences",
+    write_eligible=True,
+)
+point_id = MemoryManager().write_approved_preference(candidate, approval_id)
+if point_id:
+    print(f"✓ preference approved: {point_id}")
+else:
+    print("! preference was not written; Qdrant may be unavailable or the preference already exists")
+    raise SystemExit(1)
+PY
+        )
+        ;;
+      *)
+        echo "Usage: wizard preferences [list|review|approve] ..."
+        exit 1
+        ;;
+    esac
     ;;
 
   brain)

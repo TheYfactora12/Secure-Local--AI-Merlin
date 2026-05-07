@@ -102,6 +102,14 @@ Issue #67 Phase 3C preference extraction is complete as the next narrow slice:
 - Return review-only preference candidates with category, confidence, redacted evidence, and write eligibility.
 - Do not write Qdrant memory, call models, call cloud APIs, start services, edit config, or touch the installer.
 
+Issue #79 Phase 3C preference approval bridge is complete:
+
+- Add `wizard preferences list [category]` to read approved preferences from local Qdrant.
+- Add `wizard preferences review` to show recent extracted candidates from `logs/merlin-preference-candidates.jsonl`.
+- Add `wizard preferences approve "text" category [approval-id]` to write explicitly approved preferences through `MemoryManager.write_approved_preference()`.
+- Pass approved text, category, and approval ID through environment variables instead of inline Python string interpolation.
+- Keep writes human-triggered, local-only, and consent-gated; no model calls, cloud calls, service starts, or installer changes.
+
 Issue #68 Phase 3D session reflection is complete:
 
 - Add `merlin/session_reflector.py`.
