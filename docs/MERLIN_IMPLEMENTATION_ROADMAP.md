@@ -46,9 +46,9 @@ left behind.
 
 - GitHub milestones `v1.0 — Stable Installer Release`,
   `v1.1 — Mobile Access + Remote-Safe Entry Points`, and
-  `v1.2 — Hardware Guide + Document Ingestion Planning` are closed as of
-  2026-05-07. The next milestone in execution order is
-  `v1.3 — Reliability + Memory + Router`.
+  `v1.2 — Hardware Guide + Document Ingestion Planning`, and
+  `v1.3 — Reliability + Memory + Router` are closed as of 2026-05-07.
+  The next milestone in execution order is `v1.5 — Memory Benchmarking`.
 - #41–#46, #48, #49, and #61 closed under `v1.0` with `release` + `priority: critical` labels.
 - #1 is closed under `v1.0`; installer runtime and package builder defects are resolved. Developer ID Installer/notarization is split to #64 under `v3.0`.
 - #62 passed under `v1.0` on 2026-05-07 after a fresh-data low/core reinstall and launchd validation; see `docs/archive/WHOLE_STACK_RC_VALIDATION_2026-05-07.md`.
@@ -60,17 +60,20 @@ left behind.
 - #5 is closed under `v1.2`: stale 16GB-minimum hardware guidance was replaced
   with the current 8GB-first guide, free stack map, and planning-only document
   ingestion scope.
-- Next active milestone is `v1.3`; #3 is closed after static retry
-  contracts were added to all n8n Ollama HTTP nodes. #35 is the remaining
-  open issue.
+- #3 is closed under `v1.3` after static retry contracts were added to all n8n
+  Ollama HTTP nodes.
 - #6 is closed as stale/duplicate of #35 because its original acceptance
   criteria required automatic cloud escalation, which conflicts with the
   current local-first approval-gated policy.
-- #35 hardens `n8n-workflows/ai-router-starter.json` so n8n remains an
+- #35 is closed under `v1.3`; it hardens
+  `n8n-workflows/ai-router-starter.json` so n8n remains an
   optional local-first workflow adapter. Executable cloud provider HTTP nodes
   are forbidden in the starter workflow; cloud routes return
   `approval_required` metadata for `cloud_model_call`, `external_network`, and
   `api_key_use`.
+- #85 captures the future v2.0 design question of whether to add more Merlin
+  staff skills. It is intentionally not part of v1.3.
+- Next active milestone is `v1.5`; open issue: #7.
 - #28 closed under `v2.0`. #50–#60 closed under `v2.0`.
 - #30, #39 open under `v2.1`. #33, #34 open under `v2.2`. #37 open under `v3.0`.
 
