@@ -26,6 +26,7 @@ Recent normalization:
 - #41 through #46 are closed under `v1.0` and normalized with `v1.0`, `release`, and `priority: critical` labels.
 - #48 and #49 are closed under `v1.0`.
 - #61 is closed under `v1.0` after fixing optional Compose service profile gating exposed by live core upgrade.
+- #1 remains open under `v1.0`; live launchd and clean uninstall/reinstall validation passed on the 8GB Mac. Signing/notarization is the remaining separate release gate.
 - #47 is open under `v1.1`.
 - #5 is open under `v1.2`.
 - #28 is closed under `v2.0`.
@@ -37,8 +38,8 @@ Recent normalization:
 
 Current next queue:
 
-1. Validate launchd persistence and read-only status API behavior.
-2. Finish #1 only after fresh install, package, upgrade, backup, restore, launchd, and uninstall checks pass.
+1. Finish #1 release notes after the uninstaller launchd warning fix lands and CI is green.
+2. Keep signed/notarized package distribution separate from the functional unsigned installer gate.
 3. Then take #47 or #5 as docs/planning work, not runtime behavior.
 
 ## Issue 1: Document Current Installer Baseline And Do-Not-Break List

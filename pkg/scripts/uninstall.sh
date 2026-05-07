@@ -158,7 +158,14 @@ remove_launchd_agents() {
 
   log "Removing launchd agents"
   for label in "${labels[@]}"; do
-    run launchctl bootout "gui/${uid}/${label}" 2>/dev/null || true
+    if launchctl print "gui/${uid}/${label}" >/dev/null 2>&1; then
+      if [[ "$DRY_RUN" == true ]]; then
+        run launchctl bootout "gui/${uid}/${label}"
+      elif ! launchctl bootout "gui/${uid}/${label}" 2>/dev/null; then
+        warn "Could not unload launchd agent ${label}"
+        warn "Run manually if needed: launchctl bootout gui/${uid}/${label}"
+      fi
+    fi
     run rm -f "${HOME}/Library/LaunchAgents/${label}.plist"
   done
 }

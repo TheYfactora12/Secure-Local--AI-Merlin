@@ -29,6 +29,7 @@ Stress-test result: keep this ladder explicit. Do not jump from v1.0 to v1.3; v1
 ## Current Issue Alignment (2026-05-06)
 
 - #41–#46, #48, #49, and #61 closed under `v1.0` with `release` + `priority: critical` labels.
+- #1 remains open under `v1.0`; fresh install, unsigned package, backup/restore, core upgrade, launchd persistence, and clean reinstall are validated on the 8GB Mac. Signing/notarization remains a separate distribution gate.
 - #47 open under `v1.1`. #5 open under `v1.2`.
 - #28 closed under `v2.0`. #50–#52, #54–#59 closed under `v2.0`.
 - #53 and #60 open under `v2.0`.
@@ -417,6 +418,7 @@ Next implementation slice:
 - Publish unsigned `v0.8.1` prerelease with tested package artifacts and changelog. `Done: GitHub release v0.8.1`
 - Update release artifact actions to the Node 24-compatible major version. `Done: .github/workflows/release.yml, tests/release-workflow-smoke.sh`
 - Make package uninstall guarded, dry-runnable, and covered by smoke tests. `Done: pkg/scripts/uninstall.sh, scripts/uninstall.sh, tests/uninstall-smoke.sh`
+- Warn when launchd agent unload fails during uninstall so a loaded agent is not silently left behind. `Done: pkg/scripts/uninstall.sh, tests/uninstall-smoke.sh`
 - Update GitHub release action to the Node 24-compatible major version. `Done: .github/workflows/release.yml, tests/release-workflow-smoke.sh`
 - Make launchd auto-start use the laptop-safe core profile instead of raw full-stack Compose. `Done: launchd/com.homeai.stack.plist, tests/launchd-core-smoke.sh`
 - Validate same-machine unsigned package install through macOS Installer. `Done: v0.8.6 package receipt, postinstall, doctor, and core-live smoke`

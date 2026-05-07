@@ -47,5 +47,11 @@ grep -q 'Skipped .*admin privileges are required' "$PKG_UNINSTALL" \
   || fail "uninstaller does not warn instead of hard-failing on sudo cleanup"
 grep -q 'Run manually if needed' "$PKG_UNINSTALL" \
   || fail "uninstaller does not print manual admin cleanup commands"
+grep -q 'launchctl print' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not detect loaded launchd agents before bootout"
+grep -q 'Could not unload launchd agent' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not warn when launchd bootout fails"
+grep -q 'launchctl bootout gui/' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not print manual launchd bootout command"
 
 echo "PASS: uninstaller is guarded and testable"

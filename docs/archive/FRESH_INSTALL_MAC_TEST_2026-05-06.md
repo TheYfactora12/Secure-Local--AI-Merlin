@@ -308,8 +308,8 @@ Warnings observed:
 
 ## Recommended Next Fix Order
 
-1. Test optional launchd persistence for the read-only status API.
-2. Move to signed/notarized package release gate once launchd checks are green.
+1. Commit the uninstaller launchd warning fix found during the clean reinstall loop.
+2. Move to signed/notarized package release gate only after the functional unsigned installer gate is closed.
 
 ## Upgrade Validation
 
@@ -343,3 +343,63 @@ Rerun result:
 - `docker compose ps --services --status running` returned only `litellm`, `open-webui`, `qdrant`, and `dashboard`.
 - `docker compose config --services` returned only `dashboard`, `litellm`, `open-webui`, and `qdrant` by default.
 - Issue #61 is closed.
+
+## Launchd Persistence Validation
+
+Command:
+
+```bash
+bash launchd/install-launchd.sh
+```
+
+Result:
+
+- Registered `com.homeai.docker`, `com.homeai.stack`, and `com.homeai.merlin-status-api`.
+- After launchd timers completed, `launchctl print gui/501/com.homeai.merlin-status-api` reported `state = running` and `last exit code = (never exited)`.
+- `GET http://localhost:8765/healthz` returned `execution_allowed=false`, `side_effects=none`, and `status=ok`.
+- `bash tests/merlin-status-api-smoke.sh` passed.
+- Running Docker services remained core-only: `litellm`, `open-webui`, `qdrant`, and `dashboard`.
+
+## Clean Uninstall/Reinstall Validation
+
+Source preservation:
+
+```bash
+git clone --no-hardlinks . /private/tmp/home-ai-elite-source-20260506_202108
+```
+
+Clean reset:
+
+```bash
+bash /private/tmp/home-ai-elite-source-20260506_202108/pkg/scripts/uninstall.sh --yes --remove-data
+docker compose down --volumes --remove-orphans
+```
+
+Result:
+
+- Uninstaller backed up `.env` and removed `/Users/kevinmedeiros/home-ai-elite`.
+- Docker Desktop, Homebrew, Ollama, and Ollama models were preserved.
+- `/usr/local/home-ai-elite` and the package receipt still required manual admin cleanup in this non-privileged shell; the uninstaller printed manual commands instead of failing.
+- Docker cleanup was skipped by the uninstaller because the engine was not visible at that instant; an explicit `docker compose down --volumes --remove-orphans` removed the old core containers and volumes before reinstall.
+- Fresh source was restored from the `/private/tmp` snapshot.
+
+Fresh reinstall:
+
+```bash
+HOME_AI_NON_INTERACTIVE=true HOME_AI_SKIP_MODEL_PULLS=true bash install.sh --profile core --skip-model-pulls --non-interactive
+```
+
+Result:
+
+- `.env` and `.wizard-bootstrapped` were absent before reinstall.
+- Installer created a new `.env`, generated local secrets, skipped optional cloud API keys, and kept model pulls disabled.
+- First-boot bootstrap initialized Qdrant collections from the memory manifest.
+- Non-interactive install correctly skipped direct status API background start and launchd setup, printing manual commands instead.
+- Running Docker services after reinstall were core-only: `litellm`, `open-webui`, `qdrant`, and `dashboard`.
+- `bash tests/core-live-smoke.sh` passed with 18 checks, 0 warnings, and 0 failures.
+- `bash scripts/doctor.sh` exited 0 with expected warnings only: low-tier caution, missing local gitleaks hook, and manual Task API on port 8766.
+
+Follow-up fixed during this validation:
+
+- A loaded launchd status API agent could remain alive if `launchctl bootout` failed while the plist removal succeeded. The uninstaller now warns with the exact manual `launchctl bootout gui/<uid>/<label>` command when unload fails.
+- `bash tests/uninstall-smoke.sh` covers launchd loaded-agent detection and the warning/manual-command behavior.

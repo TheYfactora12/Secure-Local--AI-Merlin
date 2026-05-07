@@ -129,8 +129,8 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Finish remaining `v1.0 — Stable Installer Release` gates: launchd persistence validation and package signing/notarization readiness.
-2. Keep signing/notarization deferred until the unsigned installer and package paths are functionally green.
+1. Finish remaining `v1.0 — Stable Installer Release` paperwork after the uninstaller launchd warning fix lands and CI is green.
+2. Keep signing/notarization deferred as a separate distribution gate; the unsigned functional installer path is now green on this 8GB Mac.
 3. Continue #53 and #60 only after the v1.0 release gates are green, unless the work is docs-only.
 4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 
@@ -156,9 +156,9 @@ The next engineering priority is supportability: diagnostics, sanitized bug repo
 
 ## Next Actions
 
-1. Validate launchd persistence and read-only status API behavior after login/startup.
+1. Commit and push the uninstaller launchd warning fix with the v1.0 validation notes.
 2. Keep verifying `ci-success` requires both `gitleaks-scan` and `merlin-staff-core-pytest`.
-3. Continue updating roadmap/docs/tests with every milestone before signing/notarization work.
+3. Close #1 only after CI is green and the completion comment records fresh install, package, backup/restore, upgrade, launchd, and clean reinstall validation.
 
 ## Validation
 
@@ -171,6 +171,9 @@ Last verified: 2026-05-06.
 - GitHub Actions run `25467394670` passed for commit `88d4f96`.
 - Live backup/restore verification passed on the package-installed stack with `bash tests/qdrant-restore-live-smoke.sh`: disposable Qdrant collection backed up, deleted, restored, and vector payload verified with 8 checks and 0 failures.
 - Live core upgrade verification passed after #61. The first run exposed optional `searxng` startup in core mode; #61 profile-gated optional Compose services, removed the hard `open-webui` to `searxng` dependency, added `tests/compose-profile-gating-smoke.sh`, and closed with CI run `25468170156` passing. Rerun of `bash scripts/upgrade.sh --profile core` completed and kept running services core-only: `litellm`, `open-webui`, `qdrant`, and `dashboard`.
+- Live launchd persistence validation passed: `bash launchd/install-launchd.sh` registered `com.homeai.docker`, `com.homeai.stack`, and `com.homeai.merlin-status-api`; after the timers, `launchctl print gui/501/com.homeai.merlin-status-api` reported `state = running`, `GET /healthz` returned `execution_allowed=false`, and running Docker services remained core-only.
+- Live clean uninstall/reinstall validation passed from source snapshot `/private/tmp/home-ai-elite-source-20260506_202108`: `pkg/scripts/uninstall.sh --yes --remove-data` removed `~/home-ai-elite`, backed up `.env`, and preserved Docker Desktop/Homebrew/Ollama. Docker cleanup initially skipped because the engine was not visible, so old Compose volumes were removed explicitly before reinstall. Fresh non-interactive core reinstall then passed with local-first defaults, no cloud keys, no model pulls, and core-only running services.
+- Uninstaller validation found one release-quality follow-up: launchd `bootout` failures were previously suppressed, which could leave an already-loaded status API agent alive even after the plist was removed. The uninstaller now warns with the exact manual `launchctl bootout gui/<uid>/<label>` command when unload fails, and `tests/uninstall-smoke.sh` covers that behavior.
 - Issue #22 support tooling is merged and pushed at `47f30df`: additive doctor checks, redaction helper, sanitized report generator, wizard wiring, and doctor/report-bug/redaction smokes.
 - Issue #24 CI gate is merged and pushed at `c6f6652`; GitHub Actions run `25451110988` passed.
 - Issue #25 Layer 1 is merged and pushed at `d4ece3d`; GitHub Actions run `25454666989` passed with `gitleaks-scan` and `merlin-staff-core-pytest` both required by `ci-success`.
