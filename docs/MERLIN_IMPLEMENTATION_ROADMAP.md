@@ -56,7 +56,9 @@ left behind.
   opt-in only, and preserves localhost defaults. See
   `docs/MOBILE_ACCESS_PLAN.md`.
 - #80 tracks the related webhook execution gate drift under `v1.7`.
-- #5 is the next open milestone issue under `v1.2`.
+- #5 is the active `v1.2` slice: rewrite the stale hardware guide and free
+  stack map around the current 8GB-first tier model, and keep document ingestion
+  in planning until a dedicated implementation issue is approved.
 - #28 closed under `v2.0`. #50–#60 closed under `v2.0`.
 - #30, #39 open under `v2.1`. #33, #34 open under `v2.2`. #37 open under `v3.0`.
 
