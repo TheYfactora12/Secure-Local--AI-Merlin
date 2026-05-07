@@ -22,10 +22,50 @@ logger = logging.getLogger(__name__)
 
 OutcomeStatus = Literal["success", "failure", "timeout", "rejected", "degraded"]
 UserFeedback = Literal["positive", "negative", "none"]
+OutcomeRating = Literal["approved", "corrected", "rejected", "none"]
 
 DEFAULT_OUTCOME_LOG = "merlin-outcomes.jsonl"
 DEFAULT_ROUTING_GAP_LOG = "merlin-routing-gaps.jsonl"
 LOW_CONFIDENCE_THRESHOLD = 0.6
+
+SKILL_DOMAIN_MAP: dict[str, str] = {
+    "security": "security",
+    "audit": "security",
+    "compliance": "security",
+    "vulnerability": "security",
+    "risk": "security",
+    "threat": "security",
+    "glba": "security",
+    "ffiec": "security",
+    "ncua": "security",
+    "research": "research",
+    "search": "research",
+    "find": "research",
+    "summarize": "research",
+    "explain": "research",
+    "what": "research",
+    "code": "code",
+    "write": "code",
+    "fix": "code",
+    "debug": "code",
+    "implement": "code",
+    "function": "code",
+    "script": "code",
+    "analyze": "analysis",
+    "compare": "analysis",
+    "evaluate": "analysis",
+    "assess": "analysis",
+    "review": "analysis",
+    "install": "ops",
+    "configure": "ops",
+    "deploy": "ops",
+    "upgrade": "ops",
+    "backup": "ops",
+    "restore": "ops",
+    "automate": "automation",
+    "workflow": "automation",
+    "schedule": "automation",
+}
 
 
 class TaskOutcome(BaseModel):
@@ -44,6 +84,10 @@ class TaskOutcome(BaseModel):
     approval_id: str | None = None
     audit_point_id: str | None = None
     audit_written: bool = False
+    skill_domain: str = "general"
+    outcome_rating: OutcomeRating = "none"
+    skill_outcome_point_id: str | None = None
+    skill_outcome_written: bool = False
 
 
 class RoutingGapReviewItem(BaseModel):
@@ -90,6 +134,8 @@ def observe_task_outcome(
         user_feedback=user_feedback,
         created_at=created_at,
         approval_id=effective_approval_id,
+        skill_domain=_skill_domain(route_decision.matched_keywords),
+        outcome_rating=_outcome_rating(user_feedback, outcome_status),
     )
 
     log_path = _logs_dir(logs_dir) / DEFAULT_OUTCOME_LOG
@@ -108,9 +154,13 @@ def observe_task_outcome(
 
     if write_audit and effective_approval_id:
         try:
-            point_id = MemoryManager(timeout=1).write_audit_event("task_outcome", outcome.model_dump())
+            memory = MemoryManager(timeout=1)
+            point_id = memory.write_audit_event("task_outcome", outcome.model_dump())
             outcome.audit_point_id = point_id
             outcome.audit_written = point_id is not None
+            skill_point_id = memory.write_skill_outcome(outcome.model_dump())
+            outcome.skill_outcome_point_id = skill_point_id
+            outcome.skill_outcome_written = skill_point_id is not None
         except Exception as exc:
             logger.warning("outcome_audit_write_skipped route_id=%s error=%s", route_decision.route_id, exc)
 
@@ -119,6 +169,24 @@ def observe_task_outcome(
 
 def _task_hash(user_input: str) -> str:
     return hashlib.sha256(user_input.encode("utf-8")).hexdigest()
+
+
+def _skill_domain(keyword_matches: list[str]) -> str:
+    for keyword in keyword_matches:
+        normalized = keyword.casefold()
+        if normalized in SKILL_DOMAIN_MAP:
+            return SKILL_DOMAIN_MAP[normalized]
+    return "general"
+
+
+def _outcome_rating(user_feedback: UserFeedback, outcome_status: OutcomeStatus) -> OutcomeRating:
+    if user_feedback == "positive":
+        return "approved"
+    if user_feedback == "negative":
+        return "rejected"
+    if outcome_status == "success":
+        return "approved"
+    return "none"
 
 
 def _logs_dir(path: str | Path) -> Path:

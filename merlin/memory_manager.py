@@ -8,6 +8,7 @@ import io
 import uuid
 from contextlib import redirect_stdout
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 from urllib import error, request
 
@@ -18,6 +19,8 @@ logger = logging.getLogger(__name__)
 
 OLLAMA_EMBEDDINGS_URL = "http://localhost:11434/api/embeddings"
 DEFAULT_TIMEOUT_SECONDS = 5
+SKILL_OUTCOMES_COLLECTION = "skill_outcomes"
+SKILL_OUTCOMES_VECTOR_SIZE = 384
 
 
 @dataclass(frozen=True)
@@ -97,6 +100,61 @@ class MemoryManager:
             return None
         return point_id
 
+    def write_skill_outcome(self, outcome: dict[str, Any]) -> str | None:
+        """Write a consent-gated skill outcome record.
+
+        This uses a neutral placeholder vector. Embeddings and semantic skill
+        retrieval are intentionally deferred to a later phase.
+        """
+
+        required = {
+            "agent_target",
+            "skill_domain",
+            "outcome_rating",
+            "route_id",
+            "confidence_at_routing",
+            "hardware_tier",
+            "created_at",
+        }
+        missing = sorted(key for key in required if key not in outcome)
+        if missing:
+            raise ValueError(f"skill outcome missing required keys: {', '.join(missing)}")
+        if self.degraded:
+            self._log_degraded("write_skill_outcome", SKILL_OUTCOMES_COLLECTION)
+            return None
+
+        try:
+            self._ensure_skill_outcomes_collection()
+        except OSError:
+            return None
+        point_id = str(uuid.uuid4())
+        payload = {
+            "agent_target": str(outcome["agent_target"]),
+            "skill_domain": str(outcome["skill_domain"]),
+            "outcome_rating": str(outcome["outcome_rating"]),
+            "route_id": str(outcome["route_id"]),
+            "confidence_at_routing": float(outcome["confidence_at_routing"]),
+            "hardware_tier": str(outcome["hardware_tier"]),
+            "created_at": str(outcome["created_at"]),
+            "week": _iso_week(str(outcome["created_at"])),
+        }
+        body = {
+            "points": [
+                {
+                    "id": point_id,
+                    "vector": [0.0] * SKILL_OUTCOMES_VECTOR_SIZE,
+                    "payload": payload,
+                }
+            ]
+        }
+
+        try:
+            self._request_json("PUT", f"/collections/{SKILL_OUTCOMES_COLLECTION}/points?wait=true", body)
+        except OSError:
+            self._activate_degraded("write_skill_outcome", SKILL_OUTCOMES_COLLECTION)
+            return None
+        return point_id
+
     def search(self, collection: str, query: str, top_k: int = 5) -> list[dict[str, Any]]:
         spec = self._collection_spec(collection)
         self._validate_configured_embedding_dimension(spec)
@@ -153,6 +211,25 @@ class MemoryManager:
                 self._activate_degraded("list_collections", spec.name)
             results.append({"name": spec.name, "count": count, "dims": spec.dims, "ttl": spec.ttl})
         return results
+
+    def scroll_collection(self, collection: str, limit: int = 1000) -> list[dict[str, Any]]:
+        if self.degraded:
+            self._log_degraded("scroll_collection", collection)
+            return []
+        try:
+            response = self._request_json(
+                "POST",
+                f"/collections/{collection}/points/scroll",
+                {"limit": limit, "with_payload": True, "with_vectors": False},
+            )
+        except OSError:
+            self._activate_degraded("scroll_collection", collection)
+            return []
+        result = response.get("result", {})
+        if isinstance(result, dict):
+            points = result.get("points", [])
+            return points if isinstance(points, list) else []
+        return []
 
     def _build_collection_specs(self) -> dict[str, CollectionSpec]:
         specs: dict[str, CollectionSpec] = {}
@@ -217,6 +294,14 @@ class MemoryManager:
         except OSError:
             self._activate_degraded("startup", "*")
 
+    def _ensure_skill_outcomes_collection(self) -> None:
+        body = {"vectors": {"size": SKILL_OUTCOMES_VECTOR_SIZE, "distance": "Cosine"}}
+        try:
+            self._request_json("PUT", f"/collections/{SKILL_OUTCOMES_COLLECTION}", body)
+        except OSError:
+            self._activate_degraded("ensure_collection", SKILL_OUTCOMES_COLLECTION)
+            raise
+
     def _activate_degraded(self, operation: str, collection: str) -> None:
         self.degraded = True
         logger.warning("Memory degraded mode active: operation=%s collection=%s", operation, collection)
@@ -237,3 +322,12 @@ class MemoryManager:
         except (error.URLError, TimeoutError, OSError) as exc:
             raise OSError(str(exc)) from exc
         return json.loads(raw) if raw else {}
+
+
+def _iso_week(created_at: str) -> str:
+    try:
+        parsed = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+    except ValueError:
+        return "unknown"
+    year, week, _ = parsed.isocalendar()
+    return f"{year}-{week:02d}"

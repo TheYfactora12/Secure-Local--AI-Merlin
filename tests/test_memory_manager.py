@@ -116,3 +116,82 @@ def test_startup_check_uses_json_collections_endpoint(monkeypatch: pytest.Monkey
     MemoryManager()
 
     assert calls[0] == ("GET", "/collections")
+
+
+def test_write_skill_outcome_creates_collection_and_writes_zero_vector(monkeypatch: pytest.MonkeyPatch) -> None:
+    manager = _manager(monkeypatch)
+    calls: list[tuple[str, str, dict[str, Any] | None]] = []
+
+    def fake_request(method: str, path: str, body: dict[str, Any] | None = None) -> dict[str, Any]:
+        calls.append((method, path, body))
+        return {"status": "ok"}
+
+    monkeypatch.setattr(manager, "_request_json", fake_request)
+
+    point_id = manager.write_skill_outcome(
+        {
+            "agent_target": "litellm",
+            "skill_domain": "research",
+            "outcome_rating": "approved",
+            "route_id": "general",
+            "confidence_at_routing": 0.75,
+            "hardware_tier": "low",
+            "created_at": "2026-05-06T21:16:00+00:00",
+        }
+    )
+
+    assert point_id is not None
+    assert calls[0] == (
+        "PUT",
+        "/collections/skill_outcomes",
+        {"vectors": {"size": 384, "distance": "Cosine"}},
+    )
+    method, path, body = calls[1]
+    assert method == "PUT"
+    assert path == "/collections/skill_outcomes/points?wait=true"
+    assert body is not None
+    point = body["points"][0]
+    assert point["vector"] == [0.0] * 384
+    assert point["payload"]["week"] == "2026-19"
+
+
+def test_write_skill_outcome_requires_schema_keys(monkeypatch: pytest.MonkeyPatch) -> None:
+    manager = _manager(monkeypatch)
+
+    with pytest.raises(ValueError, match="skill outcome missing required keys"):
+        manager.write_skill_outcome({"agent_target": "litellm"})
+
+
+def test_write_skill_outcome_degrades_without_raising(monkeypatch: pytest.MonkeyPatch) -> None:
+    manager = _manager(monkeypatch)
+
+    def fake_request(method: str, path: str, body: dict[str, Any] | None = None) -> dict[str, Any]:
+        raise OSError("qdrant down")
+
+    monkeypatch.setattr(manager, "_request_json", fake_request)
+
+    result = manager.write_skill_outcome(
+        {
+            "agent_target": "litellm",
+            "skill_domain": "research",
+            "outcome_rating": "approved",
+            "route_id": "general",
+            "confidence_at_routing": 0.75,
+            "hardware_tier": "low",
+            "created_at": "2026-05-06T21:16:00+00:00",
+        }
+    )
+
+    assert result is None
+    assert manager.degraded is True
+
+
+def test_scroll_collection_returns_payload_points(monkeypatch: pytest.MonkeyPatch) -> None:
+    manager = _manager(monkeypatch)
+    monkeypatch.setattr(
+        manager,
+        "_request_json",
+        lambda method, path, body=None: {"result": {"points": [{"id": "p1", "payload": {"ok": True}}]}},
+    )
+
+    assert manager.scroll_collection("skill_outcomes") == [{"id": "p1", "payload": {"ok": True}}]
