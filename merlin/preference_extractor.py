@@ -19,10 +19,13 @@ PreferenceCategory = Literal[
     "communication_style",
     "workflow_pattern",
     "domain_expertise",
+    "architecture_decision",   # NEW — design rules and structural decisions
 ]
 
 WRITE_CONFIDENCE_THRESHOLD = 0.85
 MAX_PREFERENCES_PER_SESSION = 3
+MAX_REVIEW_CANDIDATES = 8   # max candidates returned for human review
+                             # MAX_PREFERENCES_PER_SESSION (3) is the auto-write cap only
 MAX_EVIDENCE_CHARS = 80
 
 _SECRET_PATTERNS: tuple[tuple[re.Pattern[str], str | Callable[[re.Match[str]], str]], ...] = (
@@ -40,6 +43,7 @@ _SECRET_PATTERNS: tuple[tuple[re.Pattern[str], str | Callable[[re.Match[str]], s
 )
 
 _PREFERENCE_PATTERNS: tuple[tuple[re.Pattern[str], float], ...] = (
+    # Explicit declaration patterns
     (re.compile(r"\bI\s+(?:strongly\s+)?prefer\s+([^.!?\n]{3,160})", re.IGNORECASE), 0.92),
     (re.compile(r"\bI\s+always\s+([^.!?\n]{3,160})", re.IGNORECASE), 0.9),
     (re.compile(r"\bI\s+usually\s+([^.!?\n]{3,160})", re.IGNORECASE), 0.88),
@@ -50,6 +54,15 @@ _PREFERENCE_PATTERNS: tuple[tuple[re.Pattern[str], float], ...] = (
     (re.compile(r"\bI(?:'d| would)\s+rather\s+([^.!?\n]{3,160})", re.IGNORECASE), 0.88),
     (re.compile(r"\bI\s+(?:do not|don't)\s+want\s+([^.!?\n]{3,160})", re.IGNORECASE), 0.87),
     (re.compile(r"\bmaybe\s+(?:use|prefer|keep)\s+([^.!?\n]{3,160})", re.IGNORECASE), 0.55),
+    # Implicit instruction patterns — the 80% of real preferences that are commands
+    (re.compile(r"\bdon't\s+(?:use|add|include|put|make)\s+([^.!?\n]{3,120})", re.IGNORECASE), 0.86),
+    (re.compile(r"\bnever\s+(?:use|add|include|do|make|put)\s+([^.!?\n]{3,120})", re.IGNORECASE), 0.90),
+    (re.compile(r"\balways\s+(?:add|include|use|write|run|make|put)\s+([^.!?\n]{3,120})", re.IGNORECASE), 0.88),
+    (re.compile(r"\bkeep\s+(?:it|them|this|that)\s+([^.!?\n]{3,100})", re.IGNORECASE), 0.78),
+    (re.compile(r"\bsplit\s+(?:it|this|that)\s+into\s+([^.!?\n]{3,100})", re.IGNORECASE), 0.82),
+    (re.compile(r"\b(?:not|no)\s+([^.!?\n]{3,80}),?\s+(?:just|only|instead)\s+([^.!?\n]{3,80})", re.IGNORECASE), 0.83),
+    (re.compile(r"\bone\s+commit\s+(?:per|for|not)\s+([^.!?\n]{3,100})", re.IGNORECASE), 0.85),
+    (re.compile(r"\b(\d+)\s+commits?\s+(?:not|instead of|rather than)\s+\d+", re.IGNORECASE), 0.88),
 )
 
 
@@ -72,10 +85,11 @@ class PreferenceCandidate(BaseModel):
 
 
 def extract_preferences(session_text: str) -> list[PreferenceCandidate]:
-    """Extract up to three review-only preference candidates from a session.
+    """Extract preference candidates from a session for human review.
 
-    The output is intentionally conservative. Candidates below the write
-    confidence threshold are returned for review with write_eligible=false.
+    Returns up to MAX_REVIEW_CANDIDATES (8) for human review.
+    Of those, at most MAX_PREFERENCES_PER_SESSION (3) will have write_eligible=True.
+    Callers must enforce the auto-write cap on write_eligible items.
     This function never persists preferences.
     """
 
@@ -85,6 +99,8 @@ def extract_preferences(session_text: str) -> list[PreferenceCandidate]:
 
     candidates: list[PreferenceCandidate] = []
     seen: set[str] = set()
+    write_eligible_count = 0
+
     for pattern, base_confidence in _PREFERENCE_PATTERNS:
         for match in pattern.finditer(text):
             evidence = _truncate_evidence(match.group(0))
@@ -99,18 +115,28 @@ def extract_preferences(session_text: str) -> list[PreferenceCandidate]:
             seen.add(key)
 
             confidence = _calibrated_confidence(base_confidence, match.group(0))
+            is_write_eligible = (
+                confidence >= WRITE_CONFIDENCE_THRESHOLD
+                and write_eligible_count < MAX_PREFERENCES_PER_SESSION
+            )
+            if is_write_eligible:
+                write_eligible_count += 1
+
             candidates.append(
                 PreferenceCandidate(
                     preference_text=redact_sensitive_text(preference_text),
                     category=_categorize(match.group(0)),
                     confidence=confidence,
                     evidence=redact_sensitive_text(evidence),
-                    write_eligible=confidence >= WRITE_CONFIDENCE_THRESHOLD,
+                    write_eligible=is_write_eligible,
                 )
             )
 
     candidates.sort(key=lambda item: item.confidence, reverse=True)
-    return candidates[:MAX_PREFERENCES_PER_SESSION]
+    # Return up to MAX_REVIEW_CANDIDATES for human review.
+    # write_eligible=True candidates are capped at MAX_PREFERENCES_PER_SESSION.
+    # Callers must enforce the auto-write cap on write_eligible items.
+    return candidates[:MAX_REVIEW_CANDIDATES]
 
 
 def redact_sensitive_text(text: str) -> str:
@@ -135,6 +161,8 @@ def _to_third_person_preference(preference_body: str, evidence: str) -> str:
         return f"User does not want {body}"
     if "make sure" in lowered_evidence:
         return f"User wants Merlin to {body}"
+    if "never" in lowered_evidence:
+        return f"User never wants {body}"
     if body.startswith(("to ", "that ")):
         return f"User prefers {body}"
     return f"User prefers {body}"
@@ -155,25 +183,66 @@ def _truncate_evidence(value: str) -> str:
 
 def _calibrated_confidence(base_confidence: float, evidence: str) -> float:
     lowered = evidence.casefold()
-    if any(marker in lowered for marker in ("maybe", "sometimes", "might", "could")):
-        return min(base_confidence, 0.7)
-    if any(marker in lowered for marker in ("always", "strongly", "must", "need")):
+
+    # Negation detection FIRST — before any boosting.
+    # These phrases indicate the speaker is hedging or negating — drop below write threshold.
+    _NEGATION_PHRASES = (
+        "don't strongly", "not necessarily", "don't really", "not really",
+        "not sure", "not always", "doesn't matter", "either way",
+        "not important", "don't mind",
+    )
+    if any(phrase in lowered for phrase in _NEGATION_PHRASES):
+        return min(base_confidence, 0.55)  # below WRITE_CONFIDENCE_THRESHOLD
+
+    if any(m in lowered for m in ("maybe", "sometimes", "might", "could", "perhaps")):
+        return min(base_confidence, 0.70)
+    if any(m in lowered for m in ("always", "strongly", "must", "need", "never", "every")):
         return min(1.0, base_confidence + 0.02)
     return base_confidence
 
 
 def _categorize(evidence: str) -> PreferenceCategory:
     lowered = evidence.casefold()
-    if _contains_any(lowered, ("python", "bash", "pytest", "test", "refactor", "code", "typing")):
+
+    if _contains_any(lowered, (
+        "python", "bash", "pytest", "test", "refactor", "code", "typing",
+        "commit", "commits", "split", "pr", "pull request", "branch",
+    )):
         return "coding_style"
-    if _contains_any(lowered, ("docker", "github", "qdrant", "ollama", "litellm", "n8n", "qwen", "model")):
+
+    if _contains_any(lowered, (
+        "docker", "github", "qdrant", "ollama", "litellm", "n8n", "qwen",
+        "model", "wizard", "cli", "install", "installer", "pkg", "launchd",
+        "compose", "upgrade", "backup", "restore",
+    )):
         return "tool_preference"
-    if _contains_any(lowered, ("explain", "concise", "direct", "honest", "don't lie", "tone", "ask")):
+
+    if _contains_any(lowered, (
+        "explain", "concise", "direct", "honest", "don't lie", "tone",
+        "ask", "format", "bullet", "table", "section", "header",
+    )):
         return "communication_style"
-    if _contains_any(lowered, ("commit", "push", "roadmap", "issue", "milestone", "validate", "best practice")):
-        return "workflow_pattern"
-    if _contains_any(lowered, ("bank", "finance", "financial", "ffiec", "compliance", "security")):
+
+    if _contains_any(lowered, (
+        "architecture", "design", "tradeoff", "pattern", "structure",
+        "phase", "layer", "module", "service", "component", "interface",
+        "always", "never", "every", "each",
+    )):
+        return "architecture_decision"   # catches design rules
+
+    if _contains_any(lowered, (
+        "bank", "finance", "financial", "ffiec", "ncua", "glba", "cis",
+        "nist", "iso", "compliance", "security", "audit", "risk",
+        "vulnerability", "threat", "regulated",
+    )):
         return "domain_expertise"
+
+    if _contains_any(lowered, (
+        "roadmap", "issue", "milestone", "validate", "best practice",
+        "workflow", "process", "step", "checklist",
+    )):
+        return "workflow_pattern"
+
     return "workflow_pattern"
 
 
