@@ -618,14 +618,7 @@ def _write_route_audit(decision: RouteDecision, input_hash: str, timestamp: str)
         return None
 
 
-def route_task(user_input: str, system_prompt: str = "") -> tuple[RouteDecision, str]:
-    """Route a task and log the decision without storing raw input.
-
-    Returns (RouteDecision, system_prompt) where system_prompt may be
-    prepended with active user preferences when available.
-    Preference injection is non-blocking — Qdrant failure never breaks routing.
-    """
-
+def _route_task_decision(user_input: str, system_prompt: str = "") -> tuple[RouteDecision, str]:
     decision = _apply_skill_bias(classify_task(user_input))
 
     # Load active preferences for this domain (non-blocking, graceful on failure)
@@ -668,3 +661,21 @@ def route_task(user_input: str, system_prompt: str = "") -> tuple[RouteDecision,
         decision.preference_count_injected,
     )
     return decision, system_prompt
+
+
+def route_task(user_input: str) -> RouteDecision:
+    """Route a task and log the decision without storing raw input."""
+
+    decision, _ = _route_task_decision(user_input)
+    return decision
+
+
+def route_task_with_prompt(user_input: str, system_prompt: str = "") -> tuple[RouteDecision, str]:
+    """Route a task and return a preference-injected system prompt.
+
+    This preserves route_task() as the stable RouteDecision-returning API for
+    existing callers while exposing the Phase 3C preference prompt bridge to
+    callers that explicitly opt in.
+    """
+
+    return _route_task_decision(user_input, system_prompt)

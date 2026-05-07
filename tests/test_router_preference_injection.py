@@ -11,6 +11,8 @@ import pytest
 from merlin.router import (
     _inject_preferences,
     _preference_context_for_domain,
+    route_task,
+    route_task_with_prompt,
 )
 
 
@@ -75,3 +77,29 @@ def test_inject_preferences_format() -> None:
     # Blank line separator before original prompt
     assert "" in lines
     assert "Original." in result
+
+
+def test_route_task_contract_stays_route_decision(monkeypatch) -> None:
+    """route_task remains backward compatible; prompt injection is opt-in."""
+
+    monkeypatch.setattr("merlin.router._preference_context_for_domain", lambda category: ["User prefers concise answers"])
+
+    decision = route_task("explain how Qdrant works")
+
+    assert not isinstance(decision, tuple)
+    assert decision.route_id == "general"
+
+
+def test_route_task_with_prompt_injects_preferences(monkeypatch) -> None:
+    """Callers that need prompt injection use the explicit tuple-returning API."""
+
+    monkeypatch.setattr("merlin.router._preference_context_for_domain", lambda category: ["User prefers concise answers"])
+
+    decision, prompt = route_task_with_prompt("explain how Qdrant works", "Base prompt.")
+
+    assert decision.route_id == "general"
+    assert decision.preference_context_injected is True
+    assert decision.preference_count_injected == 1
+    assert "ACTIVE USER PREFERENCES" in prompt
+    assert "User prefers concise answers" in prompt
+    assert "Base prompt." in prompt
