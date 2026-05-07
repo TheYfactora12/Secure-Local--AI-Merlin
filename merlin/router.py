@@ -58,6 +58,19 @@ SKILL_DOMAIN_HINTS: dict[str, str] = {
     "schedule": "automation",
 }
 
+# Mapping from RouteDecision task_type to PreferenceCategory domain
+_TASK_TYPE_TO_PREF_CATEGORY: dict[str, str] = {
+    "code": "coding_style",
+    "architecture": "architecture_decision",
+    "security": "domain_expertise",
+    "automation": "workflow_pattern",
+    "ai_engineering": "tool_preference",
+    "product_design": "communication_style",
+    "search": "workflow_pattern",
+    "memory_write": "workflow_pattern",
+    "general": "workflow_pattern",
+}
+
 
 class RouteDecision(BaseModel):
     route_id: str
@@ -83,6 +96,9 @@ class RouteDecision(BaseModel):
     decision_reason: str
     skill_bias_applied: bool = False
     skill_bias_agent: str | None = None
+    # Phase 3C: preference injection audit fields
+    preference_context_injected: bool = False
+    preference_count_injected: int = 0
 
 
 class _RouteRule(BaseModel):
@@ -452,6 +468,42 @@ def _apply_skill_bias(decision: RouteDecision) -> RouteDecision:
     return decision
 
 
+def _preference_context_for_domain(
+    domain_category: str,
+    memory: MemoryManager | None = None,
+) -> list[str]:
+    """Retrieve approved preferences for a domain category.
+
+    Returns list of preference_text strings for system prompt injection.
+    Returns empty list if memory unavailable — never raises.
+    Non-blocking: called before routing, not in the routing critical path.
+    """
+    if memory is None:
+        try:
+            memory = MemoryManager(timeout=1)
+        except Exception:
+            return []
+    prefs = memory.get_preferences_by_category(domain_category)
+    return [p.get("preference_text", "") for p in prefs if p.get("preference_text")]
+
+
+def _inject_preferences(system_prompt: str, preferences: list[str]) -> str:
+    """Prepend active user preferences to system prompt.
+
+    Format:
+        ACTIVE USER PREFERENCES (apply to this task):
+        - User prefers 3 commits not 1
+        - User always wants tests included with code changes
+        [original system prompt continues]
+    """
+    if not preferences:
+        return system_prompt
+    pref_block = "ACTIVE USER PREFERENCES (apply to this task):\n"
+    pref_block += "\n".join(f"- {p}" for p in preferences[:5])  # max 5 to avoid prompt bloat
+    pref_block += "\n\n"
+    return pref_block + system_prompt
+
+
 def classify_task(user_input: str) -> RouteDecision:
     """Classify input into a Merlin staff mode and execution target."""
 
@@ -548,6 +600,8 @@ def _write_route_audit(decision: RouteDecision, input_hash: str, timestamp: str)
         "model_fallback_reason": decision.model_fallback_reason,
         "skill_bias_applied": decision.skill_bias_applied,
         "skill_bias_agent": decision.skill_bias_agent,
+        "preference_context_injected": decision.preference_context_injected,
+        "preference_count_injected": decision.preference_count_injected,
         "outcome_status": "routed",
         "task_hash": input_hash,
     }
@@ -564,10 +618,33 @@ def _write_route_audit(decision: RouteDecision, input_hash: str, timestamp: str)
         return None
 
 
-def route_task(user_input: str) -> RouteDecision:
-    """Route a task and log the decision without storing raw input."""
+def route_task(user_input: str, system_prompt: str = "") -> tuple[RouteDecision, str]:
+    """Route a task and log the decision without storing raw input.
+
+    Returns (RouteDecision, system_prompt) where system_prompt may be
+    prepended with active user preferences when available.
+    Preference injection is non-blocking — Qdrant failure never breaks routing.
+    """
 
     decision = _apply_skill_bias(classify_task(user_input))
+
+    # Load active preferences for this domain (non-blocking, graceful on failure)
+    pref_category = _TASK_TYPE_TO_PREF_CATEGORY.get(decision.task_type, "workflow_pattern")
+    try:
+        active_prefs = _preference_context_for_domain(pref_category)
+        if active_prefs:
+            system_prompt = _inject_preferences(system_prompt, active_prefs)
+            decision.preference_context_injected = True
+            decision.preference_count_injected = min(len(active_prefs), 5)
+            logger.info(
+                "preference_context_injected count=%d domain=%s",
+                decision.preference_count_injected,
+                pref_category,
+            )
+    except Exception as exc:
+        logger.warning("preference_injection_skipped error=%s", exc)
+        # Routing continues normally — preferences are additive, not load-bearing
+
     timestamp = datetime.now(UTC).isoformat()
     input_hash = _input_hash(user_input)
     audit_point_id = _write_route_audit(decision, input_hash, timestamp)
@@ -575,7 +652,8 @@ def route_task(user_input: str) -> RouteDecision:
     decision.audit_written = audit_point_id is not None
     logger.info(
         "route_decision timestamp=%s input_hash=%s route_id=%s staff_mode=%s agent_target=%s "
-        "preferred_model=%s selected_model=%s fallback=%s audit_written=%s confidence=%.2f",
+        "preferred_model=%s selected_model=%s fallback=%s audit_written=%s confidence=%.2f "
+        "pref_injected=%s pref_count=%d",
         timestamp,
         input_hash,
         decision.route_id,
@@ -586,5 +664,7 @@ def route_task(user_input: str) -> RouteDecision:
         decision.model_fallback_applied,
         decision.audit_written,
         decision.confidence,
+        decision.preference_context_injected,
+        decision.preference_count_injected,
     )
-    return decision
+    return decision, system_prompt
