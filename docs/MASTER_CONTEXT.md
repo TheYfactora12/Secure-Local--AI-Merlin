@@ -237,6 +237,9 @@ Last verified: 2026-05-06.
 - Live memory validation on 2026-05-06 initialized canonical Qdrant collections with `MERLIN_CREATE_CANONICAL_COLLECTIONS=true bash scripts/init-qdrant.sh`, explicitly installed local `nomic-embed-text`, approved `approval_dryrun_20260506_040756_17686`, wrote point `640cc4bb-5dc9-3c68-8a44-5d2560a15ab5` into `merlin_user`, and verified the JSONL audit record `mem_20260506_040805_654553` stayed redacted.
 - Live memory search validation on 2026-05-06 ran `wizard merlin memory search --query "local-first profile-aware" --memory-type preference --limit 3`, retrieved point `640cc4bb-5dc9-3c68-8a44-5d2560a15ab5`, and verified read audit record `mread_20260506_041535_472003` stored hashes only.
 - PR #10 / `installer-hardening` is closed and `origin/installer-hardening` is an ancestor of `origin/main`; it is not an active blocker.
+- Phase 3A outcome observer is complete in #65 through `b1be9e9`; it records hashed task outcomes to JSONL and optionally writes approved audit events.
+- Phase 3B retrieval-augmented routing is complete in #66 at `1487176`; CI run `25473476135` passed. Routing now exposes keyword/retrieval scores and only approved outcome history can influence retrieval scoring.
+- Phase 3C preference extractor is complete in #67. It is review-only: `merlin/preference_extractor.py` returns candidate preferences with confidence, category, redacted evidence, and write eligibility, but performs no memory writes or model/cloud calls.
 
 Earlier live validation on 2026-05-05:
 

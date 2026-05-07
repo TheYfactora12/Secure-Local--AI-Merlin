@@ -19,6 +19,10 @@ Phase 3 adds review-first learning loops on top of the Phase 2 Merlin Staff Core
 3. `Phase 3C` — `merlin/preference_extractor.py`
    - Extract explicit or strongly implied user preferences for review.
    - Do not write preferences automatically.
+   - Status: implemented in #67 as a deterministic, offline, review-only
+     extractor. Candidates include category, confidence, short redacted
+     evidence, and `write_eligible`; no Qdrant writes, model calls, cloud calls,
+     or config edits occur.
 4. `Phase 3D` — `merlin/session_reflector.py`
    - Build short-lived session summaries for continuity.
    - Summaries expire by default; Merlin session memory is intentionally temporary.

@@ -94,7 +94,15 @@ Issue #1 latest package validation is complete through `64096f4`; GitHub Actions
 - `pkgutil --check-signature` can validate current-user trust after the local cert is trusted in the login keychain.
 - Privileged `installer` still rejects the self-signed package without System keychain trust or Developer ID Installer notarization. Do not spend more engineering cycles trying to bypass this macOS trust model.
 
-Next work should be selected as a narrow slice: after #66 Phase 3B retrieval scoring, continue with preference extraction, session reflection, and skill scores.
+Issue #66 Phase 3B retrieval scoring is complete at `1487176`; GitHub Actions run `25473476135` passed and #66 is closed.
+
+Issue #67 Phase 3C preference extraction is complete as the next narrow slice:
+
+- Add `merlin/preference_extractor.py`.
+- Return review-only preference candidates with category, confidence, redacted evidence, and write eligibility.
+- Do not write Qdrant memory, call models, call cloud APIs, start services, edit config, or touch the installer.
+
+After #67, continue with session reflection and skill scores.
 
 Port contract:
 
