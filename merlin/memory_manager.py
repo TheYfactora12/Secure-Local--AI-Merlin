@@ -213,7 +213,7 @@ class MemoryManager:
 
     def _check_qdrant(self) -> None:
         try:
-            self._request_json("GET", "/healthz")
+            self._request_json("GET", "/collections")
         except OSError:
             self._activate_degraded("startup", "*")
 

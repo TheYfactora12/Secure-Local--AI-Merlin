@@ -100,3 +100,19 @@ def test_write_audit_event_uses_neutral_vector_without_embedding(monkeypatch: py
     assert point["vector"] == [0.0] * 768
     assert point["payload"]["event_type"] == "route_decision"
     assert point["payload"]["route_id"] == "general"
+
+
+def test_startup_check_uses_json_collections_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[tuple[str, str]] = []
+
+    def fake_request(self: MemoryManager, method: str, path: str, body: dict | None = None) -> dict:
+        calls.append((method, path))
+        if path == "/collections":
+            return {"result": {"collections": []}}
+        return {"result": {"count": 0}}
+
+    monkeypatch.setattr(MemoryManager, "_request_json", fake_request)
+
+    MemoryManager()
+
+    assert calls[0] == ("GET", "/collections")
