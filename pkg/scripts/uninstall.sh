@@ -116,6 +116,13 @@ compose_down() {
     return 0
   fi
 
+  local cleanup_command
+  if [[ "$REMOVE_DATA" == true ]]; then
+    cleanup_command="docker compose -f ${compose_file} down --volumes --remove-orphans"
+  else
+    cleanup_command="docker compose -f ${compose_file} down --remove-orphans"
+  fi
+
   if [[ "$DRY_RUN" == true ]]; then
     if [[ "$REMOVE_DATA" == true ]]; then
       log "Stopping services and removing Docker volumes"
@@ -129,11 +136,13 @@ compose_down() {
 
   if ! command -v docker >/dev/null 2>&1; then
     warn "Docker CLI not found; skipping Docker cleanup"
+    warn "Run manually if needed: ${cleanup_command}"
     return 0
   fi
 
   if ! docker info >/dev/null 2>&1; then
     warn "Docker engine not running; skipping Docker cleanup"
+    warn "Run manually if needed after Docker starts: ${cleanup_command}"
     return 0
   fi
 

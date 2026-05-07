@@ -53,5 +53,9 @@ grep -q 'Could not unload launchd agent' "$PKG_UNINSTALL" \
   || fail "uninstaller does not warn when launchd bootout fails"
 grep -q 'launchctl bootout gui/' "$PKG_UNINSTALL" \
   || fail "uninstaller does not print manual launchd bootout command"
+grep -q 'docker compose -f .* down --volumes --remove-orphans' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not print manual Docker volume cleanup command"
+grep -q 'Run manually if needed after Docker starts' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not print manual Docker cleanup hint when engine is down"
 
 echo "PASS: uninstaller is guarded and testable"
