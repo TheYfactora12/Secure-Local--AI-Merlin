@@ -1,0 +1,208 @@
+# home-ai-elite — optional observability profile
+# This file is intentionally not loaded by default.
+# Start explicitly:
+#   docker compose -f docker-compose.yml -f docker-compose.observability.yml --profile observability up -d
+#
+# SECURITY:
+# - All published ports bind to 127.0.0.1.
+# - Langfuse uses host port 3010 so Open WebUI keeps port 3000.
+# - Secrets must be set in .env before this profile starts.
+
+volumes:
+  langfuse-postgres-data:
+  langfuse-clickhouse-data:
+  langfuse-clickhouse-logs:
+  langfuse-minio-data:
+  langfuse-redis-data:
+
+services:
+  langfuse-worker:
+    profiles: ["observability"]
+    image: docker.io/langfuse/langfuse-worker:3
+    container_name: langfuse-worker
+    restart: unless-stopped
+    depends_on: &langfuse-depends-on
+      langfuse-postgres:
+        condition: service_healthy
+      langfuse-minio:
+        condition: service_healthy
+      langfuse-redis:
+        condition: service_healthy
+      langfuse-clickhouse:
+        condition: service_healthy
+    ports:
+      - "${LANGFUSE_WORKER_BIND:-127.0.0.1}:${LANGFUSE_WORKER_PORT:-3030}:3030"
+    environment: &langfuse-env
+      NEXTAUTH_URL: "http://localhost:${LANGFUSE_PORT:-3010}"
+      DATABASE_URL: "postgresql://${LANGFUSE_POSTGRES_USER:-langfuse}:${LANGFUSE_POSTGRES_PASSWORD:-REQUIRED_CHANGE_ME}@langfuse-postgres:5432/${LANGFUSE_POSTGRES_DB:-langfuse}"
+      SALT: "${LANGFUSE_SALT:-REQUIRED_CHANGE_ME}"
+      ENCRYPTION_KEY: "${LANGFUSE_ENCRYPTION_KEY:-REQUIRED_CHANGE_ME}"
+      TELEMETRY_ENABLED: "${LANGFUSE_TELEMETRY_ENABLED:-false}"
+      LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES: "${LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES:-false}"
+      CLICKHOUSE_MIGRATION_URL: "clickhouse://langfuse-clickhouse:9000"
+      CLICKHOUSE_URL: "http://langfuse-clickhouse:8123"
+      CLICKHOUSE_USER: "${LANGFUSE_CLICKHOUSE_USER:-langfuse}"
+      CLICKHOUSE_PASSWORD: "${LANGFUSE_CLICKHOUSE_PASSWORD:-REQUIRED_CHANGE_ME}"
+      CLICKHOUSE_CLUSTER_ENABLED: "false"
+      LANGFUSE_USE_AZURE_BLOB: "false"
+      LANGFUSE_USE_OCI_NATIVE_OBJECT_STORAGE: "false"
+      LANGFUSE_S3_EVENT_UPLOAD_BUCKET: "${LANGFUSE_S3_BUCKET:-langfuse}"
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: "auto"
+      LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: "${LANGFUSE_MINIO_ROOT_USER:-langfuse}"
+      LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: "${LANGFUSE_MINIO_ROOT_PASSWORD:-REQUIRED_CHANGE_ME}"
+      LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: "http://langfuse-minio:9000"
+      LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+      LANGFUSE_S3_EVENT_UPLOAD_PREFIX: "events/"
+      LANGFUSE_S3_MEDIA_UPLOAD_BUCKET: "${LANGFUSE_S3_BUCKET:-langfuse}"
+      LANGFUSE_S3_MEDIA_UPLOAD_REGION: "auto"
+      LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID: "${LANGFUSE_MINIO_ROOT_USER:-langfuse}"
+      LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY: "${LANGFUSE_MINIO_ROOT_PASSWORD:-REQUIRED_CHANGE_ME}"
+      LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: "http://localhost:${LANGFUSE_MINIO_PORT:-9090}"
+      LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE: "true"
+      LANGFUSE_S3_MEDIA_UPLOAD_PREFIX: "media/"
+      LANGFUSE_S3_BATCH_EXPORT_ENABLED: "false"
+      LANGFUSE_S3_BATCH_EXPORT_BUCKET: "${LANGFUSE_S3_BUCKET:-langfuse}"
+      LANGFUSE_S3_BATCH_EXPORT_PREFIX: "exports/"
+      LANGFUSE_S3_BATCH_EXPORT_REGION: "auto"
+      LANGFUSE_S3_BATCH_EXPORT_ENDPOINT: "http://langfuse-minio:9000"
+      LANGFUSE_S3_BATCH_EXPORT_EXTERNAL_ENDPOINT: "http://localhost:${LANGFUSE_MINIO_PORT:-9090}"
+      LANGFUSE_S3_BATCH_EXPORT_ACCESS_KEY_ID: "${LANGFUSE_MINIO_ROOT_USER:-langfuse}"
+      LANGFUSE_S3_BATCH_EXPORT_SECRET_ACCESS_KEY: "${LANGFUSE_MINIO_ROOT_PASSWORD:-REQUIRED_CHANGE_ME}"
+      LANGFUSE_S3_BATCH_EXPORT_FORCE_PATH_STYLE: "true"
+      REDIS_HOST: "langfuse-redis"
+      REDIS_PORT: "6379"
+      REDIS_AUTH: "${LANGFUSE_REDIS_AUTH:-REQUIRED_CHANGE_ME}"
+      REDIS_TLS_ENABLED: "false"
+      EMAIL_FROM_ADDRESS: ""
+      SMTP_CONNECTION_URL: ""
+    networks:
+      - ai-net
+    labels:
+      - "com.homeai.profile=observability"
+
+  langfuse-web:
+    profiles: ["observability"]
+    image: docker.io/langfuse/langfuse:3
+    container_name: langfuse-web
+    restart: unless-stopped
+    depends_on: *langfuse-depends-on
+    ports:
+      - "${LANGFUSE_BIND:-127.0.0.1}:${LANGFUSE_PORT:-3010}:3000"
+    environment:
+      <<: *langfuse-env
+      NEXTAUTH_SECRET: "${LANGFUSE_NEXTAUTH_SECRET:-REQUIRED_CHANGE_ME}"
+      LANGFUSE_INIT_ORG_ID: "${LANGFUSE_INIT_ORG_ID:-}"
+      LANGFUSE_INIT_ORG_NAME: "${LANGFUSE_INIT_ORG_NAME:-}"
+      LANGFUSE_INIT_PROJECT_ID: "${LANGFUSE_INIT_PROJECT_ID:-}"
+      LANGFUSE_INIT_PROJECT_NAME: "${LANGFUSE_INIT_PROJECT_NAME:-}"
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: "${LANGFUSE_INIT_PROJECT_PUBLIC_KEY:-}"
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: "${LANGFUSE_INIT_PROJECT_SECRET_KEY:-}"
+      LANGFUSE_INIT_USER_EMAIL: "${LANGFUSE_INIT_USER_EMAIL:-}"
+      LANGFUSE_INIT_USER_NAME: "${LANGFUSE_INIT_USER_NAME:-}"
+      LANGFUSE_INIT_USER_PASSWORD: "${LANGFUSE_INIT_USER_PASSWORD:-}"
+    networks:
+      - ai-net
+    labels:
+      - "com.homeai.profile=observability"
+
+  langfuse-clickhouse:
+    profiles: ["observability"]
+    image: docker.io/clickhouse/clickhouse-server:latest
+    container_name: langfuse-clickhouse
+    restart: unless-stopped
+    user: "101:101"
+    environment:
+      CLICKHOUSE_DB: "default"
+      CLICKHOUSE_USER: "${LANGFUSE_CLICKHOUSE_USER:-langfuse}"
+      CLICKHOUSE_PASSWORD: "${LANGFUSE_CLICKHOUSE_PASSWORD:-REQUIRED_CHANGE_ME}"
+    ports:
+      - "${LANGFUSE_CLICKHOUSE_BIND:-127.0.0.1}:${LANGFUSE_CLICKHOUSE_HTTP_PORT:-8123}:8123"
+      - "${LANGFUSE_CLICKHOUSE_BIND:-127.0.0.1}:${LANGFUSE_CLICKHOUSE_NATIVE_PORT:-9000}:9000"
+    volumes:
+      - langfuse-clickhouse-data:/var/lib/clickhouse
+      - langfuse-clickhouse-logs:/var/log/clickhouse-server
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 1s
+    networks:
+      - ai-net
+    labels:
+      - "com.homeai.profile=observability"
+
+  langfuse-minio:
+    profiles: ["observability"]
+    image: cgr.dev/chainguard/minio:latest
+    container_name: langfuse-minio
+    restart: unless-stopped
+    entrypoint: sh
+    command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
+    environment:
+      MINIO_ROOT_USER: "${LANGFUSE_MINIO_ROOT_USER:-langfuse}"
+      MINIO_ROOT_PASSWORD: "${LANGFUSE_MINIO_ROOT_PASSWORD:-REQUIRED_CHANGE_ME}"
+    ports:
+      - "${LANGFUSE_MINIO_BIND:-127.0.0.1}:${LANGFUSE_MINIO_PORT:-9090}:9000"
+      - "${LANGFUSE_MINIO_BIND:-127.0.0.1}:${LANGFUSE_MINIO_CONSOLE_PORT:-9091}:9001"
+    volumes:
+      - langfuse-minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 1s
+      timeout: 5s
+      retries: 5
+      start_period: 1s
+    networks:
+      - ai-net
+    labels:
+      - "com.homeai.profile=observability"
+
+  langfuse-redis:
+    profiles: ["observability"]
+    image: docker.io/redis:7
+    container_name: langfuse-redis
+    restart: unless-stopped
+    environment:
+      REDIS_AUTH: "${LANGFUSE_REDIS_AUTH:-REQUIRED_CHANGE_ME}"
+    command: >
+      --requirepass ${LANGFUSE_REDIS_AUTH:-REQUIRED_CHANGE_ME}
+      --maxmemory-policy noeviction
+    ports:
+      - "${LANGFUSE_REDIS_BIND:-127.0.0.1}:${LANGFUSE_REDIS_PORT:-6379}:6379"
+    volumes:
+      - langfuse-redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_AUTH:-REQUIRED_CHANGE_ME}\" ping | grep PONG"]
+      interval: 3s
+      timeout: 10s
+      retries: 10
+    networks:
+      - ai-net
+    labels:
+      - "com.homeai.profile=observability"
+
+  langfuse-postgres:
+    profiles: ["observability"]
+    image: docker.io/postgres:17
+    container_name: langfuse-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: "${LANGFUSE_POSTGRES_USER:-langfuse}"
+      POSTGRES_PASSWORD: "${LANGFUSE_POSTGRES_PASSWORD:-REQUIRED_CHANGE_ME}"
+      POSTGRES_DB: "${LANGFUSE_POSTGRES_DB:-langfuse}"
+      TZ: "UTC"
+      PGTZ: "UTC"
+    ports:
+      - "${LANGFUSE_POSTGRES_BIND:-127.0.0.1}:${LANGFUSE_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - langfuse-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER:-langfuse}\""]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    networks:
+      - ai-net
+    labels:
+      - "com.homeai.profile=observability"

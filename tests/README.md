@@ -266,3 +266,16 @@ or network access.
 bash tests/merlin-trace-view-smoke.sh
 wizard trace <trace_id>
 ```
+
+---
+
+## langfuse-observability-profile-smoke.sh
+
+This test validates the optional Langfuse profile without starting services. It
+proves Langfuse is absent from default Compose, profile-gated in the optional
+override, localhost-bound, not on Open WebUI port 3000, and protected by the
+low-RAM start guard.
+
+```bash
+bash tests/langfuse-observability-profile-smoke.sh
+```

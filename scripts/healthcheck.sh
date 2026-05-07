@@ -39,6 +39,12 @@ check_http "n8n"          "http://localhost:5678"
 check_http "Qdrant"       "http://localhost:6333"
 check_http "SearXNG"      "http://localhost:8080"
 check_http "LiteLLM"      "http://localhost:4000"
+if [[ "${HOME_AI_OBSERVABILITY_PROFILE_ACTIVE:-false}" == "true" ]] || \
+   docker compose ps --services --filter status=running 2>/dev/null | grep -qx 'langfuse-web'; then
+  check_http "Langfuse"   "http://localhost:${LANGFUSE_PORT:-3010}/api/public/health"
+else
+  echo "ℹ️  Langfuse observability disabled; skipping health check"
+fi
 check_http "Nginx HTTPS"  "https://localhost" --insecure 2>/dev/null || true
 
 echo "──────────────────────────────"

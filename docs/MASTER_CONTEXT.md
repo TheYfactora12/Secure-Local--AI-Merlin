@@ -42,6 +42,10 @@ Current milestone position:
 - #8 JSONL trace inspection now follows the same baseline-first rule:
   `wizard trace <id>` reads local trace, approval, and outcome JSONL before
   any optional trace UI is introduced.
+- #8 optional Langfuse lives only in `docker-compose.observability.yml` and
+  starts only through `wizard start observability`. It remains off by default,
+  localhost-only, separate from Open WebUI port `3000`, and guarded against
+  low-RAM startup unless explicitly overridden.
 - #35 is the canonical n8n ModelRouter rewrite issue. #6 is closed as
   stale/duplicate because it required automatic cloud escalation, which violates
   current local-first approval-gated policy.

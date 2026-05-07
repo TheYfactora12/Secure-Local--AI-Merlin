@@ -63,6 +63,20 @@ Allowed future shape:
 - `wizard score` still works from JSONL when the trace UI is disabled
 - `wizard trace <session_id>` supports JSONL baseline first, optional UI second
 
+Implemented optional local profile:
+
+- `docker-compose.observability.yml` defines Langfuse web/worker plus Postgres,
+  ClickHouse, Redis, and MinIO under the `observability` profile only.
+- `configs/langfuse/langfuse.env.example` lists required local env keys without
+  secret values.
+- `wizard start observability` calls `scripts/start-observability.sh`, refuses
+  to start on RAM below 16GB unless `HOME_AI_ALLOW_LOW_TIER_OBSERVABILITY=true`
+  is explicitly set, and starts the override profile intentionally.
+- Langfuse binds to `http://localhost:3010` by default. Open WebUI keeps port
+  `3000`.
+- `scripts/healthcheck.sh` checks Langfuse only when the observability profile
+  is active; otherwise it skips that health check.
+
 Disallowed future shape:
 
 - adding Langfuse to the default Compose service list,
@@ -116,6 +130,13 @@ Runtime health:
 wizard doctor
 wizard merlin status-api status
 wizard merlin task-api status
+wizard start observability
+```
+
+After explicitly starting the optional profile, open:
+
+```bash
+http://localhost:3010
 ```
 
 ## Test Contract
@@ -143,7 +164,25 @@ wizard merlin task-api status
 - hash-based lookup can connect route, approval, and outcome records,
 - no external telemetry or live services are required.
 
+`tests/langfuse-observability-profile-smoke.sh` proves the optional Langfuse
+profile is gated:
+
+- default `docker-compose.yml` has no Langfuse services,
+- all Langfuse services live in `docker-compose.observability.yml` under the
+  `observability` profile,
+- all published ports bind to `127.0.0.1`,
+- Langfuse uses host port `3010`, not Open WebUI port `3000`,
+- the start script has a low-RAM guard and explicit override,
+- healthcheck skips Langfuse unless the profile is active.
+
 ## Rollback
 
-Revert this guide and the design smoke test. The existing JSONL traces and
-status endpoints remain unchanged.
+Stop the optional profile:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.observability.yml --profile observability down
+```
+
+Then revert the optional override/config/script changes if needed. The existing
+JSONL traces, `wizard score`, `wizard trace`, and status endpoints remain
+unchanged.

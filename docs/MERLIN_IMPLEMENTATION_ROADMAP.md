@@ -86,6 +86,10 @@ left behind.
 - #8 also adds a JSONL baseline trace viewer, `wizard trace <id>`, before any
   optional trace UI. This keeps trace inspection local, redacted, and usable
   without live services.
+- #8 optional Langfuse is implemented only as `docker-compose.observability.yml`
+  plus `wizard start observability`. It is off by default, localhost-only,
+  blocked on low RAM unless explicitly overridden, and tested so it cannot slip
+  into the default Compose stack.
 - #28 closed under `v2.0`. #50–#60 closed under `v2.0`.
 - #30, #39 open under `v2.1`. #33, #34 open under `v2.2`. #37 open under `v3.0`.
 
