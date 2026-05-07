@@ -29,11 +29,20 @@ from merlin.skill_scorer import compute_skill_report
 
 logger = logging.getLogger(__name__)
 OUTCOME_LOG_PATH = Path("logs/merlin-outcomes.jsonl")
-OUTCOME_DECAY_DAYS = 30
 OUTCOME_SAMPLE_LIMIT = 50
-KEYWORD_WEIGHT = 0.6
-RETRIEVAL_WEIGHT = 1.0 - KEYWORD_WEIGHT
-NO_RETRAINING_CONSTRAINT = True
+
+# PATENT NOTICE — Element 2 (docs/ip/INVENTOR_RECORD.md)
+# These constants are claim-relevant. Do not change without updating
+# INVENTOR_RECORD.md and notifying the patent attorney of record.
+KEYWORD_WEIGHT: float = 0.6
+RETRIEVAL_WEIGHT: float = 0.4
+# Invariant: KEYWORD_WEIGHT + RETRIEVAL_WEIGHT == 1.0
+OUTCOME_DECAY_DAYS: int = 30
+# Decay formula: exp(-days_since_outcome / OUTCOME_DECAY_DAYS)
+NO_RETRAINING_CONSTRAINT: bool = True
+# Routing accuracy improves ONLY via JSONL outcome retrieval feedback.
+# Zero gradient descent. Zero model retraining. Ever.
+# This is an architectural invariant, not a feature flag.
 
 AgentTarget = Literal["openhands", "n8n", "litellm", "merlin-core"]
 ALLOWED_AGENT_TARGETS = {"openhands", "n8n", "litellm", "merlin-core"}

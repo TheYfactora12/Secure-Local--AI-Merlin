@@ -356,7 +356,15 @@ def test_router_exposes_no_retraining_and_weight_constants() -> None:
     assert NO_RETRAINING_CONSTRAINT is True
     assert KEYWORD_WEIGHT == 0.6
     assert RETRIEVAL_WEIGHT == 0.4
+    assert KEYWORD_WEIGHT + RETRIEVAL_WEIGHT == 1.0
     assert OUTCOME_DECAY_DAYS == 30
+
+
+def test_routes_yaml_exposes_local_no_telemetry_contract() -> None:
+    routes_yaml = Path("configs/merlin/routes.yaml").read_text()
+
+    assert "cloud_allowed: false" in routes_yaml
+    assert "telemetry: disabled" in routes_yaml
 
 
 def test_approved_success_outcomes_boost_retrieval_score(monkeypatch, tmp_path) -> None:

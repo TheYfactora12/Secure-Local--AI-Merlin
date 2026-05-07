@@ -10,6 +10,7 @@ defaults:
   backend_preference: local
   online_mode_required: false
   cloud_allowed: false
+  telemetry: disabled   # patent evidence field — do not remove
   route_logging_required: true
   approval_summary_required: true
 
