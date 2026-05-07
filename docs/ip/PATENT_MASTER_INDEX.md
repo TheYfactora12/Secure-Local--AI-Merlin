@@ -22,6 +22,7 @@
 | **Claim 1** | Hardware-Tier-Aware Policy Router | 7.5/10 ⭐ Strongest | File First |
 | **Claim 2** | Consent-Gated Memory Write System | 7/10 ⭐ Strong | File with Claim 1 |
 | **Claim 3** | Air-Gap Profile Isolation | 6/10 Solid | File with Claims 1+2 |
+| **Claim 4** | Retrieval Feedback Routing | 6.5/10 Partial | File after claim-hardening or disclose as current JSONL baseline + planned vector extension |
 
 **File all three in one provisional application. One fee, one priority date, maximum protection.**
 
@@ -87,6 +88,13 @@ Since *Alice Corp. v. CLS Bank* (2014), software patents that are "abstract idea
 
 "Watch Merlin route this task" = OK.
 "Here's how the hardware tier maps to the approval gate" = NOT OK until provisional filed.
+
+## Evidence Alignment Note
+
+Claim 4 currently has implemented evidence for local JSONL outcome-retrieval
+routing with time decay and no retraining. Qdrant task-signature vector retrieval
+is a planned claim-hardening extension, not current implementation evidence.
+Do not describe that extension as implemented until code and tests land.
 
 ---
 

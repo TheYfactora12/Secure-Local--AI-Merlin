@@ -16,7 +16,7 @@
 Portions of the source code in this repository were authored with AI coding assistance (including but not limited to LLM-based code generation tools). Per USPTO guidance on AI-assisted inventions:
 
 - All **architectural decisions** were made by the human inventor.
-- All **claim-relevant algorithm parameters** (e.g., `suppression_weight = 0.15`, `lambda_decay = 0.001`, `token_window = 5`, `keyword_weight = 0.6`) were selected and validated by the human inventor.
+- All **claim-relevant algorithm parameters** (e.g., `suppression_weight = 0.15`, `token_window = 5`, `KEYWORD_WEIGHT = 0.6`, `RETRIEVAL_WEIGHT = 0.4`, `OUTCOME_DECAY_DAYS = 30`) were selected and validated by the human inventor.
 - The choice to implement consent gates, approval pipelines, and no-retraining constraints as **mandatory architectural controls** rather than optional UI features was a deliberate inventive decision by the human inventor.
 - AI tools were used as implementation assistants, not as inventors.
 
@@ -41,7 +41,7 @@ On 2026-04-30, I conceived of and implemented a system in which no behavioral pr
 ### Element 2 — Retrieval-Augmented Routing with Time-Decay Outcome Weighting
 
 **Conception Date:** 2026-04-30
-**First Committed Evidence:** `merlin/router.py` establishing the blending formula and no-retraining constraint.
+**First Committed Evidence:** `merlin/router.py` establishing the blending formula and no-retraining constraint for the implemented local JSONL outcome-retrieval path.
 **Related Issues:** #81, #83, #29
 **Related Files:** `merlin/router.py`, `configs/merlin/routes.yaml`
 **Patent Candidates:** Candidate 2 (Routing with Decay)
@@ -50,11 +50,13 @@ On 2026-04-30, I conceived of and implemented a routing method in which AI agent
 
 `C_final = keyword_weight × C_keyword + (1 − keyword_weight) × C_retrieval`
 
-where `C_retrieval` is the retrieval-weighted average of historical outcomes for semantically similar past tasks, decayed by `exp(−λ × Δt)` with `λ = 0.001`. I directed all key design decisions, including the specific blending formula, the deliberate architectural constraint that routing accuracy improves **only** via retrieval feedback (zero gradient descent, zero model retraining), and the use of Qdrant vector embeddings of task signatures as the retrieval key rather than raw categorical labels. This constraint is enforced by the module-level constant `NO_RETRAINING_CONSTRAINT = True`.
+where the implemented `C_retrieval` is a time-decayed average of approved historical outcomes for the selected route, decayed by `exp(-days_since_outcome / OUTCOME_DECAY_DAYS)` with `OUTCOME_DECAY_DAYS = 30`. I directed all key design decisions, including the specific blending formula (`KEYWORD_WEIGHT = 0.6`, `RETRIEVAL_WEIGHT = 0.4`) and the deliberate architectural constraint that routing accuracy improves **only** via retrieval feedback (zero gradient descent, zero model retraining). This constraint is enforced by the module-level constant `NO_RETRAINING_CONSTRAINT = True`.
+
+**Planned claim-hardening extension:** The broader claim target is to replace the current route-id-scoped JSONL outcome retrieval with Qdrant vector retrieval keyed by task-signature embeddings, while preserving the same no-retraining constraint and local-only execution. Until that implementation lands, Qdrant task-signature retrieval is a design target, not current code evidence.
 
 **Differentiation from Kount US12335276B2:** Kount's exponential decay is applied to fraud and network access control variables using cloud-based telemetry. This system applies time-decay weighting exclusively to AI agent task routing decisions on local hardware with no cloud transmission and no model retraining. The domain, architecture, purpose, and hardware constraint are all distinct.
 
-**Specific Technical Improvement:** Routing accuracy improves on repeated task patterns without any model retraining, on hardware-constrained local devices, with full decision traceability via vector retrieval rather than opaque model weights.
+**Specific Technical Improvement:** Routing confidence improves on repeated approved task patterns without any model retraining, on hardware-constrained local devices, with full decision traceability through local outcome records rather than opaque model weights.
 
 ---
 
@@ -132,3 +134,4 @@ On 2026-05-07, I conceived of a system in which an AI agent observes its own LLM
 |------|--------|--------|
 | 2026-05-07 | Initial creation — all five elements documented; conception dates established | TheYfactora12 |
 | 2026-05-07 | Set inventor legal name: Kevin Paul Medeiros Jr | TheYfactora12 |
+| 2026-05-07 | Corrected Element 2 evidence to match current implementation: JSONL outcome retrieval is implemented; Qdrant task-signature retrieval remains planned claim-hardening work | TheYfactora12 |

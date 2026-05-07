@@ -10,7 +10,14 @@ import json
 from pathlib import Path
 from typing import Any
 
-from merlin.router import classify_task, route_task
+from merlin.router import (
+    KEYWORD_WEIGHT,
+    NO_RETRAINING_CONSTRAINT,
+    OUTCOME_DECAY_DAYS,
+    RETRIEVAL_WEIGHT,
+    classify_task,
+    route_task,
+)
 from merlin.swarm_coordinator import build_swarm_context
 
 
@@ -343,6 +350,13 @@ def test_cold_start_preserves_keyword_confidence(monkeypatch, tmp_path) -> None:
     assert decision.keyword_score == decision.confidence
     assert decision.retrieval_score == 0.0
     assert decision.retrieval_sample_count == 0
+
+
+def test_router_exposes_no_retraining_and_weight_constants() -> None:
+    assert NO_RETRAINING_CONSTRAINT is True
+    assert KEYWORD_WEIGHT == 0.6
+    assert RETRIEVAL_WEIGHT == 0.4
+    assert OUTCOME_DECAY_DAYS == 30
 
 
 def test_approved_success_outcomes_boost_retrieval_score(monkeypatch, tmp_path) -> None:

@@ -31,6 +31,9 @@ logger = logging.getLogger(__name__)
 OUTCOME_LOG_PATH = Path("logs/merlin-outcomes.jsonl")
 OUTCOME_DECAY_DAYS = 30
 OUTCOME_SAMPLE_LIMIT = 50
+KEYWORD_WEIGHT = 0.6
+RETRIEVAL_WEIGHT = 1.0 - KEYWORD_WEIGHT
+NO_RETRAINING_CONSTRAINT = True
 
 AgentTarget = Literal["openhands", "n8n", "litellm", "merlin-core"]
 ALLOWED_AGENT_TARGETS = {"openhands", "n8n", "litellm", "merlin-core"}
@@ -265,7 +268,7 @@ def _retrieval_score(route_id: str, now: datetime | None = None) -> tuple[float,
 def _final_confidence(keyword_score: float, retrieval_score: float, retrieval_sample_count: int) -> float:
     if retrieval_sample_count == 0:
         return keyword_score
-    return max(0.0, min(1.0, (0.6 * keyword_score) + (0.4 * retrieval_score)))
+    return max(0.0, min(1.0, (KEYWORD_WEIGHT * keyword_score) + (RETRIEVAL_WEIGHT * retrieval_score)))
 
 
 def _load_config_quietly() -> MerlinConfig:
