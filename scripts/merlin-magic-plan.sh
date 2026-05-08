@@ -128,6 +128,27 @@ DECISION_REASON="$(value_for decision_reason)"
 
 case "$ROUTE_ID" in
   general)
+    TOOLS_REQUIRED="local_llm"
+    ;;
+  search)
+    TOOLS_REQUIRED="search_profile,network"
+    ;;
+  code)
+    TOOLS_REQUIRED="repo_read,file_write,shell,git,openhands_optional"
+    ;;
+  automation)
+    TOOLS_REQUIRED="n8n,webhook,external_api_optional"
+    ;;
+  memory)
+    TOOLS_REQUIRED="memory_review,qdrant_write_optional"
+    ;;
+  *)
+    TOOLS_REQUIRED="manual_review"
+    ;;
+esac
+
+case "$ROUTE_ID" in
+  general)
     STEP_1="Clarify the goal and constraints"
     STEP_2="Use local model route '${MODEL_ALIAS}' for reasoning"
     STEP_3="Summarize answer and cite local limitations"
@@ -182,6 +203,7 @@ write_plan_record() {
     APPROVAL_REQUIRED="$APPROVAL_REQUIRED" APPROVAL_REQUEST_ID="$APPROVAL_REQUEST_ID" \
     APPROVAL_GATES="$APPROVAL_GATES" POLICY_DECISION="$POLICY_DECISION" RISK="$RISK" \
     PLAN_STATUS="$PLAN_STATUS" NEXT_ALLOWED_ACTION="$NEXT_ALLOWED_ACTION" DECISION_REASON="$DECISION_REASON" \
+    TOOLS_REQUIRED="$TOOLS_REQUIRED" \
     STEP_1="$STEP_1" STEP_2="$STEP_2" STEP_3="$STEP_3" STEP_4="$STEP_4" PLAN_LOG="$PLAN_LOG" python3 - <<'PY'
 import json
 import os
@@ -213,11 +235,15 @@ record = {
     "risk": os.environ["RISK"],
     "plan_status": os.environ["PLAN_STATUS"],
     "next_allowed_action": os.environ["NEXT_ALLOWED_ACTION"],
+    "mode": "plan_only",
+    "pause_supported": True,
+    "stop_supported": True,
+    "tools_required": [item for item in os.environ["TOOLS_REQUIRED"].split(",") if item],
     "steps": [
-        {"id": "step_1", "title": os.environ["STEP_1"], "status": "planned", "execution_allowed": False},
-        {"id": "step_2", "title": os.environ["STEP_2"], "status": "planned", "execution_allowed": False},
-        {"id": "step_3", "title": os.environ["STEP_3"], "status": "planned", "execution_allowed": False},
-        {"id": "step_4", "title": os.environ["STEP_4"], "status": "planned", "execution_allowed": False},
+        {"id": "step_1", "title": os.environ["STEP_1"], "status": "planned", "execution_allowed": False, "approval_gates": gates, "tools_required": [item for item in os.environ["TOOLS_REQUIRED"].split(",") if item]},
+        {"id": "step_2", "title": os.environ["STEP_2"], "status": "planned", "execution_allowed": False, "approval_gates": gates, "tools_required": [item for item in os.environ["TOOLS_REQUIRED"].split(",") if item]},
+        {"id": "step_3", "title": os.environ["STEP_3"], "status": "planned", "execution_allowed": False, "approval_gates": gates, "tools_required": [item for item in os.environ["TOOLS_REQUIRED"].split(",") if item]},
+        {"id": "step_4", "title": os.environ["STEP_4"], "status": "planned", "execution_allowed": False, "approval_gates": gates, "tools_required": [item for item in os.environ["TOOLS_REQUIRED"].split(",") if item]},
     ],
     "decision_reason": os.environ["DECISION_REASON"],
     "redaction_applied": True,
@@ -243,6 +269,8 @@ fi
 
 cat <<EOF
 Merlin Magic Mode plan
+mode: plan_only
+boundary: planning_only_no_execution
 plan_id: ${PLAN_ID}
 timestamp: ${TIMESTAMP}
 trace_id: ${TRACE_ID}
@@ -260,12 +288,15 @@ selected_model_alias: ${MODEL_ALIAS}
 approval_required: ${APPROVAL_REQUIRED}
 approval_request_id: ${APPROVAL_REQUEST_ID}
 approval_gates: ${APPROVAL_GATES}
+tools_required: ${TOOLS_REQUIRED}
 policy_decision: ${POLICY_DECISION}
 risk: ${RISK}
 plan_status: ${PLAN_STATUS}
 next_allowed_action: ${NEXT_ALLOWED_ACTION}
 pause_supported: true
 stop_supported: true
+pause_guidance: Pause means review this plan; no action is running.
+stop_guidance: Stop means discard the plan; there is no background execution to stop.
 execution_allowed: false
 side_effects: $([[ "$WRITE_PLAN" == true ]] && echo "audit_log_only" || echo "none")
 model_calls: none
@@ -285,16 +316,24 @@ steps:
     title: ${STEP_1}
     status: planned
     execution_allowed: false
+    approval_gates: ${APPROVAL_GATES:-none}
+    tools_required: ${TOOLS_REQUIRED}
   - id: step_2
     title: ${STEP_2}
     status: planned
     execution_allowed: false
+    approval_gates: ${APPROVAL_GATES:-none}
+    tools_required: ${TOOLS_REQUIRED}
   - id: step_3
     title: ${STEP_3}
     status: planned
     execution_allowed: false
+    approval_gates: ${APPROVAL_GATES:-none}
+    tools_required: ${TOOLS_REQUIRED}
   - id: step_4
     title: ${STEP_4}
     status: planned
     execution_allowed: false
+    approval_gates: ${APPROVAL_GATES:-none}
+    tools_required: ${TOOLS_REQUIRED}
 EOF

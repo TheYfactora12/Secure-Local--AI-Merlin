@@ -210,6 +210,8 @@ cat << 'EOF'
                               Execute v0 read-only Merlin status action
     wizard merlin magic plan "goal"
                               Draft plan-only Magic Mode steps
+    wizard merlin audit list
+                              View redacted local audit summaries
     wizard merlin memory plan --memory-type preference --text "..."
                               Preview approved memory-write boundary
     wizard merlin memory simulate --memory-type preference --text "..." --approval-id <id>
@@ -451,6 +453,18 @@ print(f'Resolved At       : {ctx.resolved_at}')
             ;;
           *)
             echo "Usage: wizard merlin magic plan \"goal\""
+            exit 1
+            ;;
+        esac
+        ;;
+      audit)
+        case "${3:-}" in
+          list)
+            shift 3
+            bash "$WIZARD_DIR/scripts/merlin-audit-view.sh" list "$@"
+            ;;
+          *)
+            echo "Usage: wizard merlin audit list [--type all|route|approval|magic|memory_read|memory_write|outcome]"
             exit 1
             ;;
         esac

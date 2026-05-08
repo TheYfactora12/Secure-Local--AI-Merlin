@@ -37,3 +37,23 @@ telemetry, default trace UI containers, or external trace export by default.
   approval.
 
 The v1.6 design is documented in `docs/observability-guide.md`.
+
+## Magic Mode And Audit Viewer Boundary
+
+Magic Mode is plan-only in v2.2. `wizard merlin magic plan "goal"` may produce
+steps, route metadata, approval gates, tool requirements, pause/stop guidance,
+and a redacted JSONL plan record. It must not execute shell commands, write
+files, start services, call models, write memory, use n8n/OpenHands, access
+external network, or approve gates.
+
+The local audit viewer is read-only:
+
+- Command: `wizard merlin audit list`
+- Script: `scripts/merlin-audit-view.sh`
+- Sources: local JSONL logs only
+- Output: event summaries, ids, hashes, route ids, approval gates, status, and
+  execution flags
+
+It never calls Docker, Ollama, LiteLLM, Qdrant, n8n, Langfuse, cloud APIs, or
+external network services. It does not print raw prompts, model responses,
+memory text, query previews, or secret-like values.

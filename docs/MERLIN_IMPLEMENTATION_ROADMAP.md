@@ -118,7 +118,8 @@ left behind.
   milestone after n8n usage proves which patterns are worth owning, not a v1.6
   rebuild.
 - #28 closed under `v2.0`. #50–#60 closed under `v2.0`.
-- #30, #39 open under `v2.1`. #33, #34 open under `v2.2`. #37 open under `v3.0`.
+- #30 and #39 are closed under `v2.1`.
+- #33 and #34 are active under `v2.2`. #37, #64, #94, and #95 are open under `v3.0`.
 
 ---
 
@@ -586,6 +587,7 @@ Next implementation slice:
 - Run the execution-aware Merlin task API as a separate foreground launchd job on port 8766 while preserving the read-only port 8765 status API boundary. `Done: scripts/merlin-task-api.sh, launchd/com.homeai.merlin-task-api.plist, launchd/install-launchd.sh, tests/merlin-task-api-smoke.sh`
 - Add v0 policy-gated execution boundary with only read-only `merlin_status` allowed and risky actions denied even after approval. `Done: scripts/merlin-execute.sh, cli/wizard, tests/merlin-execute-smoke.sh`
 - Add plan-only Magic Mode runner that turns route dry-runs into auditable steps without executing any step. `Done: scripts/merlin-magic-plan.sh, cli/wizard, tests/merlin-magic-plan-smoke.sh`
+- Add redacted local audit viewer for route, approval, memory, outcome, and Magic records. `Done: scripts/merlin-audit-view.sh, cli/wizard, tests/merlin-audit-view-smoke.sh`
 - Add approved memory-write simulator before real Qdrant writes so consent/audit behavior is stable first. `Done: scripts/merlin-memory-write.sh, cli/wizard, tests/merlin-memory-write-smoke.sh`
 - Add approved local Qdrant memory write adapter behind the simulator contract, with canonical collection checks, local Ollama embeddings only, redacted audit records, backup manifest coverage, and fake-adapter denial tests. `Done: scripts/merlin-memory-write.sh, configs/merlin/memory-collections.env, tests/merlin-memory-write-smoke.sh, tests/memory-config-smoke.sh`
 - Live-validate approved local Qdrant memory write on the low-memory core profile after explicit canonical collection initialization and explicit `nomic-embed-text` install. `Done: merlin_user point 640cc4bb-5dc9-3c68-8a44-5d2560a15ab5, redacted audit mem_20260506_040805_654553`

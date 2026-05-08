@@ -144,6 +144,7 @@ jobs:
           bash tests/merlin-ask-smoke.sh
           bash tests/merlin-execute-smoke.sh
           bash tests/merlin-magic-plan-smoke.sh
+          bash tests/merlin-audit-view-smoke.sh
           bash tests/merlin-memory-write-smoke.sh
           bash tests/merlin-memory-read-smoke.sh
           bash tests/merlin-status-api-smoke.sh
