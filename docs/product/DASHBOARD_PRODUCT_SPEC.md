@@ -37,6 +37,40 @@ surface remains approval-gated behind Merlin APIs:
   placeholder, and System Doctor panels.
 - Security/approval gate summary.
 
+## v3.0 Front-Door Direction
+
+Wizard HQ should become the default Merlin AI product surface, not a companion
+page beside Open WebUI. Open WebUI, Qwen, other Ollama models, LiteLLM routes,
+and optional cloud providers are "brains" or connector options that Merlin can
+use, not the product identity the user should feel they are using.
+
+The v3.0 front-door layout should use an Apple-level, tabbed product shell:
+
+- **Merlin Chat:** the main conversation surface. Early versions may link to the
+  local chat workspace, but the target is a Merlin-native chat that routes
+  through the Merlin task API with staff mode/model/approval metadata visible.
+- **Brains:** local model/provider registry. Shows Ollama/Qwen, other local
+  models, Open WebUI workspace, LiteLLM aliases, and optional cloud providers as
+  disabled/offline/available/approval-required. No API key values are displayed.
+- **Memory:** approved memory, pending review, collection health, and delete
+  paths once policy-gated backend flows are ready.
+- **Agents:** research, coding, automation, and Magic Mode surfaces, all
+  guarded. Plan-only behavior remains the default until execution gates are
+  proven.
+- **Security:** local-only state, telemetry off, cloud disabled, approval gates,
+  audit summaries, and secrets-protected status.
+- **System:** startup readiness, hardware tier, service health, doctor output,
+  and low-memory warnings.
+- **Settings:** future safe configuration surface for providers, models,
+  privacy, backups, and advanced developer controls.
+
+MVP for this front-door slice should be status-first and mostly read-only:
+tabs, information architecture, provider/model status cards, clear empty states,
+and safe links. It must not add model downloads, cloud routing, API key
+submission, memory writes, approval execution, shell/browser/file actions, or
+autonomous Magic Mode execution until those flows have separate policy-gated
+backend issues and tests.
+
 ## Out Of Scope For MVP
 
 - Autonomous execution.

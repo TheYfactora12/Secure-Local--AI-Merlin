@@ -98,6 +98,33 @@ Avoid:
 
 ## Screens
 
+## v3.0 Tabbed Product Shell
+
+The next Wizard HQ iteration should feel like the Merlin AI app, not a service
+status board. Use a premium, Apple-level tab shell with compact navigation and
+clear mode boundaries:
+
+- **Chat:** Merlin-native conversation surface and current safe first action.
+- **Brains:** local and optional provider choices, shown as capability/status
+  cards. Qwen/Ollama is the current local brain option; Open WebUI is a local
+  workspace; optional cloud APIs stay disabled until explicitly configured and
+  approved.
+- **Memory:** what Merlin can remember, what is pending approval, and what can
+  be deleted once backend policy flows are ready.
+- **Agents:** staff modes, Magic Mode plan-only state, and guarded optional
+  adapters.
+- **Security:** sovereignty status, cloud off, telemetry off, approval gates,
+  and secrets-protected state.
+- **System:** startup readiness, service health, hardware tier, logs, and doctor
+  findings.
+- **Settings:** future provider/model/privacy/backup controls behind safe
+  guardrails.
+
+The shell should communicate that Merlin is the product and other models/APIs
+are replaceable brains or connectors. Do not brand the experience as Qwen,
+Llama, Open WebUI, or LiteLLM; those are implementation details exposed in the
+Brains/System tabs.
+
 ### 1. Merlin Chat
 
 Purpose: Main user experience.
