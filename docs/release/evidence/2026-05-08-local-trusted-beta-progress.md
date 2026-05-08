@@ -2379,3 +2379,146 @@ needs validation.
 Improved but still not complete. Public Beta still requires live browser
 validation, memory review/delete UX, policy-gated Settings, installer retest
 evidence, and final onboarding/release docs.
+
+## Issue #113 Live Merlin Chat Validation Update
+
+### Date/Time
+
+2026-05-08 08:15 EDT
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`0dc09dc8a01a33ae6542114c0304d31e255ffe09`
+
+### Target Issues
+
+- #113: Native Merlin Chat inside Wizard HQ
+
+### Scope
+
+Validate the previously blocked live Merlin Chat path by installing the
+configured local default chat model and retesting Merlin Task API routing.
+
+### Files Changed
+
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None.
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `curl -sS --max-time 5 http://127.0.0.1:11434/api/tags` | PASS before model install; confirmed only `nomic-embed-text:latest` was installed. |
+| `sed -n '1,240p' configs/merlin/routes.yaml` | PASS; confirmed general route uses `qwen7b` and low-memory fallback alias is `mistral`. |
+| `sed -n '1,120p' configs/litellm/config.yaml` | PASS; confirmed `qwen7b` and `mistral` both route to Ollama `qwen2.5:7b`. |
+| `sed -n '1,120p' configs/merlin/models.yaml` | PASS; confirmed `qwen2.5:7b` is the enabled local default chat model and model downloads require approval. |
+| `bash scripts/add-model.sh qwen2.5:7b` | PASS; intentionally downloaded the configured local chat model, 4.7 GB. |
+| `curl -sS --max-time 5 http://127.0.0.1:11434/api/tags` | PASS after model install; confirmed `qwen2.5:7b` and `nomic-embed-text:latest` are present. |
+| `curl -sS --max-time 5 http://127.0.0.1:4000/health/readiness` | PASS; LiteLLM healthy. |
+| `curl -sS --max-time 5 http://127.0.0.1:8765/healthz` | PASS; status API read-only health endpoint healthy. |
+| `curl -sS --max-time 5 http://127.0.0.1:8766/status/routes` | PASS; Task API route metadata available. |
+| `curl -sS --max-time 90 -X POST http://127.0.0.1:8766/task -H 'Content-Type: application/json' -d '{"input":"explain what Merlin is in one short paragraph"}'` | PASS; returned non-degraded Merlin response with `approved: true`, route `general`, selected model alias `mistral`, and `audit_written: true`. |
+| `bash tests/dashboard-native-chat-smoke.sh` | PASS; native chat remains policy-gated through Task API. |
+| `bash tests/dashboard-tabs-smoke.sh` | PASS; tab shell remains Merlin-native with the narrowed Task API POST boundary. |
+| `bash tests/dashboard-first-run-smoke.sh` | PASS; first-run clarity remains safe. |
+| `bash tests/dashboard-merlin-status-smoke.sh` | PASS; dashboard status contract remains intact. |
+| `bash tests/dashboard-readiness-smoke.sh` | PASS; readiness surface remains honest. |
+| `bash scripts/status.sh` | PASS; Dashboard, Open WebUI, LiteLLM, Qdrant, and Ollama running; `qwen2.5:7b` listed in Ollama models. |
+| `gh issue create ...` for model-readiness UX follow-up | FAIL first attempt; shell interpreted Markdown backticks in the body before `gh` ran, and sandboxed network access blocked GitHub. |
+| `gh issue create ...` retried with safer body quoting and escalated network permission | PASS; created #115. |
+
+### Tests Skipped And Why
+
+Manual browser typing/screenshot capture is still not recorded in this update.
+The backend path that Wizard HQ calls is live and non-degraded, and static
+dashboard tests cover the browser safety boundary. A final browser screenshot
+can be captured before closing #113 if needed for release evidence.
+
+### Failures Found
+
+The prior live `/task` degraded response was caused by missing local chat model
+state. After `qwen2.5:7b` was installed intentionally, `/task` returned
+non-degraded model output.
+
+The first `gh issue create` attempt failed because the body used Markdown
+backticks inside a double-quoted shell argument. `zsh` treated those as command
+substitution and attempted to execute model names and endpoint text. The command
+was retried with safer quoting and no Markdown backticks in the shell argument.
+
+### Failure Category
+
+- LiteLLM/model router runtime readiness
+- Wizard HQ/dashboard live validation
+- No-surprise-model-download release safety
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+The stack was running, but Ollama only had an embedding model. The configured
+Merlin/LiteLLM general chat aliases resolve to `qwen2.5:7b`, so the router could
+select a valid alias while the backend had no corresponding chat-capable model
+loaded.
+
+### Fix Applied
+
+Installed `qwen2.5:7b` via `bash scripts/add-model.sh qwen2.5:7b` after
+explicitly verifying it is the configured local default chat model. No installer
+defaults were changed and no automatic model download behavior was added.
+
+### Retest Result
+
+PASS. Merlin Task API returned a non-degraded response:
+
+- `approved: true`
+- `degraded: false`
+- `route.route_id: general`
+- `route.selected_model_alias: mistral`
+- `route.audit_written: true`
+
+### Regression Tests Added
+
+No new regression test was needed in this update because
+`tests/dashboard-native-chat-smoke.sh` already enforces the browser boundary.
+This was a runtime environment/model-availability validation, not a code defect.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommend a focused follow-up for v3.1 Brains/System UX if not already tracked:
+Wizard HQ should make the missing-chat-model state obvious and offer a safe,
+approval-gated next step instead of leaving the user to infer it from degraded
+Task API output.
+
+Created #115: Wizard HQ model readiness empty state and safe install guidance.
+
+### Lesson Learned
+
+Service health is not enough. Merlin Chat readiness requires all three:
+Task API healthy, LiteLLM healthy, and at least one configured local chat model
+installed.
+
+### What Not To Repeat Next Time
+
+Do not treat "Ollama running" as equivalent to "Merlin can chat." Always inspect
+Ollama model inventory against Merlin/LiteLLM aliases.
+
+Do not pass Markdown backticks inside double-quoted `gh --body` shell arguments.
+Use safe quoting, a body file, or remove shell-sensitive Markdown when creating
+issues from the command line.
+
+### Local Trusted Beta Impact
+
+Improved. Merlin now has a working live local chat path through the Task API on
+this machine.
+
+### Public Beta Impact
+
+Improved, but still not complete. Public Beta still needs browser screenshot
+evidence, first-run model readiness UX, memory review/delete UX, policy-gated
+Settings, and clean installer retest evidence.
