@@ -35,9 +35,9 @@ work.
 
 Current verified queue:
 
-1. #30/#39 dashboard command center and security center under v2.1.
-2. #33/#34 Magic Mode plan-only UI and audit viewer under v2.2.
-3. #37/#64/#94 public release hardening, signing/notarization, and installer/downloader Merlin branding under v3.0.
+1. #33/#34 Magic Mode plan-only UI and audit viewer under v2.2.
+2. #37/#64/#94 public release hardening, signing/notarization, and installer/downloader Merlin branding under v3.0.
+3. #92 Native Automation Runtime under v3.x.
 
 ## 2. REPO SNAPSHOT — WHAT EXISTS TODAY (2026-05-08)
 
