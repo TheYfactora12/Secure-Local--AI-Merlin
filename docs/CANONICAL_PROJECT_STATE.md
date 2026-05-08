@@ -88,10 +88,9 @@ flowchart LR
 
 ## Active Execution Queue
 
-1. #96: Wizard HQ startup/loading readiness under v3.0, with read-only live status checks and no fake readiness.
-2. #97: Trusted local beta evidence pack under v3.0.
-3. #37, #64, and #95: Public release hardening, Developer ID/notarization, and release readiness audit in v3.0.
-4. #92: Native Automation Runtime in v3.x after release readiness work.
+1. #97: Trusted local beta evidence pack under v3.0.
+2. #37, #64, and #95: Public release hardening, Developer ID/notarization, and release readiness audit in v3.0.
+3. #92: Native Automation Runtime in v3.x after release readiness work.
 
 Patent/IP issues #81 through #84 are cross-cutting governance work. They should
 not add novel claim language to public docs unless the inventor explicitly

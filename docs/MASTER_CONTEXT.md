@@ -216,11 +216,10 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Complete #96: first-run Wizard HQ loading/readiness UX with live read-only status checks and no fake readiness.
-2. Move to #97: trusted local beta validation evidence pack.
-3. Continue #37/#64/#95 release hardening, signing/notarization, and product audit/retest work.
-4. The v1.0 low/core installer path is green on this 8GB Mac; rerun full installer tests after startup/onboarding/branding changes.
-5. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
+1. Complete #97: trusted local beta validation evidence pack.
+2. Continue #37/#64/#95 release hardening, signing/notarization, and product audit/retest work.
+3. The v1.0 low/core installer path is green on this 8GB Mac; rerun full installer tests after startup/onboarding/branding changes.
+4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 
 ## Reasoning Summary
 

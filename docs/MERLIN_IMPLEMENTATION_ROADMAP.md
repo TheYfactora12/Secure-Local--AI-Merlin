@@ -119,7 +119,11 @@ left behind.
   rebuild.
 - #28 closed under `v2.0`. #50–#60 closed under `v2.0`.
 - #30 and #39 are closed under `v2.1`.
-- #33 and #34 are active under `v2.2`. #37, #64, #94, and #95 are open under `v3.0`.
+- #33 and #34 are closed under `v2.2`; the milestone is closed.
+- #94 and #96 are closed under `v3.0`.
+- #97 is active under `v3.0` as the trusted local beta evidence pack.
+- #37, #64, and #95 remain open under `v3.0` for public onboarding/release
+  hardening, Developer ID/notarization, and release readiness audit.
 
 ---
 
