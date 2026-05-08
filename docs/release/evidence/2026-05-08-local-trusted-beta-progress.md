@@ -833,3 +833,129 @@ keeps the required CI gates from carrying known platform drift.
 
 Improved. Public Beta should not ship with known avoidable GitHub Actions
 runtime deprecation warnings.
+
+---
+
+## Clean Install Prep Uninstall — 2026-05-08 UTC
+
+### Scope
+
+Uninstall the local Home AI Elite product stack to prepare for a later clean
+install test. Developer ID signing/notarization remains deferred until the
+product surface is complete.
+
+### Starting Commit SHA
+
+`10080608005eebd8b89e3cafea57dd97f68becd0` —
+`docs(issue-98): align roadmap after ci warning closure`
+
+### Files Changed
+
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None. No installer, package script, uninstall script, launchd plist, service,
+API, dashboard, model, memory, cloud, or execution behavior was changed.
+
+### Commands Run
+
+| Command | Result |
+|---|---|
+| `bash pkg/scripts/uninstall.sh --help` | PASS; confirmed `--keep-files` and `--remove-data` behavior. |
+| `git status --short --branch` | PASS; clean before uninstall. |
+| `bash scripts/status.sh` before uninstall | PASS; core stack running, optional profiles disabled. |
+| `sed -n '1,260p' pkg/scripts/uninstall.sh` | PASS; verified default mode would remove the working repo path, so `--keep-files` was required. |
+| `bash pkg/scripts/uninstall.sh --yes --keep-files --remove-data` | PASS with admin warning for pkg receipt cleanup. |
+| `bash scripts/status.sh` after uninstall | PASS; Dashboard/Open WebUI/LiteLLM/Qdrant down, optional services disabled, native Ollama still running. |
+| `docker compose ps` | PASS; no compose containers running. |
+| `launchctl list | rg 'homeai|merlin' || true` | PASS; no HomeAI/Merlin launchd agents listed. |
+| `ls -l /Users/kevinmedeiros/home-ai-elite-env-backup-20260507_234435.env` | PASS; `.env` backup exists with `600` permissions. |
+| `curl -fsS --max-time 3 http://localhost:8765/healthz` | Expected FAIL; port 8765 no longer listening after uninstall. |
+| `curl -fsS --max-time 3 http://localhost:8766/status/routes` | Expected FAIL; port 8766 no longer listening after uninstall. |
+| `docker volume ls --format '{{.Name}}'` | PASS with escalation; showed only unrelated Docker volume. |
+| `docker volume ls --filter name=home-ai-elite --format '{{.Name}}'` | PASS; no Home AI Elite Docker volumes remain. |
+
+### Tests Skipped And Why
+
+- Full clean reinstall: intentionally deferred. This uninstall prepares the
+  machine for that later clean-install evidence run.
+- Developer ID / notarization tests: explicitly deferred until the final product
+  is polished enough to justify public distribution signing.
+
+### Failures Found
+
+- Package receipt cleanup could not run without admin privileges:
+  `sudo pkgutil --forget com.homeai.elite` is still needed if receipt cleanup
+  is required before the clean install test.
+- A non-escalated `docker volume ls | rg ...` check hit Docker socket permission
+  denial; reran volume verification with approved Docker volume access and
+  without a pipe.
+
+### Failure Category
+
+- Package signing/notarization
+- Package/uninstall cleanup
+- Release tooling/operator environment
+
+### Root Cause Or Current Hypothesis
+
+- The uninstaller correctly avoids privileged receipt removal unless sudo is
+  available non-interactively.
+- Docker socket access can differ between sandboxed and escalated commands.
+
+### Fix Applied
+
+- Preserved repo files by using `--keep-files`.
+- Removed product Docker data with `--remove-data`.
+- Verified Home AI Elite volumes are absent using `docker volume ls --filter`.
+- Did not force package receipt cleanup because it requires admin privileges and
+  is not needed to stop services or remove Docker data.
+
+### Retest Result
+
+After uninstall:
+
+- Core Docker containers are stopped and removed.
+- Home AI Elite Docker volumes are removed.
+- HomeAI/Merlin launchd agents are not listed.
+- 8765 and 8766 are down as expected.
+- `.env` backup exists at
+  `/Users/kevinmedeiros/home-ai-elite-env-backup-20260507_234435.env`.
+- Native Ollama and local models remain installed, matching the uninstaller
+  safety contract.
+
+### Regression Test Added Or Reason Not Added
+
+No regression test added. Existing `tests/uninstall-smoke.sh` already covers
+guarded uninstaller behavior. This was a live machine state operation, not a
+code defect.
+
+### Follow-Up Issues Created Or Recommended
+
+- No new issue required.
+- Before the later clean install test, decide whether to manually run:
+  `sudo pkgutil --forget com.homeai.elite`
+  if package receipt state matters for that test.
+
+### Lessons Learned
+
+The uninstaller default would remove `/Users/kevinmedeiros/home-ai-elite`, which
+is also the active development repo. For clean-install prep during development,
+use `--keep-files --remove-data` unless the repo has first been moved or cloned
+elsewhere.
+
+### What Not To Repeat Next Time
+
+Do not run the uninstaller default from inside the working repo unless the goal
+is to delete the repo. Use `--keep-files` for development-machine reset runs.
+
+### Local Trusted Beta Impact
+
+Improved. The machine is now reset at the product-stack/data level and ready for
+a later clean install validation run.
+
+### Public Beta Impact
+
+Neutral. Developer ID signing remains intentionally deferred until product
+quality, onboarding, and release evidence are stronger.
