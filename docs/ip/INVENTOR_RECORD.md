@@ -42,7 +42,7 @@ On 2026-04-30, I conceived of and implemented a system in which no behavioral pr
 
 **Conception Date:** 2026-04-30
 **First Committed Evidence:** `merlin/router.py` — `route_task()` routing dispatch and `_final_confidence()` blending formula. `configs/merlin/routes.yaml` — `cloud_allowed: false` local-first constraint.
-**Auditability Evidence:** `bc10616` — claim-relevant constants named with patent notice comments; `routes.yaml` adds `telemetry: disabled`. `2c05724` — Qdrant task-signature vector retrieval and approved outcome signature writes.
+**Auditability Evidence:** `bc10616` — claim-relevant constants named with patent notice comments; `routes.yaml` adds `telemetry: disabled`. `29035ed` — Qdrant task-signature vector retrieval and approved outcome signature writes.
 **Related Issues:** #81, #83, #29
 **Related Files:** `merlin/router.py`, `configs/merlin/routes.yaml`
 **Patent Candidates:** Candidate 2 (Routing with Decay)
@@ -64,8 +64,8 @@ where `C_retrieval` is the weighted average of approved historical outcomes for 
 - `OUTCOME_DECAY_DAYS = 30` is a named module-level constant in `merlin/router.py` as of `bc10616`; the implemented decay formula is `exp(-days_since_outcome / OUTCOME_DECAY_DAYS)`.
 - `NO_RETRAINING_CONSTRAINT = True` is a named module-level constant in `merlin/router.py` as of `bc10616`. Routing accuracy improves only via approved outcome retrieval feedback. Zero gradient descent. Zero model retraining.
 - All routing decisions are local. `cloud_allowed: false` and `telemetry: disabled` in `routes.yaml` are the current enforcement fields as of `bc10616`.
-- Qdrant task-signature retrieval is implemented as of `2c05724`. The router searches approved task outcomes using a local task-signature embedding when Qdrant is available and falls back to JSONL retrieval when it is unavailable.
-- Approved task outcome signature writes are implemented as of `2c05724`. The raw task signature may be embedded locally but is not stored in the Qdrant payload; the payload stores hashed/redacted operational metadata only.
+- Qdrant task-signature retrieval is implemented as of `29035ed`. The router searches approved task outcomes using a local task-signature embedding when Qdrant is available and falls back to JSONL retrieval when it is unavailable.
+- Approved task outcome signature writes are implemented as of `29035ed`. The raw task signature may be embedded locally but is not stored in the Qdrant payload; the payload stores hashed/redacted operational metadata only.
 
 **Specific Technical Improvement:** Routing confidence improves on repeated approved task patterns without any model retraining, on hardware-constrained local devices, with full decision traceability through local JSONL outcome records rather than opaque model weights.
 
@@ -75,9 +75,9 @@ where `C_retrieval` is the weighted average of approved historical outcomes for 
 
 The following elements are part of the conceived invention but are **not yet present in committed code**. They are claim-hardening targets tracked in issue #81. Do not cite these as implemented evidence until the corresponding commit SHA is recorded here.
 
-No remaining design targets for the implemented outcome-feedback routing baseline. JSONL retrieval remains the safe fallback; Qdrant vector retrieval of task signatures is now implemented evidence after `2c05724`.
+No remaining design targets for the implemented outcome-feedback routing baseline. JSONL retrieval remains the safe fallback; Qdrant vector retrieval of task signatures is now implemented evidence after `29035ed`.
 
-**Patent filing note:** Claims based on currently implemented code (JSONL outcome feedback, Qdrant task-signature retrieval, time-decay weighting, local-only constraint, no-telemetry config field, no-retraining invariant, and `_final_confidence()` blending formula) are supportable as implemented evidence after `2c05724`.
+**Patent filing note:** Claims based on currently implemented code (JSONL outcome feedback, Qdrant task-signature retrieval, time-decay weighting, local-only constraint, no-telemetry config field, no-retraining invariant, and `_final_confidence()` blending formula) are supportable as implemented evidence after `29035ed`.
 
 ---
 
@@ -146,7 +146,7 @@ On 2026-05-07, I conceived of a system in which an AI agent observes its own LLM
 - **Alice §101 readiness**: All elements include explicit technical improvement language per USPTO 2019 Revised Guidance and 2025 Director Memorandum. See issue #83 for per-element Alice Step 2B language.
 - **SMED readiness**: Inventor should be prepared to submit a Subject Matter Eligibility Declaration confirming the claimed limitations cannot practically be performed in the human mind.
 - **Prior art citations to include in nonprovisional spec:** Kount US12335276B2, Kount US20250274461A1, Microsoft US20250200475A1, ServiceNow US20250265521A1, Cumulus Digital US20250156783A1, UiPath US12204295B2, FlowMind arxiv 2602.11782.
-- **Claim hardening before nonprovisional for Element 2:** Constants and local telemetry fields were added in `bc10616`; Qdrant task-signature vector retrieval was added in `2c05724`.
+- **Claim hardening before nonprovisional for Element 2:** Constants and local telemetry fields were added in `bc10616`; Qdrant task-signature vector retrieval was added in `29035ed`.
 
 ---
 
@@ -159,4 +159,4 @@ On 2026-05-07, I conceived of a system in which an AI agent observes its own LLM
 | 2026-05-07 | Corrected Element 2: split implemented vs. design target; removed overclaimed constants (NO_RETRAINING_CONSTRAINT, KEYWORD_WEIGHT, LAMBDA_DECAY, Qdrant retrieval); JSONL outcome retrieval confirmed as implemented baseline. Validated by external AI review. | TheYfactora12 |
 | 2026-05-07 | Updated AI Tool Disclosure to remove reference to non-existent named constants; updated Element 3 first-committed-evidence to cite commit dab3271 | TheYfactora12 |
 | 2026-05-07 | Promoted Element 2 constants and telemetry field to implemented evidence after commit bc10616; Qdrant vector retrieval remains separate future work tracked by #89. | TheYfactora12 |
-| 2026-05-08 | Promoted Qdrant task-signature retrieval and approved signature outcome writes to implemented Element 2 evidence after commit `2c05724`; JSONL remains fallback. | TheYfactora12 |
+| 2026-05-08 | Promoted Qdrant task-signature retrieval and approved signature outcome writes to implemented Element 2 evidence after commit `29035ed`; JSONL remains fallback. | TheYfactora12 |

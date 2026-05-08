@@ -90,4 +90,4 @@ store raw user input in payloads, and does not replace JSONL fallback behavior.
 | --- | --- | --- |
 | 2026-05-07 | Initial evidence-aligned claim record for implemented JSONL retrieval feedback routing | TheYfactora12 |
 | 2026-05-08 | Governance alignment verified that Qdrant vector task-signature retrieval remains future work tracked by #89; implemented evidence remains JSONL retrieval plus `bc10616` constants and `telemetry: disabled`. | TheYfactora12 |
-| 2026-05-08 | Implemented Qdrant task-signature retrieval and approved outcome signature writes in `2c05724`; JSONL remains fallback and no-retraining constraint remains active. | TheYfactora12 |
+| 2026-05-08 | Implemented Qdrant task-signature retrieval and approved outcome signature writes in `29035ed`; JSONL remains fallback and no-retraining constraint remains active. | TheYfactora12 |

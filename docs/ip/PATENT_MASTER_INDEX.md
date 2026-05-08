@@ -94,7 +94,7 @@ Since *Alice Corp. v. CLS Bank* (2014), software patents that are "abstract idea
 Claim 4 currently has implemented evidence for local JSONL outcome-retrieval
 routing with time decay, Qdrant task-signature vector retrieval, local-only
 execution, and no retraining. Qdrant retrieval was promoted to implemented
-evidence after `2c05724`; JSONL remains the fallback when Qdrant or local
+evidence after `29035ed`; JSONL remains the fallback when Qdrant or local
 embeddings are unavailable.
 
 ---
