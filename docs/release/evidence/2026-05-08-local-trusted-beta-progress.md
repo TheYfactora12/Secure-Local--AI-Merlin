@@ -616,6 +616,10 @@ service startup, status API, and task API behavior were not changed.
 | `bash tests/installer-branding-smoke.sh` | PASS |
 | `bash tests/pkg-readiness-smoke.sh` | PASS |
 | `bash tests/uninstall-smoke.sh` | PASS |
+| `gh run watch 25535113030 --exit-status` | PASS; full CI completed successfully for commit `7dc471e`. |
+| `gh api repos/TheYfactora12/home-ai-elite/actions/runs/25535113030/annotations` | FAIL; endpoint does not exist for workflow-run annotations. |
+| `gh api repos/TheYfactora12/home-ai-elite/commits/7dc471edf4f624bca9b989278ba4cb2d58fc8c34/check-runs --jq '.check_runs[] | [.id,.name,.conclusion] | @tsv'` | PASS; listed successful check run IDs. |
+| `gh api repos/TheYfactora12/home-ai-elite/check-runs/74949294820/annotations` | PASS; returned `[]` for the Python unit-test check run. |
 | `bash -n install.sh` | PASS |
 | `bash install.sh --help` | PASS; usage only, no install side effects. |
 | `bash scripts/doctor.sh` | PASS; 52 passed, 3 warnings, 0 failures. |
@@ -746,17 +750,17 @@ API, memory, dashboard, cloud, or execution behavior changed.
 
 ### Tests Skipped And Why
 
-Full static CI validation is deferred to GitHub Actions after push. No live
-Docker/Ollama/Qdrant checks are required because this is a workflow-version
-change only.
+No live Docker/Ollama/Qdrant checks were required because this is a
+workflow-version change only.
 
 ### Failures Found
 
-None.
+- `gh api repos/TheYfactora12/home-ai-elite/actions/runs/25535113030/annotations`
+  returned 404 because workflow-run annotations are not exposed at that path.
 
 ### Failure Category
 
-None yet.
+- Release tooling/operator error
 
 ### Root Cause Or Current Hypothesis
 
@@ -786,7 +790,9 @@ Passed locally:
 - `bash tests/pkg-readiness-smoke.sh`
 - `bash tests/uninstall-smoke.sh`
 
-GitHub Actions validation pending push.
+GitHub Actions run `25535113030` passed for commit `7dc471e`. The Python
+unit-test check run annotation query returned `[]`, so the previously observed
+Node.js 20 warning was not present on the affected job after the v6 upgrade.
 
 ### Regression Tests Added
 
@@ -802,11 +808,18 @@ CI platform warnings are release-hardening work even when the current run is
 green. If a warning can become a future CI failure, pin a regression smoke near
 the workflow instead of relying on memory.
 
+GitHub Actions annotations are attached to check runs, not to the workflow run
+path I first tried. Use the commit check-runs endpoint, then query the affected
+check-run annotations.
+
 ### What Not To Repeat Next Time
 
 Do not treat green CI as sufficient when GitHub emits platform deprecation
 annotations. Track and close the warning while the replacement action is still
 a safe one-line update.
+
+Do not use the nonexistent workflow-run annotations path; query check-run
+annotations instead.
 
 ### Local Trusted Beta Impact
 
