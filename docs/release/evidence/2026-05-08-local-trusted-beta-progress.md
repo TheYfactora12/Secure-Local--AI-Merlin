@@ -696,3 +696,124 @@ adding write controls, model downloads, cloud setup, or memory actions.
 
 Improved, but #37 remains open. Public Beta still requires full onboarding,
 package GUI evidence, backup/restore verification, and #64 signing/notarization.
+
+---
+
+## Issue #98 CI Node Runtime Hardening — 2026-05-08 UTC
+
+### Scope
+
+Resolve the known GitHub Actions Node.js 20 deprecation warning for the Python
+unit-test job without changing job semantics, test coverage, installer behavior,
+dashboard behavior, Merlin runtime behavior, or package behavior.
+
+### Starting Commit SHA
+
+`5ef94a7186cead87e6bcdbe3d6b0e18eb7b125a4` —
+`feat(dashboard): clarify Merlin first-run experience — refs #37 #95`
+
+### Files Changed
+
+- `.github/workflows/ci.yml`
+- `tests/ci-actions-node-runtime-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `.github/workflows/ci.yml`: protected CI gate file. Change is limited to
+  `actions/setup-python@v6` and adding a static smoke to the existing static
+  smoke job.
+
+No installer, package script, uninstall, launchd, service startup, model-pull,
+API, memory, dashboard, cloud, or execution behavior changed.
+
+### Commands Run
+
+| Command | Result |
+|---|---|
+| `gh issue view 98 --json number,title,state,body,labels,milestone` | PASS; #98 is open in `v3.0 — Public Product Release`. |
+| `rg -n "uses: actions/setup-python\|uses: actions/checkout\|actions/" .github/workflows` | PASS; only `actions/setup-python@v5` needed upgrade. |
+| `bash -n tests/ci-actions-node-runtime-smoke.sh` | PASS |
+| `bash tests/ci-actions-node-runtime-smoke.sh` | PASS |
+| `bash tests/beta-readiness-evidence-smoke.sh` | PASS |
+| `bash tests/release-readiness-readme-smoke.sh` | PASS |
+| `git diff --check` | PASS |
+| `bash -n install.sh` | PASS |
+| `bash install.sh --help` | PASS; usage only, no install side effects. |
+| `bash tests/installer-branding-smoke.sh` | PASS |
+| `bash tests/pkg-readiness-smoke.sh` | PASS |
+| `bash tests/uninstall-smoke.sh` | PASS |
+
+### Tests Skipped And Why
+
+Full static CI validation is deferred to GitHub Actions after push. No live
+Docker/Ollama/Qdrant checks are required because this is a workflow-version
+change only.
+
+### Failures Found
+
+None.
+
+### Failure Category
+
+None yet.
+
+### Root Cause Or Current Hypothesis
+
+GitHub Actions emitted a Node.js 20 runtime deprecation annotation for
+`actions/setup-python@v5`. Updating to `actions/setup-python@v6` is the narrow
+release-hardening fix.
+
+### Fix Applied
+
+- Updated `.github/workflows/ci.yml` from `actions/setup-python@v5` to
+  `actions/setup-python@v6`.
+- Added `tests/ci-actions-node-runtime-smoke.sh` so CI rejects
+  `actions/setup-python@v5` and any workflow-local `node20` references.
+- Wired the new smoke into the existing static smoke job.
+
+### Retest Result
+
+Passed locally:
+
+- `bash tests/ci-actions-node-runtime-smoke.sh`
+- `bash tests/beta-readiness-evidence-smoke.sh`
+- `bash tests/release-readiness-readme-smoke.sh`
+- `git diff --check`
+- `bash -n install.sh`
+- `bash install.sh --help`
+- `bash tests/installer-branding-smoke.sh`
+- `bash tests/pkg-readiness-smoke.sh`
+- `bash tests/uninstall-smoke.sh`
+
+GitHub Actions validation pending push.
+
+### Regression Tests Added
+
+- `tests/ci-actions-node-runtime-smoke.sh`
+
+### Runbook / Docs Updated
+
+- This evidence note records the #98 CI runtime-hardening slice.
+
+### Lessons Learned
+
+CI platform warnings are release-hardening work even when the current run is
+green. If a warning can become a future CI failure, pin a regression smoke near
+the workflow instead of relying on memory.
+
+### What Not To Repeat Next Time
+
+Do not treat green CI as sufficient when GitHub emits platform deprecation
+annotations. Track and close the warning while the replacement action is still
+a safe one-line update.
+
+### Local Trusted Beta Impact
+
+Neutral to slightly improved. This does not affect runtime behavior, but it
+keeps the required CI gates from carrying known platform drift.
+
+### Public Beta Impact
+
+Improved. Public Beta should not ship with known avoidable GitHub Actions
+runtime deprecation warnings.
