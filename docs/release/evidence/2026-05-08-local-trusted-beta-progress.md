@@ -2692,3 +2692,24 @@ Task API path has a regression-tested CORS fix.
 
 Improved, but Public Beta still needs broader first-run onboarding, clean
 installer retest evidence, model readiness empty state, and final visual polish.
+
+### CI Retest Update
+
+GitHub Actions run `25558697777` failed after the first push. The failing static
+gate was reproduced locally with `bash tests/dashboard-security-center-smoke.sh`.
+Root cause: the smoke still required old visible Chat-page labels
+`Sovereignty Status` and `Agent Control` after those diagnostics were moved out
+of the visible Chat page. The test was updated to verify the current Security tab
+contract instead: `Sovereignty is visible`, `Approval Gates`, `Approve buttons`,
+and `not present`.
+
+Retest:
+
+- `bash tests/dashboard-security-center-smoke.sh` — PASS
+- `bash tests/dashboard-readiness-smoke.sh` — PASS
+- `bash tests/dashboard-first-run-smoke.sh` — PASS
+- `git diff --check` — PASS
+
+Lesson: when a product UX decision moves engineering detail out of the primary
+page, every static smoke that encodes the old layout must be audited, not only
+the first failing one.

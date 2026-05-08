@@ -5,12 +5,14 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DASHBOARD_FILE="${ROOT_DIR}/dashboard/index.html"
 
-grep -q "Sovereignty Status" "$DASHBOARD_FILE"
-grep -q "Agent Control" "$DASHBOARD_FILE"
-grep -q "Approval gates" "$DASHBOARD_FILE"
+grep -q ">Security<" "$DASHBOARD_FILE"
+grep -q "Sovereignty is visible" "$DASHBOARD_FILE"
+grep -q "Approval Gates" "$DASHBOARD_FILE"
 grep -q "15" "$DASHBOARD_FILE"
 grep -q "cloud_disabled" "$DASHBOARD_FILE"
 grep -q "local_only" "$DASHBOARD_FILE"
+grep -q "Approve buttons" "$DASHBOARD_FILE"
+grep -q "not present" "$DASHBOARD_FILE"
 grep -q "webhook_execution" "$ROOT_DIR/configs/merlin/policy.yaml"
 grep -q "http://localhost:8766/status/approvals" "$DASHBOARD_FILE"
 
