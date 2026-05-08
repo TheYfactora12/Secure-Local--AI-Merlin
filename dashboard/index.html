@@ -767,7 +767,7 @@ textarea {
         <div class="status-list">
           <div class="status-pill"><strong>Chat models</strong><span id="brains-chat-models">checking</span></div>
           <div class="status-pill"><strong>Memory model</strong><span id="brains-embedding-models">checking</span></div>
-          <div class="status-pill"><strong>Safe install</strong><span>bash scripts/add-model.sh qwen2.5:7b</span></div>
+          <div class="status-pill"><strong>Safe install</strong><span id="brains-safe-install">bash scripts/add-model.sh qwen2.5:7b</span></div>
         </div>
       </article>
       <article class="surface-card">
@@ -1160,6 +1160,7 @@ function renderModelReadiness(data) {
   text('brains-chat-ready', data.chat_ready ? 'ready' : 'missing chat model');
   text('brains-chat-models', chatModels);
   text('brains-embedding-models', embeddingModels);
+  text('brains-safe-install', data.safe_install_guidance || 'manual model install required');
   text('brains-model-message', data.message || modelReadinessCopy());
   text('system-chat-model', data.chat_ready ? 'ready' : state);
 }

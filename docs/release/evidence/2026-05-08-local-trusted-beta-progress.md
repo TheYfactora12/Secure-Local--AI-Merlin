@@ -3487,3 +3487,131 @@ Wizard HQ issues.
 
 Improved governance clarity, but Public Beta still depends on later installer
 retest, onboarding polish, and policy-gated settings flows.
+
+## #118 Model Library Manual Download Confirmations
+
+### Date/Time
+
+2026-05-08T11:35:00-04:00
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`5e185f0`
+
+### Target Issues
+
+- #118
+- #114
+
+### Scope
+
+Improve Wizard HQ model readiness and manual download guidance so the product
+can explain safe local model setup without implying any browser-side pull or
+automatic download behavior.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-model-readiness-smoke.sh`
+- `tests/control-plane-strategy-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+No installer, package, router, policy engine, or memory manager behavior
+changed. This is dashboard copy plus static smoke coverage.
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `.venv-test/bin/python -m pytest tests/test_status_extension.py -q` | PASS; 24 passed. |
+| `bash tests/dashboard-model-readiness-smoke.sh` | PASS after adding the safe-install guidance slot. |
+| `bash tests/control-plane-strategy-smoke.sh` | PASS after updating the canonical queue expectations. |
+| `bash tests/dashboard-tabs-smoke.sh` | PASS. |
+| `bash tests/dashboard-settings-policy-smoke.sh` | PASS. |
+| `git diff --check` | PASS. |
+
+### Test Output Summary
+
+Wizard HQ model readiness now renders safe install guidance through a dedicated
+slot, still reports embedding-only vs chat-ready status honestly, and keeps
+downloads manual-only. The control-plane smoke now matches the live v3.1 queue.
+
+### Tests Skipped And Why
+
+No live model pulls were run. This slice is explicitly about manual guidance and
+must not perform downloads or cloud routing. Full installer retest was not
+required because installer/package behavior was untouched.
+
+### Failures Found
+
+The first pass exposed a stale dashboard assumption: the model readiness panel
+had a hardcoded safe-install string instead of a dedicated slot for model
+guidance. The control-plane smoke also still carried closed issue references
+until updated.
+
+### Failure Category
+
+- UX/readiness confusion
+- Documentation mismatch
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+Model guidance needs a dedicated rendering slot so future copy or instructions
+can be updated without touching the rest of the readiness wording. The control
+plane smoke was still enforcing older issue numbers after the queue moved.
+
+### Fix Applied
+
+- Added a `brains-safe-install` slot to the model readiness panel.
+- Wired the model readiness renderer to use `safe_install_guidance`.
+- Updated `tests/dashboard-model-readiness-smoke.sh` to require the guidance
+  slot in addition to the safe manual install command.
+- Updated `tests/control-plane-strategy-smoke.sh` so the canonical queue
+  expects #106, #114, #117, #118, #119, and #120.
+
+### Retest Result
+
+PASS. Backend tests, dashboard model readiness, dashboard tabs, settings smoke,
+and control-plane strategy smoke all passed.
+
+### Regression Tests Added
+
+- `brains-safe-install` model guidance slot check in
+  `tests/dashboard-model-readiness-smoke.sh`
+- current v3.1 queue checks in `tests/control-plane-strategy-smoke.sh`
+
+### Lesson Learned
+
+When a readiness panel already teaches the difference between chat models and
+embedding models, give the safe install guidance its own slot instead of hiding
+it in a generic label.
+
+### What Not To Repeat Next Time
+
+Do not leave hardcoded install guidance in the dashboard if the panel is meant
+to evolve into a richer model library view.
+
+### Next Recommended Step
+
+Move to the next read-only/manual-first Settings slice only after this model
+library view is reviewed in-browser. If it still feels too generic, create a
+small follow-up for the richer model library browser view before any credential
+flow work.
+
+### Local Trusted Beta Impact
+
+Improved. The model readiness screen now has a clearer place for safe manual
+install guidance and does not imply browser-driven downloads.
+
+### Public Beta Impact
+
+Improved, but Public Beta still needs the final installer retest, onboarding
+polish, and whatever write-capable settings flows remain after #118 is reviewed
+in the browser.

@@ -50,6 +50,12 @@ grep -q "#114" "$CANONICAL" \
   || fail "canonical queue must include policy-gated Settings parent"
 grep -q "#117" "$CANONICAL" \
   || fail "canonical queue must include provider connector setup follow-up"
+grep -q "#118" "$CANONICAL" \
+  || fail "canonical queue must include model library follow-up"
+grep -q "#119" "$CANONICAL" \
+  || fail "canonical queue must include startup/API controls follow-up"
+grep -q "#120" "$CANONICAL" \
+  || fail "canonical queue must include memory controls follow-up"
 grep -q "Developer ID signing/notarization remains tracked by #64" "$CANONICAL" \
   || fail "canonical state must document #64 deferred status"
 

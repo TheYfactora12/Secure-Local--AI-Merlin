@@ -28,6 +28,8 @@ grep -q "Embedding models support memory, but they cannot answer chat" "$DASHBOA
   || fail "Brains tab must distinguish embedding models from chat models"
 grep -q "bash scripts/add-model.sh qwen2.5:7b" "$DASHBOARD_FILE" \
   || fail "dashboard missing safe explicit model install guidance"
+grep -q "brains-safe-install" "$DASHBOARD_FILE" \
+  || fail "dashboard missing safe install guidance slot"
 grep -q "Merlin will not download models from the browser" "$DASHBOARD_FILE" \
   || fail "dashboard missing no browser model download guarantee"
 grep -q "downloads.*manual_only\\|manual_only" "$STATUS_EXTENSION" \
