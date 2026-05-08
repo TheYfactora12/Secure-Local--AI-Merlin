@@ -26,6 +26,8 @@ Open WebUI can remain available as a proven chat UI, but the Home AI Elite dashb
 MVP dashboard is read-only and command-center-first while the task execution
 surface remains approval-gated behind Merlin APIs:
 
+- Startup Readiness surface that computes ready/degraded/fix-needed states from
+  live localhost GET checks instead of hardcoded success.
 - Status panels from port 8765 and `/status/*` panels from port 8766.
 - Active route, staff mode, selected model, fallback state, and approval state.
 - Local-only/cloud-disabled indicator.
@@ -46,6 +48,7 @@ surface remains approval-gated behind Merlin APIs:
 - Enterprise RBAC.
 - Multi-user administration.
 - Editing secrets or showing key values.
+- Static "ready" language that is not backed by live status checks.
 
 ## Data Sources
 
@@ -80,5 +83,7 @@ surface remains approval-gated behind Merlin APIs:
 - User can see the Wizard HQ command center and understand what Merlin can do right now.
 - User can see local-only/cloud disabled without opening settings.
 - User can tell whether the system is healthy, degraded, or blocked.
+- User never sees local model or system readiness marked ready unless the
+  underlying localhost status checks pass.
 - User can preview Magic Mode without any action executing.
 - UI works on 8 GB Macs without encouraging heavy profiles.

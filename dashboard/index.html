@@ -76,6 +76,7 @@ button, input, textarea { font: inherit; }
 .chip.warn { color: var(--yellow); border-color: rgba(243, 201, 105, 0.35); background: rgba(243, 201, 105, 0.08); }
 .chip.bad { color: var(--red); border-color: rgba(255, 107, 107, 0.35); background: rgba(255, 107, 107, 0.08); }
 .chip.info { color: var(--cyan); border-color: rgba(103, 232, 249, 0.35); background: rgba(103, 232, 249, 0.08); }
+.chip.neutral { color: var(--muted); }
 .refresh {
   border: 1px solid rgba(103, 232, 249, 0.42);
   background: rgba(103, 232, 249, 0.12);
@@ -258,6 +259,26 @@ button, input, textarea { font: inherit; }
   border-radius: 6px;
 }
 
+.stage-list { display: grid; gap: 8px; }
+.stage {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.stage:first-child { border-top: 0; padding-top: 0; }
+.stage strong { display: block; font-size: 13px; }
+.stage span { display: block; color: var(--dim); font-size: 12px; margin-top: 2px; overflow-wrap: anywhere; }
+.stage-state { font-family: var(--mono); font-size: 11px; color: var(--muted); text-align: right; }
+.stage.good .stage-state { color: var(--green); }
+.stage.warn .stage-state { color: var(--yellow); }
+.stage.bad .stage-state { color: var(--red); }
+.stage.good .status-dot { background: var(--green); box-shadow: 0 0 16px rgba(66, 211, 146, 0.36); }
+.stage.warn .status-dot { background: var(--yellow); }
+.stage.bad .status-dot { background: var(--red); }
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -300,6 +321,7 @@ button, input, textarea { font: inherit; }
       <span class="chip good" id="chip-local">local_only</span>
       <span class="chip good" id="chip-cloud">cloud_disabled</span>
       <span class="chip info" id="chip-tier">tier: checking</span>
+      <span class="chip warn" id="chip-readiness">readiness: checking</span>
       <span class="chip warn" id="chip-task-api">task_api: checking</span>
       <button class="refresh" type="button" onclick="refreshAll()" aria-label="Refresh dashboard">Refresh</button>
     </div>
@@ -342,6 +364,21 @@ button, input, textarea { font: inherit; }
     </aside>
 
     <section class="column">
+      <section class="panel" aria-labelledby="startup-readiness-title">
+        <h2 id="startup-readiness-title">Startup Readiness</h2>
+        <div class="stage-list" id="readiness-stages" aria-live="polite">
+          <div class="stage warn" id="stage-core"><span class="status-dot warn"></span><div><strong>Preparing Merlin Core</strong><span>Waiting for localhost status API.</span></div><div class="stage-state">checking</div></div>
+          <div class="stage warn" id="stage-hardware"><span class="status-dot warn"></span><div><strong>Checking local hardware</strong><span>Waiting for hardware tier.</span></div><div class="stage-state">checking</div></div>
+          <div class="stage warn" id="stage-brain"><span class="status-dot warn"></span><div><strong>Starting local AI brain</strong><span>Checking Ollama native runtime.</span></div><div class="stage-state">checking</div></div>
+          <div class="stage warn" id="stage-memory"><span class="status-dot warn"></span><div><strong>Starting memory vault</strong><span>Checking Qdrant and memory status.</span></div><div class="stage-state">checking</div></div>
+          <div class="stage warn" id="stage-router"><span class="status-dot warn"></span><div><strong>Starting model router</strong><span>Checking LiteLLM and route registry.</span></div><div class="stage-state">checking</div></div>
+          <div class="stage good" id="stage-dashboard"><span class="status-dot good"></span><div><strong>Starting dashboard</strong><span>Wizard HQ static shell loaded from localhost.</span></div><div class="stage-state">loaded</div></div>
+          <div class="stage warn" id="stage-privacy"><span class="status-dot warn"></span><div><strong>Verifying privacy mode</strong><span>Checking local-only, cloud-disabled policy.</span></div><div class="stage-state">checking</div></div>
+          <div class="stage warn" id="stage-doctor"><span class="status-dot warn"></span><div><strong>Running system doctor</strong><span>Probing core local services with read-only GET requests.</span></div><div class="stage-state">checking</div></div>
+          <div class="stage warn" id="stage-final"><span class="status-dot warn"></span><div><strong>Ready / Degraded</strong><span>Final state appears only after live checks complete.</span></div><div class="stage-state">checking</div></div>
+        </div>
+      </section>
+
       <section class="panel hero">
         <div class="hero-title">
           <h2>Merlin AI</h2>
@@ -359,10 +396,10 @@ button, input, textarea { font: inherit; }
       <section class="panel">
         <h2>Brain Status</h2>
         <div class="hero-grid">
-          <div class="metric good"><span>Local Model</span><strong>Active</strong></div>
-          <div class="metric good"><span>Runtime</span><strong>Ollama Native</strong></div>
-          <div class="metric warn"><span>Acceleration</span><strong>GPU if available</strong></div>
-          <div class="metric good"><span>Routing</span><strong>Local-First</strong></div>
+          <div class="metric warn" id="brain-local-model"><span>Local Model</span><strong>checking</strong></div>
+          <div class="metric warn" id="brain-runtime"><span>Runtime</span><strong>checking</strong></div>
+          <div class="metric warn" id="brain-acceleration"><span>Acceleration</span><strong>hardware-dependent</strong></div>
+          <div class="metric good" id="brain-routing"><span>Routing</span><strong>Local-First</strong></div>
         </div>
       </section>
 
@@ -435,6 +472,13 @@ const SERVICE_CHECKS = [
   ['6333', 'http://localhost:6333/healthz'],
   ['11434', 'http://localhost:11434/api/tags'],
 ];
+const readinessState = {
+  services: {},
+  status: null,
+  routes: null,
+  memory: null,
+  probesComplete: false,
+};
 
 function text(id, value) {
   const el = document.getElementById(id);
@@ -451,6 +495,26 @@ function setChip(id, value, state) {
 function dot(id, state) {
   const el = document.getElementById(`dot-${id}`);
   if (el) el.className = `status-dot ${state || ''}`.trim();
+}
+
+function metricState(id, state, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = `metric ${state || ''}`.trim();
+  const strong = el.querySelector('strong');
+  if (strong) strong.textContent = value;
+}
+
+function setStage(id, state, label, detail) {
+  const el = document.getElementById(`stage-${id}`);
+  if (!el) return;
+  el.className = `stage ${state || ''}`.trim();
+  const dotEl = el.querySelector('.status-dot');
+  if (dotEl) dotEl.className = `status-dot ${state || ''}`.trim();
+  const stateEl = el.querySelector('.stage-state');
+  if (stateEl) stateEl.textContent = label;
+  const detailEl = el.querySelector('span:not(.status-dot)');
+  if (detailEl && detail) detailEl.textContent = detail;
 }
 
 function safe(value, fallback = '—') {
@@ -475,16 +539,20 @@ async function checkServices() {
   await Promise.all(SERVICE_CHECKS.map(async ([id, url]) => {
     try {
       await fetch(url, { method: 'GET', signal: AbortSignal.timeout(1800) });
+      readinessState.services[id] = true;
       dot(id, 'good');
     } catch (_) {
+      readinessState.services[id] = false;
       dot(id, 'bad');
     }
   }));
+  readinessState.probesComplete = true;
 }
 
 async function loadMerlinStatus() {
   try {
     const data = await getJson(`${STATUS_API}/status`);
+    readinessState.status = data;
     text('metric-privacy', safe(data.privacy_mode, 'local_only'));
     text('metric-tier', safe(data.hardware_tier, 'unknown'));
     text('execution-allowed', String(Boolean(data.execution_allowed)));
@@ -494,6 +562,7 @@ async function loadMerlinStatus() {
     setChip('chip-cloud', data.cloud_allowed ? 'cloud_enabled' : 'cloud_disabled', data.cloud_allowed ? 'warn' : 'good');
     setChip('chip-tier', `tier: ${safe(data.hardware_tier, 'unknown')}`, data.hardware_tier === 'low' ? 'warn' : 'info');
   } catch (_) {
+    readinessState.status = null;
     text('metric-tier', 'unknown');
     setChip('chip-tier', 'tier: unknown', 'warn');
   }
@@ -503,6 +572,7 @@ async function loadRoutes() {
   const panel = document.getElementById('routes-panel');
   try {
     const data = await getJson(`${TASK_API}/status/routes`);
+    readinessState.routes = data;
     setChip('chip-task-api', 'task_api: online', 'good');
     text('metric-routes', safe(data.total, '0'));
     const rows = (data.routes || []).map(route => `
@@ -522,6 +592,7 @@ async function loadRoutes() {
       </table>
     `;
   } catch (_) {
+    readinessState.routes = null;
     setChip('chip-task-api', 'task_api: degraded', 'warn');
     text('metric-routes', 'degraded');
     panel.className = 'degraded';
@@ -555,6 +626,7 @@ async function loadMemory() {
   const panel = document.getElementById('memory-panel');
   try {
     const data = await getJson(`${TASK_API}/status/memory`);
+    readinessState.memory = data;
     text('metric-vectors', safe(data.total_vectors, '0'));
     const collections = (data.collections || []).map(collection => `
       <div class="row">
@@ -565,6 +637,7 @@ async function loadMemory() {
     panel.className = data.degraded ? 'degraded' : 'rows';
     panel.innerHTML = data.degraded ? 'Memory API degraded. Merlin continues without exposing raw memory data.' : collections;
   } catch (_) {
+    readinessState.memory = null;
     text('metric-vectors', 'degraded');
     panel.className = 'degraded';
     panel.textContent = 'Memory status unavailable. No memory contents or protected values are displayed.';
@@ -594,6 +667,70 @@ async function loadTraces() {
   }
 }
 
+function renderReadiness() {
+  const service = id => readinessState.services[id];
+  const status = readinessState.status;
+  const routes = readinessState.routes;
+  const memory = readinessState.memory;
+  const privacyGood = Boolean(status && status.cloud_allowed === false && status.online_mode === false);
+
+  setStage(
+    'core',
+    service('8765') ? 'good' : 'bad',
+    service('8765') ? 'ready' : 'fix needed',
+    service('8765') ? 'Status API responded on localhost:8765.' : 'Start with: wizard merlin status-api start'
+  );
+  setStage(
+    'hardware',
+    status && status.hardware_tier ? 'good' : 'warn',
+    status && status.hardware_tier ? 'ready' : 'warming',
+    status && status.hardware_tier ? `Hardware tier: ${status.hardware_tier}.` : 'Hardware tier unavailable until status API responds.'
+  );
+  setStage(
+    'brain',
+    service('11434') ? 'good' : 'warn',
+    service('11434') ? 'ready' : 'degraded',
+    service('11434') ? 'Ollama native runtime responded on localhost:11434.' : 'Ollama is unavailable; local model features are warming or degraded.'
+  );
+  setStage(
+    'memory',
+    service('6333') && memory && !memory.degraded ? 'good' : 'warn',
+    service('6333') && memory && !memory.degraded ? 'ready' : 'degraded',
+    service('6333') ? 'Qdrant responded; memory status loaded when task API is available.' : 'Qdrant is unavailable; memory vault is degraded.'
+  );
+  setStage(
+    'router',
+    service('4000') && service('8766') && routes ? 'good' : 'warn',
+    service('4000') && service('8766') && routes ? 'ready' : 'degraded',
+    service('4000') && service('8766') ? 'LiteLLM and route registry responded.' : 'LiteLLM or task API unavailable; routing status is degraded.'
+  );
+  setStage(
+    'privacy',
+    privacyGood ? 'good' : (status ? 'bad' : 'warn'),
+    privacyGood ? 'verified' : (status ? 'fix needed' : 'checking'),
+    privacyGood ? 'Local-only policy confirmed; cloud and online modes are disabled.' : 'Privacy policy state could not be verified as local-only/cloud-disabled.'
+  );
+  setStage(
+    'doctor',
+    readinessState.probesComplete ? 'good' : 'warn',
+    readinessState.probesComplete ? 'complete' : 'checking',
+    readinessState.probesComplete ? 'Read-only service probes completed.' : 'Service probes are still running.'
+  );
+
+  const requiredReady = service('8765') && service('8766') && service('6333') && service('11434') && service('4000') && privacyGood;
+  setStage(
+    'final',
+    requiredReady ? 'good' : 'warn',
+    requiredReady ? 'ready' : 'degraded',
+    requiredReady ? 'Core local services and privacy checks are ready.' : 'One or more core checks are warming, degraded, or need attention.'
+  );
+  setChip('chip-readiness', requiredReady ? 'readiness: ready' : 'readiness: degraded', requiredReady ? 'good' : 'warn');
+  metricState('brain-local-model', service('11434') ? 'good' : 'warn', service('11434') ? 'available' : 'degraded');
+  metricState('brain-runtime', service('11434') ? 'good' : 'warn', service('11434') ? 'Ollama Native' : 'unavailable');
+  metricState('brain-acceleration', status && status.hardware_tier === 'low' ? 'warn' : 'info', status && status.hardware_tier ? `${status.hardware_tier} tier` : 'checking');
+  metricState('brain-routing', service('4000') && service('8766') ? 'good' : 'warn', service('4000') && service('8766') ? 'Local-First' : 'degraded');
+}
+
 async function refreshAll() {
   await Promise.all([
     checkServices(),
@@ -603,6 +740,7 @@ async function refreshAll() {
     loadMemory(),
     loadTraces(),
   ]);
+  renderReadiness();
 }
 
 refreshAll();

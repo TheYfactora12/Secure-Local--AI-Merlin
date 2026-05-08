@@ -24,6 +24,12 @@ v2.1 MVP layout:
 - Right rail: Agent Control, approval gates, Memory Vault, Knowledge Graph placeholder, and safe CLI next steps.
 - Top bar: Wizard HQ brand, local-only badge, hardware tier, cloud disabled state, and task API state.
 
+The first-run experience should show a Startup Readiness surface before the
+user trusts the dashboard. It must show staged readiness from live localhost
+checks: Merlin Core, hardware tier, local AI brain, memory vault, model router,
+dashboard shell, privacy mode, system doctor probes, and the final
+ready/degraded state.
+
 The chat experience should be usable even if optional services are down. If LiteLLM or the task API is unavailable, the UI should show a clear startup/degraded message, not a broken dashboard.
 
 For v2.1 specifically, the static dashboard must not submit chat/tasks. Browser

@@ -88,8 +88,8 @@ flowchart LR
 
 ## Active Execution Queue
 
-1. #94: Installer/downloader Merlin brand surface under v3.0, with protected installer behavior unchanged.
-2. #96 and #97: Wizard HQ startup/loading readiness and trusted local beta evidence under v3.0.
+1. #96: Wizard HQ startup/loading readiness under v3.0, with read-only live status checks and no fake readiness.
+2. #97: Trusted local beta evidence pack under v3.0.
 3. #37, #64, and #95: Public release hardening, Developer ID/notarization, and release readiness audit in v3.0.
 4. #92: Native Automation Runtime in v3.x after release readiness work.
 
