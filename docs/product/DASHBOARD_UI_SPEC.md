@@ -1,23 +1,34 @@
 # Dashboard UI Spec — Merlin Command Center
 
-Last updated: 2026-05-06
+Last updated: 2026-05-07
 
 ## Product Direction
 
-The dashboard should feel like a refined Merlin-native ChatGPT experience, not a container status page. The first screen should be a calm, elegant conversation workspace with local-first trust signals always visible: active model, hardware tier, memory state, policy mode, and whether cloud access is disabled.
+The dashboard should feel like a refined Merlin-native command center, not a
+container status page. The v2.1 launch surface is **Wizard HQ**: a premium,
+read-only local AI operations dashboard that exposes trust signals before it
+adds chat execution. Later releases can bring the ChatGPT-style conversation
+surface into the center once `/task` execution and approval UX are fully gated.
 
-The theme should be strong wizard, not novelty wizard. Use a dark, premium interface with restrained arcane details: subtle sigils, luminous focus states, clear typography, green/yellow/red operational states, and a single Merlin identity system. Avoid cartoon assets, oversized decorative cards, and one-note purple/blue gradients.
+The theme should be strong wizard, not novelty wizard. Use a dark, premium interface with restrained arcane details: subtle geometric intelligence, luminous focus states, clear typography, green/yellow/red operational states, and a single Merlin identity system. Avoid cartoon assets, oversized decorative cards, and one-note purple/blue gradients.
+
+Reference the brand direction and generated concept assets in
+`docs/product/MERLIN_BRAND_UX_SPEC.md`.
 
 ## First-Screen Layout
 
-MVP layout:
+v2.1 MVP layout:
 
-- Center: Merlin chat composer and response stream.
-- Left rail: conversations, Magic Mode plans, memory review, models, system health.
-- Right rail: current route, staff mode, selected model, approvals, memory status, hardware warnings.
-- Top bar: Merlin status, local-only badge, active profile, cloud disabled/enabled state.
+- Center: Merlin AI core, Brain Status, route registry, and recent traces.
+- Left rail: System Doctor, Sovereignty Status, and read-only boundary.
+- Right rail: Agent Control, approval gates, Memory Vault, Knowledge Graph placeholder, and safe CLI next steps.
+- Top bar: Wizard HQ brand, local-only badge, hardware tier, cloud disabled state, and task API state.
 
 The chat experience should be usable even if optional services are down. If LiteLLM or the task API is unavailable, the UI should show a clear startup/degraded message, not a broken dashboard.
+
+For v2.1 specifically, the static dashboard must not submit chat/tasks. Browser
+task execution returns in a later issue after policy-gated approval UX is
+designed and tested.
 
 ## Core Interaction Model
 

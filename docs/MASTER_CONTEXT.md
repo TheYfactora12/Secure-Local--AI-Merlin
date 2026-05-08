@@ -217,7 +217,7 @@ Recently verified closures:
 ## Open Work, Priority Order
 
 1. Move to #30/#39 under `v2.1 — Dashboard Command Center`: dashboard command center and security approvals panel.
-2. Keep signing/notarization deferred to #64; the v1.0 low/core installer path is green on this 8GB Mac.
+2. Keep signing/notarization deferred to #64 and installer/downloader Merlin branding tracked in #94; the v1.0 low/core installer path is green on this 8GB Mac.
 3. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 
 ## Reasoning Summary

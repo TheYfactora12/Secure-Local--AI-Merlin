@@ -1,208 +1,612 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WIZARD — AI Stack Dashboard</title>
+<title>Wizard HQ — Merlin AI</title>
 <style>
 :root {
-  --bg: #0d0d0f; --surface: #141418; --surface2: #1a1a20; --border: #2a2a35;
-  --text: #e8e8f0; --muted: #7a7a90; --faint: #3a3a4a;
-  --teal: #00d4b4; --teal2: #009e87; --blue: #4a9eff; --gold: #f0b429;
-  --red: #ff5c5c; --green: #4ade80; --purple: #a78bfa;
-  --font: 'JetBrains Mono', 'Fira Code', monospace;
-  --sans: 'Inter', system-ui, sans-serif;
+  --bg: #0b0d10;
+  --panel: #11161c;
+  --panel-2: #151c24;
+  --line: #26313d;
+  --text: #edf2f7;
+  --muted: #9aa8b6;
+  --dim: #6e7b88;
+  --green: #42d392;
+  --yellow: #f3c969;
+  --red: #ff6b6b;
+  --cyan: #67e8f9;
+  --violet: #b7a1ff;
+  --ink: #050607;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; min-height: 100vh; }
-.header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-.logo { display: flex; align-items: center; gap: 10px; }
-.logo-text { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
-.logo-text span { color: var(--teal); }
-.refresh-btn { background: var(--teal2); color: #000; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; }
-.main { padding: 24px; display: grid; grid-template-columns: 260px 1fr; gap: 20px; max-width: 1400px; margin: 0 auto; }
-.sidebar { display: flex; flex-direction: column; gap: 16px; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-.card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; }
-.service { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--faint); }
-.service:last-child { border-bottom: none; }
-.service-left { display: flex; align-items: center; gap: 10px; }
-.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.dot.up { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
-.dot.down { background: var(--red); }
-.dot.checking { background: var(--gold); animation: blink 1s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-.service-name { font-size: 13px; font-weight: 500; }
-.service-port { font-size: 11px; color: var(--muted); font-family: var(--font); }
-.service-link { font-size: 11px; color: var(--teal); text-decoration: none; }
-.qlink { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; text-decoration: none; color: var(--text); font-size: 13px; margin-bottom: 8px; }
-.stat-row { display: flex; justify-content: space-between; padding: 6px 0; }
-.stat-label { font-size: 12px; color: var(--muted); }
-.stat-value { font-size: 14px; font-weight: 600; font-family: var(--font); color: var(--teal); }
-.status-note { color: var(--muted); font-size: 12px; line-height: 1.5; margin: 8px 0 12px; }
-.command-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-.command-row { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; }
-.command-label { color: var(--muted); font-size: 11px; margin-bottom: 4px; }
-.command-value { color: var(--teal); font-family: var(--font); font-size: 12px; overflow-wrap: anywhere; }
-.content { display: flex; flex-direction: column; gap: 20px; }
-.content-top { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.mode-pills { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
-.pill { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid transparent; }
-.pill[data-mode="GENERAL"] { background: rgba(74,158,255,0.15); border-color: var(--blue); color: var(--blue); }
-.pill[data-mode="GENERAL"].active { background: var(--blue); color: #000; }
-.pill[data-mode="CODING"] { background: rgba(167,139,250,0.15); border-color: var(--purple); color: var(--purple); }
-.pill[data-mode="CODING"].active { background: var(--purple); color: #000; }
-.pill[data-mode="RESEARCH"] { background: rgba(240,180,41,0.15); border-color: var(--gold); color: var(--gold); }
-.pill[data-mode="RESEARCH"].active { background: var(--gold); color: #000; }
-.pill[data-mode="SENSITIVE"] { background: rgba(255,92,92,0.15); border-color: var(--red); color: var(--red); }
-.pill[data-mode="SENSITIVE"].active { background: var(--red); color: #fff; }
-.ask-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px; resize: vertical; min-height: 80px; font-family: inherit; }
-.ask-input:focus { outline: none; border-color: var(--teal); }
-.ask-btn { margin-top: 8px; width: 100%; background: var(--teal2); color: #000; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px; }
-.response-box { margin-top: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; font-family: var(--font); display: none; max-height: 200px; overflow-y: auto; }
-.response-box.visible { display: block; }
-.response-meta { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
-.models-list { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
-.model-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--surface2); border-radius: 6px; }
-.model-name { font-family: var(--font); font-size: 12px; }
-.model-role { font-size: 10px; color: var(--muted); background: var(--faint); padding: 2px 6px; border-radius: 4px; }
-.model-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
-.model-badge.ready { background: rgba(74,222,128,0.15); color: var(--green); }
-.model-badge.missing { background: rgba(255,92,92,0.15); color: var(--red); }
-.activity-log { height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-.log-entry { display: flex; gap: 10px; padding: 6px 8px; border-radius: 6px; font-size: 12px; background: var(--surface2); }
-.log-time { color: var(--muted); font-family: var(--font); white-space: nowrap; }
-.log-level { font-weight: 600; font-size: 10px; padding: 1px 6px; border-radius: 3px; align-self: center; white-space: nowrap; }
-.log-level.info { background: rgba(74,158,255,0.2); color: var(--blue); }
-.log-level.ok { background: rgba(74,222,128,0.2); color: var(--green); }
-.log-level.warn { background: rgba(240,180,41,0.2); color: var(--gold); }
-.log-level.error { background: rgba(255,92,92,0.2); color: var(--red); }
-.log-msg { color: var(--text); flex: 1; }
-.routing-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.routing-table th { background: var(--surface2); padding: 8px 10px; text-align: left; font-size: 10px; text-transform: uppercase; color: var(--muted); }
-.routing-table td { padding: 8px 10px; border-top: 1px solid var(--faint); }
-.type-badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
-.type-badge.SENSITIVE { background: rgba(255,92,92,0.15); color: var(--red); }
-.type-badge.CODING { background: rgba(167,139,250,0.15); color: var(--purple); }
-.type-badge.RESEARCH { background: rgba(240,180,41,0.15); color: var(--gold); }
-.type-badge.GENERAL { background: rgba(74,158,255,0.15); color: var(--blue); }
-.local-badge { background: rgba(74,222,128,0.1); color: var(--green); padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; }
-.cloud-badge { background: rgba(74,158,255,0.1); color: var(--blue); padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; }
-::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-@media (max-width: 900px) { .main { grid-template-columns: 1fr; } .content-top { grid-template-columns: 1fr; } }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); }
+body { font-size: 14px; line-height: 1.45; }
+button, input, textarea { font: inherit; }
+
+.app { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 22px;
+  background: rgba(11, 13, 16, 0.92);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.mark {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(103, 232, 249, 0.7);
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: var(--cyan);
+  font-weight: 800;
+  letter-spacing: 0;
+  box-shadow: 0 0 26px rgba(103, 232, 249, 0.18);
+}
+.brand h1 { margin: 0; font-size: 18px; letter-spacing: 0; }
+.brand p { margin: 1px 0 0; color: var(--muted); font-size: 12px; }
+.top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.chip.good { color: var(--green); border-color: rgba(66, 211, 146, 0.35); background: rgba(66, 211, 146, 0.08); }
+.chip.warn { color: var(--yellow); border-color: rgba(243, 201, 105, 0.35); background: rgba(243, 201, 105, 0.08); }
+.chip.bad { color: var(--red); border-color: rgba(255, 107, 107, 0.35); background: rgba(255, 107, 107, 0.08); }
+.chip.info { color: var(--cyan); border-color: rgba(103, 232, 249, 0.35); background: rgba(103, 232, 249, 0.08); }
+.refresh {
+  border: 1px solid rgba(103, 232, 249, 0.42);
+  background: rgba(103, 232, 249, 0.12);
+  color: var(--cyan);
+  border-radius: 8px;
+  min-height: 32px;
+  padding: 6px 11px;
+  cursor: pointer;
+}
+.refresh:hover { background: rgba(103, 232, 249, 0.18); }
+
+.shell {
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr) 340px;
+  gap: 18px;
+  padding: 18px;
+  max-width: 1500px;
+  width: 100%;
+  margin: 0 auto;
+}
+.column { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 15px;
+  min-width: 0;
+}
+.panel h2 {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.panel h3 { margin: 0 0 6px; font-size: 15px; }
+.panel p { margin: 0; color: var(--muted); }
+
+.ai-core {
+  width: min(210px, 48vw);
+  aspect-ratio: 1;
+  margin: 2px auto 4px;
+  border: 1px solid rgba(103, 232, 249, 0.32);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle, rgba(103, 232, 249, 0.42) 0 4%, transparent 5%),
+    radial-gradient(circle, rgba(103, 232, 249, 0.16), transparent 44%),
+    conic-gradient(from 90deg, transparent, rgba(66, 211, 146, 0.28), transparent, rgba(103, 232, 249, 0.30), transparent);
+  box-shadow: 0 0 70px rgba(103, 232, 249, 0.12), inset 0 0 40px rgba(103, 232, 249, 0.08);
+}
+.ai-core::before {
+  content: "";
+  width: 48%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(237, 242, 247, 0.32);
+  transform: rotate(45deg);
+  background: linear-gradient(135deg, rgba(103, 232, 249, 0.18), rgba(66, 211, 146, 0.08));
+  box-shadow: 0 0 28px rgba(103, 232, 249, 0.24);
+}
+
+.hero {
+  min-height: 330px;
+  display: grid;
+  align-content: space-between;
+  gap: 18px;
+  background:
+    radial-gradient(circle at 18% 10%, rgba(103, 232, 249, 0.10), transparent 34%),
+    radial-gradient(circle at 50% 34%, rgba(103, 232, 249, 0.11), transparent 35%),
+    linear-gradient(135deg, rgba(21, 28, 36, 0.98), rgba(12, 16, 20, 0.98));
+}
+.hero-title { max-width: 760px; margin: 0 auto; text-align: center; }
+.hero-title h2 {
+  color: var(--text);
+  font-size: clamp(26px, 4vw, 46px);
+  line-height: 1.05;
+  letter-spacing: 0;
+  text-transform: none;
+  margin: 0 0 10px;
+}
+.hero-title p { font-size: 15px; max-width: 720px; margin: 0 auto; }
+.hero-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+
+.metric {
+  background: rgba(5, 6, 7, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 11px;
+  min-height: 74px;
+}
+.metric span { display: block; color: var(--muted); font-size: 11px; margin-bottom: 6px; }
+.metric strong { display: block; font-family: var(--mono); font-size: 15px; overflow-wrap: anywhere; }
+.metric.good strong { color: var(--green); }
+.metric.warn strong { color: var(--yellow); }
+.metric.bad strong { color: var(--red); }
+
+.rows { display: flex; flex-direction: column; gap: 8px; }
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.row:first-child { border-top: 0; padding-top: 0; }
+.label { min-width: 0; }
+.label strong { display: block; font-size: 13px; overflow-wrap: anywhere; }
+.label span { display: block; color: var(--dim); font-size: 12px; margin-top: 2px; overflow-wrap: anywhere; }
+.value { font-family: var(--mono); color: var(--cyan); font-size: 12px; text-align: right; overflow-wrap: anywhere; }
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  background: var(--dim);
+}
+.status-dot.good { background: var(--green); box-shadow: 0 0 16px rgba(66, 211, 146, 0.36); }
+.status-dot.warn { background: var(--yellow); }
+.status-dot.bad { background: var(--red); }
+
+.gate-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.gate {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  padding: 9px;
+  min-height: 70px;
+}
+.gate strong { display: block; font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+.gate span { display: inline-flex; margin-top: 7px; font-size: 11px; }
+.gate.high span, .gate.critical span { color: var(--red); }
+.gate.medium span { color: var(--yellow); }
+.gate.low span { color: var(--green); }
+
+.route-table { width: 100%; border-collapse: collapse; }
+.route-table th {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: left;
+  padding: 8px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.route-table td {
+  padding: 9px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: top;
+  font-size: 12px;
+}
+.route-table td:first-child { font-family: var(--mono); color: var(--cyan); }
+.keywords { color: var(--dim); max-width: 360px; overflow-wrap: anywhere; }
+
+.trace {
+  display: grid;
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.trace:first-child { border-top: 0; padding-top: 0; }
+.trace-line { display: flex; gap: 8px; align-items: center; justify-content: space-between; min-width: 0; }
+.trace-code { font-family: var(--mono); color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+
+.empty, .degraded {
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.02);
+}
+.degraded { border-color: rgba(243, 201, 105, 0.35); color: var(--yellow); }
+
+.readonly-note {
+  border-left: 3px solid var(--cyan);
+  padding: 10px 12px;
+  background: rgba(103, 232, 249, 0.07);
+  color: var(--muted);
+  border-radius: 6px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 1180px) {
+  .shell { grid-template-columns: 250px 1fr; }
+  .right { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 820px) {
+  .topbar { align-items: flex-start; flex-direction: column; }
+  .shell { grid-template-columns: 1fr; padding: 12px; }
+  .right { display: flex; }
+  .hero-grid, .gate-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .hero-grid, .gate-grid { grid-template-columns: 1fr; }
+  .route-table { display: block; overflow-x: auto; }
+}
 </style>
 </head>
 <body>
-<header class="header">
-  <div class="logo">
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" stroke="#00d4b4" stroke-width="1.5"/><path d="M7 10l3.5 8L14 11l3.5 7L21 10" stroke="#00d4b4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="14" cy="6" r="2" fill="#00d4b4"/></svg>
-    <div class="logo-text"><span>WIZARD</span> AI Stack</div>
-  </div>
-  <div style="display:flex;align-items:center;gap:16px">
-    <span style="background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px;font-size:12px;color:var(--muted)" id="stack-time">checking...</span>
-    <button class="refresh-btn" onclick="refreshAll()">↻ Refresh</button>
-  </div>
-</header>
-<div class="main">
-  <div class="sidebar">
-    <div class="card">
-      <div class="card-title">Stack Health</div>
-      <div class="service"><div class="service-left"><div class="dot checking" id="dot-brain"></div><div><div class="service-name">Wizard Brain</div><div class="service-port">:11434 — Ollama</div></div></div><a href="http://localhost:11434" target="_blank" class="service-link">open ↗</a></div>
-      <div class="service"><div class="service-left"><div class="dot checking" id="dot-chat"></div><div><div class="service-name">Wizard Chat</div><div class="service-port">:3000 — Open WebUI</div></div></div><a href="http://localhost:3000" target="_blank" class="service-link">open ↗</a></div>
-      <div class="service"><div class="service-left"><div class="dot checking" id="dot-memory"></div><div><div class="service-name">Wizard Memory</div><div class="service-port">:6333 — Qdrant</div></div></div><a href="http://localhost:6333/dashboard" target="_blank" class="service-link">open ↗</a></div>
-      <div class="service"><div class="service-left"><div class="dot checking" id="dot-auto"></div><div><div class="service-name">Automation</div><div class="service-port">:5678 — n8n</div></div></div><a href="http://localhost:5678" target="_blank" class="service-link">open ↗</a></div>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">M</div>
+      <div>
+        <h1>Wizard HQ</h1>
+        <p>Merlin AI · Private Intelligence. Locally Owned.</p>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-title">Quick Access</div>
-      <a href="http://localhost:3000" target="_blank" class="qlink"><span>💬</span>Chat with Wizard</a>
-      <a href="http://localhost:5678" target="_blank" class="qlink"><span>⚙️</span>n8n Workflows</a>
-      <a href="http://localhost:6333/dashboard" target="_blank" class="qlink"><span>🧠</span>Memory Browser</a>
+    <div class="top-actions" aria-label="Current Merlin state">
+      <span class="chip good" id="chip-local">local_only</span>
+      <span class="chip good" id="chip-cloud">cloud_disabled</span>
+      <span class="chip info" id="chip-tier">tier: checking</span>
+      <span class="chip warn" id="chip-task-api">task_api: checking</span>
+      <button class="refresh" type="button" onclick="refreshAll()" aria-label="Refresh dashboard">Refresh</button>
     </div>
-    <div class="card">
-      <div class="card-title">Memory Stats</div>
-      <div class="stat-row"><span class="stat-label">Conversations</span><span class="stat-value" id="mem-conv">—</span></div>
-      <div class="stat-row"><span class="stat-label">Documents</span><span class="stat-value" id="mem-docs">—</span></div>
-    </div>
-  </div>
-  <div class="content">
-    <div class="content-top">
-      <div class="card">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span style="font-size:18px">🧙</span><h2 style="font-size:16px;font-weight:600">Ask Wizard</h2></div>
-        <div class="mode-pills">
-          <div class="pill active" data-mode="GENERAL" onclick="setMode(this)">GENERAL</div>
-          <div class="pill" data-mode="CODING" onclick="setMode(this)">CODING</div>
-          <div class="pill" data-mode="RESEARCH" onclick="setMode(this)">RESEARCH</div>
-          <div class="pill" data-mode="SENSITIVE" onclick="setMode(this)">SENSITIVE</div>
+  </header>
+
+  <main class="shell">
+    <aside class="column">
+      <section class="panel">
+        <h2>System Doctor</h2>
+        <div class="rows" id="service-list">
+          <div class="row"><div class="label"><strong>Merlin Status API</strong><span>127.0.0.1:8765</span></div><span class="status-dot" id="dot-8765"></span></div>
+          <div class="row"><div class="label"><strong>Merlin Task API</strong><span>127.0.0.1:8766</span></div><span class="status-dot" id="dot-8766"></span></div>
+          <div class="row"><div class="label"><strong>Open WebUI</strong><span>localhost:3000</span></div><span class="status-dot" id="dot-3000"></span></div>
+          <div class="row"><div class="label"><strong>LiteLLM</strong><span>localhost:4000</span></div><span class="status-dot" id="dot-4000"></span></div>
+          <div class="row"><div class="label"><strong>Qdrant</strong><span>localhost:6333</span></div><span class="status-dot" id="dot-6333"></span></div>
+          <div class="row"><div class="label"><strong>Ollama</strong><span>localhost:11434</span></div><span class="status-dot" id="dot-11434"></span></div>
         </div>
-        <textarea class="ask-input" id="ask-input" placeholder="Ask Wizard anything..." rows="4"></textarea>
-        <button class="ask-btn" id="ask-btn" onclick="askWizard()">Ask Wizard →</button>
-        <div class="response-box" id="response-box"><div class="response-meta" id="response-meta"></div><div id="response-text"></div></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Wizard Brain — Models</div>
-        <div class="models-list" id="models-list"><div style="color:var(--muted);font-size:13px;padding:8px">Checking brain...</div></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Merlin Control Status</div>
-      <p class="status-note">Read-only CLI-backed status. This dashboard does not execute approvals, shell commands, model downloads, memory writes, or service changes.</p>
-      <div class="stat-row"><span class="stat-label">Active Profile</span><span class="stat-value" id="merlin-profile">core</span></div>
-      <div class="stat-row"><span class="stat-label">Hardware Tier</span><span class="stat-value" id="merlin-tier">wizard merlin status</span></div>
-      <div class="stat-row"><span class="stat-label">Privacy Mode</span><span class="stat-value" id="merlin-privacy">local_only</span></div>
-      <div class="stat-row"><span class="stat-label">Online Mode</span><span class="stat-value" id="merlin-online">false</span></div>
-      <div class="stat-row"><span class="stat-label">Cloud Allowed</span><span class="stat-value" id="merlin-cloud">false</span></div>
-      <div class="stat-row"><span class="stat-label">Approvals</span><span class="stat-value" id="merlin-approvals">wizard merlin approvals list</span></div>
-      <div class="stat-row"><span class="stat-label">Observed Services</span><span class="stat-value" id="merlin-services">checking...</span></div>
-      <div class="stat-row"><span class="stat-label">Status API</span><span class="stat-value" id="merlin-api">offline</span></div>
-      <div class="stat-row"><span class="stat-label">Execution Allowed</span><span class="stat-value">false</span></div>
-      <div class="command-list" aria-label="Merlin CLI commands">
-        <div class="command-row"><div class="command-label">Authoritative status</div><div class="command-value">wizard merlin status</div></div>
-        <div class="command-row"><div class="command-label">Start status API</div><div class="command-value">wizard merlin status-api start</div></div>
-        <div class="command-row"><div class="command-label">Review approvals</div><div class="command-value">wizard merlin approvals list</div></div>
-        <div class="command-row"><div class="command-label">Preview Magic Mode route</div><div class="command-value">wizard merlin dry-run "goal"</div></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Task Routing Map</div>
-      <table class="routing-table">
-        <thead><tr><th>Type</th><th>Without API Keys</th><th>With API Keys</th><th>Privacy</th></tr></thead>
-        <tbody>
-          <tr><td><span class="type-badge SENSITIVE">SENSITIVE</span></td><td><span class="local-badge">Wizard (Qwen)</span></td><td><span class="local-badge">Wizard (Qwen)</span></td><td style="color:var(--green);font-size:12px;font-weight:600">🔒 Always local</td></tr>
-          <tr><td><span class="type-badge CODING">CODING</span></td><td><span class="local-badge">Qwen Coder</span></td><td><span class="cloud-badge">OpenAI GPT-4o</span> → <span class="local-badge">fallback</span></td><td style="color:var(--muted);font-size:12px">Cloud optional</td></tr>
-          <tr><td><span class="type-badge RESEARCH">RESEARCH</span></td><td><span class="local-badge">DeepSeek / Qwen</span></td><td><span class="cloud-badge">Perplexity sonar-pro</span> → <span class="local-badge">fallback</span></td><td style="color:var(--muted);font-size:12px">Cloud optional</td></tr>
-          <tr><td><span class="type-badge GENERAL">GENERAL</span></td><td><span class="local-badge">Wizard (Qwen)</span></td><td><span class="local-badge">Wizard (Qwen)</span></td><td style="color:var(--green);font-size:12px;font-weight:600">🔒 Always local</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="card">
-      <div class="card-title">Activity Log</div>
-      <div class="activity-log" id="activity-log">
-        <div class="log-entry"><span class="log-time" id="init-time">--:--:--</span><span class="log-level info">INFO</span><span class="log-msg">Dashboard initialized</span></div>
-      </div>
-    </div>
-  </div>
+      </section>
+
+      <section class="panel">
+        <h2>Sovereignty Status</h2>
+        <div class="rows">
+          <div class="row"><div class="label"><strong>Air-gapped mode</strong><span>External providers disabled by default</span></div><div class="value">active</div></div>
+          <div class="row"><div class="label"><strong>Telemetry</strong><span>Local dashboard only</span></div><div class="value">off</div></div>
+          <div class="row"><div class="label"><strong>Execution Allowed</strong><span>Legacy 8765 status API</span></div><div class="value" id="execution-allowed">false</div></div>
+          <div class="row"><div class="label"><strong>Cloud Allowed</strong><span>Default policy</span></div><div class="value" id="cloud-allowed">false</div></div>
+          <div class="row"><div class="label"><strong>Online mode</strong><span>Default policy</span></div><div class="value" id="online-mode">false</div></div>
+          <div class="row"><div class="label"><strong>Approval gates</strong><span>Fail closed</span></div><div class="value" id="gate-total">15</div></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Read-Only Boundary</h2>
+        <div class="readonly-note">
+          This dashboard performs read-only GET requests against localhost status APIs.
+          It does not approve gates, run shell commands, write files, download models,
+          start services, write memory, or execute Magic Mode steps.
+        </div>
+      </section>
+    </aside>
+
+    <section class="column">
+      <section class="panel hero">
+        <div class="hero-title">
+          <h2>Merlin AI</h2>
+          <p>Wizard HQ is the sovereign, air-gapped command surface for private local intelligence. Inspect the local AI stack without exposing protected values or triggering actions.</p>
+        </div>
+        <div class="ai-core" aria-hidden="true"></div>
+        <div class="hero-grid">
+          <div class="metric good"><span>Privacy mode</span><strong id="metric-privacy">local_only</strong></div>
+          <div class="metric"><span>Hardware tier</span><strong id="metric-tier">checking</strong></div>
+          <div class="metric"><span>Routes</span><strong id="metric-routes">—</strong></div>
+          <div class="metric"><span>Memory vectors</span><strong id="metric-vectors">—</strong></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Brain Status</h2>
+        <div class="hero-grid">
+          <div class="metric good"><span>Local Model</span><strong>Active</strong></div>
+          <div class="metric good"><span>Runtime</span><strong>Ollama Native</strong></div>
+          <div class="metric warn"><span>Acceleration</span><strong>GPU if available</strong></div>
+          <div class="metric good"><span>Routing</span><strong>Local-First</strong></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Route Registry</h2>
+        <div id="routes-panel" class="empty">Waiting for `http://localhost:8766/status/routes`.</div>
+      </section>
+
+      <section class="panel">
+        <h2>Recent Traces</h2>
+        <div id="traces-panel" class="empty">No trace data loaded. Raw prompts and model responses are never displayed here.</div>
+      </section>
+    </section>
+
+    <aside class="column right">
+      <section class="panel">
+        <h2>Agent Control</h2>
+        <div class="rows" style="margin-bottom: 12px;">
+          <div class="row"><div class="label"><strong>Research Agent</strong><span>Routes through policy gates</span></div><div class="value">standby</div></div>
+          <div class="row"><div class="label"><strong>Coding Agent</strong><span>File and shell actions blocked here</span></div><div class="value">standby</div></div>
+          <div class="row"><div class="label"><strong>Automation Agent</strong><span>Webhook execution requires approval</span></div><div class="value">guarded</div></div>
+        </div>
+        <div class="hero-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 10px;">
+          <div class="metric"><span>Total</span><strong id="approval-total">—</strong></div>
+          <div class="metric good"><span>Open</span><strong id="approval-open">—</strong></div>
+          <div class="metric bad"><span>Closed</span><strong id="approval-closed">—</strong></div>
+        </div>
+        <div id="gates-panel" class="empty">Waiting for `http://localhost:8766/status/approvals`.</div>
+      </section>
+
+      <section class="panel">
+        <h2>Memory Vault</h2>
+        <div id="memory-panel" class="empty">Waiting for `http://localhost:8766/status/memory`.</div>
+      </section>
+
+      <section class="panel">
+        <h2>Knowledge Graph</h2>
+        <div class="readonly-note">
+          Concept target: connected projects, documents, goals, and decisions. MVP shows status only; interactive graph editing is deferred until memory review/delete flows are policy-gated.
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Safe Next Commands</h2>
+        <div class="rows">
+          <div class="row"><div class="label"><strong>Authoritative status</strong><span>CLI read-only summary</span></div><div class="value">wizard merlin status</div></div>
+          <div class="row"><div class="label"><strong>Start status API</strong><span>Local read-only bridge</span></div><div class="value">wizard merlin status-api start</div></div>
+          <div class="row"><div class="label"><strong>Review approvals</strong><span>No dashboard approve button</span></div><div class="value">wizard merlin approvals list</div></div>
+          <div class="row"><div class="label"><strong>Preview routing</strong><span>No side effects</span></div><div class="value">wizard merlin dry-run "goal"</div></div>
+        </div>
+      </section>
+    </aside>
+  </main>
 </div>
+
 <script>
-let currentMode='GENERAL';
-const knownModels=[{name:'qwen2.5:7b',role:'general'},{name:'qwen2.5-coder:7b',role:'coding'},{name:'deepseek-r1:7b',role:'reasoning'},{name:'nomic-embed-text',role:'embeddings'}];
-function ts(){return new Date().toLocaleTimeString('en-US',{hour12:false});}
-function log(msg,level='info'){const l=document.getElementById('activity-log');const e=document.createElement('div');e.className='log-entry';e.innerHTML=`<span class="log-time">${ts()}</span><span class="log-level ${level}">${level.toUpperCase()}</span><span class="log-msg">${msg}</span>`;l.prepend(e);if(l.children.length>50)l.removeChild(l.lastChild);}
-function setDot(id,status){const d=document.getElementById('dot-'+id);if(d)d.className='dot '+status;}
-function setMode(el){document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');currentMode=el.dataset.mode;}
-async function checkService(id,url){try{const r=await fetch(url,{signal:AbortSignal.timeout(3000)});if(r.ok||r.status<500){setDot(id,'up');return true;}}catch(e){}setDot(id,'down');return false;}
-function updateMerlinServices(results){const el=document.getElementById('merlin-services');if(!el)return;const up=Object.entries(results).filter(([,ok])=>ok).map(([name])=>name);el.textContent=up.length?`${up.length}/4 up: ${up.join(', ')}`:'0/4 up';}
-async function loadMerlinStatus(){const api=document.getElementById('merlin-api');try{const r=await fetch('http://localhost:8765/status',{signal:AbortSignal.timeout(2500)});if(!r.ok)throw new Error('status api unavailable');const d=await r.json();document.getElementById('merlin-profile').textContent=d.active_profile||'core';document.getElementById('merlin-tier').textContent=d.hardware_tier||'unknown';document.getElementById('merlin-privacy').textContent=d.privacy_mode||'local_only';document.getElementById('merlin-online').textContent=String(Boolean(d.online_mode));document.getElementById('merlin-cloud').textContent=String(Boolean(d.cloud_allowed));const a=d.approvals||{};document.getElementById('merlin-approvals').textContent=`${a.pending||0} pending / ${a.approved||0} approved / ${a.denied||0} denied`;const services=d.services||{};const up=Object.entries(services).filter(([,status])=>status==='running').map(([name])=>name);document.getElementById('merlin-services').textContent=up.length?`${up.length}/${Object.keys(services).length} up: ${up.join(', ')}`:'0 up';api.textContent='online';}catch(e){api.textContent='offline';}}
-async function loadModels(){const list=document.getElementById('models-list');try{const r=await fetch('http://localhost:11434/api/tags',{signal:AbortSignal.timeout(4000)});const d=await r.json();const loaded=(d.models||[]).map(m=>m.name);list.innerHTML='';knownModels.forEach(m=>{const base=m.name.split(':')[0];const ready=loaded.some(l=>l===m.name||l===`${m.name}:latest`||l.split(':')[0]===base);list.innerHTML+=`<div class="model-row"><div><div class="model-name">${m.name}</div><div class="model-role">${m.role}</div></div><span class="model-badge ${ready?'ready':'missing'}">${ready?'LOADED':'MISSING'}</span></div>`;});}catch(e){list.innerHTML='<div style="color:var(--red);font-size:12px;padding:8px">Brain offline</div>';}}
-async function loadMemoryStats(){try{const r=await fetch('http://localhost:6333/collections/home_ai_memory',{signal:AbortSignal.timeout(3000)});const d=await r.json();document.getElementById('mem-conv').textContent=(d.result?.points_count??'0').toLocaleString();document.getElementById('mem-docs').textContent='1';}catch(e){document.getElementById('mem-conv').textContent='—';document.getElementById('mem-docs').textContent='—';}}
-async function askWizard(){const input=document.getElementById('ask-input').value.trim();if(!input)return;const btn=document.getElementById('ask-btn');const box=document.getElementById('response-box');const meta=document.getElementById('response-meta');const txt=document.getElementById('response-text');btn.disabled=true;btn.textContent='Wizard is thinking...';box.className='response-box visible';meta.textContent=`Mode: ${currentMode} | Via: n8n router`;txt.textContent='⏳ Routing task...';log(`Task routed — type: ${currentMode}`,'info');try{const r=await fetch('http://localhost:5678/webhook/wizard-task',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task:input,mode:currentMode}),signal:AbortSignal.timeout(30000)});const d=await r.json();txt.textContent=d.result||d.response||JSON.stringify(d);meta.textContent=`Mode: ${d.wizard_classification||currentMode} | ${ts()}`;log(`Response received`,'ok');}catch(e){try{const r2=await fetch('http://localhost:11434/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'qwen2.5:7b',prompt:input,stream:false}),signal:AbortSignal.timeout(30000)});const d2=await r2.json();txt.textContent=d2.response||'No response';meta.textContent=`Direct to Wizard Brain | ${ts()}`;log('n8n offline — direct brain response','warn');}catch(e2){txt.textContent='Could not reach Wizard. Run: wizard start';log('Wizard unreachable','error');}}
-btn.disabled=false;btn.textContent='Ask Wizard →';}
-document.getElementById('ask-input').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))askWizard();});
-async function refreshAll(){document.getElementById('stack-time').textContent=ts();const [brain,chat,memory,auto]=await Promise.all([checkService('brain','http://localhost:11434/api/tags'),checkService('chat','http://localhost:3000'),checkService('memory','http://localhost:6333/healthz'),checkService('auto','http://localhost:5678/healthz')]);updateMerlinServices({brain,chat,memory,auto});await loadMerlinStatus();await loadModels();await loadMemoryStats();}
-document.getElementById('init-time').textContent=ts();
-document.getElementById('stack-time').textContent=ts();
+// Static data sources:
+// http://localhost:8765/status
+// http://localhost:8766/status/routes
+// http://localhost:8766/status/approvals
+// http://localhost:8766/status/memory
+// http://localhost:8766/status/traces
+const STATUS_API = 'http://localhost:8765';
+const TASK_API = 'http://localhost:8766';
+const SERVICE_CHECKS = [
+  ['8765', `${STATUS_API}/healthz`],
+  ['8766', `${TASK_API}/status/routes`],
+  ['3000', 'http://localhost:3000'],
+  ['4000', 'http://localhost:4000/health/readiness'],
+  ['6333', 'http://localhost:6333/healthz'],
+  ['11434', 'http://localhost:11434/api/tags'],
+];
+
+function text(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function setChip(id, value, state) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = value;
+  el.className = `chip ${state || ''}`.trim();
+}
+
+function dot(id, state) {
+  const el = document.getElementById(`dot-${id}`);
+  if (el) el.className = `status-dot ${state || ''}`.trim();
+}
+
+function safe(value, fallback = '—') {
+  return value === undefined || value === null || value === '' ? fallback : String(value);
+}
+
+function riskClass(risk) {
+  const normalized = String(risk || '').toLowerCase();
+  if (normalized === 'critical') return 'critical';
+  if (normalized === 'high') return 'high';
+  if (normalized === 'medium') return 'medium';
+  return 'low';
+}
+
+async function getJson(url, timeout = 2500) {
+  const response = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(timeout) });
+  if (!response.ok) throw new Error(`${url} returned ${response.status}`);
+  return response.json();
+}
+
+async function checkServices() {
+  await Promise.all(SERVICE_CHECKS.map(async ([id, url]) => {
+    try {
+      await fetch(url, { method: 'GET', signal: AbortSignal.timeout(1800) });
+      dot(id, 'good');
+    } catch (_) {
+      dot(id, 'bad');
+    }
+  }));
+}
+
+async function loadMerlinStatus() {
+  try {
+    const data = await getJson(`${STATUS_API}/status`);
+    text('metric-privacy', safe(data.privacy_mode, 'local_only'));
+    text('metric-tier', safe(data.hardware_tier, 'unknown'));
+    text('execution-allowed', String(Boolean(data.execution_allowed)));
+    text('cloud-allowed', String(Boolean(data.cloud_allowed)));
+    text('online-mode', String(Boolean(data.online_mode)));
+    setChip('chip-local', safe(data.privacy_mode, 'local_only'), 'good');
+    setChip('chip-cloud', data.cloud_allowed ? 'cloud_enabled' : 'cloud_disabled', data.cloud_allowed ? 'warn' : 'good');
+    setChip('chip-tier', `tier: ${safe(data.hardware_tier, 'unknown')}`, data.hardware_tier === 'low' ? 'warn' : 'info');
+  } catch (_) {
+    text('metric-tier', 'unknown');
+    setChip('chip-tier', 'tier: unknown', 'warn');
+  }
+}
+
+async function loadRoutes() {
+  const panel = document.getElementById('routes-panel');
+  try {
+    const data = await getJson(`${TASK_API}/status/routes`);
+    setChip('chip-task-api', 'task_api: online', 'good');
+    text('metric-routes', safe(data.total, '0'));
+    const rows = (data.routes || []).map(route => `
+      <tr>
+        <td>${safe(route.route_id)}</td>
+        <td>${safe(route.staff_mode)}</td>
+        <td>${safe(route.preferred_model_alias)}</td>
+        <td>${route.requires_approval ? '<span class="chip warn">approval_required</span>' : '<span class="chip good">open</span>'}</td>
+        <td class="keywords">${(route.approval_gates || []).join(', ') || 'none'}</td>
+      </tr>
+    `).join('');
+    panel.className = '';
+    panel.innerHTML = `
+      <table class="route-table">
+        <thead><tr><th>Route</th><th>Staff</th><th>Model</th><th>State</th><th>Gates</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  } catch (_) {
+    setChip('chip-task-api', 'task_api: degraded', 'warn');
+    text('metric-routes', 'degraded');
+    panel.className = 'degraded';
+    panel.textContent = 'Task API unavailable. Route registry is degraded, but this dashboard remains read-only.';
+  }
+}
+
+async function loadApprovals() {
+  const panel = document.getElementById('gates-panel');
+  try {
+    const data = await getJson(`${TASK_API}/status/approvals`);
+    text('gate-total', safe(data.total));
+    text('approval-total', safe(data.total));
+    text('approval-open', safe(data.open_count));
+    text('approval-closed', safe(data.closed_count));
+    const gates = (data.gates || []).map(gate => `
+      <div class="gate ${riskClass(gate.risk_tier)}">
+        <strong>${safe(gate.gate_name)}</strong>
+        <span>${safe(gate.risk_tier, 'unknown')} · ${gate.requires_approval ? 'approval required' : 'open'}</span>
+      </div>
+    `).join('');
+    panel.className = 'gate-grid';
+    panel.innerHTML = gates || '<div class="empty">No gates returned.</div>';
+  } catch (_) {
+    panel.className = 'degraded';
+    panel.textContent = 'Approval status unavailable. Policy remains fail-closed if the API cannot load gates.';
+  }
+}
+
+async function loadMemory() {
+  const panel = document.getElementById('memory-panel');
+  try {
+    const data = await getJson(`${TASK_API}/status/memory`);
+    text('metric-vectors', safe(data.total_vectors, '0'));
+    const collections = (data.collections || []).map(collection => `
+      <div class="row">
+        <div class="label"><strong>${safe(collection.name)}</strong><span>${safe(collection.dimensions)} dimensions · ${safe(collection.status)}</span></div>
+        <div class="value">${safe(collection.vector_count, '0')}</div>
+      </div>
+    `).join('');
+    panel.className = data.degraded ? 'degraded' : 'rows';
+    panel.innerHTML = data.degraded ? 'Memory API degraded. Merlin continues without exposing raw memory data.' : collections;
+  } catch (_) {
+    text('metric-vectors', 'degraded');
+    panel.className = 'degraded';
+    panel.textContent = 'Memory status unavailable. No memory contents or protected values are displayed.';
+  }
+}
+
+async function loadTraces() {
+  const panel = document.getElementById('traces-panel');
+  try {
+    const data = await getJson(`${TASK_API}/status/traces`);
+    const traces = data.traces || [];
+    if (!traces.length) {
+      panel.className = 'empty';
+      panel.textContent = 'No traces recorded in the current in-memory buffer.';
+      return;
+    }
+    panel.className = '';
+    panel.innerHTML = traces.slice(0, 8).map(trace => `
+      <div class="trace">
+        <div class="trace-line"><strong>${safe(trace.route_id)}</strong><span class="chip ${trace.approved ? 'good' : 'warn'}">${trace.approved ? 'approved' : 'blocked'}</span></div>
+        <div class="trace-code">hash=${safe(trace.input_hash).slice(0, 18)}… · staff=${safe(trace.staff_mode)} · latency=${safe(trace.latency_ms)}ms · memory=${safe(trace.memory_written)}</div>
+      </div>
+    `).join('');
+  } catch (_) {
+    panel.className = 'degraded';
+    panel.textContent = 'Trace status unavailable. Raw prompts and model responses are never stored here.';
+  }
+}
+
+async function refreshAll() {
+  await Promise.all([
+    checkServices(),
+    loadMerlinStatus(),
+    loadRoutes(),
+    loadApprovals(),
+    loadMemory(),
+    loadTraces(),
+  ]);
+}
+
 refreshAll();
-setInterval(refreshAll,30000);
+setInterval(refreshAll, 30000);
 </script>
 </body>
 </html>

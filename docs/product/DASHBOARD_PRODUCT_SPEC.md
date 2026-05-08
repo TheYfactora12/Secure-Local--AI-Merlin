@@ -1,10 +1,14 @@
 # Dashboard Product Spec — Merlin Command Center
 
-Last updated: 2026-05-06
+Last updated: 2026-05-07
 
 ## Product Goal
 
 The dashboard is the user-facing command center for Home AI Elite. It should make Merlin feel like a private, local-first AI assistant with the polish of a modern chat product and the control surface of a secure workstation.
+
+The v2.1 product name for this surface is **Wizard HQ**. The brand direction is
+tracked in `docs/product/MERLIN_BRAND_UX_SPEC.md`, with the current concept image
+at `docs/product/assets/wizard-hq-concept.png`.
 
 Open WebUI can remain available as a proven chat UI, but the Home AI Elite dashboard should become the Merlin-native experience: chat, Magic Mode planning, memory review, model status, approvals, and local system health in one place.
 
@@ -19,20 +23,22 @@ Open WebUI can remain available as a proven chat UI, but the Home AI Elite dashb
 
 ## MVP Scope
 
-MVP dashboard is read-mostly and conversation-first:
+MVP dashboard is read-only and command-center-first while the task execution
+surface remains approval-gated behind Merlin APIs:
 
-- Merlin Chat connected to the local task API on port 8766.
 - Status panels from port 8765 and `/status/*` panels from port 8766.
 - Active route, staff mode, selected model, fallback state, and approval state.
 - Local-only/cloud-disabled indicator.
 - Hardware tier and low-memory warnings.
 - Memory collection health and approved memory status.
-- Magic Mode plan-only view.
+- Brain Status, Memory Vault, Agent Control, Sovereignty Status, Knowledge Graph
+  placeholder, and System Doctor panels.
 - Security/approval gate summary.
 
 ## Out Of Scope For MVP
 
 - Autonomous execution.
+- Browser chat submission or task execution from the static dashboard.
 - Browser or shell control.
 - Dashboard-driven package installs.
 - Automatic cloud routing.
@@ -47,7 +53,7 @@ MVP dashboard is read-mostly and conversation-first:
 |---|---|---|
 | Legacy read-only health | `http://localhost:8765/status` | Security contract: read-only only |
 | Task route/status panels | `http://localhost:8766/status/*` | Execution-aware FastAPI app |
-| Chat/task response | `POST http://localhost:8766/task` | Approval gates return 403 |
+| Future chat/task response | `POST http://localhost:8766/task` | Not used by read-only v2.1 launch dashboard |
 | Open WebUI | `http://localhost:3000` | External chat UI remains linked |
 | Ollama model list | `http://localhost:11434/api/tags` | Localhost only |
 | Qdrant health | `http://localhost:6333/healthz` | Local memory |
@@ -71,7 +77,7 @@ MVP dashboard is read-mostly and conversation-first:
 ## Success Criteria
 
 - User can open `http://localhost:8888` and understand what Merlin can do right now.
-- User can start a Merlin chat from the first screen.
+- User can see the Wizard HQ command center and understand what Merlin can do right now.
 - User can see local-only/cloud disabled without opening settings.
 - User can tell whether the system is healthy, degraded, or blocked.
 - User can preview Magic Mode without any action executing.
