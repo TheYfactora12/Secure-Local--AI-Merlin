@@ -195,7 +195,10 @@ def test_status_providers_returns_local_first_registry() -> None:
     assert body["local_first"] is True
     assert body["cloud_enabled"] is False
     assert body["external_providers_enabled"] is False
-    assert body["total"] >= 5
+    assert body["allow_policy"] == "explicit_user_allow_required_for_external"
+    assert body["allowed_count"] == 2
+    assert body["blocked_count"] >= 6
+    assert body["total"] >= 8
 
 
 def test_status_providers_reports_local_ollama_and_litellm() -> None:
@@ -203,10 +206,40 @@ def test_status_providers_reports_local_ollama_and_litellm() -> None:
     providers = {provider["provider_id"]: provider for provider in response.json()["providers"]}
     assert providers["ollama"]["enabled"] is True
     assert providers["ollama"]["local"] is True
+    assert providers["ollama"]["user_allowed"] is True
+    assert providers["ollama"]["connection_state"] == "allowed_local"
+    assert providers["ollama"]["api_family"] == "ollama_native"
+    assert providers["ollama"]["setup_state"] == "allowed"
     assert providers["ollama"]["api_key_required"] is False
     assert "qwen7b" in providers["ollama"]["model_aliases"]
     assert providers["litellm"]["enabled"] is True
     assert providers["litellm"]["local"] is True
+    assert providers["litellm"]["user_allowed"] is True
+    assert providers["litellm"]["api_family"] == "openai_compatible_gateway"
+
+
+def test_status_providers_includes_known_external_connector_catalog() -> None:
+    response = client.get("/status/providers")
+    providers = {provider["provider_id"]: provider for provider in response.json()["providers"]}
+
+    for provider_id in ["openai", "anthropic", "perplexity", "google", "mistral", "openrouter"]:
+        assert provider_id in providers
+        provider = providers[provider_id]
+        assert provider["enabled"] is False
+        assert provider["user_allow_required"] is True
+        assert provider["user_allowed"] is False
+        assert provider["connection_state"] == "not_allowed"
+        assert provider["setup_state"] == "locked_until_policy_flow"
+        assert provider["known_model_examples"]
+        assert provider["capabilities"]
+
+    assert providers["openai"]["display_name"] == "ChatGPT / OpenAI"
+    assert providers["openai"]["api_family"] == "openai_responses"
+    assert "gpt-4o" in providers["openai"]["known_model_examples"]
+    assert providers["anthropic"]["api_family"] == "anthropic_messages"
+    assert providers["perplexity"]["api_family"] == "perplexity_sonar"
+    assert providers["google"]["api_family"] == "gemini_generate_content"
+    assert "gemini-2.5-pro" in providers["google"]["known_model_examples"]
 
 
 def test_status_providers_external_cloud_disabled_even_when_key_present(monkeypatch) -> None:
@@ -219,7 +252,10 @@ def test_status_providers_external_cloud_disabled_even_when_key_present(monkeypa
 
     assert providers["openai"]["enabled"] is False
     assert providers["openai"]["local"] is False
+    assert providers["openai"]["user_allowed"] is False
+    assert providers["openai"]["connection_state"] == "not_allowed"
     assert providers["openai"]["api_key_present"] is True
+    assert providers["openai"]["credential_present"] is True
     assert providers["openai"]["requires_approval"] is True
     assert fake_key not in body_text
 
@@ -229,6 +265,10 @@ def test_status_providers_never_exposes_known_cloud_key_values(monkeypatch) -> N
         "OPENAI_API_KEY": "openai-secret-value",
         "ANTHROPIC_API_KEY": "anthropic-secret-value",
         "PERPLEXITY_API_KEY": "perplexity-secret-value",
+        "GOOGLE_API_KEY": "google-secret-value",
+        "GEMINI_API_KEY": "gemini-secret-value",
+        "MISTRAL_API_KEY": "mistral-secret-value",
+        "OPENROUTER_API_KEY": "openrouter-secret-value",
     }
     for key, value in secret_values.items():
         monkeypatch.setenv(key, value)

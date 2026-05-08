@@ -66,6 +66,18 @@ grep -q "Cloud Providers" "$DASHBOARD_FILE" \
   || fail "dashboard missing cloud provider disabled surface"
 grep -q "cloud disabled by default" "$DASHBOARD_FILE" \
   || fail "dashboard missing cloud-disabled default language"
+grep -q "/status/providers" "$DASHBOARD_FILE" \
+  || fail "dashboard must load provider connector catalog"
+grep -q "brains-provider-catalog" "$DASHBOARD_FILE" \
+  || fail "dashboard missing provider connector catalog panel"
+grep -q "not allowed until the user explicitly configures" "$DASHBOARD_FILE" \
+  || fail "dashboard missing explicit allow/not-allow provider language"
+grep -q "function loadProviders" "$DASHBOARD_FILE" \
+  || fail "dashboard missing provider connector loader"
+grep -q "api_family" "$DASHBOARD_FILE" \
+  || fail "dashboard provider catalog must render provider API family"
+grep -q "toggle-state" "$DASHBOARD_FILE" \
+  || fail "dashboard missing provider allow/not-allow toggle state visual"
 grep -q "manual only" "$DASHBOARD_FILE" \
   || fail "dashboard missing no-surprise-download language"
 grep -q "8GB/core systems" "$DASHBOARD_FILE" \

@@ -570,6 +570,39 @@ textarea {
 .status-pill .off { color: var(--yellow); }
 .status-pill .locked { color: var(--yellow); }
 .status-pill .good { color: var(--green); }
+.provider-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.toggle-state {
+  width: 34px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 168, 182, 0.34);
+  background: rgba(154, 168, 182, 0.12);
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  flex: 0 0 auto;
+}
+.toggle-state::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--dim);
+}
+.toggle-state.on {
+  justify-content: flex-end;
+  border-color: rgba(66, 211, 146, 0.44);
+  background: rgba(66, 211, 146, 0.12);
+}
+.toggle-state.on::before {
+  background: var(--green);
+  box-shadow: 0 0 12px rgba(66, 211, 146, 0.30);
+}
 
 .sr-only {
   position: absolute;
@@ -757,8 +790,8 @@ textarea {
       </article>
       <article class="surface-card">
         <h3>Cloud Providers</h3>
-        <p>External APIs remain unavailable until the user explicitly configures and approves them in a future gated flow.</p>
-        <div class="status-list">
+        <p>External APIs remain not allowed until the user explicitly configures, allows, and approves them in a gated setup flow.</p>
+        <div id="brains-provider-catalog" class="status-list">
           <div class="status-pill"><strong>Cloud escalation</strong><span class="off">disabled</span></div>
           <div class="status-pill"><strong>API keys</strong><span class="locked">not shown</span></div>
           <div class="status-pill"><strong>Telemetry</strong><span class="good">off</span></div>
@@ -861,7 +894,7 @@ textarea {
           <div class="status-pill"><strong>Settings backend</strong><span>checking</span></div>
         </div>
       </article>
-      <article class="surface-card"><h3>Provider Connectors</h3><p>External provider setup is deferred until safe secret storage, explicit enablement, and approval gates are implemented.</p><div class="status-list"><div class="status-pill"><strong>API key fields</strong><span class="locked">not available</span></div><div class="status-pill"><strong>Cloud default</strong><span class="off">off</span></div><div class="status-pill"><strong>Future path</strong><span>policy-gated</span></div></div></article>
+      <article class="surface-card"><h3>Provider Connectors</h3><p>External provider setup is deferred until safe secret storage, explicit allow/not-allow choices, and approval gates are implemented.</p><div class="status-list"><div class="status-pill"><strong>API key fields</strong><span class="locked">not available</span></div><div class="status-pill"><strong>Cloud default</strong><span class="off">off</span></div><div class="status-pill"><strong>Future path</strong><span>policy-gated</span></div></div></article>
       <article class="surface-card"><h3>Model Library</h3><p>Model additions should stay explicit, visible, and hardware-aware.</p><div class="status-list"><div class="status-pill"><strong>Downloads</strong><span class="locked">manual only</span></div><div class="status-pill"><strong>Add model</strong><span>bash scripts/add-model.sh</span></div><div class="status-pill"><strong>8GB warning</strong><span>required</span></div></div></article>
       <article class="surface-card"><h3>Memory Controls</h3><p>Remembering, deleting, and exporting memory need dedicated approval and review UX.</p><div class="status-list"><div class="status-pill"><strong>Auto-write</strong><span class="off">disabled</span></div><div class="status-pill"><strong>Review/delete</strong><span>#31 / #32</span></div><div class="status-pill"><strong>Raw memory</strong><span class="locked">not shown</span></div></div></article>
       <article class="surface-card"><h3>Privacy & Sovereignty</h3><p>Local-first defaults stay visible before advanced configuration exists.</p><div class="status-list"><div class="status-pill"><strong>Telemetry</strong><span class="good">off</span></div><div class="status-pill"><strong>Cloud escalation</strong><span class="off">disabled</span></div><div class="status-pill"><strong>Secrets</strong><span class="locked">protected</span></div></div></article>
@@ -878,6 +911,7 @@ textarea {
 // http://localhost:8766/status/approvals
 // http://localhost:8766/status/memory
 // http://localhost:8766/status/models
+// http://localhost:8766/status/providers
 // http://localhost:8766/status/settings
 // http://localhost:8766/status/traces
 const STATUS_API = 'http://localhost:8765';
@@ -900,6 +934,7 @@ const readinessState = {
   routes: null,
   memory: null,
   models: null,
+  providers: null,
   settings: null,
   probesComplete: false,
 };
@@ -1148,6 +1183,42 @@ async function loadModels() {
   }
 }
 
+async function loadProviders() {
+  const panel = document.getElementById('brains-provider-catalog');
+  try {
+    const data = await getJson(`${TASK_API}/status/providers`);
+    readinessState.providers = data;
+    if (!panel) return;
+    const externalRows = (data.providers || [])
+      .filter(provider => !provider.local)
+      .map(provider => {
+        const keyState = provider.credential_present ? 'credential present' : 'no credential';
+        const examples = (provider.known_model_examples || []).slice(0, 2).join(', ') || 'provider models';
+        const allowState = provider.user_allowed ? 'allowed' : 'not allowed';
+        return `
+          <div class="status-pill">
+            <strong>${escapeHtml(provider.display_name || provider.provider_id)}</strong>
+            <span class="provider-state">
+              <span class="toggle-state ${provider.user_allowed ? 'on' : ''}" aria-hidden="true"></span>
+              <span>${escapeHtml(allowState)} · ${escapeHtml(keyState)} · ${escapeHtml(provider.api_family || 'provider api')} · ${escapeHtml(examples)}</span>
+            </span>
+          </div>
+        `;
+      }).join('');
+    panel.innerHTML = `
+      <div class="status-pill"><strong>Cloud default</strong><span>${data.cloud_enabled ? 'enabled' : 'off'}</span></div>
+      <div class="status-pill"><strong>External allow policy</strong><span>${escapeHtml(data.allow_policy || 'explicit user allow required')}</span></div>
+      <div class="status-pill"><strong>Allowed connectors</strong><span>${Number(data.allowed_count || 0)}</span></div>
+      ${externalRows || '<div class="status-pill"><strong>External catalog</strong><span>warming</span></div>'}
+    `;
+  } catch (_) {
+    readinessState.providers = null;
+    if (panel) {
+      panel.innerHTML = '<div class="status-pill"><strong>Provider catalog</strong><span>warming</span></div>';
+    }
+  }
+}
+
 async function loadSettings() {
   const panel = document.getElementById('settings-policy-panel');
   try {
@@ -1375,6 +1446,7 @@ async function refreshAll() {
     loadApprovals(),
     loadMemory(),
     loadModels(),
+    loadProviders(),
     loadSettings(),
     loadTraces(),
   ]);

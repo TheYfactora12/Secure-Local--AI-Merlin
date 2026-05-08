@@ -25,13 +25,13 @@ SETTINGS_ACTIONS: list[dict[str, Any]] = [
         "action_id": "provider_connectors",
         "category": "Provider Connectors",
         "state": "locked",
-        "summary": "External provider setup is unavailable until safe secret storage and explicit enablement exist.",
+        "summary": "External provider setup is unavailable until safe secret storage and explicit allow/not-allow enablement exist.",
         "approval_gates": ["api_key_use", "secret_access", "cloud_model_call", "external_network"],
-        "tracked_issue": "#114",
+        "tracked_issue": "#117",
         "allowed_from_dashboard": False,
         "secrets_displayed": False,
         "cloud_default": False,
-        "manual_guidance": "Use local models by default. Cloud setup remains disabled until a future policy-gated flow.",
+        "manual_guidance": "Use local models by default. External providers remain not allowed until a future policy-gated setup flow.",
     },
     {
         "action_id": "model_library",
@@ -307,11 +307,18 @@ def status_models() -> dict[str, Any]:
 def status_providers() -> dict[str, Any]:
     registry = build_provider_registry()
     providers = [provider.model_dump() for provider in registry.providers]
+    for provider in providers:
+        provider["credential_present"] = provider["api_key_present"]
+    allowed_count = sum(1 for provider in providers if provider["user_allowed"])
+    blocked_count = len(providers) - allowed_count
     return {
         "mode": registry.mode,
         "local_first": registry.local_first,
         "cloud_enabled": registry.cloud_enabled,
         "external_providers_enabled": registry.external_providers_enabled,
+        "allow_policy": "explicit_user_allow_required_for_external",
+        "allowed_count": allowed_count,
+        "blocked_count": blocked_count,
         "providers": providers,
         "total": len(providers),
     }

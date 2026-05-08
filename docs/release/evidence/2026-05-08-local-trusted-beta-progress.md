@@ -3193,3 +3193,178 @@ from a backend contract without exposing secrets or unsafe controls.
 
 Improved but still not complete. Public Beta still needs full clean installer
 retest, onboarding polish, and later policy-gated write flows.
+
+## #117 Provider Connector Capability Map
+
+### Date/Time
+
+2026-05-08T10:50:00-04:00
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`005435f`
+
+### Target Issues
+
+- #117
+- #114
+
+### Scope
+
+Add a safer provider connector capability map before any write-capable key entry
+or cloud enablement flow. This is a read-only product/engineering slice.
+
+### Files Changed
+
+- `merlin/provider_registry.py`
+- `merlin/status_extension.py`
+- `dashboard/index.html`
+- `tests/test_status_extension.py`
+- `tests/dashboard-tabs-smoke.sh`
+- `docs/product/PROVIDER_CONNECTOR_CAPABILITIES.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+No installer, package, policy engine, router, memory manager, or task execution
+behavior changed. `merlin/status_extension.py` remains read-only status surface
+work.
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `.venv-test/bin/python -m pytest tests/test_status_extension.py -q` | PASS; 24 passed. |
+| `bash tests/dashboard-tabs-smoke.sh` | PASS. |
+| `bash tests/dashboard-settings-policy-smoke.sh` | PASS. |
+| `/bin/zsh -lc "bash scripts/merlin-task-api.sh restart >/dev/null && curl -fsS --max-time 5 http://localhost:8766/status/providers \| jq '{mode,allow_policy,cloud_enabled,external_providers_enabled,total,providers:[.providers[] \| {provider_id,api_family,user_allowed,api_key_present,setup_state}]}'"` | FAIL; exited with no visible output, command design did not preserve diagnostic detail. |
+| `/bin/zsh -lc "bash scripts/merlin-task-api.sh restart; curl -v --max-time 5 http://localhost:8766/status/providers"` | PASS; HTTP 200 returned read-only provider catalog. |
+| `gh run watch 25562866832 --exit-status` | FAIL due GitHub API HTTP 504 after static smokes had passed; follow-up status query was required. |
+| `gh run view 25562866832 --json status,conclusion,url,headSha` | PASS; run completed with `conclusion=success` for `f41f6bb`. |
+
+### Test Output Summary
+
+The provider registry now returns local Ollama, LiteLLM gateway, and six
+external provider families with explicit allow state, API family, auth scheme,
+capabilities, key presence booleans, and known model examples. External
+providers remain `not_allowed`.
+
+### Tests Skipped And Why
+
+Live provider calls were skipped. This slice must not call external APIs or
+validate real provider keys. Full installer retest was skipped because no
+installer/package behavior changed.
+
+### Failures Found
+
+No product test failures after implementation. The first live check command
+failed with no useful output because it suppressed restart output and piped the
+response through a compact `jq` filter. The rerun used visible restart output
+and `curl -v`, which confirmed `/status/providers` returned HTTP 200.
+
+The design risk identified was that a generic API key field would be wrong
+because providers use different API families and auth shapes.
+
+The final CI watch command hit a GitHub API HTTP 504 while the run was still
+being queried. A direct `gh run view` query confirmed the amended run passed.
+
+### Failure Category
+
+- UX/readiness confusion
+- Documentation mismatch risk
+- CI/static smoke gap avoided
+- Test design gap
+- GitHub API/transient CI status query
+
+### Root Cause Or Current Hypothesis
+
+Provider setup needs capability metadata before UI controls exist. Without it,
+Wizard HQ would likely create one generic connector flow that cannot correctly
+handle OpenAI Responses, Anthropic Messages, Gemini generateContent,
+Perplexity/Sonar, OpenRouter, Mistral, and local Ollama behavior.
+
+The live-check failure was a command-observability problem, not a product
+defect. The command hid useful diagnostic output.
+
+The CI watch failure was a GitHub API availability issue, not a repo failure.
+
+### Fix Applied
+
+- Added provider `display_name`, `api_family`, `auth_scheme`,
+  `user_allow_required`, `user_allowed`, `known_model_examples`,
+  `capabilities`, and `setup_state` fields.
+- Added external provider catalog entries for ChatGPT/OpenAI, Claude/Anthropic,
+  Perplexity Sonar, Gemini/Google AI, Mistral AI, and OpenRouter.
+- Dashboard Brains tab now loads `/status/providers` and renders connector
+  allow/not-allow state with a non-clickable toggle visual.
+- Added provider capability documentation with official source links.
+- Retested live provider status with verbose curl after the first live command
+  failed without useful diagnostics.
+
+### Retest Result
+
+PASS. Focused backend and dashboard static tests passed. Live
+`/status/providers` returned `mode=local_only`, `cloud_enabled=false`,
+`external_providers_enabled=false`, `allow_policy=explicit_user_allow_required_for_external`,
+and eight providers with external providers locked/not allowed.
+
+CI then caught an additional dashboard first-run smoke failure:
+`FAIL: dashboard first-run must not expose secret-like fields`. Root cause was
+the browser code referencing the backend field name `api_key_present`. The fix
+keeps the backend presence-only field for API consumers, adds a neutral
+`credential_present` alias, and updates Wizard HQ to render only credential
+language.
+
+### Regression Tests Added
+
+- Provider registry tests now assert external providers are present, not
+  allowed, locked until policy flow, and never expose secret values.
+- Dashboard tab smoke now asserts `/status/providers`, provider loader,
+  API-family rendering, and toggle-state visual.
+- Existing dashboard first-run smoke caught secret-shaped browser field names;
+  the browser now uses `credential_present`.
+
+### Follow-Up Issues Created Or Recommended
+
+#117 remains open for the write-capable provider setup flow: key submission,
+secret storage, explicit allow toggle, audit event, and cloud-disabled default
+must still be implemented behind backend policy gates.
+
+### Lesson Learned
+
+The setup screen should be provider-aware before it becomes interactive. A good
+toggle UI is not enough; each provider needs the correct backend adapter family.
+
+### What Not To Repeat Next Time
+
+Do not add a universal API key box or a live browser toggle that enables cloud.
+Build provider-specific setup contracts first.
+
+Do not hide live-check diagnostics behind suppressed command output when
+validating new endpoints.
+
+Do not put secret-shaped field names in browser code when a neutral display
+alias can carry the same presence-only state.
+
+Do not treat a `gh run watch` transport failure as CI truth; confirm with
+`gh run view` before classifying release impact.
+
+### Next Recommended Step
+
+Finish #117 by adding the backend-gated secret submission and explicit provider
+allow flow, still presence-only and disabled by default.
+
+### Local Trusted Beta Impact
+
+Improved. Wizard HQ can now explain known provider options without enabling
+external providers or exposing secrets.
+
+### Public Beta Impact
+
+Improved but incomplete. Public Beta still needs the real setup flow, manual
+provider-key tests with dummy values, and full installer retest after UI/setup
+changes settle.
