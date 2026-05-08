@@ -90,6 +90,8 @@ bash pkg/scripts/uninstall.sh --yes --keep-files --remove-data
 HOME_AI_NON_INTERACTIVE=true HOME_AI_SKIP_MODEL_PULLS=true \
   bash install.sh --profile core --skip-model-pulls --non-interactive
 bash launchd/install-launchd.sh
+sleep 35
+bash scripts/doctor.sh
 ```
 
 Expected evidence:
@@ -101,6 +103,11 @@ Expected evidence:
 - native Ollama is used on macOS
 - Merlin status API is available on port 8765 after launchd/manual start
 - Merlin task API is available on port 8766 after launchd/manual start
+- Wizard HQ explains that non-interactive installs leave Merlin API panels
+  warming/degraded until `bash launchd/install-launchd.sh` or the manual API
+  start commands complete
+- launchd warmup language is visible: Status API starts after roughly 35
+  seconds and Task API after roughly 40 seconds
 - no cloud/API keys are required
 - no hidden telemetry is enabled
 
@@ -178,6 +185,7 @@ Wizard HQ must never fake readiness.
 bash tests/dashboard-readiness-smoke.sh
 bash tests/dashboard-merlin-status-smoke.sh
 bash tests/dashboard-security-center-smoke.sh
+bash tests/dashboard-first-run-smoke.sh
 ```
 
 Manual screenshots to capture:

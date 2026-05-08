@@ -1773,3 +1773,141 @@ product blockers: #102, #101, #31, and #32.
 Improved. Stale v1/v2 queue issues no longer compete with the v3.0/v3.1 product
 track, but Public Beta remains blocked by Wizard HQ polish, full evidence,
 model-add UX, memory review/delete, and final packaging trust decisions.
+
+## Issue #102 First-Run Merlin API Readiness Copy
+
+### Date/Time
+
+2026-05-08 06:58:46 EDT
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`2294a33a985b6b236c701734d709f2d75b4b4d55`
+
+### Target Issues
+
+- #102: clarify Wizard HQ status API first-run persistence
+- #101: Wizard HQ Merlin-native front door and Brains tab UX
+- #95: product push audit / release readiness evidence
+
+### Scope
+
+Clarify the first-run state after a non-interactive clean install: Wizard HQ is
+available immediately, but Merlin Status API and Task API panels can remain
+warming/degraded until the user starts APIs manually or installs launchd agents.
+
+This pass changed copy and static tests only. It did not change launchd behavior,
+API behavior, installer service startup order, cloud defaults, model downloads,
+or dashboard execution boundaries.
+
+### Files Changed
+
+- `install.sh`
+- `dashboard/index.html`
+- `tests/dashboard-first-run-smoke.sh`
+- `tests/dashboard-merlin-status-smoke.sh`
+- `tests/installer-merlin-api-policy-smoke.sh`
+- `docs/operations/TRUSTED_LOCAL_BETA_EVIDENCE.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `install.sh`
+
+Reason: #102 specifically concerns install output and first-run next-step copy.
+Only user-facing copy was changed; no install logic, profile selection,
+non-interactive behavior, launchd behavior, model-pull defaults, or cloud
+defaults changed.
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `bash -n install.sh` | PASS |
+| `bash tests/installer-merlin-api-policy-smoke.sh` | PASS |
+| `bash tests/dashboard-first-run-smoke.sh` | PASS |
+| `bash tests/dashboard-merlin-status-smoke.sh` | PASS |
+| `bash tests/beta-readiness-evidence-smoke.sh` | PASS |
+| `git diff --check` | PASS |
+
+### Tests Skipped And Why
+
+- Full clean install retest was not rerun for this copy-only pass. The earlier
+  2026-05-08 clean install evidence already verified the exact behavior this
+  copy now explains: non-interactive install leaves 8765/8766 unavailable until
+  launchd/manual API startup, then `bash launchd/install-launchd.sh`, warmup,
+  and doctor validation make both APIs reachable.
+- Live browser screenshot capture remains part of #101/#95 evidence.
+
+### Failures Found
+
+None in this pass.
+
+### Failure Category
+
+None.
+
+### Root Cause Or Current Hypothesis
+
+The original runtime behavior was intentional but the first-run copy was not
+specific enough for a trusted beta user. Wizard HQ and install output needed to
+name the supported next commands and the 35-40 second launchd warmup window.
+
+### Fix Applied
+
+- Installer output now says non-interactive installs skip direct API start and
+  launchd setup, and that launchd starts Status API on :8765 after roughly 35s
+  and Task API on :8766 after roughly 40s.
+- Installer final command list now includes `bash launchd/install-launchd.sh`
+  and `sleep 35 && bash scripts/doctor.sh`.
+- Wizard HQ now shows persistent API and manual Task API commands in Safe Next
+  Commands.
+- Route panel degraded/warming copy now names `bash scripts/merlin-task-api.sh
+  start` and `bash launchd/install-launchd.sh`.
+- Evidence pack now includes the launchd warmup and first-run API readiness
+  expectations.
+
+### Retest Result
+
+Focused static smokes passed.
+
+### Regression Test Added
+
+Updated existing static smokes:
+
+- `tests/installer-merlin-api-policy-smoke.sh`
+- `tests/dashboard-first-run-smoke.sh`
+- `tests/dashboard-merlin-status-smoke.sh`
+
+These now assert the exact launchd/manual API commands and warmup language.
+
+### Follow-Up Issues Created Or Recommended
+
+No new issue required. #101 remains open for browser visual validation and
+product-shell polish.
+
+### Lesson Learned
+
+A correct degraded state still feels broken if the UI does not explain the exact
+next command and expected warmup timing. First-run copy is part of readiness,
+not a cosmetic detail.
+
+### What Not To Repeat Next Time
+
+Do not say "status panels degraded" without naming the command that resolves the
+state and the time window before it should be judged failed.
+
+### Local Trusted Beta Impact
+
+Improved. The non-interactive clean install path is clearer for trusted beta
+users without changing protected installer behavior.
+
+### Public Beta Impact
+
+Improved but incomplete. Public Beta still requires browser screenshot evidence,
+model-add UX, memory review/delete, final onboarding pass, and later packaging
+trust decisions.

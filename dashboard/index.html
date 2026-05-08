@@ -589,6 +589,10 @@ button, input, textarea { font: inherit; }
       <section class="panel">
         <h2>Route Registry</h2>
         <div id="routes-panel" class="empty">Waiting for `http://localhost:8766/status/routes`.</div>
+        <div class="readonly-note">
+          If routes stay unavailable after install, start the task API with <code>bash scripts/merlin-task-api.sh start</code>
+          or install persistent macOS agents with <code>bash launchd/install-launchd.sh</code>, then wait 35-40 seconds and run <code>bash scripts/doctor.sh</code>.
+        </div>
       </section>
 
       <section class="panel">
@@ -630,6 +634,8 @@ button, input, textarea { font: inherit; }
         <div class="rows">
           <div class="row"><div class="label"><strong>Authoritative status</strong><span>CLI read-only summary</span></div><div class="value">wizard merlin status</div></div>
           <div class="row"><div class="label"><strong>Start status API</strong><span>Local read-only bridge</span></div><div class="value">wizard merlin status-api start</div></div>
+          <div class="row"><div class="label"><strong>Persistent APIs</strong><span>macOS launchd, 35-40s warmup</span></div><div class="value">bash launchd/install-launchd.sh</div></div>
+          <div class="row"><div class="label"><strong>Start task API</strong><span>Route/status panels on 8766</span></div><div class="value">bash scripts/merlin-task-api.sh start</div></div>
           <div class="row"><div class="label"><strong>Open local chat</strong><span>Current model workspace</span></div><div class="value">localhost:3000</div></div>
           <div class="row"><div class="label"><strong>Review approvals</strong><span>No dashboard approve button</span></div><div class="value">wizard merlin approvals list</div></div>
           <div class="row"><div class="label"><strong>Preview routing</strong><span>No side effects</span></div><div class="value">wizard merlin dry-run "goal"</div></div>
@@ -1027,7 +1033,7 @@ function renderReadiness() {
     'core',
     service('8765') ? 'good' : 'warn',
     service('8765') ? 'ready' : 'warming',
-    service('8765') ? 'Status API responded on localhost:8765.' : `${WARMING_COPY} If it stays unavailable, run: wizard merlin status-api start`
+    service('8765') ? 'Status API responded on localhost:8765.' : `${WARMING_COPY} If it stays unavailable, run: wizard merlin status-api start or bash launchd/install-launchd.sh.`
   );
   setStage(
     'hardware',
@@ -1051,7 +1057,7 @@ function renderReadiness() {
     'router',
     service('4000') && service('8766') && routes ? 'good' : 'warn',
     service('4000') && service('8766') && routes ? 'ready' : 'warming',
-    service('4000') && service('8766') ? 'LiteLLM and route registry responded.' : `${WARMING_COPY} Routing status is not ready until LiteLLM and Task API respond.`
+    service('4000') && service('8766') ? 'LiteLLM and route registry responded.' : `${WARMING_COPY} Routing status is not ready until LiteLLM and Task API respond. Start manually with bash scripts/merlin-task-api.sh start or use bash launchd/install-launchd.sh.`
   );
   setStage(
     'privacy',

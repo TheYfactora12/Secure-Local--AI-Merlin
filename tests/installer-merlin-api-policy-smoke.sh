@@ -17,6 +17,12 @@ grep -q 'Merlin status API start skipped in non-interactive mode' "$INSTALLER" \
   || fail "installer should not claim background status API persistence in non-interactive mode"
 grep -q 'launchd/install-launchd.sh' "$INSTALLER" \
   || fail "installer should point users to launchd for persistent status API startup"
+grep -q 'Status API.*35s' "$INSTALLER" \
+  || fail "installer should document status API launchd warmup"
+grep -q 'Task API.*40s' "$INSTALLER" \
+  || fail "installer should document task API launchd warmup"
+grep -q 'sleep 35 && bash scripts/doctor.sh' "$INSTALLER" \
+  || fail "installer should print a post-launchd doctor verification command"
 grep -q 'Read-only Merlin status is separated from task execution' "$INSTALLER" \
   || fail "installer should explain status/task API separation"
 grep -q 'Merlin Task API.*not directly started' "$INSTALLER" \

@@ -30,6 +30,14 @@ grep -q "Secrets Protected" "$DASHBOARD_FILE" \
   || fail "dashboard missing protected-values status"
 grep -q "Current model workspace" "$DASHBOARD_FILE" \
   || fail "dashboard missing local chat command hint"
+grep -q "bash launchd/install-launchd.sh" "$DASHBOARD_FILE" \
+  || fail "dashboard missing persistent launchd first-run command"
+grep -q "bash scripts/merlin-task-api.sh start" "$DASHBOARD_FILE" \
+  || fail "dashboard missing manual task API first-run command"
+grep -q "35-40 seconds" "$DASHBOARD_FILE" \
+  || fail "dashboard missing launchd warmup language"
+grep -q "bash scripts/doctor.sh" "$DASHBOARD_FILE" \
+  || fail "dashboard missing doctor verification command after API warmup"
 
 if grep -qiE '<input|<textarea|type="password"|api[_-]?key|token[[:space:]]*[:=]|password[[:space:]]*[:=]|secret[[:space:]]*[:=]' "$DASHBOARD_FILE"; then
   fail "dashboard first-run must not expose forms or secret-like fields"

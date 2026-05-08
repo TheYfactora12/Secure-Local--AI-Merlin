@@ -925,7 +925,8 @@ if [[ -f "${SCRIPT_DIR}/scripts/merlin-status-api.sh" ]]; then
   if [[ "$NON_INTERACTIVE" == true || ! -t 0 ]]; then
     warn "Skipped direct Merlin Status API background start in non-interactive mode"
     warn "Run manually: bash scripts/merlin-status-api.sh start"
-    warn "For persistent login startup: bash launchd/install-launchd.sh"
+    warn "For persistent Wizard HQ panels on macOS: bash launchd/install-launchd.sh"
+    warn "Launchd starts Status API on :8765 after ~35s and Task API on :8766 after ~40s"
     log_to_file "[WARN] STEP 8B: Merlin status API start skipped in non-interactive mode"
   elif bash "${SCRIPT_DIR}/scripts/merlin-status-api.sh" start >/dev/null 2>&1; then
     MERLIN_STATUS_API_STARTED=true
@@ -961,6 +962,7 @@ if [[ "$OS" == "Darwin" ]] && [[ -f "launchd/install-launchd.sh" ]]; then
   step "macOS Auto-Start (LaunchD)"
   if [[ "$NON_INTERACTIVE" == true ]]; then
     warn "Skipped launchd setup in non-interactive mode — run manually: bash launchd/install-launchd.sh"
+    warn "Wizard HQ status panels will show warming/degraded until launchd or manual API starts complete"
   else
     echo -e "  ${YELLOW}Install launchd agents for auto-start on login? [y/N]${NC}"
     read -r INSTALL_LAUNCHD
@@ -1038,7 +1040,8 @@ if [[ "$MERLIN_STATUS_API_STARTED" == true ]]; then
   echo -e "  ${CYAN}🩺 Merlin Status API:${NC}       http://localhost:8765/status"
 else
   echo -e "  ${YELLOW}! Merlin Status API:${NC}       not started; run: bash scripts/merlin-status-api.sh start"
-  echo -e "  ${YELLOW}! Persistent Status API:${NC}   optional launchd setup: bash launchd/install-launchd.sh"
+  echo -e "  ${YELLOW}! Persistent Merlin APIs:${NC}  macOS: bash launchd/install-launchd.sh"
+  echo -e "  ${YELLOW}! Launchd warmup:${NC}          Status API ~35s, Task API ~40s after registration"
 fi
 echo -e "  ${YELLOW}! Merlin Task API:${NC}         not directly started; run: bash scripts/merlin-task-api.sh start"
 if [[ " ${INSTALL_CAPABILITIES} " == *" search "* ]]; then
@@ -1071,13 +1074,16 @@ echo -e "  ${BOLD}First commands to run:${NC}"
 if command -v wizard >/dev/null 2>&1; then
   echo -e "  ${CYAN}wizard status${NC}                    → full stack health check"
   echo -e "  ${CYAN}wizard merlin status-api status${NC}  → confirm read-only Merlin status API"
+  echo -e "  ${CYAN}bash launchd/install-launchd.sh${NC}  → persistent Wizard HQ status/task panels on macOS"
   echo -e "  ${CYAN}wizard open${NC}                      → open Wizard HQ in browser"
 else
   echo -e "  ${CYAN}${CLI_PATH} status${NC}               → full stack health check"
   echo -e "  ${CYAN}${CLI_PATH} merlin status-api status${NC} → confirm read-only Merlin status API"
+  echo -e "  ${CYAN}bash launchd/install-launchd.sh${NC}  → persistent Wizard HQ status/task panels on macOS"
   echo -e "  ${CYAN}${CLI_PATH} open${NC}                 → open Wizard HQ in browser"
 fi
 echo -e "  ${CYAN}bash scripts/merlin-task-api.sh start${NC}       → optional supervised Merlin Task API on :8766"
+echo -e "  ${CYAN}sleep 35 && bash scripts/doctor.sh${NC}          → verify launchd/API warmup"
 echo ""
 echo -e "  ${BOLD}First-time setup steps:${NC}"
 echo -e "  1. http://localhost:3000  → create your admin account"
