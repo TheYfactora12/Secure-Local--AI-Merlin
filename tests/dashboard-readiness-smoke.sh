@@ -53,8 +53,12 @@ fi
 if grep -q "All systems ready\\|Merlin is ready\\|System ready" "$DASHBOARD_FILE"; then
   fail "dashboard contains fake/static readiness language"
 fi
-if grep -q "method:'POST'\\|method: 'POST'\\|method: \"POST\"\\|fetch(.*POST" "$DASHBOARD_FILE"; then
-  fail "dashboard readiness must not introduce POST or execution calls"
+POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
+[[ "$POST_COUNT" == "1" ]] || fail "dashboard must have exactly one POST: Merlin Task API /task"
+grep -q 'fetch(`${TASK_API}/task`' "$DASHBOARD_FILE" \
+  || fail "dashboard POST must route only through Merlin Task API /task"
+if grep -q "api/generate\\|/api/chat\\|/v1/chat/completions\\|localhost:4000/v1" "$DASHBOARD_FILE"; then
+  fail "dashboard readiness must not call model backends directly"
 fi
 if grep -q "approveGate\\|denyGate\\|data-action=\"approve\"\\|data-action=\"deny\"" "$DASHBOARD_FILE"; then
   fail "dashboard readiness must not introduce approval controls"

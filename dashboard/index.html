@@ -27,6 +27,14 @@
 html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); }
 body { font-size: 14px; line-height: 1.45; }
 button, input, textarea { font: inherit; }
+textarea {
+  width: 100%;
+  border: 1px solid rgba(103, 232, 249, 0.28);
+  border-radius: 8px;
+  background: rgba(5, 6, 7, 0.38);
+  color: var(--text);
+  resize: vertical;
+}
 
 .app { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
 .topbar {
@@ -306,6 +314,83 @@ button, input, textarea { font: inherit; }
   border-radius: 6px;
 }
 
+.chat-panel {
+  display: grid;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 4%, rgba(103, 232, 249, 0.16), transparent 30%),
+    radial-gradient(circle at 84% 12%, rgba(66, 211, 146, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(21, 28, 36, 0.98), rgba(13, 17, 22, 0.98));
+}
+.chat-panel::before {
+  content: "";
+  position: absolute;
+  inset: -32% 22% auto;
+  height: 190px;
+  border: 1px solid rgba(103, 232, 249, 0.14);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+.chat-panel > * { position: relative; }
+.chat-form { display: grid; gap: 10px; }
+.chat-form textarea {
+  min-height: 110px;
+  padding: 12px;
+  line-height: 1.45;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.chat-form textarea:focus {
+  outline: 0;
+  border-color: rgba(103, 232, 249, 0.62);
+  box-shadow: 0 0 0 3px rgba(103, 232, 249, 0.08);
+}
+.chat-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.chat-actions button {
+  border: 1px solid rgba(103, 232, 249, 0.48);
+  border-radius: 8px;
+  min-height: 36px;
+  padding: 8px 13px;
+  background: rgba(103, 232, 249, 0.13);
+  color: var(--cyan);
+  cursor: pointer;
+}
+.chat-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+.chat-hint { color: var(--muted); font-size: 12px; }
+.chat-output { display: grid; gap: 10px; }
+.message {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 12px;
+  background:
+    linear-gradient(180deg, rgba(5, 6, 7, 0.34), rgba(5, 6, 7, 0.20));
+}
+.message .meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.message .body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.route-meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.route-meta .metric { min-height: 62px; padding: 9px; }
+.chat-output .empty { min-height: 84px; }
+
 .action-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -513,8 +598,10 @@ button, input, textarea { font: inherit; }
         <h2>Read-Only Boundary</h2>
         <div class="readonly-note">
           This dashboard performs read-only GET requests against localhost status APIs.
+          Chat uses one policy-gated POST to Merlin Task API <code>/task</code>.
           It does not approve gates, run shell commands, write files, download models,
-          start services, write memory, or execute Magic Mode steps.
+          start services, write memory, execute Magic Mode steps, or call model
+          backends directly.
         </div>
       </section>
     </aside>
@@ -546,6 +633,24 @@ button, input, textarea { font: inherit; }
           <div class="metric"><span>Hardware tier</span><strong id="metric-tier">checking</strong></div>
           <div class="metric"><span>Routes</span><strong id="metric-routes">—</strong></div>
           <div class="metric"><span>Memory vectors</span><strong id="metric-vectors">—</strong></div>
+        </div>
+      </section>
+
+      <section class="panel chat-panel" aria-labelledby="merlin-chat-title">
+        <div>
+          <h2 id="merlin-chat-title">Merlin Chat</h2>
+          <p>Ask through Merlin, not directly through a model. The Task API routes the request, applies approval gates, and returns model/staff metadata.</p>
+        </div>
+        <form class="chat-form" id="merlin-chat-form" onsubmit="submitMerlinChat(event)">
+          <label class="sr-only" for="merlin-chat-input">Ask Merlin</label>
+          <textarea id="merlin-chat-input" name="merlin-chat-input" maxlength="4000" placeholder="Ask Merlin a safe local question..." autocomplete="off" spellcheck="true"></textarea>
+          <div class="chat-actions">
+            <span class="chat-hint">Local-first. No cloud by default. Approval-required routes are blocked, not executed.</span>
+            <button id="merlin-chat-submit" type="submit">Ask Merlin</button>
+          </div>
+        </form>
+        <div id="merlin-chat-output" class="chat-output">
+          <div class="empty">No Merlin Chat request yet. Route metadata will appear here after a safe task response.</div>
         </div>
       </section>
 
@@ -800,6 +905,7 @@ const STATUS_API = 'http://localhost:8765';
 const TASK_API = 'http://localhost:8766';
 const SERVICE_PROBE_TIMEOUT_MS = 5000;
 const STATUS_PANEL_TIMEOUT_MS = 7000;
+const TASK_REQUEST_TIMEOUT_MS = 90000;
 const WARMING_COPY = 'Warming on low-memory systems can take 35-40 seconds after launchd registration.';
 const SERVICE_CHECKS = [
   ['8765', `${STATUS_API}/healthz`],
@@ -867,6 +973,16 @@ function safe(value, fallback = '—') {
   return value === undefined || value === null || value === '' ? fallback : String(value);
 }
 
+function escapeHtml(value) {
+  return safe(value, '').replace(/[&<>"']/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[character]));
+}
+
 function riskClass(risk) {
   const normalized = String(risk || '').toLowerCase();
   if (normalized === 'critical') return 'critical';
@@ -879,6 +995,97 @@ async function getJson(url, timeout = STATUS_PANEL_TIMEOUT_MS) {
   const response = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(timeout) });
   if (!response.ok) throw new Error(`${url} returned ${response.status}`);
   return response.json();
+}
+
+function renderChatOutput({ state, title, body, route, gates, degraded }) {
+  const panel = document.getElementById('merlin-chat-output');
+  if (!panel) return;
+  const chipClass = state === 'approved'
+    ? 'good'
+    : (state === 'pending' ? 'info' : (state === 'blocked' || state === 'degraded' ? 'warn' : 'bad'));
+  const routeData = route || {};
+  const gateText = (gates || routeData.approval_gates || []).join(', ') || 'none';
+  panel.innerHTML = `
+    <div class="message">
+      <div class="meta">
+        <span class="chip ${chipClass}">${escapeHtml(title)}</span>
+        ${degraded ? '<span class="chip warn">degraded</span>' : ''}
+      </div>
+      <div class="body">${escapeHtml(body)}</div>
+    </div>
+    <div class="route-meta">
+      <div class="metric"><span>Route</span><strong>${escapeHtml(routeData.route_id || 'unavailable')}</strong></div>
+      <div class="metric"><span>Staff mode</span><strong>${escapeHtml(routeData.staff_mode || 'unavailable')}</strong></div>
+      <div class="metric"><span>Model</span><strong>${escapeHtml(routeData.selected_model_alias || 'unavailable')}</strong></div>
+      <div class="metric"><span>Approval gates</span><strong>${escapeHtml(gateText)}</strong></div>
+    </div>
+  `;
+}
+
+async function submitMerlinChat(event) {
+  event.preventDefault();
+  const input = document.getElementById('merlin-chat-input');
+  const button = document.getElementById('merlin-chat-submit');
+  const userInput = input ? input.value.trim() : '';
+  if (!userInput) {
+    renderChatOutput({
+      state: 'degraded',
+      title: 'input needed',
+      body: 'Ask Merlin a safe local question before submitting.',
+    });
+    return;
+  }
+
+  if (button) button.disabled = true;
+  renderChatOutput({
+    state: 'pending',
+    title: 'routing through Merlin',
+    body: 'Merlin Task API is classifying the request and checking policy gates.',
+  });
+
+  try {
+    const response = await fetch(`${TASK_API}/task`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ input: userInput }),
+      signal: AbortSignal.timeout(TASK_REQUEST_TIMEOUT_MS),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (response.status === 403) {
+      const detail = data.detail || {};
+      renderChatOutput({
+        state: 'blocked',
+        title: 'approval required',
+        body: safe(detail.message, 'Merlin blocked this request because approval is required before continuing.'),
+        route: { route_id: detail.route_id },
+        gates: detail.approval_gates || [],
+      });
+      await loadApprovals();
+      await loadTraces();
+      return;
+    }
+    if (!response.ok) {
+      throw new Error(`Task API returned ${response.status}`);
+    }
+    renderChatOutput({
+      state: data.approved ? 'approved' : 'degraded',
+      title: data.approved ? 'Merlin response' : 'Merlin degraded',
+      body: safe(data.response, 'Merlin returned no response text.'),
+      route: data.route || {},
+      degraded: Boolean(data.degraded),
+    });
+    await loadRoutes();
+    await loadMemory();
+    await loadTraces();
+  } catch (error) {
+    renderChatOutput({
+      state: 'degraded',
+      title: 'task api unavailable',
+      body: `Merlin Chat is warming or degraded. Start the Task API with bash scripts/merlin-task-api.sh start, then try again. Detail: ${safe(error && error.message, 'unknown error')}`,
+    });
+  } finally {
+    if (button) button.disabled = false;
+  }
 }
 
 async function checkServices() {

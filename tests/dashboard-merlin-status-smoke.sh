@@ -40,14 +40,18 @@ grep -q "loadApprovals" "$DASHBOARD_FILE"
 grep -q "loadRoutes" "$DASHBOARD_FILE"
 grep -q "loadMemory" "$DASHBOARD_FILE"
 grep -q "loadTraces" "$DASHBOARD_FILE"
+grep -q "Merlin Chat" "$DASHBOARD_FILE"
+grep -q "submitMerlinChat" "$DASHBOARD_FILE"
+grep -q 'fetch(`${TASK_API}/task`' "$DASHBOARD_FILE"
 
-if grep -q "method:'POST'\\|method: 'POST'\\|method: \"POST\"\\|fetch(.*POST" "$DASHBOARD_FILE"; then
-  echo "Dashboard v1 must not POST or execute actions" >&2
+POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
+if [[ "$POST_COUNT" != "1" ]]; then
+  echo "Dashboard must have exactly one POST: Merlin Task API /task" >&2
   exit 1
 fi
 
-if grep -q "Ask Wizard\\|wizard-task\\|api/generate" "$DASHBOARD_FILE"; then
-  echo "Dashboard v1 must not expose chat execution controls" >&2
+if grep -q "Ask Wizard\\|wizard-task\\|api/generate\\|/api/chat\\|/v1/chat/completions\\|localhost:4000/v1" "$DASHBOARD_FILE"; then
+  echo "Dashboard must not call model backends directly" >&2
   exit 1
 fi
 

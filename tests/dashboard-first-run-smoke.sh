@@ -43,12 +43,17 @@ grep -q "35-40 seconds" "$DASHBOARD_FILE" \
 grep -q "bash scripts/doctor.sh" "$DASHBOARD_FILE" \
   || fail "dashboard missing doctor verification command after API warmup"
 
-if grep -qiE '<input|<textarea|type="password"|api[_-]?key|token[[:space:]]*[:=]|password[[:space:]]*[:=]|secret[[:space:]]*[:=]' "$DASHBOARD_FILE"; then
-  fail "dashboard first-run must not expose forms or secret-like fields"
+if grep -qiE '<input|type="password"|api[_-]?key|token[[:space:]]*[:=]|password[[:space:]]*[:=]|secret[[:space:]]*[:=]' "$DASHBOARD_FILE"; then
+  fail "dashboard first-run must not expose secret-like fields"
 fi
 
-if grep -q "method:'POST'\\|method: 'POST'\\|method: \"POST\"\\|fetch(.*POST" "$DASHBOARD_FILE"; then
-  fail "dashboard first-run must not introduce POST or execution calls"
+POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
+[[ "$POST_COUNT" == "1" ]] || fail "dashboard must have exactly one POST: Merlin Task API /task"
+grep -q 'fetch(`${TASK_API}/task`' "$DASHBOARD_FILE" \
+  || fail "dashboard POST must route only through Merlin Task API /task"
+
+if grep -q "api/generate\\|/api/chat\\|/v1/chat/completions\\|localhost:4000/v1" "$DASHBOARD_FILE"; then
+  fail "dashboard first-run must not call model backends directly"
 fi
 
 if grep -qiE '<button[^>]*>[^<]*(download|pull|approve|run|write|configure)|downloadModel|pullModel|runShell|writeMemory|configureProvider' "$DASHBOARD_FILE"; then

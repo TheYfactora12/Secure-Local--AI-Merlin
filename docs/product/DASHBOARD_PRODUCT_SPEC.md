@@ -23,13 +23,15 @@ Open WebUI can remain available as a proven chat UI, but the Home AI Elite dashb
 
 ## MVP Scope
 
-MVP dashboard is read-only and command-center-first while the task execution
-surface remains approval-gated behind Merlin APIs:
+MVP dashboard is command-center-first. Status surfaces remain read-only, while
+native chat is allowed to submit exactly one policy-gated request path through
+Merlin Task API `/task`:
 
 - Startup Readiness surface that computes ready/degraded/fix-needed states from
   live localhost GET checks instead of hardcoded success.
 - Status panels from port 8765 and `/status/*` panels from port 8766.
-- Active route, staff mode, selected model, fallback state, and approval state.
+- Merlin Chat surface with active route, staff mode, selected model, fallback
+  state, response state, and approval state.
 - Local-only/cloud-disabled indicator.
 - Hardware tier and low-memory warnings.
 - Memory collection health and approved memory status.
@@ -64,17 +66,18 @@ The v3.0 front-door layout should use an Apple-level, tabbed product shell:
 - **Settings:** future safe configuration surface for providers, models,
   privacy, backups, and advanced developer controls.
 
-MVP for this front-door slice should be status-first and mostly read-only:
-tabs, information architecture, provider/model status cards, clear empty states,
-and safe links. It must not add model downloads, cloud routing, API key
-submission, memory writes, approval execution, shell/browser/file actions, or
-autonomous Magic Mode execution until those flows have separate policy-gated
-backend issues and tests.
+MVP for this front-door slice should be status-first and tightly scoped: tabs,
+information architecture, provider/model status cards, clear empty states, safe
+links, and one Merlin Chat request path through `/task`. It must not add model
+downloads, direct model backend calls, cloud routing, API key submission, memory
+writes, approval execution, shell/browser/file actions, or autonomous Magic
+Mode execution until those flows have separate policy-gated backend issues and
+tests.
 
 ## Out Of Scope For MVP
 
 - Autonomous execution.
-- Browser chat submission or task execution from the static dashboard.
+- Direct browser calls to model backends or unsafe execution endpoints.
 - Browser or shell control.
 - Dashboard-driven package installs.
 - Automatic cloud routing.
@@ -90,14 +93,14 @@ backend issues and tests.
 |---|---|---|
 | Legacy read-only health | `http://localhost:8765/status` | Security contract: read-only only |
 | Task route/status panels | `http://localhost:8766/status/*` | Execution-aware FastAPI app |
-| Future chat/task response | `POST http://localhost:8766/task` | Not used by read-only v2.1 launch dashboard |
+| Native Merlin Chat | `POST http://localhost:8766/task` | Only allowed browser POST; policy-gated by Merlin Task API |
 | Open WebUI | `http://localhost:3000` | Current local chat bridge remains linked until native Merlin Chat is policy-gated |
 | Ollama model list | `http://localhost:11434/api/tags` | Localhost only |
 | Qdrant health | `http://localhost:6333/healthz` | Local memory |
 
 ## Product Risks
 
-- Dashboard becomes a second execution surface before policy gates are ready.
+- Dashboard bypasses Merlin Task API and becomes a second direct execution surface.
 - Users confuse plan-only Magic Mode with autonomous execution.
 - UI hides local-only/cloud state too deeply.
 - 8 GB users see options their machine cannot safely run.

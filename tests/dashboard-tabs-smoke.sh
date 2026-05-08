@@ -50,6 +50,16 @@ grep -q "open-chat-workspace" "$DASHBOARD_FILE" \
   || fail "dashboard missing stable chat workspace link id"
 grep -q "Open WebUI runs the chat engine today; Merlin owns routing, policy, memory, and status around it" "$DASHBOARD_FILE" \
   || fail "dashboard missing honest chat bridge boundary"
+grep -q "Merlin Chat" "$DASHBOARD_FILE" \
+  || fail "dashboard missing native Merlin Chat surface"
+grep -q "submitMerlinChat" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Merlin Chat submit handler"
+grep -q 'fetch(`${TASK_API}/task`' "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must route through Task API /task"
+grep -q "selected_model_alias" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must render selected model metadata"
+grep -q "approval required" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must handle approval-required responses"
 grep -q "Cloud Providers" "$DASHBOARD_FILE" \
   || fail "dashboard missing cloud provider disabled surface"
 grep -q "cloud disabled by default" "$DASHBOARD_FILE" \
@@ -91,11 +101,14 @@ grep -q "#31 / #32" "$DASHBOARD_FILE" \
 grep -q "Cloud escalation" "$DASHBOARD_FILE" \
   || fail "dashboard missing cloud escalation setting"
 
-if grep -q "method:'POST'\\|method: 'POST'\\|method: \"POST\"\\|fetch(.*POST" "$DASHBOARD_FILE"; then
-  fail "dashboard tab shell must not add POST or execution calls"
+POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
+[[ "$POST_COUNT" == "1" ]] || fail "dashboard must have exactly one POST: Merlin Task API /task"
+
+if grep -q "api/generate\\|/api/chat\\|/v1/chat/completions\\|localhost:4000/v1" "$DASHBOARD_FILE"; then
+  fail "dashboard tab shell must not call model backends directly"
 fi
 
-if grep -qiE '<input|<textarea|type="password"|downloadModel|pullModel|runShell|writeMemory|configureProvider|approveGate|denyGate|data-action="approve"|data-action="deny"' "$DASHBOARD_FILE"; then
+if grep -qiE '<input|type="password"|downloadModel|pullModel|runShell|writeMemory|configureProvider|approveGate|denyGate|data-action="approve"|data-action="deny"' "$DASHBOARD_FILE"; then
   fail "dashboard tab shell must not expose unsafe setup/action controls"
 fi
 

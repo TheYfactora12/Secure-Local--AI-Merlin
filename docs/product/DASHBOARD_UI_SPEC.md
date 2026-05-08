@@ -6,9 +6,8 @@ Last updated: 2026-05-08
 
 The dashboard should feel like a refined Merlin-native command center, not a
 container status page. The v2.1 launch surface is **Wizard HQ**: a premium,
-read-only local AI operations dashboard that exposes trust signals before it
-adds chat execution. Later releases can bring the ChatGPT-style conversation
-surface into the center once `/task` execution and approval UX are fully gated.
+local AI operations dashboard that exposes trust signals and routes chat only
+through Merlin Task API. Any privileged action remains behind policy gates.
 
 The theme should be strong wizard, not novelty wizard. Use a dark, premium interface with restrained arcane details: subtle geometric intelligence, luminous focus states, clear typography, green/yellow/red operational states, and a single Merlin identity system. Avoid cartoon assets, oversized decorative cards, and one-note purple/blue gradients.
 
@@ -32,16 +31,18 @@ ready/degraded state.
 
 The chat experience should be usable even if optional services are down. If LiteLLM or the task API is unavailable, the UI should show a clear startup/degraded message, not a broken dashboard.
 
-For v2.1 specifically, the static dashboard must not submit chat/tasks. Browser
-task execution returns in a later issue after policy-gated approval UX is
-designed and tested.
+For the native chat slice, the dashboard may submit exactly one browser POST to
+`http://localhost:8766/task`. It must not call LiteLLM, Ollama generation APIs,
+approval endpoints, shell/file operations, model downloads, or memory writes
+directly.
 
 ## Core Interaction Model
 
 Merlin Chat:
 
-- Target state: the composer is the primary action, with large readable text and an obvious send button.
-- Current safe bridge: Wizard HQ opens Open WebUI in a separate tab for chat while Merlin owns routing, policy, memory, audit, and readiness around it.
+- The composer is the primary action, with large readable text and an obvious send button.
+- Native chat routes through Merlin Task API, then shows route/staff/model metadata inline.
+- Open WebUI remains linked as an alternate local chat bridge while Merlin owns routing, policy, memory, audit, and readiness around it.
 - Responses show the selected staff mode, route confidence, model alias, and whether memory was used.
 - Approval-required responses are shown inline with the blocked gate names and a safe next command.
 - Raw prompts, secrets, API keys, and model response text are never written to dashboard logs.

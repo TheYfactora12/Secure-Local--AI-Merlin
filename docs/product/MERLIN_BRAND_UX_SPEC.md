@@ -80,8 +80,8 @@ Before the first public launch test, the installer/downloader path should show
 the Merlin AI mark and product name so the user understands they are installing
 the sovereign local AI system, not a generic script bundle.
 
-This work belongs in the public-release packaging milestone, not in the read-only
-dashboard slice. The protected installer should only be changed through a
+This work belongs in the public-release packaging milestone, not in the
+dashboard/chat slice. The protected installer should only be changed through a
 dedicated packaging issue with tests for:
 
 - branded welcome/summary surface where the packaging format supports it
@@ -110,9 +110,13 @@ brand only to user-facing package and terminal surfaces:
 
 ## Launch Guardrails
 
-- Dashboard v1 is read-only.
+- Wizard HQ status surfaces are read-only.
+- Merlin Chat may submit exactly one policy-gated request path through
+  `POST http://localhost:8766/task`.
 - No shell, file, memory-write, approval, model-download, or Magic Mode
   execution controls appear in the browser.
+- The browser must not call LiteLLM, Ollama generation APIs, cloud providers,
+  approval endpoints, memory-write endpoints, or shell/file endpoints directly.
 - All risky actions stay behind Merlin policy gates and the CLI/API approval
   model.
 - No raw prompts, model responses, or sensitive values are stored in browser

@@ -2197,3 +2197,185 @@ bridge, and treat Settings as locked until policy-gated flows are built.
 Improved but still blocked. Public Beta still needs native Wizard HQ chat or an
 intentional bridge/onboarding design, complete memory review/delete UX,
 installer retest evidence, and final release packaging guidance.
+
+## Issue #113 Native Merlin Chat Slice
+
+### Date/Time
+
+2026-05-08 07:56:43 EDT
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`86cdd395d4fae7f91d46b3631c568f71ff138e0b`
+
+### Target Issues
+
+- #113: Native Merlin Chat inside Wizard HQ
+- #106: Wizard HQ Product Shell parent
+- #95: product push audit / release readiness evidence
+
+### Scope
+
+Add the first native Merlin Chat surface inside Wizard HQ. The browser may now
+submit exactly one policy-gated request path: `POST http://localhost:8766/task`.
+The browser still must not call Ollama, LiteLLM, cloud APIs, approval endpoints,
+shell/file operations, model downloads, or memory writes directly.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `docs/product/DASHBOARD_PRODUCT_SPEC.md`
+- `docs/product/DASHBOARD_UI_SPEC.md`
+- `docs/product/MERLIN_BRAND_UX_SPEC.md`
+- `.github/workflows/ci.yml`
+- `tests/dashboard-native-chat-smoke.sh`
+- `tests/dashboard-first-run-smoke.sh`
+- `tests/dashboard-merlin-status-smoke.sh`
+- `tests/dashboard-readiness-smoke.sh`
+- `tests/dashboard-tabs-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `.github/workflows/ci.yml` was touched only to add the new static dashboard
+  native-chat smoke to CI.
+
+Runtime protected files were not changed: installer, package scripts, router,
+policy engine, memory manager, task endpoint, status API, Docker defaults, and
+launchd behavior remain untouched.
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `gh issue view 113 --json number,title,state,body,labels,milestone` | PASS; confirmed #113 scope and acceptance criteria. |
+| `sed -n '1,260p' merlin/task_endpoint.py` | PASS; verified existing `/task` endpoint, response shape, approval-required 403, degraded fallback, and route metadata. |
+| `rg -n "app\\.|@app|/task|status/routes|TaskRequest|TaskResponse|POST|class .*Request|class .*Response" merlin/task_endpoint.py merlin/router.py dashboard/index.html tests` | PASS; confirmed the backend contract and existing dashboard POST bans that needed updating. |
+| `bash tests/dashboard-native-chat-smoke.sh` | PASS; verifies native Merlin Chat routes through Task API `/task`, renders route/staff/model metadata, and avoids direct model/backend action calls. |
+| `bash tests/dashboard-tabs-smoke.sh` | PASS; tab shell remains Merlin-native with the narrowed safe POST boundary. |
+| `bash tests/dashboard-first-run-smoke.sh` | PASS; first-run product clarity remains safe. |
+| `bash tests/dashboard-merlin-status-smoke.sh` | PASS; status panel contract remains intact. |
+| `bash tests/dashboard-readiness-smoke.sh` | PASS; readiness surface remains honest. |
+| `bash tests/dashboard-security-center-smoke.sh` | PASS; no approval controls exposed. |
+| `bash tests/control-plane-strategy-smoke.sh` | PASS; strategy/canonical queue still scoped to current/future boundaries. |
+| `bash tests/master-prompt-smoke.sh` | PASS; master prompt/context remain current. |
+| `bash -n install.sh` | PASS; installer syntax unchanged and valid. |
+| `bash install.sh --help` | PASS; install help still renders. |
+| `bash tests/installer-branding-smoke.sh` | PASS; #94 installer branding remains protected. |
+| `bash tests/pkg-readiness-smoke.sh` | PASS; package readiness checks remain valid. |
+| `bash tests/uninstall-smoke.sh` | PASS; uninstaller remains guarded and testable. |
+| `bash tests/release-readiness-readme-smoke.sh` | PASS; README release-readiness positioning remains conservative. |
+| Full CI static smoke sequence from `.github/workflows/ci.yml` | PASS overall; surfaced one local sandbox bind failure in `tests/merlin-status-api-smoke.sh`, documented below. |
+| `bash tests/merlin-status-api-smoke.sh` with host-level permission | PASS; confirmed the prior bind failure was environment/sandbox-specific, not a product regression. |
+| `curl -sS --max-time 5 http://127.0.0.1:8766/status/routes` | PASS; Task API route status is available. |
+| `curl -sS --max-time 5 http://127.0.0.1:8766/status/approvals` | PASS; Task API approval status is available and all 15 gates fail closed. |
+| `curl -sS --max-time 5 http://127.0.0.1:8765/healthz` | PASS; read-only status API health endpoint is available. |
+| `curl -sS --max-time 25 -X POST http://127.0.0.1:8766/task -H 'Content-Type: application/json' -d '{"input":"explain what Merlin is in one short paragraph"}'` | DEGRADED; Task API accepted the request and returned a safe degraded response: `Merlin is starting up. Try again in 30 seconds.` |
+| `curl -sS --max-time 5 http://127.0.0.1:4000/health/readiness` | PASS; LiteLLM is healthy. |
+| `curl -sS --max-time 5 http://127.0.0.1:11434/api/tags` | PASS; Ollama is healthy but only `nomic-embed-text:latest` is installed. |
+| `bash scripts/status.sh` | PASS; Dashboard, Open WebUI, LiteLLM, Qdrant, and Ollama running; Ollama model list confirms only the embedding model is loaded. |
+| `git diff --check` | PASS; no whitespace errors. |
+
+### Tests Skipped And Why
+
+Live browser/manual chat test is still pending. This implementation is static
+and API-contract aligned, but it still needs a running Task API + LiteLLM +
+local model validation pass before #113 can be closed.
+
+### Failures Found
+
+- Full static smoke sequence printed a `PermissionError: [Errno 1] Operation
+  not permitted` while `tests/merlin-status-api-smoke.sh` tried to bind its
+  local test server from the sandbox.
+- Live `/task` call returned a degraded response instead of model content
+  because no chat-capable Ollama model is currently installed.
+- A boundary change was identified before testing: older dashboard smokes
+  banned all POSTs. Those tests were updated to allow exactly one safe POST to
+  Merlin Task API `/task` and continue blocking direct model backend calls.
+
+### Failure Category
+
+- Test design gap
+- Wizard HQ/dashboard
+- Release tooling/operator environment
+- LiteLLM/model router runtime readiness
+
+### Root Cause Or Current Hypothesis
+
+The dashboard had correctly been read-only until #113. Native chat changes the
+contract from "no browser POSTs" to "exactly one policy-gated browser POST to
+Merlin Task API." The tests needed to encode that more precise boundary.
+
+The status API bind failure was environment-specific: rerunning
+`tests/merlin-status-api-smoke.sh` with host-level permission passed.
+
+The live `/task` degraded result means the new Wizard HQ chat panel is wired to
+the correct backend boundary, but the end-to-end response path still needs a
+chat-capable local model before #113 can be closed.
+
+### Fix Applied
+
+- Added a premium native Merlin Chat panel inside Wizard HQ.
+- Added a single submit path to `POST ${TASK_API}/task`.
+- Rendered response, degraded state, route id, staff mode, selected model alias,
+  and approval gates.
+- Added approval-required handling for 403 responses without approving or
+  executing anything in the browser.
+- Updated product docs to reflect the new boundary: status is read-only, native
+  chat is policy-gated through `/task`.
+- Added `tests/dashboard-native-chat-smoke.sh` and wired it into CI.
+- Reran the status API smoke with host-level permission to prove the bind error
+  was not a product regression.
+- Kept #113 open because live `/task` returned degraded rather than a routed
+  model response.
+- Did not auto-download a model. This preserves the no-surprise-model-download
+  rule.
+
+### Retest Result
+
+Focused static dashboard, security, governance, docs, and whitespace checks
+passed locally. The full static smoke sequence completed, and the one sandbox
+bind failure was retested successfully with host-level permission.
+
+Live Task API validation reached `/task` but returned degraded because only the
+embedding model is installed. This is safe behavior, not completion evidence.
+
+### Regression Tests Added
+
+- `tests/dashboard-native-chat-smoke.sh`
+- Existing dashboard smokes now require exactly one Task API `/task` POST and
+  reject direct model backend calls such as Ollama generation or LiteLLM chat
+  completion paths.
+
+### Follow-Up Issues Created Or Recommended
+
+No new issue required yet. Keep #113 open until a live browser/API validation
+proves the native chat panel returns non-degraded model content against running
+core services with a chat-capable local model installed.
+
+### Lesson Learned
+
+"Read-only dashboard" was too broad once native chat became the main product
+surface. The stronger rule is more specific: browser status panels are read-only
+and chat may only go through Merlin's policy-gated Task API.
+
+### What Not To Repeat Next Time
+
+Do not loosen browser security by allowing generic POSTs. Any future browser
+action must name its exact endpoint, backend gate, response shape, and tests.
+
+### Local Trusted Beta Impact
+
+Improved. Wizard HQ now starts becoming the actual user workspace instead of a
+status shell plus external chat link, but the live model response path still
+needs validation.
+
+### Public Beta Impact
+
+Improved but still not complete. Public Beta still requires live browser
+validation, memory review/delete UX, policy-gated Settings, installer retest
+evidence, and final onboarding/release docs.
