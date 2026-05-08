@@ -3162,6 +3162,11 @@ Issue creation initially failed when using a non-existent `security` label.
 The repo's current labels were checked with `gh label list --limit 100`, and
 the issues were recreated with existing labels only.
 
+Posting the final #114 tracking comment also hit a transient
+`error connecting to api.github.com` failure. The same comment command was
+retried after network escalation and succeeded:
+`https://github.com/TheYfactora12/home-ai-elite/issues/114#issuecomment-4407340308`.
+
 ### Lesson Learned
 
 Settings should become useful through a backend policy manifest before any
