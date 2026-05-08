@@ -480,3 +480,94 @@ and tightened the first-run diagnostics surface for 8GB/core.
 Improved but not enough for Public Beta. The product is closer to a controlled
 Local Trusted Beta path, but public release still requires packaging/signing and
 full human-facing onboarding evidence.
+
+---
+
+## Issue #100 Warmup Diagnostics Fix — 2026-05-08 UTC
+
+### Scope
+
+Harden first-run readiness diagnostics so 8GB/core users see `warming` and
+historical-log guidance instead of ambiguous degraded/down states.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `scripts/doctor.sh`
+- `tests/dashboard-readiness-smoke.sh`
+- `tests/doctor-warmup-diagnostics-smoke.sh`
+
+### Commands Run
+
+| Command | Result |
+|---|---|
+| `gh issue edit 100 --milestone "v3.0 — Public Product Release" --add-label "v3.0" --add-label "release" --add-label "ux" --add-label "qa" --add-label "priority: high"` | PASS |
+| `bash tests/doctor-warmup-diagnostics-smoke.sh` | PASS |
+| `bash tests/dashboard-readiness-smoke.sh` | PASS |
+| `bash scripts/doctor.sh` | PASS; `52 passed / 3 warnings / 0 failures` |
+| `bash scripts/status.sh` | PASS |
+| `bash tests/dashboard-merlin-status-smoke.sh` | PASS |
+| `bash tests/dashboard-security-center-smoke.sh` | PASS |
+| `bash tests/beta-readiness-evidence-smoke.sh` | PASS |
+| `git diff --check` | PASS |
+
+### Failures Found
+
+- Static dashboard smoke initially expected `readiness: degraded`, but #100
+  intentionally changes launchd/API startup copy to `readiness: warming`.
+
+### Failure Category
+
+- Test design gap
+- UX/readiness confusion
+
+### Root Cause Or Current Hypothesis
+
+The old test encoded the previous degraded-state language and did not reflect
+the newer warmup contract for launchd-delayed services on 8GB systems.
+
+### Fix Applied
+
+- Increased dashboard service probe timeout to 5 seconds.
+- Increased dashboard status-panel timeout to 7 seconds.
+- Added shared launchd warmup copy: 35-40 seconds after launchd registration.
+- Changed Task API, approvals, memory, router, and final readiness copy from
+  premature degraded/fix-needed language to warming where appropriate.
+- Updated doctor to label stale log warnings as historical when Merlin API ports
+  are currently open.
+- Added a safe stale-log remediation hint after evidence is saved.
+
+### Retest Result
+
+All #100 targeted tests passed locally. Live doctor output now says:
+
+`Historical log scan: 1 ERROR/CRITICAL lines found, but Merlin API ports are currently open`
+
+### Regression Tests Added
+
+- `tests/doctor-warmup-diagnostics-smoke.sh`
+
+Regression tests updated:
+
+- `tests/dashboard-readiness-smoke.sh`
+
+### Lessons Learned
+
+Readiness UX must model time. On an 8GB Mac, a service can be correctly
+launching and still look down for a short window. The product should call that
+`warming`, not make the user diagnose launchd timing.
+
+### What Not To Repeat Next Time
+
+Do not encode degraded-state wording in tests when the intended state is a
+temporary launchd warmup window.
+
+### Local Trusted Beta Impact
+
+Improved. This removes one of the remaining first-run trust gaps from the prior
+evidence run.
+
+### Public Beta Impact
+
+Improved, but Public Beta remains blocked by signing/notarization and full
+package/onboarding evidence.

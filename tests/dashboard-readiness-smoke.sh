@@ -34,8 +34,14 @@ grep -q "status.cloud_allowed === false" "$DASHBOARD_FILE" \
   || fail "dashboard readiness does not verify cloud-disabled state"
 grep -q "status.online_mode === false" "$DASHBOARD_FILE" \
   || fail "dashboard readiness does not verify local/offline policy"
-grep -q "readiness: degraded" "$DASHBOARD_FILE" \
-  || fail "dashboard missing degraded readiness state"
+grep -q "readiness: warming" "$DASHBOARD_FILE" \
+  || fail "dashboard missing warming readiness state"
+grep -q "SERVICE_PROBE_TIMEOUT_MS = 5000" "$DASHBOARD_FILE" \
+  || fail "dashboard service probe timeout is too short for 8GB warmup"
+grep -q "STATUS_PANEL_TIMEOUT_MS = 7000" "$DASHBOARD_FILE" \
+  || fail "dashboard status panel timeout is too short for 8GB warmup"
+grep -q "35-40 seconds after launchd registration" "$DASHBOARD_FILE" \
+  || fail "dashboard missing launchd warmup guidance"
 grep -q "fix needed" "$DASHBOARD_FILE" \
   || fail "dashboard missing fix-needed wording"
 grep -q "warming" "$DASHBOARD_FILE" \

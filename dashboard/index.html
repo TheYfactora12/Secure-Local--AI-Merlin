@@ -464,6 +464,9 @@ button, input, textarea { font: inherit; }
 // http://localhost:8766/status/traces
 const STATUS_API = 'http://localhost:8765';
 const TASK_API = 'http://localhost:8766';
+const SERVICE_PROBE_TIMEOUT_MS = 5000;
+const STATUS_PANEL_TIMEOUT_MS = 7000;
+const WARMING_COPY = 'Warming on low-memory systems can take 35-40 seconds after launchd registration.';
 const SERVICE_CHECKS = [
   ['8765', `${STATUS_API}/healthz`],
   ['8766', `${TASK_API}/status/routes`],
@@ -529,7 +532,7 @@ function riskClass(risk) {
   return 'low';
 }
 
-async function getJson(url, timeout = 2500) {
+async function getJson(url, timeout = STATUS_PANEL_TIMEOUT_MS) {
   const response = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(timeout) });
   if (!response.ok) throw new Error(`${url} returned ${response.status}`);
   return response.json();
@@ -538,7 +541,7 @@ async function getJson(url, timeout = 2500) {
 async function checkServices() {
   await Promise.all(SERVICE_CHECKS.map(async ([id, url]) => {
     try {
-      await fetch(url, { method: 'GET', signal: AbortSignal.timeout(1800) });
+      await fetch(url, { method: 'GET', signal: AbortSignal.timeout(SERVICE_PROBE_TIMEOUT_MS) });
       readinessState.services[id] = true;
       dot(id, 'good');
     } catch (_) {
@@ -593,10 +596,10 @@ async function loadRoutes() {
     `;
   } catch (_) {
     readinessState.routes = null;
-    setChip('chip-task-api', 'task_api: degraded', 'warn');
-    text('metric-routes', 'degraded');
+    setChip('chip-task-api', 'task_api: warming', 'warn');
+    text('metric-routes', 'warming');
     panel.className = 'degraded';
-    panel.textContent = 'Task API unavailable. Route registry is degraded, but this dashboard remains read-only.';
+    panel.textContent = `Task API is warming or unavailable. ${WARMING_COPY} This dashboard remains read-only.`;
   }
 }
 
@@ -618,7 +621,7 @@ async function loadApprovals() {
     panel.innerHTML = gates || '<div class="empty">No gates returned.</div>';
   } catch (_) {
     panel.className = 'degraded';
-    panel.textContent = 'Approval status unavailable. Policy remains fail-closed if the API cannot load gates.';
+    panel.textContent = `Approval status is warming or unavailable. ${WARMING_COPY} Policy remains fail-closed if the API cannot load gates.`;
   }
 }
 
@@ -638,9 +641,9 @@ async function loadMemory() {
     panel.innerHTML = data.degraded ? 'Memory API degraded. Merlin continues without exposing raw memory data.' : collections;
   } catch (_) {
     readinessState.memory = null;
-    text('metric-vectors', 'degraded');
+    text('metric-vectors', 'warming');
     panel.className = 'degraded';
-    panel.textContent = 'Memory status unavailable. No memory contents or protected values are displayed.';
+    panel.textContent = `Memory status is warming or unavailable. ${WARMING_COPY} No memory contents or protected values are displayed.`;
   }
 }
 
@@ -676,9 +679,9 @@ function renderReadiness() {
 
   setStage(
     'core',
-    service('8765') ? 'good' : 'bad',
-    service('8765') ? 'ready' : 'fix needed',
-    service('8765') ? 'Status API responded on localhost:8765.' : 'Start with: wizard merlin status-api start'
+    service('8765') ? 'good' : 'warn',
+    service('8765') ? 'ready' : 'warming',
+    service('8765') ? 'Status API responded on localhost:8765.' : `${WARMING_COPY} If it stays unavailable, run: wizard merlin status-api start`
   );
   setStage(
     'hardware',
@@ -695,14 +698,14 @@ function renderReadiness() {
   setStage(
     'memory',
     service('6333') && memory && !memory.degraded ? 'good' : 'warn',
-    service('6333') && memory && !memory.degraded ? 'ready' : 'degraded',
-    service('6333') ? 'Qdrant responded; memory status loaded when task API is available.' : 'Qdrant is unavailable; memory vault is degraded.'
+    service('6333') && memory && !memory.degraded ? 'ready' : 'warming',
+    service('6333') ? 'Qdrant responded; memory status loads after the Task API finishes warming.' : 'Qdrant is unavailable; memory vault is degraded.'
   );
   setStage(
     'router',
     service('4000') && service('8766') && routes ? 'good' : 'warn',
-    service('4000') && service('8766') && routes ? 'ready' : 'degraded',
-    service('4000') && service('8766') ? 'LiteLLM and route registry responded.' : 'LiteLLM or task API unavailable; routing status is degraded.'
+    service('4000') && service('8766') && routes ? 'ready' : 'warming',
+    service('4000') && service('8766') ? 'LiteLLM and route registry responded.' : `${WARMING_COPY} Routing status is not ready until LiteLLM and Task API respond.`
   );
   setStage(
     'privacy',
@@ -721,10 +724,10 @@ function renderReadiness() {
   setStage(
     'final',
     requiredReady ? 'good' : 'warn',
-    requiredReady ? 'ready' : 'degraded',
+    requiredReady ? 'ready' : 'warming',
     requiredReady ? 'Core local services and privacy checks are ready.' : 'One or more core checks are warming, degraded, or need attention.'
   );
-  setChip('chip-readiness', requiredReady ? 'readiness: ready' : 'readiness: degraded', requiredReady ? 'good' : 'warn');
+  setChip('chip-readiness', requiredReady ? 'readiness: ready' : 'readiness: warming', requiredReady ? 'good' : 'warn');
   metricState('brain-local-model', service('11434') ? 'good' : 'warn', service('11434') ? 'available' : 'degraded');
   metricState('brain-runtime', service('11434') ? 'good' : 'warn', service('11434') ? 'Ollama Native' : 'unavailable');
   metricState('brain-acceleration', status && status.hardware_tier === 'low' ? 'warn' : 'info', status && status.hardware_tier ? `${status.hardware_tier} tier` : 'checking');

@@ -375,11 +375,13 @@ else
 fi
 
 echo -e "\n${BOLD}Merlin Core${NC}"
+MERLIN_PORTS_OPEN=0
 for port in 8765 8766; do
   if lsof -ti :"$port" >/dev/null 2>&1 || nc -z localhost "$port" 2>/dev/null; then
     pass "Port $port is open"
+    MERLIN_PORTS_OPEN=$((MERLIN_PORTS_OPEN + 1))
   else
-    warn "Port $port is closed"
+    warn "Port $port is closed or warming after launchd registration"
   fi
 done
 LOG_ERROR_COUNT=0
@@ -390,6 +392,9 @@ if [[ -d "${STACK_DIR}/logs" ]]; then
   done < <(find "${STACK_DIR}/logs" -maxdepth 1 \( -name "*.log" -o -name "*.jsonl" \) 2>/dev/null || true)
   if (( LOG_ERROR_COUNT == 0 )); then
     pass "Log scan: 0 errors found"
+  elif (( MERLIN_PORTS_OPEN == 2 )); then
+    warn "Historical log scan: ${LOG_ERROR_COUNT} ERROR/CRITICAL lines found, but Merlin API ports are currently open"
+    info "If this is confusing, rotate logs after saving evidence: truncate -s 0 logs/*.log"
   else
     warn "Log scan: ${LOG_ERROR_COUNT} ERROR/CRITICAL lines found"
   fi
