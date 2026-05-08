@@ -82,15 +82,14 @@ flowchart LR
 | `v1.7 — Security Hardening` | Closed | #80 added the explicit fail-closed `webhook_execution` gate without changing webhook defaults. |
 | `v2.0 — Merlin Staff Core` | Mostly complete, follow-up queue open | Phase 2 runtime complete; remaining issues are follow-up visibility, approval, delete, and governance work. |
 | `v2.1 — Dashboard Command Center` | Closed | Read-only Wizard HQ command center and security approvals panel complete. |
-| `v2.2 — Magic Mode` | Future | Plan-first supervised orchestration only. |
-| `v3.0 — Public Product Release` | Future | Public packaging, onboarding, signing/notarization. |
+| `v2.2 — Magic Mode` | Closed | Plan-only Magic Mode and local redacted audit viewer complete. |
+| `v3.0 — Public Product Release` | Active | Public packaging, onboarding, signing/notarization, installer branding, and release readiness. |
 | `v3.x — Native Automation Runtime` | Future | Last-mile commercial runtime to supplement or replace n8n after core workflows prove the owned shape. |
 
 ## Active Execution Queue
 
-1. #33 and #34: Magic Mode plan-only UI and audit viewer in v2.2.
-2. #37, #64, and #94: Public release hardening, Developer ID/notarization, and installer/downloader Merlin branding in v3.0.
-3. #92: Native Automation Runtime in v3.x.
+1. #37, #64, #94, and #95: Public release hardening, Developer ID/notarization, installer/downloader Merlin branding, and release readiness audit in v3.0.
+2. #92: Native Automation Runtime in v3.x.
 
 Patent/IP issues #81 through #84 are cross-cutting governance work. They should
 not add novel claim language to public docs unless the inventor explicitly
