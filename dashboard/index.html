@@ -554,10 +554,10 @@ button, input, textarea { font: inherit; }
         <div class="action-grid">
           <div class="action-card">
             <div>
-              <strong>Open Merlin Local Chat</strong>
-              <span>Use the local chat workspace powered by Open WebUI and the active Ollama model. Merlin status remains visible here.</span>
+              <strong>Open Merlin Chat Workspace</strong>
+              <span>Launch the current local chat bridge in a separate tab. Open WebUI runs the chat engine today; Merlin owns routing, policy, memory, and status around it.</span>
             </div>
-            <a href="http://localhost:3000" target="_blank" rel="noreferrer">Open local chat</a>
+            <a id="open-chat-workspace" href="http://localhost:3000" target="_blank" rel="noreferrer">Open chat</a>
           </div>
           <div class="action-card">
             <div>
@@ -779,9 +779,12 @@ button, input, textarea { font: inherit; }
       <span class="chip warn">configuration locked</span>
     </div>
     <section class="surface-grid">
-      <article class="surface-card"><h3>Provider Settings</h3><p>External provider setup is deferred until safe secret storage and explicit enablement are implemented.</p><div class="status-list"><div class="status-pill"><strong>API key fields</strong><span class="locked">not available</span></div><div class="status-pill"><strong>Cloud default</strong><span class="off">off</span></div></div></article>
-      <article class="surface-card"><h3>Model Settings</h3><p>Model additions should stay explicit, visible, and hardware-aware.</p><div class="status-list"><div class="status-pill"><strong>Downloads</strong><span class="locked">manual only</span></div><div class="status-pill"><strong>8GB warning</strong><span>required</span></div></div></article>
-      <article class="surface-card"><h3>Memory Settings</h3><p>Remembering, deleting, and exporting memory need dedicated approval and review UX.</p><div class="status-list"><div class="status-pill"><strong>Auto-write</strong><span class="off">disabled</span></div><div class="status-pill"><strong>Review flow</strong><span>future gated issue</span></div></div></article>
+      <article class="surface-card"><h3>Provider Connectors</h3><p>External provider setup is deferred until safe secret storage, explicit enablement, and approval gates are implemented.</p><div class="status-list"><div class="status-pill"><strong>API key fields</strong><span class="locked">not available</span></div><div class="status-pill"><strong>Cloud default</strong><span class="off">off</span></div><div class="status-pill"><strong>Future path</strong><span>policy-gated</span></div></div></article>
+      <article class="surface-card"><h3>Model Library</h3><p>Model additions should stay explicit, visible, and hardware-aware.</p><div class="status-list"><div class="status-pill"><strong>Downloads</strong><span class="locked">manual only</span></div><div class="status-pill"><strong>Add model</strong><span>bash scripts/add-model.sh</span></div><div class="status-pill"><strong>8GB warning</strong><span>required</span></div></div></article>
+      <article class="surface-card"><h3>Memory Controls</h3><p>Remembering, deleting, and exporting memory need dedicated approval and review UX.</p><div class="status-list"><div class="status-pill"><strong>Auto-write</strong><span class="off">disabled</span></div><div class="status-pill"><strong>Review/delete</strong><span>#31 / #32</span></div><div class="status-pill"><strong>Raw memory</strong><span class="locked">not shown</span></div></div></article>
+      <article class="surface-card"><h3>Privacy & Sovereignty</h3><p>Local-first defaults stay visible before advanced configuration exists.</p><div class="status-list"><div class="status-pill"><strong>Telemetry</strong><span class="good">off</span></div><div class="status-pill"><strong>Cloud escalation</strong><span class="off">disabled</span></div><div class="status-pill"><strong>Secrets</strong><span class="locked">protected</span></div></div></article>
+      <article class="surface-card"><h3>Startup & APIs</h3><p>Wizard HQ depends on local status APIs for live route, approval, memory, and trace panels.</p><div class="status-list"><div class="status-pill"><strong>Status API</strong><span>wizard merlin status-api start</span></div><div class="status-pill"><strong>Task API</strong><span>bash scripts/merlin-task-api.sh start</span></div><div class="status-pill"><strong>macOS persistence</strong><span>bash launchd/install-launchd.sh</span></div></div></article>
+      <article class="surface-card"><h3>Backup & Recovery</h3><p>Backup, restore, uninstall, and reinstall remain CLI-led until safe browser workflows are policy-gated.</p><div class="status-list"><div class="status-pill"><strong>Backup</strong><span>bash scripts/backup.sh</span></div><div class="status-pill"><strong>Upgrade</strong><span>bash scripts/upgrade.sh</span></div><div class="status-pill"><strong>Uninstall</strong><span>bash pkg/scripts/uninstall.sh</span></div></div></article>
     </section>
   </main>
 </div>

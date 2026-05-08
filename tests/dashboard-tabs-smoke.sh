@@ -44,6 +44,12 @@ grep -q "Open WebUI Bridge" "$DASHBOARD_FILE" \
   || fail "dashboard missing Open WebUI bridge framing"
 grep -q "not the Merlin product identity" "$DASHBOARD_FILE" \
   || fail "dashboard does not demote Open WebUI from product identity"
+grep -q "Open Merlin Chat Workspace" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Merlin chat workspace entry"
+grep -q "open-chat-workspace" "$DASHBOARD_FILE" \
+  || fail "dashboard missing stable chat workspace link id"
+grep -q "Open WebUI runs the chat engine today; Merlin owns routing, policy, memory, and status around it" "$DASHBOARD_FILE" \
+  || fail "dashboard missing honest chat bridge boundary"
 grep -q "Cloud Providers" "$DASHBOARD_FILE" \
   || fail "dashboard missing cloud provider disabled surface"
 grep -q "cloud disabled by default" "$DASHBOARD_FILE" \
@@ -58,6 +64,32 @@ grep -q "API key fields" "$DASHBOARD_FILE" \
   || fail "dashboard settings must explicitly keep API key fields unavailable"
 grep -q "not available" "$DASHBOARD_FILE" \
   || fail "dashboard missing locked setting language"
+
+for setting in \
+  "Provider Connectors" \
+  "Model Library" \
+  "Memory Controls" \
+  "Privacy & Sovereignty" \
+  "Startup & APIs" \
+  "Backup & Recovery"; do
+  grep -q "${setting}" "$DASHBOARD_FILE" \
+    || fail "dashboard missing settings card: ${setting}"
+done
+
+for safe_command in \
+  "bash scripts/add-model.sh" \
+  "bash scripts/backup.sh" \
+  "bash scripts/upgrade.sh" \
+  "bash pkg/scripts/uninstall.sh" \
+  "bash launchd/install-launchd.sh"; do
+  grep -q "${safe_command}" "$DASHBOARD_FILE" \
+    || fail "dashboard missing safe CLI handoff: ${safe_command}"
+done
+
+grep -q "#31 / #32" "$DASHBOARD_FILE" \
+  || fail "dashboard settings must point memory review/delete to tracked issues"
+grep -q "Cloud escalation" "$DASHBOARD_FILE" \
+  || fail "dashboard missing cloud escalation setting"
 
 if grep -q "method:'POST'\\|method: 'POST'\\|method: \"POST\"\\|fetch(.*POST" "$DASHBOARD_FILE"; then
   fail "dashboard tab shell must not add POST or execution calls"

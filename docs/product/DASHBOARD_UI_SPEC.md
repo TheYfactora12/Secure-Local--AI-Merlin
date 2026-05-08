@@ -1,6 +1,6 @@
 # Dashboard UI Spec — Merlin Command Center
 
-Last updated: 2026-05-07
+Last updated: 2026-05-08
 
 ## Product Direction
 
@@ -40,7 +40,8 @@ designed and tested.
 
 Merlin Chat:
 
-- The composer is the primary action, with large readable text and an obvious send button.
+- Target state: the composer is the primary action, with large readable text and an obvious send button.
+- Current safe bridge: Wizard HQ opens Open WebUI in a separate tab for chat while Merlin owns routing, policy, memory, audit, and readiness around it.
 - Responses show the selected staff mode, route confidence, model alias, and whether memory was used.
 - Approval-required responses are shown inline with the blocked gate names and a safe next command.
 - Raw prompts, secrets, API keys, and model response text are never written to dashboard logs.

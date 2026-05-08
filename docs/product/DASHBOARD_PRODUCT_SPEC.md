@@ -1,6 +1,6 @@
 # Dashboard Product Spec — Merlin Command Center
 
-Last updated: 2026-05-07
+Last updated: 2026-05-08
 
 ## Product Goal
 
@@ -91,7 +91,7 @@ backend issues and tests.
 | Legacy read-only health | `http://localhost:8765/status` | Security contract: read-only only |
 | Task route/status panels | `http://localhost:8766/status/*` | Execution-aware FastAPI app |
 | Future chat/task response | `POST http://localhost:8766/task` | Not used by read-only v2.1 launch dashboard |
-| Open WebUI | `http://localhost:3000` | External chat UI remains linked |
+| Open WebUI | `http://localhost:3000` | Current local chat bridge remains linked until native Merlin Chat is policy-gated |
 | Ollama model list | `http://localhost:11434/api/tags` | Localhost only |
 | Qdrant health | `http://localhost:6333/healthz` | Local memory |
 

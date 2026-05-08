@@ -92,9 +92,10 @@ flowchart LR
 
 ## Active Execution Queue
 
-1. #102: clarify Wizard HQ status API first-run persistence after clean install.
-2. #101: continue Wizard HQ Merlin-native front door and Brains tab UX,
+1. #101: continue Wizard HQ Merlin-native front door and Brains tab UX,
    including browser visual validation and screenshot evidence.
+2. #113 and #114 under #106: native Merlin Chat and policy-gated Settings
+   backend after the read-only #101 shell is validated.
 3. #37 and #95: public onboarding hardening and product audit evidence
    collection under v3.0.
 4. #64: Developer ID signing/notarization under v3.0, deferred until the

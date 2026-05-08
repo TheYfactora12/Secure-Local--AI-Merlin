@@ -2024,3 +2024,161 @@ is being served, but Local Trusted Beta visual evidence still needs screenshots.
 ### Public Beta Impact
 
 Still blocked on browser screenshot evidence and manual first-impression review.
+
+## Issue #101 Chat Bridge + Settings Product Hub Polish
+
+### Date/Time
+
+2026-05-08 07:19:59 EDT
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`15cd9831ca8f4c2f7a9cb590bec4e0bab1e79d80`
+
+### Target Issues
+
+- #101: Wizard HQ Merlin-native front door and Brains tab UX
+- #106: Wizard HQ Product Shell parent
+- #37/#95: release onboarding and product audit evidence
+
+### Scope
+
+Tighten Wizard HQ as the Merlin product hub after visual review showed users can
+still experience chat as "Llama/Open WebUI" instead of Merlin. This slice keeps
+runtime behavior safe: the dashboard remains read-only, the chat button opens
+the current local chat bridge, and Settings explains future controls without
+adding browser-side execution, API-key fields, model downloads, memory writes,
+or approval buttons.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `README.md`
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/product/DASHBOARD_PRODUCT_SPEC.md`
+- `docs/product/DASHBOARD_UI_SPEC.md`
+- `docs/product/GTM_STRATEGY.md`
+- `docs/product/PRODUCT_GUIDE.md`
+- `tests/dashboard-first-run-smoke.sh`
+- `tests/dashboard-merlin-status-smoke.sh`
+- `tests/dashboard-tabs-smoke.sh`
+- `docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-top-shell.png`
+- `docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-manual.png`
+
+### Protected Files Touched
+
+None. Installer, uninstall, package scripts, policy engine, router, memory
+manager, task endpoint, status API, and Docker defaults were not changed.
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `git status --short --branch` | PASS; branch `main`, dashboard edit plus untracked screenshots identified before continuing. |
+| `rg -n "Open Merlin\|open-chat\|Provider Connectors\|Model Library\|Memory Controls\|Privacy & Sovereignty\|Startup & APIs\|Backup & Recovery\|Open Merlin Local Chat\|Open Merlin Chat Workspace" dashboard/index.html tests docs/product docs/release/evidence` | PASS; found stale test expectations for the old chat label. |
+| `bash tests/dashboard-tabs-smoke.sh` | PASS after test update; verifies tab shell, chat bridge boundary, richer Settings cards, no unsafe controls. |
+| `bash tests/dashboard-first-run-smoke.sh` | PASS after test update; verifies first-run chat bridge copy and read-only setup boundary. |
+| `bash tests/dashboard-merlin-status-smoke.sh` | PASS after test update; verifies Wizard HQ status markers and chat workspace link. |
+| `bash tests/dashboard-readiness-smoke.sh` | PASS; readiness surface remains honest and read-only. |
+| `bash tests/beta-readiness-evidence-smoke.sh` | PASS; trusted local beta evidence pack remains complete. |
+| `bash tests/master-prompt-smoke.sh` | PASS; master prompt/context remain current. |
+| `rg -n "Wizard AI\|Primary chat interface\|Open WebUI.*Primary\|Chat UI \\(your ChatGPT\|Wizard HQ service dashboard\|Open WebUI → create admin account\|Buy \\$99\|Developer ID.*This Week\|Windows is v3\\.1" README.md docs/product docs/CANONICAL_PROJECT_STATE.md` | PASS after doc updates; no stale identity or premature Developer ID priority language remains in current product docs. |
+| `bash -n install.sh` | PASS; installer syntax unchanged and valid. |
+| `bash install.sh --help` | PASS; install help still renders. |
+| `bash tests/installer-branding-smoke.sh` | PASS; #94 branding surface remains protected. |
+| `bash tests/pkg-readiness-smoke.sh` | PASS; package readiness checks remain valid. |
+| `bash tests/uninstall-smoke.sh` | PASS; uninstaller remains guarded and testable. |
+| `git diff --check` | PASS; no whitespace errors. |
+
+### Tests Skipped And Why
+
+No live service tests were required for this slice because runtime service
+behavior did not change. Installer/package tests are still required before
+Local Trusted Beta signoff, but not for this read-only dashboard/doc polish
+commit.
+
+### Failures Found
+
+- Static dashboard tests still expected the old `Open Merlin Local Chat` label
+  after the UI was changed to `Open Merlin Chat Workspace`.
+- Product docs still had stale `Wizard AI` naming and Open WebUI-first wording.
+- Two screenshot artifacts captured the terminal/Open WebUI state instead of
+  clean Wizard HQ evidence and were removed before commit.
+
+### Failure Category
+
+- Wizard HQ/dashboard
+- Documentation mismatch
+- Test design gap
+- UX/readiness confusion
+
+### Root Cause Or Current Hypothesis
+
+The implementation had moved Wizard HQ toward a Merlin product shell, but tests
+and current docs still reflected the older "dashboard plus Open WebUI" mental
+model. That mismatch made it easier for a first-time user to believe Llama/Open
+WebUI was the product and Merlin was just a status panel.
+
+### Fix Applied
+
+- Added a stable `open-chat-workspace` link and clearer copy that Open WebUI is
+  today's local chat bridge while Merlin owns routing, policy, memory, status,
+  and audit around it.
+- Expanded Settings into six read-only cards: Provider Connectors, Model
+  Library, Memory Controls, Privacy & Sovereignty, Startup & APIs, and Backup &
+  Recovery.
+- Updated dashboard static smokes to verify the richer hub UX and safe CLI
+  handoffs.
+- Updated current product docs and README so Wizard HQ is the product hub and
+  Open WebUI is the bridge, not the product identity.
+- Updated the GTM doc to use Merlin AI naming and to keep Developer ID deferred
+  until the product surface and clean install evidence are complete.
+
+### Retest Result
+
+Dashboard and docs smokes passed after the updates listed above.
+
+### Regression Tests Added
+
+- `tests/dashboard-first-run-smoke.sh` now checks the stable chat workspace link
+  and honest Merlin/Open WebUI boundary copy.
+- `tests/dashboard-tabs-smoke.sh` now checks the richer Settings surfaces, safe
+  CLI handoffs, memory issue pointers, cloud escalation state, and no unsafe
+  browser actions.
+- `tests/dashboard-merlin-status-smoke.sh` now checks the updated chat workspace
+  label and link id.
+
+### Follow-Up Issues Created Or Recommended
+
+- Created #113: native Merlin Chat inside Wizard HQ, routed through `POST /task`
+  on port 8766 with visible route/staff/model/approval metadata and designed
+  approval UX.
+- Created #114: policy-gated Settings backend for provider connectors, model
+  library, memory review/delete, backup/restore, and API persistence.
+
+### Lesson Learned
+
+Visual evidence is not just cosmetic. Seeing the running chat page branded as
+Llama/Open WebUI exposed a product identity gap that static architecture docs
+did not make obvious enough.
+
+### What Not To Repeat Next Time
+
+Do not describe Open WebUI as the primary product experience in current docs.
+It is a bridge behind Merlin until native Wizard HQ chat exists.
+
+### Local Trusted Beta Impact
+
+Improved. A trusted user now has clearer first-run guidance: open Wizard HQ
+first, understand Merlin as the hub, use Open WebUI as the current local chat
+bridge, and treat Settings as locked until policy-gated flows are built.
+
+### Public Beta Impact
+
+Improved but still blocked. Public Beta still needs native Wizard HQ chat or an
+intentional bridge/onboarding design, complete memory review/delete UX,
+installer retest evidence, and final release packaging guidance.

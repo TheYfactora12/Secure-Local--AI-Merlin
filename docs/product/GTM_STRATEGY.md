@@ -1,11 +1,11 @@
-# Wizard AI — Go-to-Market, Monetization & Exit Strategy
+# Merlin AI — Go-to-Market, Monetization & Exit Strategy
 **Confidential | TheYfactora12 | Built 2026-05-06**
 
 ---
 
 ## The North Star (One Sentence)
 
-Wizard AI is the first truly air-gapped personal and enterprise AI operating system — you own it, you name it, it grows with you, and no data ever leaves your hardware unless you say so.
+Merlin AI is a sovereign local-first personal intelligence system: you own the hardware, the memory, the model options, and the approval gates. Cloud providers stay off by default and are used only when explicitly configured.
 
 ---
 
@@ -22,7 +22,7 @@ This is:
 - An **executive** with a virtual chief of staff that is secure, private, and learns their workflow
 - A **company** that wants to build and own their own internal AI data set — air-gapped, sovereign, theirs
 
-The air-gap angle is the sharpest edge in the market right now. Every enterprise AI story ends with "but your data goes to OpenAI." Wizard AI ends with "your data never leaves your building." That is a different product category entirely.
+The local-first angle is the sharpest edge in the market right now. Every enterprise AI story ends with "but your data goes to someone else's infrastructure." Merlin AI starts from "your data stays on owned hardware by default." That is a different product category entirely.
 
 ---
 
@@ -68,7 +68,7 @@ The air-gap angle is the sharpest edge in the market right now. Every enterprise
 
 **6. Privacy-Conscious Individual**
 - Pain: Wants an AI companion that grows with them, remembers them, isn't selling their data
-- Your edge: Wizard AI is the only AI you can name, train, own, and take with you
+- Your edge: Merlin AI is designed to be named, configured, owned, and carried forward by the user
 - Entry price: $149 one-time (after signed installer ships)
 - Hook: "A friend, a companion, an assistant — that's actually yours"
 
@@ -79,12 +79,12 @@ The air-gap angle is the sharpest edge in the market right now. Every enterprise
 **7. AI Companies Without a True Air-Gap Product**
 - Every major AI company — Microsoft, Google, Anthropic, OpenAI — has a "private" tier that still routes through their infrastructure
 - None of them have a true air-gap product that runs entirely on customer hardware
-- Wizard AI is that product
+- Merlin AI is aimed at that product gap
 - This is your **acquisition target** positioning — not for sale yet, but built to be noticed
 
 **8. MSP/Reseller Channel**
 - IT managed service providers who support healthcare, legal, financial clients
-- They white-label Wizard AI, sell it to their clients, pay you a license fee
+- They white-label Merlin AI, sell it to their clients, pay you a license fee
 - You never touch the client — pure wholesale revenue
 
 ---
@@ -154,7 +154,7 @@ The air-gap + InfoSec background + solo builder story is genuinely compelling. N
 
 **The gap:** Microsoft (Copilot), Google (Gemini), OpenAI (ChatGPT Enterprise) — none of them have a true air-gap product. Their architecture physically cannot support it — they're cloud-native by design.
 
-**The acquisition trigger:** When a major healthcare system, law firm, or financial institution publicly rejects a big AI product on air-gap grounds and says "we use Wizard AI instead" — that's the moment an acquirer calls.
+**The acquisition trigger:** When a major healthcare system, law firm, or financial institution publicly rejects a big AI product on local-control grounds and says "we use Merlin AI instead" — that's the moment an acquirer calls.
 
 **Target acquirers:**
 - Cybersecurity company wanting AI (CrowdStrike, Palo Alto, Splunk)
@@ -177,7 +177,7 @@ The air-gap + InfoSec background + solo builder story is genuinely compelling. N
 - Windows is not supported today. That is a real constraint, not a fatal one.
 - **Mac first, Linux second, Windows when ready** is a legitimate product decision
 - **Linux covers enterprise** — most regulated infrastructure runs Linux
-- **Windows is v3.1** — plan it, date it, don't promise it early
+- **Windows is future work** — plan it after the macOS/Linux product shell is validated, and don't promise it early
 - Document the Mac-first journey publicly — it's a great LinkedIn post
 
 ---
@@ -198,7 +198,7 @@ Brand positioning: own the term **"air-gapped AI"** before anyone else does.
 
 ## v3.0 Polish Gate — Before Charging Anyone
 
-- [ ] Signed installer (Developer ID — $99 Apple Developer Program)
+- [ ] Signed installer (Developer ID — deferred until the product surface and clean install evidence are complete)
 - [ ] One-click install, no Terminal required for non-developers
 - [ ] launchd persistence validated (starts on login, survives reboot)
 - [ ] `wizard doctor` returns 0 failures on a clean install
@@ -215,7 +215,7 @@ Brand positioning: own the term **"air-gapped AI"** before anyone else does.
 
 ## The Immediate 3 Moves
 
-**Move 1 (This Week):** Buy $99 Apple Developer Program membership. Unblocks signed installer, real distribution, enterprise credibility.
+**Move 1 (This Week):** Finish Wizard HQ product hub validation and clean installer evidence. Developer ID comes after the product surface is stable.
 
 **Move 2 (This Week):** Check domain availability. Secure one. A brand without a domain isn't a brand.
 
@@ -225,7 +225,7 @@ Brand positioning: own the term **"air-gapped AI"** before anyone else does.
 
 ## The One-Line Pitch
 
-> "Wizard AI is the only AI that runs entirely on your hardware, remembers what you teach it, never phones home, and grows smarter every season — built specifically for organizations where data sovereignty isn't optional."
+> "Merlin AI is private intelligence that runs on owned hardware by default, remembers only what you approve, and keeps local control visible — built for people and organizations where data sovereignty isn't optional."
 
 ---
 

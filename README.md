@@ -115,8 +115,8 @@ Core profile:
 ```
 You
  │
- ├──► Dashboard    :8888   ← Wizard HQ service dashboard
- ├──► Open WebUI   :3000   ← Chat UI
+ ├──► Wizard HQ    :8888   ← Merlin product hub and readiness surface
+ ├──► Open WebUI   :3000   ← Current local chat bridge
  ├──► LiteLLM      :4000   ← Local-first model gateway
  │         │
  │         └──► Ollama  :11434  ← Native local model runtime on macOS
@@ -129,8 +129,8 @@ Optional expanded profiles:
 ```
 You
  │
- ├──► Dashboard    :8888   ← Wizard HQ service dashboard
- ├──► Open WebUI   :3000   ← Chat UI (your ChatGPT / Perplexity)
+ ├──► Wizard HQ    :8888   ← Merlin product hub and readiness surface
+ ├──► Open WebUI   :3000   ← Current local chat bridge
  ├──► Perplexica   :3002   ← Search AI with citations (your Perplexity)
  ├──► OpenHands    :3003   ← Autonomous coding agent (your Codex)
  ├──► n8n          :5678   ← Workflow automation & AI routing
@@ -152,8 +152,8 @@ You
 
 | Service | Port | What It Does | Replaces |
 |---------|------|--------------|----------|
-| **Dashboard (Wizard HQ)** | 8888 | Unified local stack dashboard | Manual status checks |
-| **Open WebUI** | 3000 | Chat, RAG, voice, web search UI | ChatGPT, Perplexity UI |
+| **Dashboard (Wizard HQ)** | 8888 | Primary Merlin product hub, readiness, routing, memory, security, and system status | Manual status checks |
+| **Open WebUI** | 3000 | Current local chat bridge behind Wizard HQ | ChatGPT-style workspace |
 | **Perplexica** | 3002 | AI-powered web search with citations | Perplexity AI |
 | **OpenHands** | 3003 | Autonomous multi-file coding agent | GitHub Copilot Workspace / Codex |
 | **SearXNG** | 8080 | Private metasearch engine | Google (for the AI) |
@@ -264,8 +264,8 @@ Core:
 1. `bash scripts/doctor.sh` → verify Docker, Ollama, ports, models, `.env`, and service health.
 2. `bash tests/core-live-smoke.sh` → verify the running core path end to end.
 3. `bash tests/core-install-budget-smoke.sh` → re-run the core installer path and enforce the documented time budget.
-4. **http://localhost:3000** → Open WebUI → create admin account → start chatting.
-5. **http://localhost:8888** → Dashboard → review local stack status.
+4. **http://localhost:8888** → Wizard HQ → review Merlin status, privacy, brains, memory, agents, and settings.
+5. **http://localhost:3000** → Open WebUI → current local chat bridge until native Merlin Chat moves into Wizard HQ.
 6. `bash scripts/add-model.sh qwen2.5:7b` → pull a small local model if none is installed.
 
 The current core install budget is 10 minutes for `--profile core --skip-model-pulls --non-interactive` on a machine with Docker Desktop already installed and running.

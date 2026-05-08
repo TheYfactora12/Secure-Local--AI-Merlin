@@ -12,10 +12,14 @@ fail() {
 
 grep -q "First Run" "$DASHBOARD_FILE" \
   || fail "dashboard missing first-run panel"
-grep -q "Open Merlin Local Chat" "$DASHBOARD_FILE" \
-  || fail "dashboard missing Merlin local chat action"
+grep -q "Open Merlin Chat Workspace" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Merlin chat workspace action"
+grep -q 'id="open-chat-workspace"' "$DASHBOARD_FILE" \
+  || fail "dashboard missing stable chat workspace launch link"
 grep -q "http://localhost:3000" "$DASHBOARD_FILE" \
   || fail "dashboard missing local chat workspace link"
+grep -q "Open WebUI runs the chat engine today; Merlin owns routing, policy, memory, and status around it" "$DASHBOARD_FILE" \
+  || fail "dashboard missing honest Merlin/Open WebUI product boundary"
 grep -q "Understand the Brain" "$DASHBOARD_FILE" \
   || fail "dashboard missing plain-language Merlin/Qwen explanation"
 grep -q "Qwen is a current local model engine" "$DASHBOARD_FILE" \

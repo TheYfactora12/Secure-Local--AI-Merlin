@@ -1,4 +1,4 @@
-# Wizard AI — What It Is, What It Does, What's Coming
+# Merlin AI — What It Is, What It Does, What's Coming
 **Home AI Elite | `TheYfactora12/home-ai-elite` | v1.0 Pre-Release**
 *Built from live repo source — 2026-05-06*
 
@@ -6,7 +6,7 @@
 
 ## The One-Sentence Version
 
-Wizard AI is a **local-first AI operating system** you install on your own Mac or Linux machine that gives you your own private Perplexity, your own Codex, your own memory — with zero required subscriptions and zero data leaving your hardware unless you explicitly say so.
+Merlin AI is a **local-first AI operating system** you install on your own Mac or Linux machine that gives you your own private AI brain, model router, memory vault, and command center — with zero required subscriptions and zero data leaving your hardware unless you explicitly say so.
 
 ---
 
@@ -14,19 +14,20 @@ Wizard AI is a **local-first AI operating system** you install on your own Mac o
 
 Every major AI tool — ChatGPT, Perplexity, Copilot, Zapier AI, Pinecone — runs on someone else's servers. Your prompts, your data, your context, your preferences are all sent to a cloud you don't control. You pay a monthly fee to rent intelligence you can never own.
 
-Wizard AI flips that. The AI runs on your hardware, uses your GPU (Apple Silicon supported natively), stores memory in your local database, and routes tasks through a policy engine you can read and audit. You own every bit of it.
+Merlin AI flips that. The AI runs on your hardware, uses your GPU (Apple Silicon supported natively), stores memory in your local database, and routes tasks through a policy engine you can read and audit. You own every bit of it.
 
 ---
 
 ## What the Product Is Made Of
 
-Wizard AI is not one app. It is a **stack of purpose-built components** orchestrated by a single installer and unified under one AI brain called **Merlin**.
+Merlin AI is not one app. It is a **stack of purpose-built components** orchestrated by a single installer and unified under one control plane called **Merlin**.
 
 ### The Core Stack
 
 | Component | What It Replaces | Port | Notes |
 |---|---|---|---|
-| **Open WebUI** | ChatGPT | 3000 | Primary chat interface for Merlin |
+| **Wizard HQ Dashboard** | AI command center | 8888 | Primary Merlin product hub and readiness surface |
+| **Open WebUI** | ChatGPT-style workspace | 3000 | Current local chat bridge behind Merlin |
 | **Ollama** | OpenAI API | 11434 | Runs models locally; Apple Metal GPU on macOS |
 | **LiteLLM** | OpenAI API layer | 4000 | Routes model aliases to local or optional cloud |
 | **Qdrant** | Pinecone | 6333 | Local vector database — memory lives here |
@@ -34,7 +35,6 @@ Wizard AI is not one app. It is a **stack of purpose-built components** orchestr
 | **Perplexica** | Perplexity AI | 3002 | Local AI-powered search |
 | **SearXNG** | Google (for AI) | 8080 | Privacy-first metasearch engine |
 | **OpenHands** | GitHub Copilot / Codex | 3003 | Autonomous coding agent (high-risk, opt-in profile) |
-| **Wizard HQ Dashboard** | Manual status checks | 8888 | Single-pane-of-glass control panel |
 | **Merlin Status API** | — | 8765 | Read-only status bridge, localhost only |
 | **Merlin Task API** | — | 8766 | FastAPI task routing and status surfaces |
 
@@ -43,9 +43,10 @@ Wizard AI is not one app. It is a **stack of purpose-built components** orchestr
 Merlin is the AI control plane that sits above all these services. It is not a chatbot. It is the decision layer that decides **which model runs, which staff mode activates, whether an action needs approval, and what gets written to memory**.
 
 The commercial direction is to evolve Merlin into a private AI control plane
-for owned AI infrastructure: Wizard HQ as the product shell, Brains as model and
-provider options, Memory as an approved vault, Agents as supervised workers,
-Security as policy/audit visibility, and System as honest local readiness.
+for owned AI infrastructure: Wizard HQ as the primary product shell, Chat as the
+user entry point, Brains as model and provider options, Memory as an approved
+vault, Agents as supervised workers, Security as policy/audit visibility, and
+System as honest local readiness.
 Future milestones add AI asset inventory, identity/trust graph, access reviews,
 monitoring signals, DLP-style gates, governance evidence, and only later a
 Merlin-native workflow runtime. See
@@ -131,9 +132,15 @@ Perplexica + SearXNG give you AI-powered search with no tracking. Your queries s
 
 OpenHands, when enabled via the `coding` profile, can read your codebase, write files, and run terminal commands. It uses Docker socket access, which is why it's gated behind explicit profile selection and approval. It's the most powerful — and most dangerous — capability in the stack.
 
-### 8. Show You Everything in a Dashboard
+### 8. Show You Everything in Wizard HQ
 
-Wizard HQ at `localhost:8888` shows:
+Wizard HQ at `localhost:8888` is the Merlin product hub. Today it opens the
+current local chat bridge at `localhost:3000`, while Merlin owns routing,
+policy, memory, approvals, audit, and readiness around that chat engine. Over
+time, the native chat and settings flows move into Wizard HQ behind explicit
+policy-gated backend APIs.
+
+Wizard HQ shows:
 - All running services and their status
 - Your hardware tier (low/base/mid/high)
 - Active staff mode and selected model
@@ -146,7 +153,7 @@ Wizard HQ at `localhost:8888` shows:
 
 ## What Hardware You Need
 
-Wizard AI is designed to run on **hardware you already own**. The entry point is an 8GB Mac.
+Merlin AI is designed to run on **hardware you already own**. The entry point is an 8GB Mac.
 
 | Your RAM | Tier | What You Get |
 |---|---|---|
@@ -275,7 +282,7 @@ Keyword matching stays dominant (60%) so Merlin's routing is always explainable,
 
 ## What Makes This Different
 
-| Feature | Wizard AI | ChatGPT / Copilot / Perplexity |
+| Feature | Merlin AI | ChatGPT / Copilot / Perplexity |
 |---|---|---|
 | Data stays on your machine | ✅ Always | ❌ Sent to cloud |
 | Works offline | ✅ Core features | ❌ Requires internet |
@@ -310,10 +317,10 @@ bash install.sh
 # 2. Verify
 bash scripts/doctor.sh
 
-# 3. Open the dashboard
+# 3. Open Wizard HQ, the Merlin product hub
 open http://localhost:8888
 
-# 4. Start talking to Merlin
+# 4. Open the current local chat bridge
 open http://localhost:3000
 
 # 5. Preview a task decision
