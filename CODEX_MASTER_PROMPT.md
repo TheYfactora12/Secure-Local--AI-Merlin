@@ -35,7 +35,7 @@ work.
 
 Current verified queue:
 
-1. #37/#64/#94/#95 public release hardening, signing/notarization, installer/downloader Merlin branding, release-readiness audit, loading UX, and installer retest planning under v3.0.
+1. #37/#64/#95 public release hardening, signing/notarization, release-readiness audit, and installer retest planning under v3.0.
 2. #92 Native Automation Runtime under v3.x.
 
 ## 2. REPO SNAPSHOT — WHAT EXISTS TODAY (2026-05-08)

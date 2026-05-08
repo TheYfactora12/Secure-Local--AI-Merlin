@@ -89,7 +89,7 @@ flowchart LR
 ## Active Execution Queue
 
 1. #37 and #95: Public release onboarding hardening and product audit evidence collection under v3.0.
-2. #64 and #98: Developer ID signing/notarization and CI runtime deprecation hardening under v3.0.
+2. #64: Developer ID signing/notarization under v3.0.
 3. #92: Native Automation Runtime in v3.x after release readiness work.
 
 Patent/IP issues #81 through #84 are cross-cutting governance work. They should

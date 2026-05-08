@@ -217,7 +217,7 @@ Recently verified closures:
 ## Open Work, Priority Order
 
 1. Continue #37/#95: public onboarding hardening and product audit evidence collection without claiming Public Beta readiness.
-2. Continue #64/#98: Developer ID signing/notarization path and CI runtime deprecation cleanup.
+2. Continue #64: Developer ID signing/notarization path.
 3. Run the full Local Trusted Beta evidence pack on the 8GB low/core Mac after #94/#96/#97 user-facing changes.
 4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 

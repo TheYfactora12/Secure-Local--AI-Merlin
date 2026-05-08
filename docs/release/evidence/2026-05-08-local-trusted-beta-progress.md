@@ -620,6 +620,8 @@ service startup, status API, and task API behavior were not changed.
 | `gh api repos/TheYfactora12/home-ai-elite/actions/runs/25535113030/annotations` | FAIL; endpoint does not exist for workflow-run annotations. |
 | `gh api repos/TheYfactora12/home-ai-elite/commits/7dc471edf4f624bca9b989278ba4cb2d58fc8c34/check-runs --jq '.check_runs[] | [.id,.name,.conclusion] | @tsv'` | PASS; listed successful check run IDs. |
 | `gh api repos/TheYfactora12/home-ai-elite/check-runs/74949294820/annotations` | PASS; returned `[]` for the Python unit-test check run. |
+| `gh issue comment 98 --body-file /private/tmp/homeai-issue-98-close-comment.md` | PASS |
+| `gh issue close 98 --comment "Closed after setup-python v6 migration..."` | PASS |
 | `bash -n install.sh` | PASS |
 | `bash install.sh --help` | PASS; usage only, no install side effects. |
 | `bash scripts/doctor.sh` | PASS; 52 passed, 3 warnings, 0 failures. |
@@ -720,6 +722,7 @@ dashboard behavior, Merlin runtime behavior, or package behavior.
 
 - `.github/workflows/ci.yml`
 - `tests/ci-actions-node-runtime-smoke.sh`
+- #98 was commented and closed after CI and annotation verification.
 - `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
 
 ### Protected Files Touched

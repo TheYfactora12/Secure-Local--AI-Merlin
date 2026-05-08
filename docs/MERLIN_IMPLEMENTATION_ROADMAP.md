@@ -123,9 +123,11 @@ left behind.
 - #94 and #96 are closed under `v3.0`.
 - #97 is closed under `v3.0`; the trusted local beta evidence pack exists and
   is CI-covered.
-- #37, #64, #95, and #98 remain open under `v3.0` for public onboarding/release
-  hardening, Developer ID/notarization, release readiness audit/evidence
-  collection, and CI runtime deprecation cleanup.
+- #98 is closed under `v3.0` after `actions/setup-python` moved to v6 and
+  the CI runtime hardening smoke was added.
+- #37, #64, and #95 remain open under `v3.0` for public onboarding/release
+  hardening, Developer ID/notarization, and release readiness audit/evidence
+  collection.
 
 ---
 
