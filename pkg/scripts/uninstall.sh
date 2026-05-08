@@ -7,17 +7,22 @@
 # - backs up .env before deleting files
 # - keeps Docker Desktop, Homebrew, and Ollama models
 # - removes Docker volumes only with --remove-data
+# - removes Merlin-managed downloads only with explicit purge options
 set -euo pipefail
 
 INSTALL_DIR="${HOME}/home-ai-elite"
 SYSTEM_DIR="/usr/local/home-ai-elite"
 PKG_ID="com.homeai.elite"
+MODEL_TIERS_FILE="${INSTALL_DIR}/configs/merlin/model-tiers.env"
+FALLBACK_MODEL_TIERS_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/configs/merlin/model-tiers.env"
 
 YES=false
 DRY_RUN=false
 REMOVE_DATA=false
 REMOVE_FILES=true
 FORGET_RECEIPT=true
+PURGE_IMAGES=false
+PURGE_OLLAMA_MODELS=false
 
 usage() {
   cat <<'USAGE'
@@ -27,6 +32,9 @@ Options:
   --yes             Do not prompt for confirmation.
   --dry-run         Print what would be removed without changing anything.
   --remove-data     Remove Docker volumes/data for the stack.
+  --purge-images    Remove Docker images used by the stack.
+  --purge-models    Remove Merlin-recommended Ollama models.
+  --purge-all       Remove app files, Docker data/images, and Merlin models.
   --keep-files      Stop services and agents, but keep install directories.
   --keep-receipt    Do not forget the macOS pkgutil receipt.
   -h, --help        Show this help.
@@ -34,6 +42,10 @@ Options:
 Default behavior removes Home AI Elite app files after confirmation, but keeps
 Docker Desktop, Homebrew, Ollama, and Ollama models. Docker volumes are kept
 unless --remove-data is provided.
+
+Use --purge-all when preparing a truly clean reinstall. This removes Merlin
+Docker volumes/images and the known Merlin-recommended Ollama models, but it
+does not uninstall Docker Desktop, Homebrew, or the Ollama app/binary itself.
 USAGE
 }
 
@@ -47,6 +59,17 @@ while [[ $# -gt 0 ]]; do
       ;;
     --remove-data)
       REMOVE_DATA=true
+      ;;
+    --purge-images)
+      PURGE_IMAGES=true
+      ;;
+    --purge-models)
+      PURGE_OLLAMA_MODELS=true
+      ;;
+    --purge-all)
+      REMOVE_DATA=true
+      PURGE_IMAGES=true
+      PURGE_OLLAMA_MODELS=true
       ;;
     --keep-files)
       REMOVE_FILES=false
@@ -95,12 +118,22 @@ confirm() {
   [[ "$YES" == true || "$DRY_RUN" == true ]] && return 0
 
   echo "This will uninstall Home AI Elite from this Mac."
-  echo "Kept: Docker Desktop, Homebrew, Ollama, Ollama models."
+  echo "Kept: Docker Desktop, Homebrew, and the Ollama app/binary."
   if [[ "$REMOVE_DATA" == true ]]; then
     echo "Removed: app files, launchd agents, Docker containers, Docker volumes."
   else
     echo "Removed: app files, launchd agents, Docker containers."
     echo "Kept: Docker volumes/data. Use --remove-data for a clean reset."
+  fi
+  if [[ "$PURGE_IMAGES" == true ]]; then
+    echo "Removed: Docker images used by the stack."
+  else
+    echo "Kept: Docker images. Use --purge-images to remove downloaded stack images."
+  fi
+  if [[ "$PURGE_OLLAMA_MODELS" == true ]]; then
+    echo "Removed: known Merlin-recommended Ollama models."
+  else
+    echo "Kept: Ollama models. Use --purge-models or --purge-all to remove Merlin models."
   fi
   echo ""
   read -r -p "Type YES to continue: " answer
@@ -117,16 +150,26 @@ compose_down() {
   fi
 
   local cleanup_command
-  if [[ "$REMOVE_DATA" == true ]]; then
+  if [[ "$REMOVE_DATA" == true && "$PURGE_IMAGES" == true ]]; then
+    cleanup_command="docker compose -f ${compose_file} down --volumes --rmi all --remove-orphans"
+  elif [[ "$REMOVE_DATA" == true ]]; then
     cleanup_command="docker compose -f ${compose_file} down --volumes --remove-orphans"
+  elif [[ "$PURGE_IMAGES" == true ]]; then
+    cleanup_command="docker compose -f ${compose_file} down --rmi all --remove-orphans"
   else
     cleanup_command="docker compose -f ${compose_file} down --remove-orphans"
   fi
 
   if [[ "$DRY_RUN" == true ]]; then
-    if [[ "$REMOVE_DATA" == true ]]; then
+    if [[ "$REMOVE_DATA" == true && "$PURGE_IMAGES" == true ]]; then
+      log "Stopping services and removing Docker volumes and stack images"
+      run docker compose -f "$compose_file" down --volumes --rmi all --remove-orphans
+    elif [[ "$REMOVE_DATA" == true ]]; then
       log "Stopping services and removing Docker volumes"
       run docker compose -f "$compose_file" down --volumes --remove-orphans
+    elif [[ "$PURGE_IMAGES" == true ]]; then
+      log "Stopping services and removing stack images"
+      run docker compose -f "$compose_file" down --rmi all --remove-orphans
     else
       log "Stopping services without removing Docker volumes"
       run docker compose -f "$compose_file" down --remove-orphans
@@ -146,13 +189,60 @@ compose_down() {
     return 0
   fi
 
-  if [[ "$REMOVE_DATA" == true ]]; then
+  if [[ "$REMOVE_DATA" == true && "$PURGE_IMAGES" == true ]]; then
+    log "Stopping services and removing Docker volumes and stack images"
+    run docker compose -f "$compose_file" down --volumes --rmi all --remove-orphans
+  elif [[ "$REMOVE_DATA" == true ]]; then
     log "Stopping services and removing Docker volumes"
     run docker compose -f "$compose_file" down --volumes --remove-orphans
+  elif [[ "$PURGE_IMAGES" == true ]]; then
+    log "Stopping services and removing stack images"
+    run docker compose -f "$compose_file" down --rmi all --remove-orphans
   else
     log "Stopping services without removing Docker volumes"
     run docker compose -f "$compose_file" down --remove-orphans
   fi
+}
+
+merlin_model_names() {
+  local tiers_file="$MODEL_TIERS_FILE"
+  [[ -f "$tiers_file" ]] || tiers_file="$FALLBACK_MODEL_TIERS_FILE"
+  [[ -f "$tiers_file" ]] || return 0
+
+  awk '
+    /^[[:space:]]*"/ {
+      gsub(/[",]/, "", $1)
+      if ($1 != "") print $1
+    }
+  ' "$tiers_file" | sort -u
+}
+
+remove_ollama_models() {
+  [[ "$PURGE_OLLAMA_MODELS" == true ]] || return 0
+
+  if [[ "$DRY_RUN" != true ]] && ! command -v ollama >/dev/null 2>&1; then
+    warn "Ollama CLI not found; skipping model purge"
+    return 0
+  fi
+
+  local models=()
+  while IFS= read -r model; do
+    [[ -n "$model" ]] && models+=("$model")
+  done < <(merlin_model_names)
+
+  if [[ "${#models[@]}" -eq 0 ]]; then
+    warn "No Merlin model manifest found; skipping model purge"
+    return 0
+  fi
+
+  log "Removing Merlin-recommended Ollama models"
+  for model in "${models[@]}"; do
+    if [[ "$DRY_RUN" == true ]]; then
+      run ollama rm "$model"
+    elif ollama list 2>/dev/null | awk 'NR > 1 {print $1}' | grep -qx "$model"; then
+      run ollama rm "$model" >/dev/null 2>&1 || warn "Could not remove Ollama model ${model}"
+    fi
+  done
 }
 
 remove_launchd_agents() {
@@ -231,8 +321,19 @@ confirm
 compose_down
 remove_launchd_agents
 backup_env
+remove_ollama_models
 remove_files
 forget_receipt
 
 log "Uninstall complete"
-log "Docker Desktop, Homebrew, Ollama, and Ollama models were not removed"
+if [[ "$PURGE_OLLAMA_MODELS" == true ]]; then
+  log "Merlin-recommended Ollama models were removed when present"
+else
+  log "Ollama models were not removed"
+fi
+if [[ "$PURGE_IMAGES" == true ]]; then
+  log "Docker stack images were removed when Docker was available"
+else
+  log "Docker stack images were not removed"
+fi
+log "Docker Desktop, Homebrew, and the Ollama app/binary were not removed"

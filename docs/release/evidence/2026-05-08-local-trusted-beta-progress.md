@@ -1061,3 +1061,131 @@ Improved planning clarity. No runtime behavior changed.
 
 Improved product direction. Public Beta still requires implementation,
 onboarding evidence, clean install evidence, and final release-hardening work.
+
+---
+
+## Uninstaller Full-Purge Product Gap — 2026-05-08 UTC
+
+### Scope
+
+User expectation check after uninstall/reset: a product uninstall should offer a
+clear way to remove every Merlin-managed piece it downloaded, not only stop the
+stack and preserve models/images.
+
+### Starting Commit SHA
+
+`8e8e719b105c96e5fdf5b66d83b673d44f43dc88` —
+`docs(release): record wizard hq front door planning`
+
+### Target Issues
+
+- #37 Public release onboarding and packaging hardening
+- #95 Product push audit / release-readiness evidence
+
+### Files Changed
+
+- `pkg/scripts/uninstall.sh`
+- `tests/uninstall-smoke.sh`
+- `pkg/README.md`
+- `pkg/resources/readme.html`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `pkg/scripts/uninstall.sh` — touched because uninstall completeness is release
+  hardening and directly affects clean reinstall testing.
+- `pkg/resources/readme.html` — touched to expose the full-purge path in package
+  user docs.
+
+### Commands Run
+
+| Command | Result |
+|---|---|
+| `sed -n '1,260p' pkg/scripts/uninstall.sh` | PASS; confirmed old behavior explicitly kept Ollama models. |
+| `sed -n '1,240p' tests/uninstall-smoke.sh` | PASS; confirmed existing smoke locked old preserve-model behavior. |
+| `sed -n '130,185p' pkg/README.md` | PASS; confirmed docs only described default and `--remove-data`. |
+| `sed -n '60,90p' pkg/resources/readme.html` | PASS; confirmed package readme lacked full-purge guidance. |
+| `sed -n '1,220p' configs/merlin/model-tiers.env` | PASS; used Merlin model manifest as the safe purge list. |
+| `bash -n pkg/scripts/uninstall.sh` | PASS |
+| `bash tests/uninstall-smoke.sh` | PASS |
+| `bash tests/pkg-readiness-smoke.sh` | PASS |
+| `git diff --check` | PASS |
+
+### Tests Skipped And Why
+
+- Did not run destructive live `--purge-all`; this slice adds and tests the
+  dry-run path so CI can verify behavior without deleting local user assets.
+- Did not run a clean reinstall yet because the next release validation pass
+  should use the documented evidence-pack flow.
+
+### Failures Found
+
+- Product expectation failure: current uninstall behavior preserved Ollama
+  models and Docker images by design, which does not satisfy a user expectation
+  of "delete everything Merlin downloaded."
+
+### Failure Category
+
+- Installer flow
+- Uninstall
+- UX/readiness confusion
+- Documentation mismatch
+
+### Root Cause Or Current Hypothesis
+
+The original uninstaller optimized for developer safety and fast reinstall by
+preserving shared local dependencies and model downloads. That is a reasonable
+default, but the product lacked an explicit full-purge mode for clean product
+removal/reinstall testing.
+
+### Fix Applied
+
+- Added `--purge-all`.
+- Added `--purge-models` for known Merlin-recommended Ollama models.
+- Added `--purge-images` for Docker images used by the stack.
+- Kept Docker Desktop, Homebrew, and the Ollama app/binary out of scope because
+  they are system dependencies that may be used by other software.
+- Updated package docs and smoke tests.
+
+### Retest Result
+
+- Static syntax and smoke tests passed.
+- Dry-run purge verifies Docker volume/image cleanup and model removal commands
+  without deleting local assets.
+
+### Regression Test Added
+
+- `tests/uninstall-smoke.sh` now verifies:
+  - `--purge-all`
+  - `--purge-models`
+  - `--purge-images`
+  - dry-run `docker compose down --volumes --rmi all --remove-orphans`
+  - dry-run `ollama rm qwen2.5:7b`
+  - dry-run `ollama rm nomic-embed-text`
+
+### Follow-Up Issues Created Or Recommended
+
+- No new issue required yet; this aligns with #37/#95 release hardening.
+- Recommended later: a manual full-purge clean reinstall evidence run before
+  Local Trusted Beta signoff.
+
+### Lesson Learned
+
+Default-safe uninstall and product-complete uninstall are different workflows.
+Merlin needs both: a conservative default and an explicit full-purge path for
+clean reinstall testing or user removal.
+
+### What Not To Repeat Next Time
+
+Do not describe uninstall as complete if known Merlin-managed downloads are
+preserved without a visible purge option.
+
+### Local Trusted Beta Impact
+
+Improved. Trusted testers now have a documented full-purge path for clean
+reinstall validation.
+
+### Public Beta Impact
+
+Improved. Public Beta still needs live uninstall/reinstall evidence after the
+full-purge path lands.

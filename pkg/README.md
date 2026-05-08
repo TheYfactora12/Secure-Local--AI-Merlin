@@ -157,6 +157,16 @@ Clean-reset uninstall:
 bash ~/home-ai-elite/pkg/scripts/uninstall.sh --remove-data
 ```
 
+Full Merlin purge for a clean reinstall test:
+
+```bash
+bash ~/home-ai-elite/pkg/scripts/uninstall.sh --purge-all
+```
+
+This removes Merlin app files, Docker containers, Docker volumes, Docker images
+used by the stack, and known Merlin-recommended Ollama models. It still keeps
+system dependencies: Docker Desktop, Homebrew, and the Ollama app/binary.
+
 Preview first:
 
 ```bash
