@@ -156,6 +156,7 @@ jobs:
           bash tests/dashboard-tabs-smoke.sh
           bash tests/dashboard-native-chat-smoke.sh
           bash tests/dashboard-model-readiness-smoke.sh
+          bash tests/dashboard-settings-policy-smoke.sh
           bash tests/uninstall-smoke.sh
           bash tests/launchd-core-smoke.sh
           bash tests/sast-gitleaks-smoke.sh

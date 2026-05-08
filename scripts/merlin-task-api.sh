@@ -146,6 +146,29 @@ health_check() {
   curl -fsS --max-time 2 "$(routes_url)" >/dev/null 2>&1
 }
 
+port_listener_pids() {
+  command -v lsof >/dev/null 2>&1 || return 0
+  lsof -tiTCP:"$(api_port)" -sTCP:LISTEN 2>/dev/null | sort -u
+}
+
+stop_port_listeners() {
+  local pid
+  local pids
+  pids="$(port_listener_pids || true)"
+  [[ -n "$pids" ]] || return 0
+
+  while IFS= read -r pid; do
+    [[ -n "$pid" ]] || continue
+    kill "$pid" >/dev/null 2>&1 || true
+  done <<< "$pids"
+
+  for _ in {1..50}; do
+    health_check || return 0
+    sleep 0.1
+  done
+  return 1
+}
+
 write_port_file() {
   mkdir -p "$(dirname "$PORT_FILE")"
   echo "$PORT" > "$PORT_FILE"
@@ -248,6 +271,14 @@ status_api() {
 
 restart_api() {
   stop_api >/dev/null
+  if health_check; then
+    if ! stop_port_listeners; then
+      echo "status: restart_failed"
+      echo "reason: existing listener on $(routes_url) could not be stopped"
+      echo "log_file: $LOG_FILE"
+      return 1
+    fi
+  fi
   start_api
 }
 

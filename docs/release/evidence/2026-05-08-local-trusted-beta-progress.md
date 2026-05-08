@@ -3000,3 +3000,183 @@ stopping processes or guessing launchd behavior.
 
 Small improvement. Public Beta still requires full installer retest evidence and
 broader onboarding polish.
+
+### #116 Retest Correction During #114
+
+During #114 live validation, `bash scripts/merlin-task-api.sh restart` initially
+returned `status: running` but did not replace the stale Task API listener on
+port 8766. The new `/status/settings` endpoint returned 404 because the old
+process was still serving code from before the #114 changes.
+
+Failure classification:
+
+- Launchd/autostart
+- Task API 8766 lifecycle
+- Test design gap
+
+Root cause:
+
+The first restart implementation stopped only the PID-file-managed process. A
+launchd/manual process can hold port 8766 without being in the manager PID file,
+so `start_api` saw `/status/routes` as healthy and did not start a fresh server.
+
+Fix:
+
+- Reopened #116.
+- Added stale port-listener detection with `lsof`.
+- Hardened `restart` to stop any listener on the configured Task API port before
+  starting the fresh server.
+- Extended `tests/merlin-task-api-smoke.sh` so static coverage checks stale
+  listener handling.
+
+Retest:
+
+- `bash -n scripts/merlin-task-api.sh` — PASS
+- `bash tests/merlin-task-api-smoke.sh` — PASS
+- `git diff --check` — PASS
+- Live command:
+  `/bin/zsh -lc "bash scripts/merlin-task-api.sh restart && curl -fsS --max-time 5 http://localhost:8766/status/settings | jq '{mode,settings_writes_enabled,browser_actions_enabled,cloud_default,secrets_displayed,model_downloads,total}'"`
+  — PASS; returned `mode=policy_manifest`, writes disabled, browser actions
+  disabled, cloud default false, secrets hidden, model downloads manual-only,
+  total actions 6.
+
+Lesson:
+
+Do not accept "endpoint A is healthy" as proof that the running process is the
+current code. Lifecycle restart must prove the old listener was actually
+replaced when validating new backend routes.
+
+---
+
+## #114 Policy-Gated Wizard HQ Settings Backend
+
+### Date / Time
+
+2026-05-08T14:38:46Z
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`35c9f27ec08debe0a99c75e3db4e6df42c0402b7`
+
+### Target Issue(s)
+
+- #114 Policy-gated Wizard HQ Settings backend
+- Supports #106 Wizard HQ Product Shell
+- Supports #95 product push audit evidence
+
+### Scope
+
+Add a read-only Settings backend manifest so Wizard HQ Settings can show which
+configuration areas are locked, guidance-only, blocked by existing issues, or
+future policy-gated. No browser setting writes are enabled in this slice.
+
+### Files Changed
+
+- `.github/workflows/ci.yml`
+- `dashboard/index.html`
+- `merlin/status_extension.py`
+- `tests/dashboard-settings-policy-smoke.sh`
+- `tests/test_status_extension.py`
+
+### Protected Files Touched
+
+- `.github/workflows/ci.yml`: added a focused static smoke gate.
+- `merlin/status_extension.py`: added read-only status endpoint only.
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `.venv-test/bin/python -m pytest tests/test_status_extension.py -q` | PASS; 23 passed. |
+| `bash tests/dashboard-settings-policy-smoke.sh` | PASS. |
+| `bash tests/dashboard-tabs-smoke.sh` | PASS. |
+| `bash tests/dashboard-security-center-smoke.sh` | PASS. |
+| `bash tests/merlin-task-api-smoke.sh` | PASS. |
+| `git diff --check` | PASS. |
+| Live `/status/settings` check after hardened Task API restart | PASS; policy manifest returned writes disabled, browser actions disabled, cloud default false, secrets hidden, model downloads manual-only, total actions 6. |
+
+### Test Output Summary
+
+The backend manifest and dashboard Settings panel are covered by unit tests,
+static dashboard safety tests, and a live localhost endpoint check.
+
+### Tests Skipped And Why
+
+Full installer retest was skipped because this slice does not change installer,
+package, postinstall, uninstall, model-pull defaults, or startup order. It adds a
+read-only Task API status endpoint and dashboard display logic.
+
+### Failures Found
+
+The #114 implementation itself passed focused tests. Live validation exposed the
+#116 restart bug described above; that was fixed before continuing.
+
+### Failure Category
+
+- Task API 8766 lifecycle
+- Dashboard/Settings backend
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+Settings needed a backend contract before any action controls could be trusted.
+The missing contract was a product readiness gap; not a runtime bug.
+
+### Fix Applied
+
+- Added `GET /status/settings`.
+- Added an explicit settings action manifest with six Settings areas:
+  Provider Connectors, Model Library, Memory Controls, Privacy & Sovereignty,
+  Startup & APIs, Backup & Recovery.
+- Every action declares state, approval gates, tracked issue, manual guidance,
+  and that dashboard actions/secrets/cloud defaults remain disabled.
+- Wizard HQ Settings now loads and renders the manifest.
+- Added backend and dashboard static tests.
+
+### Retest Result
+
+PASS. Focused unit/static tests and live `/status/settings` check passed.
+
+### Regression Tests Added
+
+- `test_status_settings_returns_policy_gated_manifest`
+- `test_status_settings_provider_connectors_are_locked_and_gate_secrets`
+- `test_status_settings_never_exposes_secret_values`
+- `tests/dashboard-settings-policy-smoke.sh`
+
+### Follow-Up Issues Created Or Recommended
+
+No new issue required for this first #114 slice. Deeper write-capable Settings
+flows should remain separate follow-up issues because provider secrets, model
+downloads, memory delete, and service controls each require their own policy and
+rollback tests.
+
+### Lesson Learned
+
+Settings should become useful through a backend policy manifest before any
+write-capable UI exists. This gives users clarity without accidentally creating
+a browser control plane.
+
+### What Not To Repeat Next Time
+
+Do not add Settings buttons before the backend action contract, approval gates,
+and rollback path exist.
+
+### Next Recommended Step
+
+Commit and push the #116 hardening correction separately, then commit/push the
+#114 Settings manifest slice and watch CI.
+
+### Local Trusted Beta Impact
+
+Improved. Wizard HQ Settings can now explain locked/gated configuration paths
+from a backend contract without exposing secrets or unsafe controls.
+
+### Public Beta Impact
+
+Improved but still not complete. Public Beta still needs full clean installer
+retest, onboarding polish, and later policy-gated write flows.

@@ -854,6 +854,13 @@ textarea {
       <span class="chip warn">configuration locked</span>
     </div>
     <section class="surface-grid">
+      <article class="surface-card">
+        <h3>Policy-Gated Settings</h3>
+        <p>Wizard HQ loads the settings action map from Merlin. Actions remain locked unless a backend policy gate exists.</p>
+        <div id="settings-policy-panel" class="status-list">
+          <div class="status-pill"><strong>Settings backend</strong><span>checking</span></div>
+        </div>
+      </article>
       <article class="surface-card"><h3>Provider Connectors</h3><p>External provider setup is deferred until safe secret storage, explicit enablement, and approval gates are implemented.</p><div class="status-list"><div class="status-pill"><strong>API key fields</strong><span class="locked">not available</span></div><div class="status-pill"><strong>Cloud default</strong><span class="off">off</span></div><div class="status-pill"><strong>Future path</strong><span>policy-gated</span></div></div></article>
       <article class="surface-card"><h3>Model Library</h3><p>Model additions should stay explicit, visible, and hardware-aware.</p><div class="status-list"><div class="status-pill"><strong>Downloads</strong><span class="locked">manual only</span></div><div class="status-pill"><strong>Add model</strong><span>bash scripts/add-model.sh</span></div><div class="status-pill"><strong>8GB warning</strong><span>required</span></div></div></article>
       <article class="surface-card"><h3>Memory Controls</h3><p>Remembering, deleting, and exporting memory need dedicated approval and review UX.</p><div class="status-list"><div class="status-pill"><strong>Auto-write</strong><span class="off">disabled</span></div><div class="status-pill"><strong>Review/delete</strong><span>#31 / #32</span></div><div class="status-pill"><strong>Raw memory</strong><span class="locked">not shown</span></div></div></article>
@@ -871,6 +878,7 @@ textarea {
 // http://localhost:8766/status/approvals
 // http://localhost:8766/status/memory
 // http://localhost:8766/status/models
+// http://localhost:8766/status/settings
 // http://localhost:8766/status/traces
 const STATUS_API = 'http://localhost:8765';
 const TASK_API = 'http://localhost:8766';
@@ -892,6 +900,7 @@ const readinessState = {
   routes: null,
   memory: null,
   models: null,
+  settings: null,
   probesComplete: false,
 };
 
@@ -1139,6 +1148,35 @@ async function loadModels() {
   }
 }
 
+async function loadSettings() {
+  const panel = document.getElementById('settings-policy-panel');
+  try {
+    const data = await getJson(`${TASK_API}/status/settings`);
+    readinessState.settings = data;
+    if (!panel) return;
+    const rows = (data.actions || []).map(action => {
+      const gates = (action.approval_gates || []).join(', ') || 'none';
+      return `
+        <div class="status-pill">
+          <strong>${escapeHtml(action.category)}</strong>
+          <span>${escapeHtml(action.state)} · gates: ${escapeHtml(gates)}</span>
+        </div>
+      `;
+    }).join('');
+    panel.innerHTML = `
+      <div class="status-pill"><strong>Browser actions</strong><span>${data.browser_actions_enabled ? 'enabled' : 'locked'}</span></div>
+      <div class="status-pill"><strong>Secrets</strong><span>${data.secrets_displayed ? 'visible' : 'hidden'}</span></div>
+      <div class="status-pill"><strong>Cloud default</strong><span>${data.cloud_default ? 'enabled' : 'off'}</span></div>
+      ${rows}
+    `;
+  } catch (_) {
+    readinessState.settings = null;
+    if (panel) {
+      panel.innerHTML = '<div class="status-pill"><strong>Settings backend</strong><span>warming</span></div>';
+    }
+  }
+}
+
 async function loadMerlinStatus() {
   try {
     const data = await getJson(`${STATUS_API}/status`);
@@ -1337,6 +1375,7 @@ async function refreshAll() {
     loadApprovals(),
     loadMemory(),
     loadModels(),
+    loadSettings(),
     loadTraces(),
   ]);
   renderReadiness();

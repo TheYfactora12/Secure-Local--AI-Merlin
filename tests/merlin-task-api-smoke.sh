@@ -35,9 +35,15 @@ grep -q 'start|stop|restart|status|run' "$TASK_MANAGER" \
   || fail "task API manager parser must accept restart command"
 grep -q 'restart_api()' "$TASK_MANAGER" \
   || fail "task API manager missing restart function"
-grep -A5 'restart_api()' "$TASK_MANAGER" | grep -q 'stop_api' \
+grep -q 'port_listener_pids()' "$TASK_MANAGER" \
+  || fail "task API manager must detect stale port listeners"
+grep -q 'stop_port_listeners()' "$TASK_MANAGER" \
+  || fail "task API manager must stop stale port listeners during restart"
+grep -A12 'restart_api()' "$TASK_MANAGER" | grep -q 'stop_api' \
   || fail "task API restart must stop before starting"
-grep -A5 'restart_api()' "$TASK_MANAGER" | grep -q 'start_api' \
+grep -A12 'restart_api()' "$TASK_MANAGER" | grep -q 'stop_port_listeners' \
+  || fail "task API restart must handle listeners outside the PID file"
+grep -A12 'restart_api()' "$TASK_MANAGER" | grep -q 'start_api' \
   || fail "task API restart must start after stopping"
 
 grep -q 'scripts/merlin-task-api.sh run' "$TASK_PLIST" \

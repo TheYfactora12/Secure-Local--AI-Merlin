@@ -239,6 +239,53 @@ def test_status_providers_never_exposes_known_cloud_key_values(monkeypatch) -> N
         assert value not in response_text
 
 
+def test_status_settings_returns_policy_gated_manifest() -> None:
+    response = client.get("/status/settings")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["mode"] == "policy_manifest"
+    assert body["settings_writes_enabled"] is False
+    assert body["browser_actions_enabled"] is False
+    assert body["cloud_default"] is False
+    assert body["secrets_displayed"] is False
+    assert body["model_downloads"] == "manual_only"
+    assert body["total"] == 6
+    assert {action["action_id"] for action in body["actions"]} == {
+        "provider_connectors",
+        "model_library",
+        "memory_controls",
+        "privacy_sovereignty",
+        "startup_apis",
+        "backup_recovery",
+    }
+
+
+def test_status_settings_provider_connectors_are_locked_and_gate_secrets() -> None:
+    response = client.get("/status/settings")
+    actions = {action["action_id"]: action for action in response.json()["actions"]}
+    provider = actions["provider_connectors"]
+
+    assert provider["state"] == "locked"
+    assert provider["allowed_from_dashboard"] is False
+    assert provider["secrets_displayed"] is False
+    assert provider["cloud_default"] is False
+    assert {"api_key_use", "secret_access", "cloud_model_call", "external_network"} <= set(
+        provider["approval_gates"]
+    )
+    assert all(gate["requires_approval"] for gate in provider["gates"])
+
+
+def test_status_settings_never_exposes_secret_values(monkeypatch) -> None:
+    monkeypatch.setenv("OPENAI_API_KEY", "openai-secret-value")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "anthropic-secret-value")
+
+    response_text = client.get("/status/settings").text
+
+    assert "openai-secret-value" not in response_text
+    assert "anthropic-secret-value" not in response_text
+
+
 def test_task_endpoint_allows_wizard_hq_cors_origin() -> None:
     response = client.options(
         "/task",

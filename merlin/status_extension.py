@@ -20,6 +20,81 @@ QDRANT_URL = "http://localhost:6333"
 OLLAMA_TAGS_URL = "http://localhost:11434/api/tags"
 router = APIRouter(prefix="/status")
 
+SETTINGS_ACTIONS: list[dict[str, Any]] = [
+    {
+        "action_id": "provider_connectors",
+        "category": "Provider Connectors",
+        "state": "locked",
+        "summary": "External provider setup is unavailable until safe secret storage and explicit enablement exist.",
+        "approval_gates": ["api_key_use", "secret_access", "cloud_model_call", "external_network"],
+        "tracked_issue": "#114",
+        "allowed_from_dashboard": False,
+        "secrets_displayed": False,
+        "cloud_default": False,
+        "manual_guidance": "Use local models by default. Cloud setup remains disabled until a future policy-gated flow.",
+    },
+    {
+        "action_id": "model_library",
+        "category": "Model Library",
+        "state": "guidance_only",
+        "summary": "Model additions are manual-only and must include low-memory warnings.",
+        "approval_gates": ["model_download"],
+        "tracked_issue": "#115",
+        "allowed_from_dashboard": False,
+        "secrets_displayed": False,
+        "cloud_default": False,
+        "manual_guidance": "bash scripts/add-model.sh qwen2.5:7b",
+    },
+    {
+        "action_id": "memory_controls",
+        "category": "Memory Controls",
+        "state": "blocked_by_issue",
+        "summary": "Memory review and deletion stay locked until explicit approval and audit flows are complete.",
+        "approval_gates": ["memory_write", "file_delete"],
+        "tracked_issue": "#31 / #32",
+        "allowed_from_dashboard": False,
+        "secrets_displayed": False,
+        "cloud_default": False,
+        "manual_guidance": "Use existing CLI memory flows only after explicit approval.",
+    },
+    {
+        "action_id": "privacy_sovereignty",
+        "category": "Privacy & Sovereignty",
+        "state": "read_only",
+        "summary": "Local-only, cloud-disabled, and telemetry-off defaults are visible but not browser-toggleable.",
+        "approval_gates": ["cloud_model_call", "external_network"],
+        "tracked_issue": "#95",
+        "allowed_from_dashboard": False,
+        "secrets_displayed": False,
+        "cloud_default": False,
+        "manual_guidance": "Cloud remains off unless future explicit approval and provider setup are implemented.",
+    },
+    {
+        "action_id": "startup_apis",
+        "category": "Startup & APIs",
+        "state": "guidance_only",
+        "summary": "Startup and API persistence are managed by CLI/launchd, not browser execution.",
+        "approval_gates": ["service_start", "service_stop"],
+        "tracked_issue": "#116",
+        "allowed_from_dashboard": False,
+        "secrets_displayed": False,
+        "cloud_default": False,
+        "manual_guidance": "bash launchd/install-launchd.sh",
+    },
+    {
+        "action_id": "backup_recovery",
+        "category": "Backup & Recovery",
+        "state": "guidance_only",
+        "summary": "Backup, upgrade, uninstall, and restore stay CLI-led until policy-gated browser workflows exist.",
+        "approval_gates": ["file_read", "file_write", "file_delete", "service_stop"],
+        "tracked_issue": "#37",
+        "allowed_from_dashboard": False,
+        "secrets_displayed": False,
+        "cloud_default": False,
+        "manual_guidance": "Use documented CLI backup, upgrade, and uninstall commands.",
+    },
+]
+
 
 def _load_config_quietly():
     with redirect_stdout(io.StringIO()):
@@ -239,6 +314,37 @@ def status_providers() -> dict[str, Any]:
         "external_providers_enabled": registry.external_providers_enabled,
         "providers": providers,
         "total": len(providers),
+    }
+
+
+@router.get("/settings")
+def status_settings() -> dict[str, Any]:
+    config = _load_config_quietly()
+    gates_by_name = config.policy.approval_gates
+    actions = []
+    for action in SETTINGS_ACTIONS:
+        gates = []
+        for gate_name in action["approval_gates"]:
+            gate = gates_by_name.get(gate_name)
+            gates.append(
+                {
+                    "gate_name": gate_name,
+                    "requires_approval": True if gate is None else gate.requires_approval,
+                    "risk_tier": "unknown" if gate is None else gate.risk,
+                    "reason": "Policy gate is not defined." if gate is None else gate.reason,
+                }
+            )
+        actions.append({**action, "gates": gates})
+
+    return {
+        "mode": "policy_manifest",
+        "settings_writes_enabled": False,
+        "browser_actions_enabled": False,
+        "cloud_default": False,
+        "secrets_displayed": False,
+        "model_downloads": "manual_only",
+        "actions": actions,
+        "total": len(actions),
     }
 
 
