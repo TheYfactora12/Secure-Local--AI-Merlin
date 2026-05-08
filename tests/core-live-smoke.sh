@@ -25,6 +25,7 @@ PASS=0
 FAIL=0
 WARN=0
 FAILED_CHECKS=()
+HAS_OLLAMA_GENERATION_MODEL=false
 
 pass() {
   echo "[PASS] $*"
@@ -127,6 +128,7 @@ if have_cmd ollama; then
   pass "Ollama CLI available"
   OLLAMA_MODEL="${OLLAMA_SMOKE_MODEL:-$(first_ollama_generation_model)}"
   if [[ -n "${OLLAMA_MODEL:-}" ]]; then
+    HAS_OLLAMA_GENERATION_MODEL=true
     pass "Ollama model available: ${OLLAMA_MODEL}"
     ollama_payload="{\"model\":\"${OLLAMA_MODEL}\",\"prompt\":\"${PROMPT_OLLAMA}\",\"stream\":false}"
     if curl -fsS --max-time 120 "${OLLAMA_URL}/api/generate" -d "$ollama_payload" | grep -q "Merlin core online"; then
@@ -151,14 +153,18 @@ if [[ -n "$LITELLM_MASTER_KEY" ]]; then
     fail "LiteLLM model alias not listed: ${LITELLM_MODEL}"
   fi
 
-  litellm_payload="{\"model\":\"${LITELLM_MODEL}\",\"messages\":[{\"role\":\"user\",\"content\":\"${PROMPT_LITELLM}\"}],\"stream\":false,\"max_tokens\":10}"
-  if curl -fsS --max-time 120 "${LITELLM_URL}/v1/chat/completions" \
-    -H "Authorization: Bearer ${LITELLM_MASTER_KEY}" \
-    -H "Content-Type: application/json" \
-    -d "$litellm_payload" | grep -q "Merlin gateway online"; then
-    pass "LiteLLM routes to local Ollama"
+  if [[ "$HAS_OLLAMA_GENERATION_MODEL" == true ]]; then
+    litellm_payload="{\"model\":\"${LITELLM_MODEL}\",\"messages\":[{\"role\":\"user\",\"content\":\"${PROMPT_LITELLM}\"}],\"stream\":false,\"max_tokens\":10}"
+    if curl -fsS --max-time 120 "${LITELLM_URL}/v1/chat/completions" \
+      -H "Authorization: Bearer ${LITELLM_MASTER_KEY}" \
+      -H "Content-Type: application/json" \
+      -d "$litellm_payload" | grep -q "Merlin gateway online"; then
+      pass "LiteLLM routes to local Ollama"
+    else
+      fail "LiteLLM chat completion failed for ${LITELLM_MODEL}"
+    fi
   else
-    fail "LiteLLM chat completion failed for ${LITELLM_MODEL}"
+    warn "No Ollama generation-capable models installed; skipping LiteLLM chat completion check"
   fi
 else
   fail "LITELLM_MASTER_KEY missing from .env"

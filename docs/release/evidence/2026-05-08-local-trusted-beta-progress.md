@@ -1327,3 +1327,147 @@ trusted tester to understand Merlin as the app.
 
 Improved but incomplete. Public Beta still requires live install/browser
 evidence, onboarding polish, known limitations, and release hardening.
+
+---
+
+## Clean Install Evidence Run After Full Purge — 2026-05-08 UTC
+
+### Scope
+
+Ran a clean local install validation loop after adding the full-purge uninstall
+path. The test intentionally used the low/core profile with model pulls disabled
+to verify local-first, no-surprise-download behavior on the 8GB Mac.
+
+### Starting Commit SHA
+
+`1e0dede34d524ebc7d0d438bebcab3a43c6639ab` —
+`feat(dashboard): add Merlin-native Wizard HQ tab shell`
+
+### Target Issues
+
+- #37 Public release onboarding and packaging hardening
+- #95 Product push audit / release-readiness evidence
+- #101 Wizard HQ Merlin-native front door and brains tab UX
+
+### Files Changed
+
+- `tests/core-live-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None. No installer logic, runtime APIs, dashboard runtime, Docker Compose, or
+policy files were changed during this evidence/fix pass.
+
+### Commands Run
+
+| Command | Result |
+|---|---|
+| `bash pkg/scripts/uninstall.sh --purge-all --keep-files --yes` | PASS with expected warnings: Docker engine was not running for image/volume cleanup at the first purge step; package receipt cleanup needs admin privileges. Merlin-recommended Ollama models were removed when present. |
+| `HOME_AI_NON_INTERACTIVE=true HOME_AI_SKIP_MODEL_PULLS=true bash install.sh --profile core --skip-model-pulls --non-interactive` | PASS; low/core profile installed, cloud keys skipped, model pulls skipped, Qdrant collections bootstrapped, dashboard/Open WebUI/LiteLLM/Qdrant started. |
+| `bash scripts/doctor.sh` immediately after install | PASS with warnings: 47 passed, 8 warnings, 0 failures. Status/task APIs were not started because non-interactive install skips direct API start and launchd setup. |
+| `bash scripts/status.sh` | PASS; Dashboard, Open WebUI, LiteLLM, Qdrant, Ollama running; optional profiles disabled. |
+| `docker compose ps` | PASS; dashboard, open-webui, litellm, qdrant running. |
+| `ollama list` | PASS; only `nomic-embed-text:latest` remained after purge. |
+| `curl -v --max-time 5 http://127.0.0.1:8888/` | PASS; Wizard HQ returned HTTP 200. |
+| `curl -v --max-time 5 http://127.0.0.1:3000/` | PASS; Open WebUI returned HTTP 200. |
+| `bash launchd/install-launchd.sh` | PASS; registered Docker, stack, Merlin status API, and Merlin task API LaunchAgents. |
+| `sleep 35` | PASS; waited through documented launchd warmup. |
+| `curl -fsS --max-time 5 http://127.0.0.1:8765/healthz` | PASS after launchd warmup; execution_allowed false. |
+| `curl -fsS --max-time 5 http://127.0.0.1:8766/status/routes` | PASS after launchd warmup; routes returned. |
+| `bash scripts/doctor.sh` after launchd warmup | PASS with warnings: 51 passed, 4 warnings, 0 failures. |
+| `bash tests/merlin-status-api-smoke.sh` | PASS |
+| `bash tests/merlin-task-api-smoke.sh` | PASS |
+| `bash tests/dashboard-tabs-smoke.sh` | PASS |
+| `curl -fsS --max-time 5 http://127.0.0.1:8888/ -o /tmp/wizard-hq.html && rg -n "Wizard HQ\|data-tab-target=\"brains\"\|Merlin owns the experience\|Open WebUI Bridge\|cloud disabled by default\|Settings" /tmp/wizard-hq.html` | PASS; installed Wizard HQ contains the new tab shell and Brains copy. |
+| `bash tests/core-live-smoke.sh` before fix | FAIL; LiteLLM chat completion failed for `qwen7b` because no generation model was installed after full purge plus skipped model pulls. |
+| `bash -n tests/core-live-smoke.sh` after fix | PASS |
+| `bash tests/core-live-smoke.sh` after fix | PASS with 15 passed, 2 warnings, 0 failures. |
+| `bash tests/installer-model-pull-policy-smoke.sh` | PASS |
+| `git diff --check` | PASS |
+
+### Tests Skipped And Why
+
+- Did not pull `qwen2.5:7b`; model pulls are intentionally explicit and should
+  not be forced during a no-surprise-download clean install test.
+- Did not run full browser screenshot capture from this shell. HTTP evidence
+  verifies the installed Wizard HQ HTML includes the tab shell; visual screenshot
+  remains a manual beta evidence item.
+
+### Failures Found
+
+- `tests/core-live-smoke.sh` failed after the intentionally model-free install
+  because it still attempted a LiteLLM chat completion against `qwen7b`.
+- Manual `scripts/merlin-status-api.sh start` / `scripts/merlin-task-api.sh start`
+  returned started PIDs from the Codex-managed shell, but those background
+  processes did not persist. The launchd path did persist and passed health
+  checks after warmup.
+- `curl localhost:8888` was inconsistent from the sandboxed shell while direct
+  elevated `curl 127.0.0.1:8888` and Docker/nginx logs confirmed Wizard HQ HTTP
+  200 responses. Use `127.0.0.1` for evidence commands.
+
+### Failure Categories
+
+- Test design gap
+- Installer flow
+- Launchd/autostart
+- Wizard HQ/dashboard
+- Low-memory/8GB behavior
+- No-surprise-model-download
+
+### Root Cause Or Current Hypothesis
+
+- The live smoke assumed a configured LiteLLM alias meant a generation-capable
+  model was installed. That assumption is false after `--purge-all` followed by
+  `--skip-model-pulls`.
+- Background process lifecycle from this Codex-managed shell is not equivalent
+  to product persistence. launchd is the product-supported persistence path and
+  passed after documented warmup.
+
+### Fix Applied
+
+- Updated `tests/core-live-smoke.sh` so LiteLLM chat completion is skipped with a
+  warning when no Ollama generation-capable model is installed.
+- Kept LiteLLM readiness and model alias checks as hard checks.
+
+### Retest Result
+
+- `bash tests/core-live-smoke.sh` now passes with warnings on a model-free
+  low/core install.
+- Doctor passes with 51 checks, 4 warnings, 0 failures after launchd warmup.
+- Wizard HQ installed HTML contains the new tab shell.
+
+### Regression Test Added
+
+- `tests/core-live-smoke.sh` now covers the no-generation-model degraded path.
+
+### Follow-Up Issues Created Or Recommended
+
+- Recommended: create a focused issue to make non-interactive install optionally
+  enable launchd with an explicit flag, or improve postinstall/next-step copy so
+  users know Wizard HQ status panels are degraded until launchd/status APIs are
+  started.
+- Recommended: create a focused issue for browser screenshot evidence of Wizard
+  HQ after clean install.
+
+### Lesson Learned
+
+A clean install with `--skip-model-pulls` must not be treated as chat-ready.
+It is stack-ready and dashboard-ready, but generation is intentionally degraded
+until the user explicitly pulls a model.
+
+### What Not To Repeat Next Time
+
+Do not fail a no-surprise-download install because a model was not downloaded.
+Tests must distinguish service readiness from generation readiness.
+
+### Local Trusted Beta Impact
+
+Improved. Core install path is validated on the 8GB Mac with model pulls
+disabled, and the live smoke now matches the product's conservative model policy.
+
+### Public Beta Impact
+
+Improved but still incomplete. Public Beta still needs browser screenshot
+evidence, clearer status-API persistence onboarding, model-add guidance, and
+known-warning documentation.
