@@ -35,8 +35,8 @@ work.
 
 Current verified queue:
 
-1. #80 explicit `webhook_execution` gate under v1.7 Security Hardening.
-2. #85 evaluate additional Merlin staff skills without agent sprawl under v2.0.
+1. #85 evaluate additional Merlin staff skills without agent sprawl under v2.0.
+2. #30/#39 dashboard command center and security center under v2.1.
 
 ## 2. REPO SNAPSHOT — WHAT EXISTS TODAY (2026-05-08)
 

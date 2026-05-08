@@ -53,6 +53,9 @@ Current milestone position:
 - #8 JSONL trace inspection now follows the same baseline-first rule:
   `wizard trace <id>` reads local trace, approval, and outcome JSONL before
   any optional trace UI is introduced.
+- #80 adds the explicit fail-closed `webhook_execution` policy gate under v1.7.
+  Webhook execution remains disabled by default and still requires the existing
+  network, service, API-key, and action-specific gates when those risks apply.
 - #8 optional Langfuse lives only in `docker-compose.observability.yml` and
   starts only through `wizard start observability`. It remains off by default,
   localhost-only, separate from Open WebUI port `3000`, and guarded against
@@ -168,7 +171,8 @@ Phase 2 is complete on `main` through commit `b4f35c8`, with the Merlin Staff Co
 Phase 2 runtime package:
 
 - `merlin/config_loader.py` validates the Merlin YAML config set.
-- `merlin/policy_engine.py` enforces 14 fail-closed approval gates.
+- `merlin/policy_engine.py` enforces 15 fail-closed approval gates, including
+  the explicit `webhook_execution` gate for webhook-triggered execution.
 - `merlin/router.py` routes into the real 5 route IDs, selects all 6 staff modes, carries approval gates, applies low-memory model fallback, and writes route audit events.
 - `merlin/swarm_coordinator.py` converts a `RouteDecision` into immutable `SwarmContext` for persona/staff prompt wiring.
 - `merlin/memory_manager.py` talks to local Ollama embeddings and Qdrant with dimension guards.
@@ -205,7 +209,7 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Move to `v1.7 — Security Hardening`: #80 explicit `webhook_execution` gate.
+1. Move to #85 under `v2.0 — Merlin Staff Core`: evaluate additional Merlin staff skills without agent sprawl.
 2. Keep signing/notarization deferred to #64; the v1.0 low/core installer path is green on this 8GB Mac.
 3. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 

@@ -31,6 +31,7 @@ CONTROLLED_ACTION_GATES: tuple[str, ...] = (
     "model_download",
     "openhands_task",
     "secret_access",
+    "webhook_execution",
 )
 
 

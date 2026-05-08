@@ -105,6 +105,7 @@ routes:
       - approved_memory_read
     approval_gates:
       - service_start
+      - webhook_execution
       - api_key_use
       - external_network
       - memory_write

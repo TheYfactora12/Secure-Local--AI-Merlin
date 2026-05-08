@@ -1,6 +1,6 @@
 # Merlin Staff Core
 
-Last updated: 2026-05-06
+Last updated: 2026-05-08
 
 Merlin Staff Core is the local-first runtime layer that turns a user task into a policy-aware staff decision: route, staff mode, model alias, approval gates, prompt context, and audit trail. It sits above the protected installer and wraps the existing local stack instead of replacing Ollama, LiteLLM, Open WebUI, n8n, or Qdrant.
 
@@ -26,6 +26,14 @@ The coordinator is intentionally pure wiring. It performs no model calls, networ
 | `operator` | Health, upgrades, logs, hardware tiers | `mistral` |
 
 Low-memory hardware falls back to `mistral` for heavy non-default staff models.
+
+## Policy Gates
+
+Merlin policy gates fail closed. As of #80, the policy contract has 15 approval
+gates. `webhook_execution` is the dedicated gate for webhook-triggered
+automation and must be combined with network, service, API-key, and
+action-specific gates where those risks also apply. Adding this gate does not
+enable webhook execution by default.
 
 ## Boundaries
 

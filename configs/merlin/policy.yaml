@@ -113,6 +113,11 @@ approval_gates:
     default: deny
     requires_approval: true
     reason: "OpenHands has Docker socket access and can affect the host."
+  webhook_execution:
+    risk: high
+    default: deny
+    requires_approval: true
+    reason: "Webhook execution can trigger automations from network-facing entry points."
 
 allowed_scopes:
   localhost:

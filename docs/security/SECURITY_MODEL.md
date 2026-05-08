@@ -15,6 +15,9 @@ action.
 - Keep port `8766` as the execution-aware task API; do not merge it into the
   read-only status server.
 - Do not enable cloud, remote tunnel, or webhook execution behavior by default.
+- Treat any webhook-triggered execution as a dedicated `webhook_execution`
+  approval-gated action in addition to `external_network`, `service_start`,
+  `api_key_use` when token-protected, and the action-specific gate.
 
 The v1.1 design is documented in `docs/MOBILE_ACCESS_PLAN.md`.
 

@@ -58,7 +58,9 @@ left behind.
 - #47 is closed under `v1.1`: mobile/local-network access is design-first,
   opt-in only, and preserves localhost defaults. See
   `docs/MOBILE_ACCESS_PLAN.md`.
-- #80 tracks the related webhook execution gate drift under `v1.7`.
+- #80 resolves the related webhook execution gate drift under `v1.7` by adding
+  the explicit fail-closed `webhook_execution` gate without enabling webhook
+  execution by default.
 - #5 is closed under `v1.2`: stale 16GB-minimum hardware guidance was replaced
   with the current 8GB-first guide, free stack map, and planning-only document
   ingestion scope.

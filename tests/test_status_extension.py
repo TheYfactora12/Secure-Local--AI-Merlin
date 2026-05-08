@@ -46,12 +46,13 @@ def test_status_routes_total_matches_routes_yaml_count() -> None:
     assert response.json()["total"] == len(load_all_configs().routes.routes)
 
 
-def test_status_approvals_returns_all_14_gates() -> None:
+def test_status_approvals_returns_all_15_gates() -> None:
     response = client.get("/status/approvals")
     assert response.status_code == 200
     body = response.json()
-    assert body["total"] == 14
-    assert len(body["gates"]) == 14
+    assert body["total"] == 15
+    assert len(body["gates"]) == 15
+    assert any(gate["gate_name"] == "webhook_execution" for gate in body["gates"])
 
 
 def test_status_approvals_counts_add_to_total() -> None:

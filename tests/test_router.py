@@ -124,6 +124,14 @@ def test_code_route_carries_all_approval_gates() -> None:
     ]
 
 
+def test_automation_route_carries_webhook_execution_gate() -> None:
+    decision = classify_task("set up an n8n webhook")
+
+    assert decision.route_id == "automation"
+    assert "webhook_execution" in decision.approval_gates
+    assert decision.requires_approval is True
+
+
 def test_trace_fields_are_present_on_every_decision() -> None:
     decision = route_task("explain how Qdrant works")
     for field_name in [

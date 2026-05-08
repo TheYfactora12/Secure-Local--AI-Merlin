@@ -47,7 +47,7 @@ Merlin is built on six Python modules:
 | Module | What It Does |
 |---|---|
 | `merlin/config_loader.py` | Validates the YAML config set on startup |
-| `merlin/policy_engine.py` | Enforces 14 fail-closed approval gates |
+| `merlin/policy_engine.py` | Enforces 15 fail-closed approval gates |
 | `merlin/router.py` | Routes tasks to the right model, staff mode, and agent target |
 | `merlin/memory_manager.py` | Manages Qdrant reads/writes with dimension guards |
 | `merlin/persona_injector.py` | Builds system prompts with Merlin's ethos and Pi warmth |
@@ -90,9 +90,9 @@ Merlin has five canonical memory collections in Qdrant:
 
 `wizard merlin dry-run "goal"` shows you exactly what Merlin would do — which route, which staff mode, which model, which approval gates trigger — without executing anything. No side effects. No surprises.
 
-### 4. Enforce a 14-Gate Approval Policy
+### 4. Enforce a 15-Gate Approval Policy
 
-Before any risky action executes, Merlin's policy engine checks 14 gates. These fail closed — if there's no explicit approval, the action is blocked. The gates cover:
+Before any risky action executes, Merlin's policy engine checks 15 gates. These fail closed — if there's no explicit approval, the action is blocked. The gates cover:
 
 - Shell command execution
 - File read/write
@@ -103,6 +103,7 @@ Before any risky action executes, Merlin's policy engine checks 14 gates. These 
 - Model downloads
 - OpenHands (autonomous code agent) access
 - Secret access
+- Webhook-triggered execution
 - And more
 
 ### 5. Run Automation Workflows
@@ -252,7 +253,7 @@ Keyword matching stays dominant (60%) so Merlin's routing is always explainable,
 | **v1.1 — Mobile Access** | ✅ Complete | Optional local-network entry point design (opt-in, no default LAN exposure) |
 | **v1.2 — Hardware Guide + Doc Ingestion** | ✅ Complete | 8GB-first hardware guide, free stack map, optional document ingestion planning |
 | **v1.3 — Reliability + Memory + Router** | 🔵 Active | Retry logic, memory reliability, router cleanup |
-| **v2.0 — Merlin Staff Core** | ✅ Complete | Full Python control plane, 6 staff modes, 14 policy gates, memory manager |
+| **v2.0 — Merlin Staff Core** | ✅ Complete | Full Python control plane, 6 staff modes, 15 policy gates, memory manager |
 | **v2.1 — Dashboard Command Center** | 📋 Planned | Read-only/user-facing Merlin control center |
 | **v2.2 — Magic Mode** | 📋 Planned | Supervised multi-step orchestration — plan-first, approval-gated |
 | **v3.0 — Public Release** | 📋 Planned | Public packaging, onboarding polish, signed installer |
@@ -269,7 +270,7 @@ Keyword matching stays dominant (60%) so Merlin's routing is always explainable,
 | Monthly subscription | ❌ None required | ✅ Required |
 | Apple Silicon GPU acceleration | ✅ Native Metal | ❌ n/a |
 | Audit trail of every AI decision | ✅ JSONL, redacted | ❌ Not available |
-| Approval gates before risky actions | ✅ 14 fail-closed gates | ❌ None |
+| Approval gates before risky actions | ✅ 15 fail-closed gates | ❌ None |
 | Runs on an 8GB laptop | ✅ Validated | ❌ n/a |
 | You can read the policy | ✅ `configs/merlin/policy.yaml` | ❌ Proprietary |
 

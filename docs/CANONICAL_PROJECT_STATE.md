@@ -79,7 +79,7 @@ flowchart LR
 | `v1.3 — Reliability + Memory + Router` | Closed | n8n retry contracts and local-first ModelRouter starter complete. |
 | `v1.5 — Memory Benchmarking` | Closed | Offline deterministic benchmark harness complete. |
 | `v1.6 — Pi Intelligence + Observability` | Complete after #8 closure | JSONL baseline, optional local Langfuse profile/export, n8n trace emission, memory/benchmark metadata export, and Qdrant task-signature retrieval are complete. |
-| `v1.7 — Security Hardening` | Future | Webhook gate decision and broader security hardening. |
+| `v1.7 — Security Hardening` | Active | #80 adds the explicit fail-closed `webhook_execution` gate; broader security hardening remains open. |
 | `v2.0 — Merlin Staff Core` | Mostly complete, follow-up queue open | Phase 2 runtime complete; remaining issues are follow-up visibility, approval, delete, and governance work. |
 | `v2.1 — Dashboard Command Center` | Future | Read-only/status-first dashboard improvements. |
 | `v2.2 — Magic Mode` | Future | Plan-first supervised orchestration only. |
@@ -88,12 +88,11 @@ flowchart LR
 
 ## Active Execution Queue
 
-1. #80: Decide explicit `webhook_execution` policy gate in v1.7.
-2. #85: Evaluate additional Merlin staff skills without agent sprawl in v2.0.
-3. #30 and #39: Dashboard command center and security center in v2.1.
-4. #33 and #34: Magic Mode plan-only UI and audit viewer in v2.2.
-5. #37 and #64: Public release hardening and Developer ID/notarization in v3.0.
-6. #92: Native Automation Runtime in v3.x.
+1. #85: Evaluate additional Merlin staff skills without agent sprawl in v2.0.
+2. #30 and #39: Dashboard command center and security center in v2.1.
+3. #33 and #34: Magic Mode plan-only UI and audit viewer in v2.2.
+4. #37 and #64: Public release hardening and Developer ID/notarization in v3.0.
+5. #92: Native Automation Runtime in v3.x.
 
 Patent/IP issues #81 through #84 are cross-cutting governance work. They should
 not add novel claim language to public docs unless the inventor explicitly

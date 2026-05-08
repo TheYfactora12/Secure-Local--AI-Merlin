@@ -57,6 +57,13 @@ def test_gate_with_approval_disabled_executes(monkeypatch: pytest.MonkeyPatch) -
     assert controlled_action("ok") == "executed:ok"
 
 
+def test_controlled_gates_match_policy_config() -> None:
+    config = config_loader.load_all_configs()
+
+    assert set(policy_engine.CONTROLLED_ACTION_GATES) == set(config.policy.approval_gates)
+    assert "webhook_execution" in policy_engine.CONTROLLED_ACTION_GATES
+
+
 def test_policy_file_missing_fails_closed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     config_dir = _copy_configs(tmp_path)
     (config_dir / "policy.yaml").unlink()

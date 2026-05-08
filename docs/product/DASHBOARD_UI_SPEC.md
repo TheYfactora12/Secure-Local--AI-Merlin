@@ -156,7 +156,7 @@ Purpose: Show what Merlin is allowed to do.
 
 MVP:
 
-- 14 approval gates.
+- 15 approval gates.
 - Cloud disabled/enabled state.
 - API key presence only.
 - Audit log summaries.

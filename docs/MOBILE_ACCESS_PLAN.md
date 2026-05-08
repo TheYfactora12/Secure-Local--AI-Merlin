@@ -97,16 +97,15 @@ policy cannot be loaded.
 |---|---|
 | Enable LAN gateway | `external_network`, `service_start` |
 | Change a bind from `127.0.0.1` to `0.0.0.0` | `external_network`, `service_start` |
-| Use a mobile webhook to start automation | `external_network`, `service_start`, `api_key_use` when token-protected |
+| Use a mobile webhook to start automation | `webhook_execution`, `external_network`, `service_start`, `api_key_use` when token-protected |
 | Write memory from a mobile session | `memory_write` |
 | Read or manage secrets for mobile auth | `secret_access`, `api_key_use` |
 | Call cloud or remote tunnel provider | `cloud_model_call`, `external_network`, `api_key_use` |
 
-Drift note: earlier planning references a `webhook_execution` gate, but the live
-policy contract currently has 14 gates and does not include that gate. Until a
-dedicated policy issue adds it, webhook exposure must be guarded by the
-combination of `external_network`, `service_start`, `api_key_use`, and the
-action-specific gate such as `memory_write`.
+Security update: #80 added `webhook_execution` as an explicit fail-closed gate
+for webhook-triggered execution. It does not replace the existing network,
+service, API-key, or action-specific gates; it adds a dedicated execution
+boundary for webhook surfaces.
 
 ## iOS Shortcuts Shape
 
@@ -174,4 +173,3 @@ implementation, rollback must:
 2. Stop the LAN gateway service.
 3. Re-run `bash scripts/doctor.sh`.
 4. Confirm all direct service URLs are reachable only from localhost.
-
