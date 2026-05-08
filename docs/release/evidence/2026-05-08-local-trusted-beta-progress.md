@@ -959,3 +959,105 @@ a later clean install validation run.
 
 Neutral. Developer ID signing remains intentionally deferred until product
 quality, onboarding, and release evidence are stronger.
+
+---
+
+## Issue #101 Wizard HQ Front Door Spec — 2026-05-08 UTC
+
+### Scope
+
+Capture the next Wizard HQ direction: Merlin AI becomes the primary product
+front door, while Qwen/Ollama, Open WebUI, LiteLLM, other local models, and
+optional cloud APIs are shown as replaceable brains/connectors under Merlin.
+
+### Starting Commit SHA
+
+`3fc65d924956e144df4c8c7e79d94773d83a35fc` —
+`docs(release): record clean install prep uninstall`
+
+### Files Changed
+
+- `docs/product/DASHBOARD_PRODUCT_SPEC.md`
+- `docs/product/DASHBOARD_UI_SPEC.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None. No installer, package, dashboard runtime, service, API, memory, model,
+cloud, or execution behavior changed.
+
+### Commands Run
+
+| Command | Result |
+|---|---|
+| `gh issue list --state open --milestone "v3.0 — Public Product Release" --json number,title,labels` | PASS |
+| `sed -n '1,220p' docs/product/MERLIN_BRAND_UX_SPEC.md` | PASS |
+| `sed -n '1,220p' docs/product/DASHBOARD_UI_SPEC.md` | PASS |
+| `sed -n '1,220p' docs/product/DASHBOARD_PRODUCT_SPEC.md` | PASS |
+| `gh issue create --title "v3.0: Wizard HQ Merlin-native front door and brains tab UX" --body-file /private/tmp/homeai-wizard-hq-front-door-issue.md --milestone "v3.0 — Public Product Release" --label "release" --label "v3.0" --label "ux" --label "product" --label "priority: high"` | PASS; created #101. |
+| `bash tests/master-prompt-smoke.sh` | PASS |
+| `bash tests/beta-readiness-evidence-smoke.sh` | PASS |
+| `git diff --check` | PASS |
+| `git push origin main` | PASS; pushed `a02dbbe`. |
+| `gh run watch 25535810742 --exit-status` | PASS; CI passed for `a02dbbe`. |
+| `gh run view 25535810742 --json status,conclusion,headSha,url` | FAIL; transient GitHub API connection error after the watch had already confirmed success. |
+
+### Tests Skipped And Why
+
+- Live dashboard/browser testing was skipped because the local product stack is
+  intentionally uninstalled/reset for the later clean install test.
+- No live Docker/Ollama/Qdrant checks were required for this docs/issue slice.
+
+### Failures Found
+
+- Final `gh run view` retry failed with a transient `api.github.com`
+  connection error after `gh run watch` had already confirmed the workflow
+  passed.
+
+### Failure Category
+
+- Release tooling/operator environment
+
+### Root Cause Or Current Hypothesis
+
+Network/API transient after the authoritative CI watch result completed.
+
+### Fix Applied
+
+No code fix required. The successful `gh run watch` output is the evidence for
+CI success on this slice.
+
+### Retest Result
+
+- Local static checks passed.
+- GitHub Actions run `25535810742` passed for commit `a02dbbe`.
+
+### Regression Test Added Or Reason Not Added
+
+No regression test added yet. #101 defines the next implementation slice, whose
+acceptance criteria require static dashboard tab/no-unsafe-controls tests when
+the UI changes land.
+
+### Follow-Up Issues Created Or Recommended
+
+- Created #101: `v3.0: Wizard HQ Merlin-native front door and brains tab UX`.
+
+### Lessons Learned
+
+The product needs to stop feeling like "Open WebUI plus a status dashboard."
+Wizard HQ should make Merlin feel like the app, with models and APIs presented
+as optional brains/connectors.
+
+### What Not To Repeat Next Time
+
+Do not let Qwen, Llama, Open WebUI, LiteLLM, or any provider become the product
+identity. They are engines Merlin can use.
+
+### Local Trusted Beta Impact
+
+Improved planning clarity. No runtime behavior changed.
+
+### Public Beta Impact
+
+Improved product direction. Public Beta still requires implementation,
+onboarding evidence, clean install evidence, and final release-hardening work.
