@@ -42,6 +42,19 @@ Wizard AI is not one app. It is a **stack of purpose-built components** orchestr
 
 Merlin is the AI control plane that sits above all these services. It is not a chatbot. It is the decision layer that decides **which model runs, which staff mode activates, whether an action needs approval, and what gets written to memory**.
 
+The commercial direction is to evolve Merlin into a private AI control plane
+for owned AI infrastructure: Wizard HQ as the product shell, Brains as model and
+provider options, Memory as an approved vault, Agents as supervised workers,
+Security as policy/audit visibility, and System as honest local readiness.
+Future milestones add AI asset inventory, identity/trust graph, access reviews,
+monitoring signals, DLP-style gates, governance evidence, and only later a
+Merlin-native workflow runtime. See
+`docs/product/MERLIN_CONTROL_PLANE_STRATEGY.md`.
+
+Current release language must stay precise: Merlin is not yet a completed AI
+firewall, IDS, IPS, DLP, or enterprise governance suite. Those are future
+roadmap outcomes that need their own issues, tests, and evidence.
+
 Merlin is built on six Python modules:
 
 | Module | What It Does |

@@ -23,7 +23,14 @@ Ship Merlin as a useful local-first product before expanding into supervised exe
 | `v2.1 — Dashboard Command Center` | Read-only/user-facing control center | No privileged mutation in dashboard v1 |
 | `v2.2 — Magic Mode` | Supervised orchestration | Plan-first, approval-gated |
 | `v3.0 — Public Product Release` | Public packaging/onboarding polish | Only after stable lower milestones |
-| `v3.x — Native Automation Runtime` | Commercial replacement/supplement for n8n | Last-mile milestone after Merlin workflows prove the owned runtime shape |
+| `v3.1 — Wizard HQ Product Shell` | Merlin-native front door, Chat, Brains, Memory, Agents, Security, System, Settings | Product shell before deeper governance features |
+| `v3.2 — AI Asset Inventory + Identity Graph` | Local inventory of models, providers, tools, agents, and trust state | Design-first; no hidden scanning beyond explicit local scope |
+| `v3.3 — Access Control + Reviews` | Permission matrix and review workflows | Approval-gated and local audit first |
+| `v3.4 — Monitoring, IDS Signals + Drift` | AI activity events, failed gate trends, drift baseline | Detection before prevention claims |
+| `v3.5 — DLP + Prevention Gates` | Prompt/output classification, redaction, block/approve gates | Test corpus and false-positive handling required |
+| `v3.6 — Governance Reporting + Evidence` | Exportable inventory, access, policy, and incident evidence | Evidence must match implemented controls |
+| `v3.7 — Local Fallback + DR` | Provider health, offline fallback state, continuity proof | No fake fallback or readiness claims |
+| `v4.x — Native Automation Runtime` | Commercial replacement/supplement for n8n | Last-mile milestone after Merlin workflows prove the owned runtime shape |
 
 Stress-test result: keep this ladder explicit. Do not jump from v1.0 to v1.3; v1.1 and v1.2 are now real GitHub milestones.
 
@@ -49,8 +56,7 @@ left behind.
   `v1.1 — Mobile Access + Remote-Safe Entry Points`, and
   `v1.2 — Hardware Guide + Document Ingestion Planning`, and
   `v1.3 — Reliability + Memory + Router`, and
-  `v1.5 — Memory Benchmarking` are closed as of 2026-05-07. The next
-  milestone in execution order is `v1.6 — Pi Intelligence + Observability`.
+  `v1.5 — Memory Benchmarking` are closed as of 2026-05-07.
 - #41–#46, #48, #49, and #61 closed under `v1.0` with `release` + `priority: critical` labels.
 - #1 is closed under `v1.0`; installer runtime and package builder defects are resolved. Developer ID Installer/notarization is split to #64 under `v3.0`.
 - #62 passed under `v1.0` on 2026-05-07 after a fresh-data low/core reinstall and launchd validation; see `docs/archive/WHOLE_STACK_RC_VALIDATION_2026-05-07.md`.
@@ -81,8 +87,9 @@ left behind.
 - #7 is closed under `v1.5`; it adds an offline-safe benchmark harness first.
   Live Qdrant/Ollama benchmark profiles remain future integration work behind
   explicit test flags.
-- Next active milestone is `v1.6`. #36 is closed as the design-first parent.
-  #8 is closed as the optional/profile-gated Langfuse parent. #93 is closed
+- `v1.6 — Pi Intelligence + Observability` is complete. #36 is closed as the
+  design-first parent. #8 is closed as the optional/profile-gated Langfuse
+  parent. #93 is closed
   after adding `docs/CANONICAL_PROJECT_STATE.md`. #88 is complete after memory
   read/write and benchmark JSONL events were added to the optional local
   Langfuse exporter. #89 is complete after adding Qdrant task-signature vector
@@ -125,9 +132,39 @@ left behind.
   is CI-covered.
 - #98 is closed under `v3.0` after `actions/setup-python` moved to v6 and
   the CI runtime hardening smoke was added.
-- #37, #64, and #95 remain open under `v3.0` for public onboarding/release
-  hardening, Developer ID/notarization, and release readiness audit/evidence
-  collection.
+- #101 and #102 are open under `v3.0` for Wizard HQ product-shell follow-up and
+  first-run status API persistence. These now sit ahead of public polish work
+  because the user should experience Merlin first, with Open WebUI and models
+  presented as brain options.
+- #37 and #95 remain open under `v3.0` for public onboarding/release hardening
+  and release readiness audit/evidence collection.
+- #64 remains open under `v3.0`, but Developer ID/notarization is deferred until
+  Wizard HQ, onboarding, and release evidence are product-complete. Do not make
+  signing the active blocker while core product surface gaps remain.
+- #92 remains future work. It should follow the control-plane product milestones
+  and should not start until the product has proven which workflow patterns are
+  worth owning natively.
+
+## Commercial Control Plane Roadmap
+
+The validated commercial direction is captured in
+`docs/product/MERLIN_CONTROL_PLANE_STRATEGY.md`.
+
+The roadmap is:
+
+1. v3.0: public product release hardening and local trusted beta evidence.
+2. v3.1: Wizard HQ product shell and Merlin-native first-run experience.
+3. v3.2: AI asset inventory and identity/trust graph.
+4. v3.3: access control and review workflows.
+5. v3.4: monitoring, IDS signals, and drift detection.
+6. v3.5: DLP and prevention gates.
+7. v3.6: governance reporting and evidence packs.
+8. v3.7: local fallback and disaster recovery.
+9. v4.x: MerlinFlow native runtime after the control plane proves its shape.
+
+Current product claims must stay below this roadmap. Merlin is currently a
+local-first AI control-plane foundation, not yet a completed DLP, IDS, IPS, or
+enterprise governance suite.
 
 ---
 

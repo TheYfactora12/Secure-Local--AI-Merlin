@@ -29,12 +29,16 @@ Home AI Elite has a working local-first foundation:
 - Merlin Staff Core with config validation, policy gates, routing, memory,
   persona injection, task endpoint, and status panels,
 - Phase 3 review-first learning loops,
-- local JSONL observability baseline plus optional self-hosted Langfuse profile.
+- local JSONL observability baseline plus optional self-hosted Langfuse profile,
+- Wizard HQ Merlin-native tab shell with Chat, Brains, Memory, Agents,
+  Security, System, and Settings information architecture.
 
 It is not yet the final commercial Home AI Elite product. The remaining product
-gaps are dashboard command-center polish, supervised Magic Mode UX, public
-packaging/notarization, and a future native automation runtime that supplements
-or replaces n8n after workflow patterns are proven.
+gaps are first-run API persistence, dashboard command-center polish, visual
+Wizard HQ validation, supervised Magic Mode UX, public packaging evidence, and a
+future native automation runtime that supplements or replaces n8n after workflow
+patterns are proven. Developer ID signing/notarization remains tracked by #64
+but is deferred until the product surface is more complete.
 
 ## Current Architecture Diagram
 
@@ -88,9 +92,15 @@ flowchart LR
 
 ## Active Execution Queue
 
-1. #37 and #95: Public release onboarding hardening and product audit evidence collection under v3.0.
-2. #64: Developer ID signing/notarization under v3.0.
-3. #92: Native Automation Runtime in v3.x after release readiness work.
+1. #102: clarify Wizard HQ status API first-run persistence after clean install.
+2. #101: continue Wizard HQ Merlin-native front door and Brains tab UX,
+   including browser visual validation and screenshot evidence.
+3. #37 and #95: public onboarding hardening and product audit evidence
+   collection under v3.0.
+4. #64: Developer ID signing/notarization under v3.0, deferred until the
+   installer, Wizard HQ, and release evidence are otherwise product-complete.
+5. #92: Native Automation Runtime in v3.x after release readiness work and
+   control-plane product milestones.
 
 Patent/IP issues #81 through #84 are cross-cutting governance work. They should
 not add novel claim language to public docs unless the inventor explicitly
@@ -105,6 +115,7 @@ approves the disclosure and the relevant evidence exists in code.
 | `docs/MASTER_PROMPT.md` | Session bootstrap | Agent behavior rules and current next recommendation. |
 | `CODEX_MASTER_PROMPT.md` | Root repo operating contract | High-level security, engineering, and patent-sensitive rules. Treat embedded backlog lists as subordinate to GitHub truth and this doc. |
 | `docs/MERLIN_IMPLEMENTATION_ROADMAP.md` | Roadmap | Milestone ladder, issue alignment, and long-range execution plan. |
+| `docs/product/MERLIN_CONTROL_PLANE_STRATEGY.md` | Product strategy | Validated control-plane direction, current/future boundary, and v3.1-v4.x milestone ladder. |
 | `docs/observability-guide.md` | v1.6 feature owner | JSONL baseline, optional local Langfuse, trace export, and related tests. |
 | `docs/architecture/MERLIN_STAFF_CORE.md` | Merlin core owner | Staff router, swarm context, policy gates, team modes, and Phase 2 boundary. |
 | `docs/architecture/AUTOMATION_RUNTIME_STRATEGY.md` | Product/architecture | Why n8n remains optional today and how a native runtime becomes a v3.x milestone. |

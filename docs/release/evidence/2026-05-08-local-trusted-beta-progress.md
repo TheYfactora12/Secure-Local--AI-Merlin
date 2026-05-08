@@ -1489,3 +1489,152 @@ disabled, and the live smoke now matches the product's conservative model policy
 Improved but still incomplete. Public Beta still needs browser screenshot
 evidence, clearer status-API persistence onboarding, model-add guidance, and
 known-warning documentation.
+
+## Control Plane Strategy Alignment Pass
+
+### Date/Time
+
+2026-05-08 00:58:28 EDT
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`eecc8be482dc1384eafc2858cf3d5e8ab7c5a38f`
+
+### Target Issues
+
+- #37 public release onboarding and packaging hardening
+- #95 product push audit and release readiness evidence
+- #101 Wizard HQ Merlin-native front door and Brains tab UX
+- #102 Wizard HQ status API first-run persistence
+
+### Scope
+
+Validate the proposed Merlin AI control-plane / AI governance product direction
+against current repo truth, then align docs and tests so future roadmap language
+does not overclaim current product behavior.
+
+### Files Changed
+
+- `docs/product/MERLIN_CONTROL_PLANE_STRATEGY.md`
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/MERLIN_IMPLEMENTATION_ROADMAP.md`
+- `docs/product/PRODUCT_GUIDE.md`
+- `tests/control-plane-strategy-smoke.sh`
+- `.github/workflows/ci.yml`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `.github/workflows/ci.yml`
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/MERLIN_IMPLEMENTATION_ROADMAP.md`
+
+These were touched for governance alignment and static CI coverage only. No
+installer, runtime, policy, memory, status API, task API, or dashboard execution
+behavior changed.
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `bash tests/control-plane-strategy-smoke.sh` before test fix | FAIL; brittle wording assertion did not match the strategy doc's actual anti-overclaim sentence. |
+| `bash tests/control-plane-strategy-smoke.sh` after test fix | PASS |
+| `bash tests/beta-readiness-evidence-smoke.sh` | PASS |
+| `bash tests/master-prompt-smoke.sh` | PASS |
+| `git diff --check` | PASS |
+
+### Tests Skipped And Why
+
+Live service tests are not required for this docs/governance pass. The live
+clean-install evidence above remains the current runtime evidence for today.
+
+### Failures Found
+
+`tests/control-plane-strategy-smoke.sh` initially failed because it expected the
+phrase `not yet a completed AI firewall...` while the doc says `not yet be
+described as a completed AI firewall...`.
+
+### Failure Category
+
+Test design gap
+
+### Root Cause Or Current Hypothesis
+
+The validated product direction is aligned with Merlin's foundation, but the
+roadmap needed a clearer current/future boundary. The main risk was language
+drift: describing Merlin as a completed AI firewall, IDS, IPS, DLP, or
+enterprise governance product before those controls exist.
+
+The smoke-test failure root cause was brittle exact text matching.
+
+### Fix Applied
+
+- Added a control-plane strategy doc with current-state and future-state
+  architecture diagrams.
+- Updated canonical active queue to put #102 and #101 before broader public
+  polish, with #64 explicitly deferred until product polish is otherwise ready.
+- Updated the implementation roadmap with v3.1 through v3.7 control-plane
+  milestones and a v4.x native-runtime boundary.
+- Added a static smoke test to enforce the current/future product-claim
+  boundary in CI.
+- Tightened the smoke assertion to match the doc's actual anti-overclaim
+  sentence.
+
+### Retest Result
+
+`bash tests/control-plane-strategy-smoke.sh` passed after the assertion fix.
+`bash tests/beta-readiness-evidence-smoke.sh`, `bash tests/master-prompt-smoke.sh`,
+and `git diff --check` also passed.
+
+### Regression Test Added
+
+`tests/control-plane-strategy-smoke.sh` verifies the strategy doc exists,
+contains the v3.1-v4.x ladder, links from canonical state and roadmap, and
+contains explicit anti-overclaim language.
+
+### Follow-Up Issues Created Or Recommended
+
+Created GitHub milestones and parent roadmap issues:
+
+| Milestone | Parent Issue |
+| --- | --- |
+| `v3.1 — Wizard HQ Product Shell` | #106 |
+| `v3.2 — AI Asset Inventory + Identity Graph` | #105 |
+| `v3.3 — Access Control + Reviews` | #103 |
+| `v3.4 — Monitoring IDS Signals + Drift` | #104 |
+| `v3.5 — DLP + Prevention Gates` | #107 |
+| `v3.6 — Governance Reporting + Evidence` | #112 |
+| `v3.7 — Local Fallback + DR` | #108 |
+| `v4.x — MerlinFlow Native Runtime` | #111 |
+
+During issue creation, GitHub returned transient GraphQL errors for two
+parallel `gh issue create` calls. I checked existing issues before retrying and
+only retried the missing v3.6 and v4.x parent issues. No duplicate issues were
+created.
+
+### Lesson Learned
+
+The control-plane direction is good, but it must be structured as future
+milestones. The installed system is currently a strong local-first foundation
+and Wizard HQ shell, not a completed governance/security suite.
+
+### What Not To Repeat Next Time
+
+Do not let market or investor language rewrite current-state docs as if future
+DLP/IDS/RBAC features already exist. Current-state docs must always match code
+and evidence.
+
+### Local Trusted Beta Impact
+
+Improved. The next build path is clearer: stabilize first-run Wizard HQ and
+Brains before adding deeper governance layers.
+
+### Public Beta Impact
+
+Improved but still incomplete. Public Beta still needs product-shell visual
+validation, status API persistence clarity, model-add UX, and installer retest
+evidence after final onboarding changes.
