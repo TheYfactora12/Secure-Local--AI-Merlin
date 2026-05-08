@@ -31,6 +31,14 @@ cat > "${TMP}/merlin-benchmarks.jsonl" <<'JSONL'
 {"generated_at":"2099-01-01T00:00:03+00:00","suite":"epbench","profile":"offline","summaries":[{"suite":"epbench","recall_at_k":1.0,"prompt":"do-not-export"}],"recall_at_k":1.0}
 JSONL
 
+cat > "${TMP}/merlin-memory-reads.jsonl" <<'JSONL'
+{"memory_read_id":"mread-export","timestamp":"2099-01-01T00:00:04+00:00","mode":"search","memory_type":"preference","query_hash":"sha256:query","query_preview":"do-not-export","target_collection":"swarm_memory","adapter":"qdrant_local","embedding_model":"nomic-embed-text","policy_decision":"allow","result_status":"searched","decision_reason":"local read","result_count":2,"result_hashes":["sha256:result"],"redaction_applied":true,"qdrant_read":"search","embedding_calls":"local_ollama","vector_dimension_guard":"passed","cloud_calls":"none","external_network":"none","memory_writes":"none","execution_allowed":false}
+JSONL
+
+cat > "${TMP}/merlin-memory-writes.jsonl" <<'JSONL'
+{"memory_write_id":"mem-export","timestamp":"2099-01-01T00:00:05+00:00","mode":"simulate","memory_type":"preference","memory_text_hash":"sha256:memory","memory_preview":"do-not-export","raw_memory_stored":false,"approval_request_id":"approval-export","approval_status":"approved","approval_route_id":"memory","target_collection":"swarm_memory","point_id":"point-export","adapter":"jsonl_simulator","embedding_model":"nomic-embed-text","policy_decision":"allow_simulation","result_status":"simulated","decision_reason":"approved simulation","redaction_applied":true,"qdrant_write":"none","embedding_calls":"none","vector_dimension_guard":"not_applicable","model_calls":"none","service_starts":"none","tool_execution":"none","cloud_calls":"none","external_network":"none","memory_writes":"simulated_jsonl_only","execution_allowed":false}
+JSONL
+
 OUTPUT="$(bash "${ROOT_DIR}/scripts/merlin-observability-export.sh" --dry-run --log-dir "$TMP")"
 
 echo "$OUTPUT" | grep -q '^source_backend: jsonl$' || fail "exporter must use JSONL source"
@@ -42,7 +50,10 @@ echo "$OUTPUT" | grep -q '^route_records: 1$' || fail "route record count missin
 echo "$OUTPUT" | grep -q '^approval_records: 1$' || fail "approval record count missing"
 echo "$OUTPUT" | grep -q '^outcome_records: 1$' || fail "outcome record count missing"
 echo "$OUTPUT" | grep -q '^benchmark_records: 1$' || fail "benchmark record count missing"
-echo "$OUTPUT" | grep -q '^planned_events: 4$' || fail "planned event count missing"
+echo "$OUTPUT" | grep -q '^memory_read_records: 1$' || fail "memory read record count missing"
+echo "$OUTPUT" | grep -q '^memory_write_records: 1$' || fail "memory write record count missing"
+echo "$OUTPUT" | grep -q '^planned_events: 6$' || fail "planned event count missing"
+echo "$OUTPUT" | grep -q 'do-not-export' && fail "dry-run output must not print raw sensitive fixture values"
 
 WIZARD_OUTPUT="$(bash "${ROOT_DIR}/cli/wizard" observability export --dry-run --log-dir "$TMP")"
 echo "$WIZARD_OUTPUT" | grep -q '^mode: dry-run$' || fail "wizard observability export must call exporter"

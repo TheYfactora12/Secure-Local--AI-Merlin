@@ -299,8 +299,8 @@ bash tests/langfuse-observability-profile-smoke.sh
 
 This test validates `wizard observability export --dry-run` using temporary
 local JSONL fixtures. It proves dry-run performs no network export, hosted
-Langfuse URLs are refused, and explicit live mode skips gracefully when local
-Langfuse is unavailable.
+Langfuse URLs are refused, memory read/write audit events export metadata only,
+and explicit live mode skips gracefully when local Langfuse is unavailable.
 
 ```bash
 bash tests/merlin-observability-export-smoke.sh

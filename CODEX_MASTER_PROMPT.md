@@ -35,10 +35,8 @@ work.
 
 Current verified queue:
 
-1. #93 governance docs consolidation.
-2. #88 memory and benchmark event export to local Langfuse.
-3. #89 Qdrant task-signature retrieval claim hardening.
-4. Close #8 only after remaining v1.6 children and CI are complete.
+1. #89 Qdrant task-signature retrieval claim hardening.
+2. Close #8 only after remaining v1.6 children and CI are complete.
 
 ## 2. REPO SNAPSHOT — WHAT EXISTS TODAY (2026-05-08)
 

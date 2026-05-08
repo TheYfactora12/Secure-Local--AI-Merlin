@@ -130,9 +130,15 @@ Plan optional Langfuse export:
 wizard observability export --dry-run
 ```
 
-`wizard observability export --dry-run` reads route, approval, outcome, and
-benchmark JSONL records and prints planned export counts without network calls.
-It does not require Langfuse or live services.
+`wizard observability export --dry-run` reads route, approval, outcome,
+benchmark, and memory read/write JSONL records and prints planned export counts
+without network calls. It does not require Langfuse or live services.
+
+Exported memory fields are metadata-only: collection, memory type, adapter,
+policy decision, result status, result count, Qdrant read/write status,
+dimension guard status, and optional score/latency fields if present. Raw memory
+text, query previews, retrieved chunks, document content, secrets, credentials,
+tokens, and API keys are never exported.
 
 Runtime health:
 
@@ -239,6 +245,7 @@ profile is gated:
 safe:
 
 - dry-run reads local JSONL and performs no network calls,
+- memory read/write events export metadata only,
 - hosted/cloud Langfuse URLs are refused,
 - unreachable localhost Langfuse is skipped gracefully in explicit live mode,
 - `wizard observability export --dry-run` works without live services.

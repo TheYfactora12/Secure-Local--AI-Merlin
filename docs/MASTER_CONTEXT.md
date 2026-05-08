@@ -38,9 +38,12 @@ Current milestone position:
 - Next in order: `v1.6 — Pi Intelligence + Observability`. #36 is closed as
   the design-first parent. #8 is the active optional/profile-gated Langfuse
   parent and is unblocked by #36.
-- #93 is the active governance consolidation issue. It makes
-  `docs/CANONICAL_PROJECT_STATE.md` the GitHub-aligned state index and confirms
-  that the next implementation queue remains #88, then #89, then close #8.
+- #93 is closed. It added `docs/CANONICAL_PROJECT_STATE.md` as the
+  GitHub-aligned state index.
+- #88 is complete. `wizard observability export --dry-run` now includes
+  metadata-only memory read/write events plus benchmark events for optional
+  local Langfuse export. It still performs no network calls in dry-run mode and
+  refuses non-local Langfuse URLs.
 - #8 implementation order: local JSONL `wizard score` first, optional
   self-hosted Langfuse profile later. Do not add Langfuse to the default
   Compose stack.
@@ -199,12 +202,10 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Finish #93 governance consolidation and close it only after docs smoke tests
-   and CI pass.
-2. Finish the active `v1.6` observability queue: #88 first, then #89.
-3. Keep #8 open until the remaining v1.6 child work is complete and CI is green.
-4. Keep signing/notarization deferred to #64; the v1.0 low/core installer path is green on this 8GB Mac.
-5. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
+1. Finish the remaining active `v1.6` observability queue: #89.
+2. Keep #8 open until the remaining v1.6 child work is complete and CI is green.
+3. Keep signing/notarization deferred to #64; the v1.0 low/core installer path is green on this 8GB Mac.
+4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 
 ## Reasoning Summary
 

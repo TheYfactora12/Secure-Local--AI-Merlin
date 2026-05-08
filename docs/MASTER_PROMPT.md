@@ -151,7 +151,7 @@ Phase 2A through 2F and Phase 3A through 3E are implemented on `main`; do not re
 - #53: Session memory bridge n8n workflow is closed after `n8n-workflows/06-session-memory-bridge.json`, offline static tests, privacy documentation, and CI validation.
 - #60: Staff router + swarm coordinator integration is closed after `merlin/swarm_coordinator.py`, `wizard mode status`, route audit/fallback coverage, and CI validation.
 
-The current release priority is `v1.6 — Pi Intelligence + Observability`. #36 is closed as the design parent. #8 is the active optional/profile-gated Langfuse parent. #86 and #87 are complete. #93 is the active governance consolidation issue; after #93, next in order is #88, then #89, then close #8 when all child work and CI are complete. `v1.0 — Stable Installer Release` passed whole-stack low/core validation on the 8GB Mac; Developer ID Installer/notarization is deferred to #64.
+The current release priority is `v1.6 — Pi Intelligence + Observability`. #36 is closed as the design parent. #8 is the active optional/profile-gated Langfuse parent. #86, #87, #88, and #93 are complete; next in order is #89, then close #8 when all child work and CI are complete. `v1.0 — Stable Installer Release` passed whole-stack low/core validation on the 8GB Mac; Developer ID Installer/notarization is deferred to #64.
 
 See `docs/CANONICAL_PROJECT_STATE.md` before using any archived or historical phase prompt.
 See `docs/architecture/MERLIN_STAFF_CORE.md` for the staff router, swarm context boundary, team modes, policy gates, and dimension safety rule.

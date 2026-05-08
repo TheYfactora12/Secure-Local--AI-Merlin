@@ -88,17 +88,15 @@ flowchart LR
 
 ## Active Execution Queue
 
-1. #93: Governance docs consolidation and canonical state alignment.
-2. #88: Export memory and benchmark events to local Langfuse.
-3. #89: Claim-hardening Qdrant task-signature retrieval for router.
-4. #8: Close the v1.6 optional observability parent only after remaining child
+1. #89: Claim-hardening Qdrant task-signature retrieval for router.
+2. #8: Close the v1.6 optional observability parent only after remaining child
    work passes CI.
-5. #80: Decide explicit `webhook_execution` policy gate in v1.7.
-6. #85: Evaluate additional Merlin staff skills without agent sprawl in v2.0.
-7. #30 and #39: Dashboard command center and security center in v2.1.
-8. #33 and #34: Magic Mode plan-only UI and audit viewer in v2.2.
-9. #37 and #64: Public release hardening and Developer ID/notarization in v3.0.
-10. #92: Native Automation Runtime in v3.x.
+3. #80: Decide explicit `webhook_execution` policy gate in v1.7.
+4. #85: Evaluate additional Merlin staff skills without agent sprawl in v2.0.
+5. #30 and #39: Dashboard command center and security center in v2.1.
+6. #33 and #34: Magic Mode plan-only UI and audit viewer in v2.2.
+7. #37 and #64: Public release hardening and Developer ID/notarization in v3.0.
+8. #92: Native Automation Runtime in v3.x.
 
 Patent/IP issues #81 through #84 are cross-cutting governance work. They should
 not add novel claim language to public docs unless the inventor explicitly

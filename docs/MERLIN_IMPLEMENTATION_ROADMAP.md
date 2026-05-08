@@ -79,10 +79,11 @@ left behind.
   Live Qdrant/Ollama benchmark profiles remain future integration work behind
   explicit test flags.
 - Next active milestone is `v1.6`. #36 is closed as the design-first parent.
-  #8 remains the active optional/profile-gated Langfuse parent. #93 is the
-  current governance consolidation issue; after #93, the implementation queue
-  is #88 first, then #89, then close #8 when remaining child work and CI are
-  complete.
+  #8 remains the active optional/profile-gated Langfuse parent. #93 is closed
+  after adding `docs/CANONICAL_PROJECT_STATE.md`. #88 is complete after memory
+  read/write and benchmark JSONL events were added to the optional local
+  Langfuse exporter. The remaining implementation queue is #89, then close #8
+  when remaining child work and CI are complete.
 - #8 starts with a JSONL baseline command, `wizard score`, before optional
   Langfuse service wiring. This keeps observability useful on 8GB low/core
   installs.
@@ -101,6 +102,10 @@ left behind.
   when the observability profile is active. Existing workflows remain unchanged.
 - #93 adds `docs/CANONICAL_PROJECT_STATE.md` and aligns the docs hierarchy so
   old phase notes cannot override GitHub milestone truth.
+- #88 extends `wizard observability export --dry-run` to include metadata-only
+  memory read/write events and benchmark events for optional local Langfuse
+  export. JSONL remains the source of truth, dry-run remains offline, and live
+  export still refuses non-local Langfuse URLs.
 - `docs/architecture/AUTOMATION_RUNTIME_STRATEGY.md` captures the future
   commercial path for a Merlin-native automation runtime. This is a last-mile
   milestone after n8n usage proves which patterns are worth owning, not a v1.6

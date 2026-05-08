@@ -22,6 +22,8 @@ Options:
   --approval-log <path>     Override approval JSONL path
   --outcome-log <path>      Override outcome JSONL path
   --benchmark-log <path>    Override benchmark JSONL path
+  --memory-read-log <path>  Override memory read audit JSONL path
+  --memory-write-log <path> Override memory write audit JSONL path
   --limit <n>               Max records per source, default 500
 
 Dry-run is fully offline. Live export is explicit, localhost-only, and exports
@@ -119,6 +121,55 @@ SAFE_BENCHMARK_FIELDS = {
     "precision_at_k",
     "latency_ms",
 }
+SAFE_MEMORY_READ_FIELDS = {
+    "memory_read_id",
+    "timestamp",
+    "mode",
+    "memory_type",
+    "target_collection",
+    "adapter",
+    "embedding_model",
+    "policy_decision",
+    "result_status",
+    "decision_reason",
+    "result_count",
+    "redaction_applied",
+    "qdrant_read",
+    "embedding_calls",
+    "vector_dimension_guard",
+    "cloud_calls",
+    "external_network",
+    "memory_writes",
+    "execution_allowed",
+    "latency_ms",
+    "score",
+}
+SAFE_MEMORY_WRITE_FIELDS = {
+    "memory_write_id",
+    "timestamp",
+    "mode",
+    "memory_type",
+    "raw_memory_stored",
+    "approval_request_id",
+    "approval_status",
+    "approval_route_id",
+    "target_collection",
+    "adapter",
+    "embedding_model",
+    "policy_decision",
+    "result_status",
+    "decision_reason",
+    "redaction_applied",
+    "qdrant_write",
+    "embedding_calls",
+    "vector_dimension_guard",
+    "cloud_calls",
+    "external_network",
+    "memory_writes",
+    "execution_allowed",
+    "latency_ms",
+    "score",
+}
 FORBIDDEN_KEYS = {
     "prompt",
     "completion",
@@ -138,6 +189,13 @@ FORBIDDEN_KEYS = {
     "secret",
     "token",
     "private_key",
+    "memory_preview",
+    "query_preview",
+    "memory_text",
+    "memory_text_hash",
+    "query_hash",
+    "result_hashes",
+    "retrieved_chunks",
 }
 
 
@@ -154,6 +212,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--approval-log", default="")
     parser.add_argument("--outcome-log", default="")
     parser.add_argument("--benchmark-log", default="")
+    parser.add_argument("--memory-read-log", default="")
+    parser.add_argument("--memory-write-log", default="")
     parser.add_argument("--limit", type=int, default=500)
     parser.add_argument("--help", "-h", action="store_true")
     args = parser.parse_args(sys.argv[2:])
@@ -224,6 +284,9 @@ def stable_id(source: str, record: dict[str, Any], fallback_index: int) -> str:
     for key in ("trace_id", "approval_request_id", "task_hash", "id"):
         if record.get(key):
             return f"merlin-{source}-{record[key]}"
+    for key in ("memory_read_id", "memory_write_id"):
+        if record.get(key):
+            return f"merlin-{source}-{record[key]}"
     raw = json.dumps(record, sort_keys=True, separators=(",", ":"))
     digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:24]
     return f"merlin-{source}-{fallback_index}-{digest}"
@@ -263,6 +326,8 @@ def build_events(paths: dict[str, Path], limit: int) -> tuple[dict[str, int], li
         "approval": ("approval", SAFE_APPROVAL_FIELDS),
         "outcome": ("outcome", SAFE_OUTCOME_FIELDS),
         "benchmark": ("benchmark", SAFE_BENCHMARK_FIELDS),
+        "memory_read": ("memory_read", SAFE_MEMORY_READ_FIELDS),
+        "memory_write": ("memory_write", SAFE_MEMORY_WRITE_FIELDS),
     }
     counts: dict[str, int] = {}
     events: list[dict[str, Any]] = []
@@ -287,11 +352,15 @@ def print_summary(args: argparse.Namespace, paths: dict[str, Path], counts: dict
     print(f"approval_records: {counts.get('approval', 0)}")
     print(f"outcome_records: {counts.get('outcome', 0)}")
     print(f"benchmark_records: {counts.get('benchmark', 0)}")
+    print(f"memory_read_records: {counts.get('memory_read', 0)}")
+    print(f"memory_write_records: {counts.get('memory_write', 0)}")
     print(f"planned_events: {len(events)}")
     print(f"trace_log: {paths['trace']}")
     print(f"approval_log: {paths['approval']}")
     print(f"outcome_log: {paths['outcome']}")
     print(f"benchmark_log: {paths['benchmark']}")
+    print(f"memory_read_log: {paths['memory_read']}")
+    print(f"memory_write_log: {paths['memory_write']}")
 
 
 def post_ingestion(base_url: str, public_key: str, secret_key: str, events: list[dict[str, Any]]) -> tuple[str, str]:
@@ -330,6 +399,8 @@ def main() -> None:
         "approval": Path(args.approval_log or log_dir / "merlin-approvals.jsonl"),
         "outcome": Path(args.outcome_log or log_dir / "merlin-outcomes.jsonl"),
         "benchmark": Path(args.benchmark_log or log_dir / "merlin-benchmarks.jsonl"),
+        "memory_read": Path(args.memory_read_log or log_dir / "merlin-memory-reads.jsonl"),
+        "memory_write": Path(args.memory_write_log or log_dir / "merlin-memory-writes.jsonl"),
     }
     counts, events = build_events(paths, args.limit)
 
