@@ -31,7 +31,10 @@ Home AI Elite has a working local-first foundation:
 - Phase 3 review-first learning loops,
 - local JSONL observability baseline plus optional self-hosted Langfuse profile,
 - Wizard HQ Merlin-native tab shell with Chat, Brains, Memory, Agents,
-  Security, System, and Settings information architecture.
+  Security, System, and Settings information architecture,
+- read-only provider connector capability catalog for local Ollama, LiteLLM,
+  ChatGPT/OpenAI, Claude/Anthropic, Perplexity Sonar, Gemini/Google AI,
+  Mistral AI, and OpenRouter.
 
 It is not yet the final commercial Home AI Elite product. The remaining product
 gaps are first-run API persistence, dashboard command-center polish, visual
@@ -53,6 +56,7 @@ flowchart LR
     Wizard --> Installer[Protected installer and scripts]
     Wizard --> MerlinTask[Merlin Task API :8766]
     Dashboard --> StatusAPI[Read-only Status API :8765]
+    Dashboard --> MerlinTask
 
     WebUI --> LiteLLM[LiteLLM :4000]
     MerlinTask --> Router[Merlin router and policy gates]
@@ -88,19 +92,25 @@ flowchart LR
 | `v2.1 — Dashboard Command Center` | Closed | Read-only Wizard HQ command center and security approvals panel complete. |
 | `v2.2 — Magic Mode` | Closed | Plan-only Magic Mode and local redacted audit viewer complete. |
 | `v3.0 — Public Product Release` | Active | Public packaging, onboarding, signing/notarization, installer branding, and release readiness. |
+| `v3.1 — Wizard HQ Product Shell` | Active | Merlin-native Chat, Brains, Settings, provider capability catalog, and policy-gated setup flows under #106. |
 | `v3.x — Native Automation Runtime` | Future | Last-mile commercial runtime to supplement or replace n8n after core workflows prove the owned shape. |
 
 ## Active Execution Queue
 
-1. #101: continue Wizard HQ Merlin-native front door and Brains tab UX,
-   including browser visual validation and screenshot evidence.
-2. #113 and #114 under #106: native Merlin Chat and policy-gated Settings
-   backend after the read-only #101 shell is validated.
-3. #37 and #95: public onboarding hardening and product audit evidence
+1. #106: Wizard HQ Product Shell parent; keep Chat, Brains, Memory, Agents,
+   Security, System, and Settings aligned before deeper governance features.
+2. #114: policy-gated Wizard HQ Settings backend parent.
+3. #117: provider connector setup with secret presence-only storage and
+   explicit allow/not-allow flow. The read-only capability catalog is complete;
+   write-capable setup remains open.
+4. #118, #119, and #120: model library confirmations, startup/API service
+   controls, and memory review/delete controls as separate policy-gated
+   Settings slices.
+5. #37 and #95: public onboarding hardening and product audit evidence
    collection under v3.0.
-4. #64: Developer ID signing/notarization under v3.0, deferred until the
+6. #64: Developer ID signing/notarization under v3.0, deferred until the
    installer, Wizard HQ, and release evidence are otherwise product-complete.
-5. #92: Native Automation Runtime in v3.x after release readiness work and
+7. #92: Native Automation Runtime in v3.x after release readiness work and
    control-plane product milestones.
 
 Patent/IP issues #81 through #84 are cross-cutting governance work. They should
@@ -117,6 +127,7 @@ approves the disclosure and the relevant evidence exists in code.
 | `CODEX_MASTER_PROMPT.md` | Root repo operating contract | High-level security, engineering, and patent-sensitive rules. Treat embedded backlog lists as subordinate to GitHub truth and this doc. |
 | `docs/MERLIN_IMPLEMENTATION_ROADMAP.md` | Roadmap | Milestone ladder, issue alignment, and long-range execution plan. |
 | `docs/product/MERLIN_CONTROL_PLANE_STRATEGY.md` | Product strategy | Validated control-plane direction, current/future boundary, and v3.1-v4.x milestone ladder. |
+| `docs/product/PROVIDER_CONNECTOR_CAPABILITIES.md` | Product/engineering | Current provider API family map and #117 connector setup boundary. |
 | `docs/observability-guide.md` | v1.6 feature owner | JSONL baseline, optional local Langfuse, trace export, and related tests. |
 | `docs/architecture/MERLIN_STAFF_CORE.md` | Merlin core owner | Staff router, swarm context, policy gates, team modes, and Phase 2 boundary. |
 | `docs/architecture/AUTOMATION_RUNTIME_STRATEGY.md` | Product/architecture | Why n8n remains optional today and how a native runtime becomes a v3.x milestone. |

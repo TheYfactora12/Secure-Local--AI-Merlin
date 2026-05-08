@@ -132,10 +132,16 @@ left behind.
   is CI-covered.
 - #98 is closed under `v3.0` after `actions/setup-python` moved to v6 and
   the CI runtime hardening smoke was added.
-- #101 and #102 are open under `v3.0` for Wizard HQ product-shell follow-up and
-  first-run status API persistence. These now sit ahead of public polish work
-  because the user should experience Merlin first, with Open WebUI and models
-  presented as brain options.
+- #101 and #102 are closed under `v3.0`; Wizard HQ product-shell follow-up and
+  first-run status API persistence have moved into the `v3.1` #106 parent and
+  Settings child issues.
+- #106 is open under `v3.1` for the Wizard HQ Product Shell. #113 and #115 are
+  closed; #114 remains the Settings parent, with #117 through #120 split into
+  focused policy-gated Settings slices.
+- #117 has a current read-only provider capability catalog for local Ollama,
+  LiteLLM, ChatGPT/OpenAI, Claude/Anthropic, Perplexity Sonar, Gemini/Google AI,
+  Mistral AI, and OpenRouter. The write-capable credential and allow-toggle
+  setup flow remains open.
 - #37 and #95 remain open under `v3.0` for public onboarding/release hardening
   and release readiness audit/evidence collection.
 - #64 remains open under `v3.0`, but Developer ID/notarization is deferred until

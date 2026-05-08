@@ -2770,6 +2770,9 @@ local model. Preserve no-surprise-download and local-first defaults.
 | `bash tests/dashboard-security-center-smoke.sh` | PASS. |
 | `bash tests/ci-actions-node-runtime-smoke.sh` | PASS. |
 | `git diff --check` | PASS. |
+| `gh run watch 25565691603 --exit-status` | FAIL; static smoke caught stale control-plane strategy test expectations. |
+| `gh run view 25565691603 --job 75048400974 --log` | PASS; failure identified as `canonical queue must include Wizard HQ product shell issue`. |
+| `bash tests/control-plane-strategy-smoke.sh` | FAIL before fix; test still required closed #101 and #113 in canonical queue. |
 | `bash scripts/merlin-task-api.sh restart` | FAIL; script supports `start`, `stop`, `status`, and `run`, not `restart`. |
 | `bash scripts/merlin-task-api.sh stop` then `bash scripts/merlin-task-api.sh start` | PARTIAL; old manual foreground process held port first, then start succeeded after killing old PID, but sandboxed direct curl still needed approved localhost access. |
 | `bash launchd/install-launchd.sh` | PASS; launchd agents registered, including Merlin task API. |
@@ -3368,3 +3371,119 @@ external providers or exposing secrets.
 Improved but incomplete. Public Beta still needs the real setup flow, manual
 provider-key tests with dummy values, and full installer retest after UI/setup
 changes settle.
+
+## v3.1 Drift Review After Provider Catalog
+
+### Date/Time
+
+2026-05-08T11:10:00-04:00
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`5fa35e9`
+
+### Target Issues
+
+- #106
+- #114
+- #117
+- #118
+- #119
+- #120
+
+### Scope
+
+Review current Markdown direction against GitHub issue state before moving to
+the next implementation slice.
+
+### Files Changed
+
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/MERLIN_IMPLEMENTATION_ROADMAP.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `git status --short --branch` | PASS; clean before docs edit. |
+| `gh issue list --state open --milestone "v3.1 — Wizard HQ Product Shell" --limit 30` | PASS; showed #106, #114, #117, #118, #119, #120 open. |
+| `gh run list --branch main --limit 3` | PASS; latest run for `5fa35e9` green, older superseded failure retained as evidence. |
+| `rg -n "#101 and #102 are open|#113 and #114|#101: continue|Active Execution Queue" docs/CANONICAL_PROJECT_STATE.md docs/MERLIN_IMPLEMENTATION_ROADMAP.md -S` | PASS after update; stale issue references removed. |
+| `git diff --check` | PASS. |
+
+### Failures Found
+
+Documentation drift: `docs/CANONICAL_PROJECT_STATE.md` still listed #101 and
+#113 in the active queue even though GitHub shows #101, #102, #113, #115, and
+#116 closed. `docs/MERLIN_IMPLEMENTATION_ROADMAP.md` also still said #101/#102
+were open under v3.0.
+
+CI then exposed a matching test drift: `tests/control-plane-strategy-smoke.sh`
+still required #101 and #113 in the canonical queue.
+
+### Failure Category
+
+- Documentation mismatch
+- Roadmap/governance drift
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+The Wizard HQ work moved quickly through #101, #113, #115, #116, and #117. The
+implementation and issue comments were updated faster than the canonical queue
+and roadmap status notes. The static smoke carried the same stale queue
+assumption.
+
+### Fix Applied
+
+- Updated the canonical active queue to #106, #114, #117, #118, #119, #120,
+  #37/#95, #64, and #92.
+- Added the v3.1 milestone row to the canonical milestone snapshot.
+- Updated the current architecture diagram so Wizard HQ correctly points at
+  both the read-only Status API and the Task API.
+- Added the provider capability catalog to canonical docs.
+- Updated the roadmap status note to mark #101/#102 closed and #106/#114/#117
+  through #120 active.
+- Updated `tests/control-plane-strategy-smoke.sh` to assert #106, #114, and
+  #117 instead of closed #101 and #113.
+
+### Retest Result
+
+PASS after test update. The current docs and the static smoke now match GitHub
+issue state for the v3.1 queue.
+
+### Regression Test Added Or Reason Not Added
+
+Updated existing `tests/control-plane-strategy-smoke.sh` so stale active-queue
+references are caught against the current #106/#114/#117 direction.
+
+### Lesson Learned
+
+After fast issue closeout, update the canonical active queue before selecting
+the next slice. Otherwise older docs can steer work back to closed issues.
+
+### What Not To Repeat Next Time
+
+Do not start implementation from an old roadmap queue without checking live
+GitHub milestone state first.
+
+### Next Recommended Step
+
+Continue #117 only if implementing backend-gated credential setup is the next
+approved slice. Otherwise move to #118 model library confirmations because it
+is safer and remains read-only/manual-first.
+
+### Local Trusted Beta Impact
+
+Improved. The working queue is clearer and less likely to drift back to closed
+Wizard HQ issues.
+
+### Public Beta Impact
+
+Improved governance clarity, but Public Beta still depends on later installer
+retest, onboarding polish, and policy-gated settings flows.
