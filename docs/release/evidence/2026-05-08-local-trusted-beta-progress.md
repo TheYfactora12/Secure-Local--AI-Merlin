@@ -2092,6 +2092,9 @@ manager, task endpoint, status API, and Docker defaults were not changed.
 | `bash tests/installer-branding-smoke.sh` | PASS; #94 branding surface remains protected. |
 | `bash tests/pkg-readiness-smoke.sh` | PASS; package readiness checks remain valid. |
 | `bash tests/uninstall-smoke.sh` | PASS; uninstaller remains guarded and testable. |
+| `gh run watch 25553630396 --exit-status` | FAIL; CI static smoke job failed because `tests/control-plane-strategy-smoke.sh` still required closed issue #102 in the active canonical queue. |
+| `gh run view 25553630396 --job 75007196708 --log` | PASS; failure log captured and root cause identified. |
+| `bash tests/control-plane-strategy-smoke.sh` | PASS after updating the smoke to require #101, #113, and #114 instead of closed #102. |
 | `git diff --check` | PASS; no whitespace errors. |
 
 ### Tests Skipped And Why
@@ -2108,6 +2111,8 @@ commit.
 - Product docs still had stale `Wizard AI` naming and Open WebUI-first wording.
 - Two screenshot artifacts captured the terminal/Open WebUI state instead of
   clean Wizard HQ evidence and were removed before commit.
+- CI failed because `tests/control-plane-strategy-smoke.sh` encoded stale
+  canonical queue expectations for #102 after that issue was closed.
 
 ### Failure Category
 
@@ -2115,6 +2120,7 @@ commit.
 - Documentation mismatch
 - Test design gap
 - UX/readiness confusion
+- Roadmap/governance drift
 
 ### Root Cause Or Current Hypothesis
 
@@ -2122,6 +2128,10 @@ The implementation had moved Wizard HQ toward a Merlin product shell, but tests
 and current docs still reflected the older "dashboard plus Open WebUI" mental
 model. That mismatch made it easier for a first-time user to believe Llama/Open
 WebUI was the product and Merlin was just a status panel.
+
+The CI failure had the same shape: the canonical queue was correctly advanced
+past #102, but the control-plane strategy smoke test still treated #102 as
+active.
 
 ### Fix Applied
 
@@ -2137,10 +2147,13 @@ WebUI was the product and Merlin was just a status panel.
   Open WebUI is the bridge, not the product identity.
 - Updated the GTM doc to use Merlin AI naming and to keep Developer ID deferred
   until the product surface and clean install evidence are complete.
+- Updated `tests/control-plane-strategy-smoke.sh` so it checks the current
+  active Wizard HQ queue: #101, #113, and #114.
 
 ### Retest Result
 
-Dashboard and docs smokes passed after the updates listed above.
+Dashboard, docs, and control-plane strategy smokes passed after the updates
+listed above.
 
 ### Regression Tests Added
 
@@ -2151,6 +2164,8 @@ Dashboard and docs smokes passed after the updates listed above.
   browser actions.
 - `tests/dashboard-merlin-status-smoke.sh` now checks the updated chat workspace
   label and link id.
+- `tests/control-plane-strategy-smoke.sh` now catches the current #101/#113/#114
+  Wizard HQ queue instead of requiring the closed #102 issue.
 
 ### Follow-Up Issues Created Or Recommended
 

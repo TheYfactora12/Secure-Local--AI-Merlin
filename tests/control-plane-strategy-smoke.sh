@@ -44,10 +44,12 @@ grep -q "Automatic model downloads after install" "$DOC" \
 
 grep -q "MERLIN_CONTROL_PLANE_STRATEGY.md" "$CANONICAL" \
   || fail "canonical state must link the control-plane strategy"
-grep -q "#102" "$CANONICAL" \
-  || fail "canonical queue must include first-run status API issue"
 grep -q "#101" "$CANONICAL" \
   || fail "canonical queue must include Wizard HQ product shell issue"
+grep -q "#113" "$CANONICAL" \
+  || fail "canonical queue must include native Merlin Chat follow-up"
+grep -q "#114" "$CANONICAL" \
+  || fail "canonical queue must include policy-gated Settings follow-up"
 grep -q "Developer ID signing/notarization remains tracked by #64" "$CANONICAL" \
   || fail "canonical state must document #64 deferred status"
 
