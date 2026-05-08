@@ -2770,6 +2770,10 @@ local model. Preserve no-surprise-download and local-first defaults.
 | `bash tests/dashboard-security-center-smoke.sh` | PASS. |
 | `bash tests/ci-actions-node-runtime-smoke.sh` | PASS. |
 | `git diff --check` | PASS. |
+| `bash scripts/merlin-task-api.sh restart` | FAIL; script supports `start`, `stop`, `status`, and `run`, not `restart`. |
+| `bash scripts/merlin-task-api.sh stop` then `bash scripts/merlin-task-api.sh start` | PARTIAL; old manual foreground process held port first, then start succeeded after killing old PID, but sandboxed direct curl still needed approved localhost access. |
+| `bash launchd/install-launchd.sh` | PASS; launchd agents registered, including Merlin task API. |
+| `/bin/zsh -lc "curl -fsS --max-time 5 http://localhost:8766/status/models \| jq '{state,chat_ready,embedding_ready,embedding_only_installed,safe_install_guidance,downloads}'"` | PASS with local-only escalation; returned `state=ready`, `chat_ready=true`, `embedding_ready=true`, `downloads=manual_only`. |
 
 ### Test Output Summary
 
@@ -2796,11 +2800,17 @@ remains valid.
    registered under the `/status` router as `@router.get("/models")`.
 2. The first regex version printed a BSD grep warning from function-call
    parentheses in the unsafe-control check.
+3. `bash scripts/merlin-task-api.sh restart` failed because restart is not a
+   supported subcommand.
+4. A manually started old Task API process held port 8766 and confused the
+   script status/start path until that PID was killed.
 
 ### Failure Category
 
 - Test design gap
 - CI/static smoke gap
+- Launchd/autostart
+- Status API 8765 / Task API 8766 boundary
 
 ### Root Cause Or Current Hypothesis
 
@@ -2808,16 +2818,26 @@ The smoke test encoded implementation text too literally instead of matching the
 FastAPI router pattern. The regex warning came from a shell portability issue in
 BSD grep extended regular expressions.
 
+The local service restart issue was operational: the task API had been started
+manually earlier in the session, outside the manager's PID file, so the manager
+could not fully own the lifecycle until that old PID was removed. The manager
+also does not expose a `restart` command.
+
 ### Fix Applied
 
 - Changed the endpoint check to detect `@router.get("/models")`.
 - Simplified the unsafe-control regex to avoid shell-specific parenthesis
   handling.
 - Reran the smoke cleanly.
+- Used the supported launchd registration path for persistent local startup.
+- Verified the live `/status/models` endpoint after approving a local-only curl
+  check.
 
 ### Retest Result
 
-PASS. Backend tests and dashboard smokes pass cleanly with no grep warning.
+PASS. Backend tests and dashboard smokes pass cleanly with no grep warning. Live
+`/status/models` returned `chat_ready=true`, `embedding_ready=true`, and
+`downloads=manual_only` on the current machine after launchd registration.
 
 ### Regression Tests Added
 
@@ -2830,6 +2850,10 @@ PASS. Backend tests and dashboard smokes pass cleanly with no grep warning.
 
 No new issue required. #115 covers this model-readiness slice.
 
+Recommended follow-up issue: add `restart` support or clearer restart guidance
+to `scripts/merlin-task-api.sh` so operators do not guess unsupported lifecycle
+commands.
+
 ### Lesson Learned
 
 Model readiness needs to be a first-class UX state, not inferred from generic
@@ -2839,6 +2863,9 @@ service health. Ollama can be up while Merlin still lacks a chat-capable model.
 
 Do not equate `Ollama ready` with `Merlin Chat ready`. Treat embedding-only
 installations as a clear missing-chat-model state.
+
+Do not manually run long-lived Task API processes and then expect the manager
+PID file to own them. Use launchd or the manager consistently.
 
 ### Next Recommended Step
 
