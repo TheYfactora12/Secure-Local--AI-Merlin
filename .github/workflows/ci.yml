@@ -155,6 +155,7 @@ jobs:
           bash tests/launchd-core-smoke.sh
           bash tests/sast-gitleaks-smoke.sh
           bash tests/container-image-policy-smoke.sh
+          bash tests/installer-branding-smoke.sh
           bash tests/pkg-readiness-smoke.sh
           bash tests/pkg-local-sign-smoke.sh
           bash tests/pkg-signing-preflight-smoke.sh

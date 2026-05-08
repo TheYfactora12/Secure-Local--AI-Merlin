@@ -216,9 +216,11 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Move to v3.0 release readiness: #37 public onboarding/packaging hardening, #64 signing/notarization, #94 installer/downloader Merlin branding, and #95 product audit/retest/loading UX.
-2. The v1.0 low/core installer path is green on this 8GB Mac; rerun full installer tests after startup/onboarding/branding changes.
-3. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
+1. Finish v3.0 #94 installer/downloader Merlin brand surface without changing installer behavior.
+2. Move to #96/#97: first-run Wizard HQ loading/readiness UX and trusted local beta validation evidence.
+3. Continue #37/#64/#95 release hardening, signing/notarization, and product audit/retest work.
+4. The v1.0 low/core installer path is green on this 8GB Mac; rerun full installer tests after startup/onboarding/branding changes.
+5. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 
 ## Reasoning Summary
 

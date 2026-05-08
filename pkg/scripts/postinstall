@@ -121,7 +121,8 @@ run_as_user \
 # ---------------------------------------------------------------------------
 cat > "${INSTALLING_HOME}/Desktop/home-ai-elite-next-steps.txt" << 'INSTRUCTIONS'
 ┌────────────────────────────────────────────────┐
-│  home-ai-elite — Installation Complete!    │
+│  Merlin AI — Installation Complete!        │
+│  Private Intelligence. Locally Owned.      │
 │                                            │
 │  NEXT STEPS:                               │
 │                                            │
@@ -134,10 +135,10 @@ cat > "${INSTALLING_HOME}/Desktop/home-ai-elite-next-steps.txt" << 'INSTRUCTIONS
 │     qwen2.5:7b                             │
 │                                            │
 │  CORE SERVICES:                            │
+│   Wizard HQ   → http://localhost:8888      │
 │   Open WebUI  → http://localhost:3000      │
 │   LiteLLM     → http://localhost:4000      │
 │   Qdrant      → http://localhost:6333      │
-│   Dashboard   → http://localhost:8888      │
 │                                            │
 │  OPTIONAL PROFILES:                        │
 │   wizard start search                      │

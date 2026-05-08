@@ -91,6 +91,23 @@ dedicated packaging issue with tests for:
 - no model downloads unless explicitly confirmed
 - uninstall path unaffected
 
+### Implemented Surface
+
+The #94 implementation keeps installer behavior unchanged and adds the Merlin
+brand only to user-facing package and terminal surfaces:
+
+- terminal `install.sh` header: Merlin AI name, tagline, and local-first
+  positioning
+- macOS package welcome screen: Merlin AI mark, tagline, Wizard HQ, and no-cloud
+  default language
+- macOS package readme: first-run Wizard HQ path, doctor/status commands, and
+  corrected local service map
+- postinstall Desktop next-steps file: Merlin completion heading and Wizard HQ
+  service URL
+- `pkg/resources/merlin-ai-logo.png`: package-local M logo resource derived from
+  the approved concept asset
+- `tests/installer-branding-smoke.sh`: static regression coverage wired into CI
+
 ## Launch Guardrails
 
 - Dashboard v1 is read-only.

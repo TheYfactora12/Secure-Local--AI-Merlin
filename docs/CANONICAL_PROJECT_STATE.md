@@ -88,8 +88,10 @@ flowchart LR
 
 ## Active Execution Queue
 
-1. #37, #64, #94, and #95: Public release hardening, Developer ID/notarization, installer/downloader Merlin branding, and release readiness audit in v3.0.
-2. #92: Native Automation Runtime in v3.x.
+1. #94: Installer/downloader Merlin brand surface under v3.0, with protected installer behavior unchanged.
+2. #96 and #97: Wizard HQ startup/loading readiness and trusted local beta evidence under v3.0.
+3. #37, #64, and #95: Public release hardening, Developer ID/notarization, and release readiness audit in v3.0.
+4. #92: Native Automation Runtime in v3.x after release readiness work.
 
 Patent/IP issues #81 through #84 are cross-cutting governance work. They should
 not add novel claim language to public docs unless the inventor explicitly

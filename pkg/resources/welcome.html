@@ -5,7 +5,7 @@
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, sans-serif;
          margin: 20px; color: #1d1d1f; }
-  h1   { font-size: 22px; color: #01696f; margin-bottom: 8px; }
+  h1   { font-size: 24px; color: #0b1f2a; margin-bottom: 6px; }
   h2   { font-size: 15px; color: #444; margin-top: 20px; }
   ul   { padding-left: 18px; }
   li   { margin: 4px 0; font-size: 14px; }
@@ -13,12 +13,24 @@
          font-family: monospace; font-size: 13px; }
   .badge { display:inline-block; background:#01696f; color:#fff;
            padding:2px 8px; border-radius:4px; font-size:12px; }
+  .brand { border: 1px solid #d8e3ea; border-radius: 10px; padding: 14px;
+           background: linear-gradient(135deg, #f7fbff, #eef7f4); }
+  .logo { width: 54px; height: 54px; border-radius: 12px; float: left;
+          margin: 0 12px 10px 0; background: #071017; }
+  .mark { display:inline-block; border:1px solid #01696f; border-radius:8px;
+          padding:3px 8px; margin-right:8px; color:#01696f; font-weight:700; }
+  .tagline { margin: 6px 0 0; color: #345; font-size: 14px; }
 </style>
 </head>
 <body>
-<h1>🧠 home-ai-elite</h1>
-<p>Your private, self-hosted AI stack — a local Perplexity + Codex + memory system
-that runs entirely on your Mac. No cloud required.</p>
+<div class="brand">
+  <img class="logo" src="merlin-ai-logo.png" alt="Merlin AI M logo">
+  <h1><span class="mark">M</span>Merlin AI</h1>
+  <p class="tagline"><strong>Private Intelligence. Locally Owned.</strong></p>
+  <p>Your sovereign local-first AI command center: local models, private memory,
+  supervised agents, and Wizard HQ visibility on hardware you own. No cloud
+  required by default.</p>
+</div>
 
 <h2>What gets installed</h2>
 <ul>
@@ -28,7 +40,8 @@ that runs entirely on your Mac. No cloud required.</p>
   <li><strong>n8n</strong> — AI automation & workflow engine</li>
   <li><strong>Qdrant</strong> — Vector memory store for RAG</li>
   <li><strong>SearXNG</strong> — Private meta-search (Google/Bing/DDG, no tracking)</li>
-  <li><strong>LiteLLM</strong> — Model router (local-first, cloud fallback)</li>
+  <li><strong>LiteLLM</strong> — Model router (local-first; external providers are optional and explicit)</li>
+  <li><strong>Wizard HQ</strong> — Read-only Merlin dashboard at <code>http://localhost:8888</code></li>
 </ul>
 
 <h2>Requirements</h2>
@@ -45,6 +58,7 @@ that runs entirely on your Mac. No cloud required.</p>
   <li>Runs <code>install.sh</code> in the background</li>
   <li>Installs auto-start agents (services start on every login)</li>
   <li>Places a <em>Next Steps</em> file on your Desktop</li>
+  <li>Keeps cloud/API behavior off unless you explicitly configure it later</li>
 </ul>
 </body>
 </html>
