@@ -1,7 +1,7 @@
 # docs/ — Home AI Elite Documentation
 
 > **Product team navigation index.** Read this first. Every file in this folder has a purpose — find it here.
-> Last updated: 2026-05-06
+> Last updated: 2026-05-08
 
 ---
 
@@ -10,7 +10,7 @@
 | If you are... | Start here |
 |---|---|
 | New contributor or onboarding | [`ARCHITECTURE.md`](./ARCHITECTURE.md) → [`MASTER_CONTEXT.md`](./MASTER_CONTEXT.md) |
-| Starting a Codex session | [`MASTER_CONTEXT.md`](./MASTER_CONTEXT.md) → [`CODEX_MASTER_PROMPT.md`](./engineering/CODEX_MASTER_PROMPT.md) |
+| Starting a Codex session | [`CANONICAL_PROJECT_STATE.md`](./CANONICAL_PROJECT_STATE.md) → [`MASTER_CONTEXT.md`](./MASTER_CONTEXT.md) → [`MASTER_PROMPT.md`](./MASTER_PROMPT.md) |
 | Working on the current sprint | [`MERLIN_IMPLEMENTATION_ROADMAP.md`](./MERLIN_IMPLEMENTATION_ROADMAP.md) → [`MERLIN_STAFF_CORE.md`](./architecture/MERLIN_STAFF_CORE.md) |
 | Making a product decision | [`product/HOME_AI_ELITE_PRODUCT_PLAN.md`](./product/HOME_AI_ELITE_PRODUCT_PLAN.md) → [`product/MERLIN_V1_MVP.md`](./product/MERLIN_V1_MVP.md) |
 | Reviewing security posture | [`security/SECURITY_MODEL.md`](./security/SECURITY_MODEL.md) → [`security/SECURITY_REVIEW.md`](./security/SECURITY_REVIEW.md) |
@@ -23,6 +23,7 @@
 ### 📄 Root — Always-Open Docs (read frequently)
 | File | Purpose |
 |---|---|
+| [`CANONICAL_PROJECT_STATE.md`](./CANONICAL_PROJECT_STATE.md) | GitHub-aligned project state, current queue, canonical docs, and drift rules |
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Canonical system architecture — single source of truth |
 | [`MASTER_CONTEXT.md`](./MASTER_CONTEXT.md) | Full project context for Codex and team orientation |
 | [`MASTER_PROMPT.md`](./MASTER_PROMPT.md) | Active Codex agent config and rules |
@@ -95,6 +96,10 @@
 | **v1.0 — Stable Installer Release** | ✅ Complete after #63 validation — low/core whole-stack release candidate passed on 8GB Mac; Developer ID/notarization moved to #64 |
 | **v1.1 — Mobile Access + Remote-Safe Entry Points** | ✅ Complete — docs-only opt-in mobile/LAN plan, no default LAN exposure |
 | **v1.2 — Hardware Guide + Document Ingestion Planning** | ✅ Complete — 8GB-first hardware guide, free stack map, document ingestion plan |
+| **v1.3 — Reliability + Memory + Router** | ✅ Complete — retry contracts and local-first n8n ModelRouter starter |
+| **v1.5 — Memory Benchmarking** | ✅ Complete — offline benchmark harness and `wizard benchmark run` |
+| **v1.6 — Pi Intelligence + Observability** | 🔄 Active — #93 current governance alignment, then #88, #89, close #8 |
 | **v2.0 — Merlin Staff Core** | ✅ Complete — Phase 2 core, #53 session memory bridge, and #60 staff router integration closed with CI validation |
+| **v3.x — Native Automation Runtime** | ⏳ Future — last-mile commercial supplement/replacement for n8n after workflows prove the owned runtime shape |
 
 See [GitHub Milestones](https://github.com/TheYfactora12/home-ai-elite/milestones) and [CHANGELOG.md](../CHANGELOG.md) for full release history.

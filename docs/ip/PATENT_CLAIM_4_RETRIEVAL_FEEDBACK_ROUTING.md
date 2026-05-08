@@ -28,6 +28,7 @@ until code exists.
 | Local approved outcome retrieval | `merlin/router.py` | `_approved_outcomes()` |
 | Time-decayed outcome scoring | `merlin/router.py` | `_retrieval_score()` |
 | Local-only default | `configs/merlin/routes.yaml` | `defaults.cloud_allowed: false` |
+| No default telemetry | `configs/merlin/routes.yaml` | `defaults.telemetry: disabled` |
 
 ## Current Formula
 
@@ -97,3 +98,4 @@ Complete #89, the routing claim-hardening issue, to:
 | Date | Change | Author |
 | --- | --- | --- |
 | 2026-05-07 | Initial evidence-aligned claim record for implemented JSONL retrieval feedback routing | TheYfactora12 |
+| 2026-05-08 | Governance alignment verified that Qdrant vector task-signature retrieval remains future work tracked by #89; implemented evidence remains JSONL retrieval plus `bc10616` constants and `telemetry: disabled`. | TheYfactora12 |

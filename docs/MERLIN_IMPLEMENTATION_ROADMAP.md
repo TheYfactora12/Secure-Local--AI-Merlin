@@ -1,6 +1,6 @@
 # Merlin Implementation Roadmap
 
-> **Canonical roadmap.** This file was updated 2026-05-06 to absorb the unique content from `IMPLEMENTATION_ROADMAP.md` (now deleted). All milestone strategy, GitHub ladder, and current checkpoint content lives here.
+> **Canonical roadmap.** This file was updated 2026-05-08 after GitHub issue and milestone validation. Use `docs/CANONICAL_PROJECT_STATE.md` first for the current queue, then this roadmap for milestone strategy.
 
 ---
 
@@ -43,7 +43,7 @@ not hijack the active session for unrelated cleanup. Before closing a milestone,
 review its related open issues and stale findings again so nothing relevant is
 left behind.
 
-## Current Issue Alignment (2026-05-06)
+## Current Issue Alignment (2026-05-08)
 
 - GitHub milestones `v1.0 — Stable Installer Release`,
   `v1.1 — Mobile Access + Remote-Safe Entry Points`, and
@@ -78,9 +78,11 @@ left behind.
 - #7 is closed under `v1.5`; it adds an offline-safe benchmark harness first.
   Live Qdrant/Ollama benchmark profiles remain future integration work behind
   explicit test flags.
-- Next active milestone is `v1.6`; open issues: #36 and #8. #36 is the
-  design-first parent issue. #8 is a valid optional self-hosted Langfuse child
-  only after #36 is satisfied.
+- Next active milestone is `v1.6`. #36 is closed as the design-first parent.
+  #8 remains the active optional/profile-gated Langfuse parent. #93 is the
+  current governance consolidation issue; after #93, the implementation queue
+  is #88 first, then #89, then close #8 when remaining child work and CI are
+  complete.
 - #8 starts with a JSONL baseline command, `wizard score`, before optional
   Langfuse service wiring. This keeps observability useful on 8GB low/core
   installs.
@@ -97,6 +99,8 @@ left behind.
 - #87 adds `n8n-workflows/07-local-langfuse-trace-emitter.json`, an inactive
   opt-in n8n workflow that emits redacted trace metadata only to local Langfuse
   when the observability profile is active. Existing workflows remain unchanged.
+- #93 adds `docs/CANONICAL_PROJECT_STATE.md` and aligns the docs hierarchy so
+  old phase notes cannot override GitHub milestone truth.
 - `docs/architecture/AUTOMATION_RUNTIME_STRATEGY.md` captures the future
   commercial path for a Merlin-native automation runtime. This is a last-mile
   milestone after n8n usage proves which patterns are worth owning, not a v1.6
@@ -119,7 +123,7 @@ left behind.
 
 ## Current Checkpoint
 
-Last updated: 2026-05-06.
+Last updated: 2026-05-08.
 
 Phase 2 is complete on `main` through `b4f35c8`.
 

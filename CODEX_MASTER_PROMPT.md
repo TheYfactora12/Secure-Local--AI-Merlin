@@ -1,5 +1,5 @@
 # CODEX MASTER PROMPT — home-ai-elite / Merlin Platform
-# Version: 2026-05-07 | Owner: TheYfactora12
+# Version: 2026-05-08 | Owner: TheYfactora12
 # Supersedes: 2026-05-06 version
 # Audit basis: Elite AI Team Skill Audit conducted 2026-05-07
 
@@ -18,7 +18,29 @@ Local-first is non-negotiable. Consent before memory is a patent-protected invar
 
 ---
 
-## 1. REPO SNAPSHOT — WHAT EXISTS TODAY (2026-05-07)
+## 1. CURRENT-STATE VALIDATION FIRST
+
+Before using this file's backlog notes, old phase prompts, or any archived
+Markdown as implementation guidance, validate what is true now:
+
+1. GitHub milestones and issues.
+2. Recent commits and GitHub Actions status.
+3. Working tree status.
+4. `docs/CANONICAL_PROJECT_STATE.md`.
+5. `docs/MASTER_CONTEXT.md` and `docs/MASTER_PROMPT.md`.
+
+If this file conflicts with verified GitHub state, update this file or open an
+issue. Do not solve a stale prompt. Do not restart completed Phase 2 or Phase 3
+work.
+
+Current verified queue:
+
+1. #93 governance docs consolidation.
+2. #88 memory and benchmark event export to local Langfuse.
+3. #89 Qdrant task-signature retrieval claim hardening.
+4. Close #8 only after remaining v1.6 children and CI are complete.
+
+## 2. REPO SNAPSHOT — WHAT EXISTS TODAY (2026-05-08)
 
 **Stack (all local, all Docker except Ollama on macOS):**
 
@@ -51,7 +73,7 @@ debug, doctor, start, stop, status, backup, memory-stats, route, upgrade
 
 ---
 
-## 2. ARCHITECTURE DECISIONS — LOCKED
+## 3. ARCHITECTURE DECISIONS — LOCKED
 
 1. **Hybrid architecture** — Installer as baseline, Merlin Python control plane as policy brain.
 2. **n8n is optional** — execution adapter only. No critical policy logic in n8n.
@@ -66,10 +88,12 @@ debug, doctor, start, stop, status, backup, memory-stats, route, upgrade
 
 ---
 
-## 3. OPEN WORK — PRIORITY ORDER
+## 4. OPEN WORK — PRIORITY ORDER
 
-**Work top-to-bottom. Do not skip a P0 to start a P1. After completing any item, update
-this section and commit the change to CODEX_MASTER_PROMPT.md.**
+**Work from the GitHub-verified queue above unless the user explicitly assigns a
+security/IP blocker. The lists below are audit findings and backlog candidates,
+not authority to override current milestone order. After completing any item,
+update this section and commit the change to CODEX_MASTER_PROMPT.md.**
 
 ---
 
@@ -247,7 +271,7 @@ this section and commit the change to CODEX_MASTER_PROMPT.md.**
 
 ---
 
-## 4. CODE STANDARDS — NON-NEGOTIABLE
+## 5. CODE STANDARDS — NON-NEGOTIABLE
 
 **Shell (bash):**
 - `set -euo pipefail` on every script
@@ -292,7 +316,7 @@ this section and commit the change to CODEX_MASTER_PROMPT.md.**
 
 ---
 
-## 5. TESTING REQUIREMENTS
+## 6. TESTING REQUIREMENTS
 
 **Before any PR — all five must pass:**
 1. `wizard doctor` — 0 failures
@@ -312,7 +336,7 @@ this section and commit the change to CODEX_MASTER_PROMPT.md.**
 
 **Self-audit checklist (run before every PR description is written):**
 - [ ] Does any new code write to Qdrant without passing through `approval.py`?
-- [ ] Does any new code expose a port not listed in Section 1?
+- [ ] Does any new code expose a port not listed in Section 2?
 - [ ] Does any new file in `merlin/` lack a matching test file?
 - [ ] Does any shell script lack `set -euo pipefail`?
 - [ ] Does any downloaded binary lack checksum verification?
@@ -321,7 +345,7 @@ this section and commit the change to CODEX_MASTER_PROMPT.md.**
 
 ---
 
-## 6. HARDWARE RULES — ALWAYS RESPECT
+## 7. HARDWARE RULES — ALWAYS RESPECT
 
 | Tier | RAM | Models Available | Profiles Allowed |
 |---|---|---|---|
@@ -336,7 +360,7 @@ this section and commit the change to CODEX_MASTER_PROMPT.md.**
 
 ---
 
-## 7. SECURITY RULES — ZERO EXCEPTIONS
+## 8. SECURITY RULES — ZERO EXCEPTIONS
 
 1. **Gitleaks passes before every merge** — one real secret = PR blocked.
 2. **Ollama is 127.0.0.1 only** — exposure requires documented security review.
@@ -358,7 +382,7 @@ this section and commit the change to CODEX_MASTER_PROMPT.md.**
 
 ---
 
-## 8. THE INSTALLER — WHAT YOU MUST KNOW
+## 9. THE INSTALLER — WHAT YOU MUST KNOW
 
 The installer (`install.sh`) is the hardest single file in the repo. Known fragile points:
 - `stat` flags differ between macOS (`-f`) and Linux (`-c`) — always branch
@@ -374,7 +398,7 @@ The installer (`install.sh`) is the hardest single file in the repo. Known fragi
 
 ---
 
-## 9. HOW MERLIN THINKS — THE PRODUCT NORTH STAR
+## 10. HOW MERLIN THINKS — THE PRODUCT NORTH STAR
 
 Merlin is not a chatbot wrapper. Merlin is an AI command center that:
 
@@ -392,7 +416,7 @@ That is the v1 loop. Everything else is future.
 
 ---
 
-## 10. PATENT ELEMENTS — KNOW THESE, PROTECT THESE
+## 11. PATENT ELEMENTS — KNOW THESE, PROTECT THESE
 
 Five patent-pending elements are implemented in this codebase. Every one has a
 conception date recorded in `docs/ip/INVENTOR_RECORD.md` (committed 2026-05-07).
@@ -416,7 +440,7 @@ design approval is not.
 
 ---
 
-## 11. TEACHING MERLIN — HOW CODEX SHOULD LEARN THIS CODEBASE
+## 12. TEACHING MERLIN — HOW CODEX SHOULD LEARN THIS CODEBASE
 
 When starting a new session, read in this order:
 1. This file (CODEX_MASTER_PROMPT.md)
@@ -436,11 +460,12 @@ pytest merlin/ -v --tb=short --cov=merlin
 ```
 
 If doctor shows 0 failures and pytest shows 58+ passing, repo is healthy.
-Start work at the top of Section 3 (P0-SEC first).
+Start work from the Section 1 verified queue unless the user explicitly assigns
+a security/IP blocker from Section 4.
 
 ---
 
-## 12. RESPONSE CONTRACT — HOW CODEX MUST BEHAVE
+## 13. RESPONSE CONTRACT — HOW CODEX MUST BEHAVE
 
 1. **Never fabricate file paths** — only reference verified files
 2. **Never assume hardware tier** — always read from `.env` or detect at runtime
@@ -450,17 +475,17 @@ Start work at the top of Section 3 (P0-SEC first).
 6. **State what you are doing** — before each change: file, what changes, why, which
    patent element if applicable
 7. **State what tests you ran** — list commands and output after each change
-8. **Flag open items** — new gaps go into Section 3 immediately
+8. **Flag open items** — new gaps go into Section 4 immediately
 9. **Never overbuild** — 20-line solution beats 200-line solution
 10. **Respect Section 2 locks**
 11. **NEW — IP gate:** before committing any file describing novel architecture,
     ask: "Does this belong in a public file or a private IP record?"
-12. **NEW — Self-audit:** run the Section 5 self-audit checklist before writing
+12. **NEW — Self-audit:** run the Section 6 self-audit checklist before writing
     any PR description
 
 ---
 
-## 13. COMMIT TEMPLATE
+## 14. COMMIT TEMPLATE
 
 ```
 type(scope): concise description [vX.Y or BUG-XX or Element-N]
@@ -483,7 +508,7 @@ Validated:
 
 ---
 
-## 14. QUICK REFERENCE — KEY COMMANDS
+## 15. QUICK REFERENCE — KEY COMMANDS
 
 ```bash
 # Install (non-interactive, skip model pulls — CI mode)
@@ -530,7 +555,7 @@ python -m venv /tmp/merlin-venv && \
 ---
 
 *This file is the single source of truth for Codex sessions on home-ai-elite.*
-*Update Section 3 after completing any open item.*
-*Update Section 1 after any stack change.*
+*Update Section 4 after completing any open item.*
+*Update Section 2 after any stack change.*
 *Last updated: 2026-05-07 by TheYfactora12 via Perplexity Elite Team Audit session.*
 *Do NOT add novel patent claim language to this public file — use docs/ip/ instead.*
