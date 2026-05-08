@@ -17,7 +17,7 @@ Ship Merlin as a useful local-first product before expanding into supervised exe
 | `v1.2 — Hardware Guide + Document Ingestion Planning` | 8GB-first hardware guide and optional ingestion plan | Docs/planning before heavy dependencies |
 | `v1.3 — Reliability + Memory + Router` | Retry logic, memory reliability, router cleanup | Local-first and approval-gated |
 | `v1.5 — Memory Benchmarking` | Memory quality evaluation | After memory behavior is stable |
-| `v1.6 — Pi Intelligence + Observability` | Warmth/persona and local observability | No heavy default tracing dependency |
+| `v1.6 — Pi Intelligence + Observability` | Warmth/persona and local observability | Complete; JSONL remains default and Langfuse remains optional/local |
 | `v1.7 — Security Hardening` | SAST, red team, policy enforcement | Security gates stay fail-closed |
 | `v2.0 — Merlin Staff Core` | Python Merlin core and policy surfaces | No cloud default, no autonomous execution |
 | `v2.1 — Dashboard Command Center` | Read-only/user-facing control center | No privileged mutation in dashboard v1 |
@@ -79,11 +79,11 @@ left behind.
   Live Qdrant/Ollama benchmark profiles remain future integration work behind
   explicit test flags.
 - Next active milestone is `v1.6`. #36 is closed as the design-first parent.
-  #8 remains the active optional/profile-gated Langfuse parent. #93 is closed
+  #8 is closed as the optional/profile-gated Langfuse parent. #93 is closed
   after adding `docs/CANONICAL_PROJECT_STATE.md`. #88 is complete after memory
   read/write and benchmark JSONL events were added to the optional local
-  Langfuse exporter. The remaining implementation queue is #89, then close #8
-  when remaining child work and CI are complete.
+  Langfuse exporter. #89 is complete after adding Qdrant task-signature vector
+  retrieval with JSONL fallback.
 - #8 starts with a JSONL baseline command, `wizard score`, before optional
   Langfuse service wiring. This keeps observability useful on 8GB low/core
   installs.
@@ -106,6 +106,10 @@ left behind.
   memory read/write events and benchmark events for optional local Langfuse
   export. JSONL remains the source of truth, dry-run remains offline, and live
   export still refuses non-local Langfuse URLs.
+- #89 adds local Qdrant task-signature retrieval for approved historical routing
+  outcomes. It stores only hashed/redacted task metadata, never stores raw user
+  input in Qdrant payloads, preserves `NO_RETRAINING_CONSTRAINT = True`, and
+  falls back to JSONL when Qdrant or local embeddings are unavailable.
 - `docs/architecture/AUTOMATION_RUNTIME_STRATEGY.md` captures the future
   commercial path for a Merlin-native automation runtime. This is a last-mile
   milestone after n8n usage proves which patterns are worth owning, not a v1.6

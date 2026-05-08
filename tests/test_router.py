@@ -345,7 +345,7 @@ def test_default_fallback_route() -> None:
 def test_cold_start_preserves_keyword_confidence(monkeypatch, tmp_path) -> None:
     monkeypatch.setenv("MERLIN_OUTCOME_LOG", str(tmp_path / "missing-outcomes.jsonl"))
 
-    decision = classify_task("explain how Qdrant works")
+    decision = classify_task("explain Qdrant")
 
     assert decision.keyword_score == decision.confidence
     assert decision.retrieval_score == 0.0
@@ -404,6 +404,79 @@ def test_approved_success_outcomes_boost_retrieval_score(monkeypatch, tmp_path) 
     assert decision.retrieval_score > 0.99
     assert decision.confidence > decision.keyword_score
     assert "Retrieval score" in decision.decision_reason
+
+
+def test_qdrant_task_signature_retrieval_is_used_when_available(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("MERLIN_OUTCOME_LOG", str(tmp_path / "missing-outcomes.jsonl"))
+    created_at = datetime.now(UTC).isoformat()
+    searches: list[tuple[str, str]] = []
+
+    class FakeMemoryManager:
+        def __init__(self, timeout: int = 1) -> None:
+            self.timeout = timeout
+
+        def search_task_outcomes_by_signature(self, task_signature: str, route_id: str, limit: int = 50):
+            searches.append((task_signature, route_id))
+            if route_id != "general":
+                return []
+            return [
+                {
+                    "id": "qdrant-hit-1",
+                    "score": 0.94,
+                    "payload": {
+                        "event_type": "task_outcome",
+                        "route_id": "general",
+                        "outcome_status": "success",
+                        "approval_id": "approval-qdrant",
+                        "created_at": created_at,
+                        "task_hash": "hash-only",
+                    },
+                }
+            ]
+
+    monkeypatch.setattr("merlin.router.MemoryManager", FakeMemoryManager)
+
+    decision = classify_task("explain Qdrant")
+
+    assert searches
+    assert decision.retrieval_source == "qdrant"
+    assert decision.retrieval_sample_count == 1
+    assert decision.retrieval_score > 0.99
+    assert decision.confidence > decision.keyword_score
+    assert "approved qdrant outcome" in decision.decision_reason
+
+
+def test_qdrant_unavailable_falls_back_to_jsonl(monkeypatch, tmp_path) -> None:
+    outcome_log = tmp_path / "outcomes.jsonl"
+    outcome_log.write_text(
+        json.dumps(
+            {
+                "event_type": "task_outcome",
+                "route_id": "general",
+                "outcome_status": "success",
+                "approval_id": "approval-jsonl",
+                "created_at": datetime.now(UTC).isoformat(),
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("MERLIN_OUTCOME_LOG", str(outcome_log))
+
+    class FailingMemoryManager:
+        def __init__(self, timeout: int = 1) -> None:
+            self.timeout = timeout
+
+        def search_task_outcomes_by_signature(self, task_signature: str, route_id: str, limit: int = 50):
+            raise OSError("qdrant unavailable")
+
+    monkeypatch.setattr("merlin.router.MemoryManager", FailingMemoryManager)
+
+    decision = classify_task("explain Qdrant")
+
+    assert decision.retrieval_source == "jsonl"
+    assert decision.retrieval_sample_count == 1
+    assert decision.retrieval_score > 0.99
 
 
 def test_approved_failure_outcomes_penalize_final_score(monkeypatch, tmp_path) -> None:

@@ -86,6 +86,8 @@ class TaskOutcome(BaseModel):
     audit_written: bool = False
     skill_domain: str = "general"
     outcome_rating: OutcomeRating = "none"
+    task_signature_point_id: str | None = None
+    task_signature_written: bool = False
     skill_outcome_point_id: str | None = None
     skill_outcome_written: bool = False
 
@@ -158,6 +160,12 @@ def observe_task_outcome(
             point_id = memory.write_audit_event("task_outcome", outcome.model_dump())
             outcome.audit_point_id = point_id
             outcome.audit_written = point_id is not None
+            signature_point_id = memory.write_task_outcome_signature(
+                outcome.model_dump(),
+                _task_signature(user_input),
+            )
+            outcome.task_signature_point_id = signature_point_id
+            outcome.task_signature_written = signature_point_id is not None
             skill_point_id = memory.write_skill_outcome(outcome.model_dump())
             outcome.skill_outcome_point_id = skill_point_id
             outcome.skill_outcome_written = skill_point_id is not None
@@ -169,6 +177,10 @@ def observe_task_outcome(
 
 def _task_hash(user_input: str) -> str:
     return hashlib.sha256(user_input.encode("utf-8")).hexdigest()
+
+
+def _task_signature(user_input: str) -> str:
+    return " ".join(user_input.split())[:1000]
 
 
 def _skill_domain(keyword_matches: list[str]) -> str:

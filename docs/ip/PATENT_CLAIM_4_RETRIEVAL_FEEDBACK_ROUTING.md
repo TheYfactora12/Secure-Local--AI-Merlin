@@ -1,9 +1,8 @@
 # Patent Claim 4 — Retrieval Feedback Routing
 
-**Status:** Partially implemented. Current code supports local JSONL approved
-outcome retrieval with time decay. Qdrant task-signature vector retrieval is a
-planned claim-hardening extension and must not be represented as implemented
-until code exists.
+**Status:** Implemented. Current code supports local JSONL approved outcome
+retrieval with time decay and local Qdrant task-signature vector retrieval as a
+non-blocking claim-hardening extension.
 
 ## Hard Architectural Constraints
 
@@ -12,9 +11,10 @@ until code exists.
   self-training, and no model retraining.
 - Routing executes on local hardware.
 - No telemetry leaves the machine by default.
-- JSONL outcome retrieval is the implemented baseline.
-- Qdrant vector retrieval keyed by task-signature embeddings is the intended
-  next implementation slice.
+- JSONL outcome retrieval remains the fallback baseline.
+- Qdrant vector retrieval keyed by task-signature embeddings is implemented as
+  the preferred retrieval source when local Qdrant and local embeddings are
+  available.
 
 ## Current Implemented Evidence
 
@@ -27,6 +27,9 @@ until code exists.
 | No-retraining constraint | `merlin/router.py` | `NO_RETRAINING_CONSTRAINT = True` |
 | Local approved outcome retrieval | `merlin/router.py` | `_approved_outcomes()` |
 | Time-decayed outcome scoring | `merlin/router.py` | `_retrieval_score()` |
+| Qdrant task-signature retrieval | `merlin/router.py` | `_qdrant_approved_outcomes()` |
+| Task-signature outcome write | `merlin/memory_manager.py` | `write_task_outcome_signature()` |
+| Task-signature outcome search | `merlin/memory_manager.py` | `search_task_outcomes_by_signature()` |
 | Local-only default | `configs/merlin/routes.yaml` | `defaults.cloud_allowed: false` |
 | No default telemetry | `configs/merlin/routes.yaml` | `defaults.telemetry: disabled` |
 
@@ -44,7 +47,9 @@ RETRIEVAL_WEIGHT = 0.4
 OUTCOME_DECAY_DAYS = 30
 ```
 
-The implemented retrieval score uses approved local outcome records only:
+The implemented retrieval score prefers approved local Qdrant task-signature
+outcomes and falls back to approved local JSONL outcome records when Qdrant or
+local embeddings are unavailable:
 
 ```text
 weight = exp(-days_since_outcome / OUTCOME_DECAY_DAYS)
@@ -63,35 +68,21 @@ C_retrieval = sum(outcome_success * weight) / sum(weight)
 
 ## Defensible Gap Today
 
-No known cited reference covers all three implemented properties
+No known cited reference covers all four implemented properties
 simultaneously:
 
 1. Time-decay weighting applied to AI agent task routing confidence.
 2. Routing improvement via retrieval feedback only, with an explicit no-retraining
    architectural constraint.
 3. Local-first execution with no default cloud telemetry.
+4. Retrieval key is a local Qdrant vector embedding of the task signature, not a
+   categorical rule table or route ID.
 
-## Claim-Hardening Gap
+## Implementation Boundary
 
-The stronger four-part gap requires implementation work before it should be used
-as code evidence:
-
-1. Time-decay weighting applied to AI agent task routing decisions.
-2. Retrieval feedback only; no model retraining.
-3. Local hardware execution with no cloud telemetry.
-4. Retrieval key is a Qdrant vector embedding of the task signature, not a
-   categorical rule or route ID.
-
-## Required Next Implementation Issue
-
-Complete #89, the routing claim-hardening issue, to:
-
-- adds Qdrant task-signature vector retrieval,
-- stores only hashed/redacted task metadata and local embeddings,
-- preserves `NO_RETRAINING_CONSTRAINT = True`,
-- keeps JSONL as fallback when Qdrant is unavailable,
-- adds tests proving no cloud calls or retraining path exists,
-- updates this document only after code and tests pass.
+Qdrant task-signature retrieval is implemented as a non-blocking local
+enhancement. It does not retrain models, does not call cloud APIs, does not
+store raw user input in payloads, and does not replace JSONL fallback behavior.
 
 ## Revision History
 
@@ -99,3 +90,4 @@ Complete #89, the routing claim-hardening issue, to:
 | --- | --- | --- |
 | 2026-05-07 | Initial evidence-aligned claim record for implemented JSONL retrieval feedback routing | TheYfactora12 |
 | 2026-05-08 | Governance alignment verified that Qdrant vector task-signature retrieval remains future work tracked by #89; implemented evidence remains JSONL retrieval plus `bc10616` constants and `telemetry: disabled`. | TheYfactora12 |
+| 2026-05-08 | Implemented Qdrant task-signature retrieval and approved outcome signature writes in `2c05724`; JSONL remains fallback and no-retraining constraint remains active. | TheYfactora12 |

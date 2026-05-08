@@ -61,6 +61,12 @@ def test_qdrant_audit_write_requires_approval_id(tmp_path, monkeypatch) -> None:
             assert metadata["outcome_rating"] == "approved"
             return "audit-point-123"
 
+        def write_task_outcome_signature(self, outcome, task_signature):
+            assert outcome["approval_id"] == "approval-123"
+            assert "explain routing" in task_signature
+            assert "raw_input" not in outcome
+            return "signature-point-123"
+
         def write_skill_outcome(self, outcome):
             assert outcome["approval_id"] == "approval-123"
             assert outcome["skill_domain"] == "research"
@@ -80,6 +86,8 @@ def test_qdrant_audit_write_requires_approval_id(tmp_path, monkeypatch) -> None:
 
     assert outcome.audit_written is True
     assert outcome.audit_point_id == "audit-point-123"
+    assert outcome.task_signature_written is True
+    assert outcome.task_signature_point_id == "signature-point-123"
     assert outcome.skill_outcome_written is True
     assert outcome.skill_outcome_point_id == "skill-point-123"
 

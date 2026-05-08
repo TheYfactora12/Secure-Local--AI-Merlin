@@ -95,6 +95,7 @@ class RouteDecision(BaseModel):
     keyword_score: float = Field(default=0.0, ge=0.0, le=1.0)
     retrieval_score: float = Field(default=0.0, ge=0.0, le=1.0)
     retrieval_sample_count: int = 0
+    retrieval_source: Literal["none", "jsonl", "qdrant"] = "none"
     matched_keywords: list[str]
     selected_agent: str
     required_profile: str
@@ -250,9 +251,7 @@ def _approved_outcomes(route_id: str, now: datetime | None = None) -> list[dict]
     return list(reversed(matched))
 
 
-def _retrieval_score(route_id: str, now: datetime | None = None) -> tuple[float, int]:
-    now = now or datetime.now(UTC)
-    outcomes = _approved_outcomes(route_id, now)
+def _score_outcomes(outcomes: list[dict], now: datetime) -> tuple[float, int]:
     if not outcomes:
         return 0.0, 0
 
@@ -272,6 +271,49 @@ def _retrieval_score(route_id: str, now: datetime | None = None) -> tuple[float,
     if total_weight == 0:
         return 0.0, 0
     return max(0.0, min(1.0, weighted_success / total_weight)), len(outcomes)
+
+
+def _task_signature(user_input: str) -> str:
+    """Return the local-only task signature used for Qdrant retrieval.
+
+    The signature may be embedded locally for search, but raw input is never
+    persisted by the router or memory manager.
+    """
+
+    return " ".join(user_input.split())[:1000]
+
+
+def _qdrant_approved_outcomes(route_id: str, user_input: str) -> list[dict]:
+    try:
+        memory = MemoryManager(timeout=1)
+        hits = memory.search_task_outcomes_by_signature(
+            task_signature=_task_signature(user_input),
+            route_id=route_id,
+            limit=OUTCOME_SAMPLE_LIMIT,
+        )
+    except Exception as exc:
+        logger.warning("qdrant_retrieval_unavailable route_id=%s error=%s", route_id, exc)
+        return []
+    outcomes: list[dict] = []
+    for hit in hits:
+        payload = hit.get("payload", {}) if isinstance(hit, dict) else {}
+        if payload.get("approval_id"):
+            outcomes.append(payload)
+    return outcomes
+
+
+def _retrieval_score(route_id: str, user_input: str, now: datetime | None = None) -> tuple[float, int, str]:
+    now = now or datetime.now(UTC)
+    qdrant_outcomes = _qdrant_approved_outcomes(route_id, user_input)
+    if qdrant_outcomes:
+        score, count = _score_outcomes(qdrant_outcomes, now)
+        return score, count, "qdrant"
+
+    outcomes = _approved_outcomes(route_id, now)
+    if not outcomes:
+        return 0.0, 0, "none"
+    score, count = _score_outcomes(outcomes, now)
+    return score, count, "jsonl"
 
 
 def _final_confidence(keyword_score: float, retrieval_score: float, retrieval_sample_count: int) -> float:
@@ -368,6 +410,7 @@ def _decision_from_rule(
     keyword_score: float,
     retrieval_score: float,
     retrieval_sample_count: int,
+    retrieval_source: Literal["none", "jsonl", "qdrant"],
     reason: str,
 ) -> RouteDecision:
     route = _route_spec(config, rule.route_id)
@@ -388,6 +431,7 @@ def _decision_from_rule(
         keyword_score=keyword_score,
         retrieval_score=retrieval_score,
         retrieval_sample_count=retrieval_sample_count,
+        retrieval_source=retrieval_source,
         matched_keywords=matches,
         selected_agent=route.agent,
         required_profile=route.required_profile,
@@ -414,6 +458,7 @@ def _default_decision(config: MerlinConfig) -> RouteDecision:
         keyword_score=0.0,
         retrieval_score=0.0,
         retrieval_sample_count=0,
+        retrieval_source="none",
         matched_keywords=[],
         selected_agent=route.agent,
         required_profile=route.required_profile,
@@ -525,6 +570,7 @@ def classify_task(user_input: str) -> RouteDecision:
     best_keyword_score = 0.0
     best_retrieval_score = 0.0
     best_retrieval_sample_count = 0
+    best_retrieval_source: Literal["none", "jsonl", "qdrant"] = "none"
     best_final_score = 0.0
 
     for rule in STAFF_ROUTE_RULES:
@@ -532,7 +578,7 @@ def classify_task(user_input: str) -> RouteDecision:
         if not matches:
             continue
         keyword_score = _confidence(len(matches), len(rule.keywords))
-        retrieval_score, retrieval_sample_count = _retrieval_score(rule.route_id)
+        retrieval_score, retrieval_sample_count, retrieval_source = _retrieval_score(rule.route_id, user_input)
         final_score = _final_confidence(keyword_score, retrieval_score, retrieval_sample_count)
         if best_rule is None:
             best_rule = rule
@@ -540,6 +586,7 @@ def classify_task(user_input: str) -> RouteDecision:
             best_keyword_score = keyword_score
             best_retrieval_score = retrieval_score
             best_retrieval_sample_count = retrieval_sample_count
+            best_retrieval_source = retrieval_source
             best_final_score = final_score
             continue
         if final_score > best_final_score:
@@ -548,6 +595,7 @@ def classify_task(user_input: str) -> RouteDecision:
             best_keyword_score = keyword_score
             best_retrieval_score = retrieval_score
             best_retrieval_sample_count = retrieval_sample_count
+            best_retrieval_source = retrieval_source
             best_final_score = final_score
             continue
         if final_score == best_final_score and len(matches) > len(best_matches):
@@ -556,6 +604,7 @@ def classify_task(user_input: str) -> RouteDecision:
             best_keyword_score = keyword_score
             best_retrieval_score = retrieval_score
             best_retrieval_sample_count = retrieval_sample_count
+            best_retrieval_source = retrieval_source
             best_final_score = final_score
             continue
         if (
@@ -568,6 +617,7 @@ def classify_task(user_input: str) -> RouteDecision:
             best_keyword_score = keyword_score
             best_retrieval_score = retrieval_score
             best_retrieval_sample_count = retrieval_sample_count
+            best_retrieval_source = retrieval_source
             best_final_score = final_score
 
     if best_rule is None:
@@ -577,7 +627,7 @@ def classify_task(user_input: str) -> RouteDecision:
     if best_retrieval_sample_count:
         reason = (
             f"{reason} Retrieval score {best_retrieval_score:.2f} from "
-            f"{best_retrieval_sample_count} approved outcome(s)."
+            f"{best_retrieval_sample_count} approved {best_retrieval_source} outcome(s)."
         )
     return _decision_from_rule(
         config=config,
@@ -587,6 +637,7 @@ def classify_task(user_input: str) -> RouteDecision:
         keyword_score=best_keyword_score,
         retrieval_score=best_retrieval_score,
         retrieval_sample_count=best_retrieval_sample_count,
+        retrieval_source=best_retrieval_source,
         reason=reason,
     )
 
@@ -603,6 +654,7 @@ def _write_route_audit(decision: RouteDecision, input_hash: str, timestamp: str)
         "keyword_score": decision.keyword_score,
         "retrieval_score": decision.retrieval_score,
         "retrieval_sample_count": decision.retrieval_sample_count,
+        "retrieval_source": decision.retrieval_source,
         "keyword_matches": list(decision.matched_keywords),
         "approval_gates": list(decision.approval_gates),
         "requires_approval": decision.requires_approval,

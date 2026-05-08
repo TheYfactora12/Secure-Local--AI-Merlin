@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import io
+import hashlib
 import uuid
 from contextlib import redirect_stdout
 from dataclasses import dataclass
@@ -242,6 +243,96 @@ class MemoryManager:
             return None
         return point_id
 
+    def write_task_outcome_signature(self, outcome: dict[str, Any], task_signature: str) -> str | None:
+        """Write an approved task outcome with a local task-signature embedding.
+
+        This is claim-hardening evidence for retrieval-feedback routing. It
+        stores hashed/redacted operational metadata only. The raw task signature
+        is embedded locally via Ollama and is not persisted in the Qdrant
+        payload.
+        """
+
+        if not outcome.get("approval_id"):
+            return None
+
+        spec = self._collection_spec("merlin-audit")
+        self._validate_configured_embedding_dimension(spec)
+        if self.degraded:
+            self._log_degraded("write_task_outcome_signature", spec.name)
+            return None
+
+        try:
+            vector = self._embed_text(task_signature)
+            self._validate_vector_dimensions(spec, vector)
+        except (OSError, ValueError, DimensionMismatchError) as exc:
+            logger.warning("task_signature_embedding_skipped route_id=%s error=%s", outcome.get("route_id"), exc)
+            return None
+
+        point_id = str(uuid.uuid4())
+        payload = self._task_outcome_payload(outcome, task_signature)
+        body = {"points": [{"id": point_id, "vector": vector, "payload": payload}]}
+
+        try:
+            self._request_json("PUT", f"/collections/{spec.qdrant_name}/points?wait=true", body)
+        except OSError:
+            self._activate_degraded("write_task_outcome_signature", spec.name)
+            return None
+        return point_id
+
+    def search_task_outcomes_by_signature(
+        self,
+        task_signature: str,
+        route_id: str,
+        limit: int = 50,
+    ) -> list[dict[str, Any]]:
+        """Search approved task outcomes by local task-signature embedding.
+
+        Returns Qdrant hit dictionaries with `id`, `score`, and `payload`.
+        Returns [] if Qdrant or local embeddings are unavailable.
+        """
+
+        spec = self._collection_spec("merlin-audit")
+        self._validate_configured_embedding_dimension(spec)
+        if self.degraded:
+            self._log_degraded("search_task_outcomes_by_signature", spec.name)
+            return []
+
+        try:
+            vector = self._embed_text(task_signature)
+            self._validate_vector_dimensions(spec, vector)
+        except (OSError, ValueError, DimensionMismatchError) as exc:
+            logger.warning("task_signature_search_skipped route_id=%s error=%s", route_id, exc)
+            return []
+
+        body = {
+            "vector": vector,
+            "limit": limit,
+            "with_payload": True,
+            "with_vectors": False,
+            "filter": {
+                "must": [
+                    {"key": "event_type", "match": {"value": "task_outcome"}},
+                    {"key": "route_id", "match": {"value": route_id}},
+                ]
+            },
+        }
+
+        try:
+            response = self._request_json("POST", f"/collections/{spec.qdrant_name}/points/search", body)
+        except OSError:
+            self._activate_degraded("search_task_outcomes_by_signature", spec.name)
+            return []
+
+        hits = response.get("result", [])
+        if not isinstance(hits, list):
+            return []
+        approved: list[dict[str, Any]] = []
+        for hit in hits:
+            payload = hit.get("payload", {}) if isinstance(hit, dict) else {}
+            if payload.get("approval_id"):
+                approved.append({"id": hit.get("id"), "score": hit.get("score"), "payload": payload})
+        return approved
+
     def write_skill_outcome(self, outcome: dict[str, Any]) -> str | None:
         """Write a consent-gated skill outcome record.
 
@@ -421,6 +512,31 @@ class MemoryManager:
                 f"collections.{spec.name}.dims",
                 f"vector has {len(vector)} dims but {spec.name} expects {spec.dims}",
             )
+
+    def _task_outcome_payload(self, outcome: dict[str, Any], task_signature: str) -> dict[str, Any]:
+        allowed = {
+            "event_type",
+            "task_hash",
+            "route_id",
+            "staff_mode",
+            "agent_target",
+            "confidence_at_routing",
+            "outcome_status",
+            "latency_ms",
+            "keyword_matches",
+            "hardware_tier",
+            "user_feedback",
+            "created_at",
+            "approval_id",
+            "skill_domain",
+            "outcome_rating",
+        }
+        payload = {key: outcome[key] for key in sorted(allowed) if key in outcome}
+        payload["event_type"] = "task_outcome"
+        payload["source"] = "task_signature_retrieval"
+        payload["task_signature_hash"] = hashlib.sha256(task_signature.encode("utf-8")).hexdigest()
+        payload["raw_input_stored"] = False
+        return payload
 
     def _embed_text(self, text: str) -> list[float]:
         body = {"model": self.embedding_model, "prompt": text}

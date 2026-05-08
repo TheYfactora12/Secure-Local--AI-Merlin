@@ -78,7 +78,7 @@ flowchart LR
 | `v1.2 — Hardware Guide + Document Ingestion Planning` | Closed | 8GB-first guidance and planning-only ingestion scope. |
 | `v1.3 — Reliability + Memory + Router` | Closed | n8n retry contracts and local-first ModelRouter starter complete. |
 | `v1.5 — Memory Benchmarking` | Closed | Offline deterministic benchmark harness complete. |
-| `v1.6 — Pi Intelligence + Observability` | Active | #8 is the parent; #88 then #89 are next after #93. |
+| `v1.6 — Pi Intelligence + Observability` | Complete after #8 closure | JSONL baseline, optional local Langfuse profile/export, n8n trace emission, memory/benchmark metadata export, and Qdrant task-signature retrieval are complete. |
 | `v1.7 — Security Hardening` | Future | Webhook gate decision and broader security hardening. |
 | `v2.0 — Merlin Staff Core` | Mostly complete, follow-up queue open | Phase 2 runtime complete; remaining issues are follow-up visibility, approval, delete, and governance work. |
 | `v2.1 — Dashboard Command Center` | Future | Read-only/status-first dashboard improvements. |
@@ -88,15 +88,12 @@ flowchart LR
 
 ## Active Execution Queue
 
-1. #89: Claim-hardening Qdrant task-signature retrieval for router.
-2. #8: Close the v1.6 optional observability parent only after remaining child
-   work passes CI.
-3. #80: Decide explicit `webhook_execution` policy gate in v1.7.
-4. #85: Evaluate additional Merlin staff skills without agent sprawl in v2.0.
-5. #30 and #39: Dashboard command center and security center in v2.1.
-6. #33 and #34: Magic Mode plan-only UI and audit viewer in v2.2.
-7. #37 and #64: Public release hardening and Developer ID/notarization in v3.0.
-8. #92: Native Automation Runtime in v3.x.
+1. #80: Decide explicit `webhook_execution` policy gate in v1.7.
+2. #85: Evaluate additional Merlin staff skills without agent sprawl in v2.0.
+3. #30 and #39: Dashboard command center and security center in v2.1.
+4. #33 and #34: Magic Mode plan-only UI and audit viewer in v2.2.
+5. #37 and #64: Public release hardening and Developer ID/notarization in v3.0.
+6. #92: Native Automation Runtime in v3.x.
 
 Patent/IP issues #81 through #84 are cross-cutting governance work. They should
 not add novel claim language to public docs unless the inventor explicitly
@@ -126,8 +123,8 @@ approves the disclosure and the relevant evidence exists in code.
 - `docs/MERLIN_PHASE3_LEARNING_PLAN.md` is the Phase 3 design record. Phase 3A
   through 3E are complete; do not use this file to restart completed work.
 - `docs/ip/PATENT_CLAIM_4_RETRIEVAL_FEEDBACK_ROUTING.md` is evidence-aligned:
-  JSONL retrieval is implemented; Qdrant task-signature vector retrieval is
-  future work tracked by #89.
+  JSONL retrieval and Qdrant task-signature vector retrieval are implemented;
+  JSONL remains the fallback when Qdrant is unavailable.
 
 ## Diagram Rule
 

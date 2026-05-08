@@ -92,9 +92,10 @@ Since *Alice Corp. v. CLS Bank* (2014), software patents that are "abstract idea
 ## Evidence Alignment Note
 
 Claim 4 currently has implemented evidence for local JSONL outcome-retrieval
-routing with time decay and no retraining. Qdrant task-signature vector retrieval
-is a planned claim-hardening extension, not current implementation evidence.
-Do not describe that extension as implemented until code and tests land.
+routing with time decay, Qdrant task-signature vector retrieval, local-only
+execution, and no retraining. Qdrant retrieval was promoted to implemented
+evidence after `2c05724`; JSONL remains the fallback when Qdrant or local
+embeddings are unavailable.
 
 ---
 

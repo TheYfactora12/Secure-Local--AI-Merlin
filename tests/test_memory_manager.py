@@ -195,3 +195,92 @@ def test_scroll_collection_returns_payload_points(monkeypatch: pytest.MonkeyPatc
     )
 
     assert manager.scroll_collection("skill_outcomes") == [{"id": "p1", "payload": {"ok": True}}]
+
+
+def test_write_task_outcome_signature_uses_embedding_without_raw_payload(monkeypatch: pytest.MonkeyPatch) -> None:
+    manager = _manager(monkeypatch)
+    calls: list[tuple[str, str, dict[str, Any] | None]] = []
+    raw_signature = "scan private customer notes for credential exposure"
+
+    monkeypatch.setattr(manager, "_embed_text", lambda text: _vector(768))
+
+    def fake_request(method: str, path: str, body: dict[str, Any] | None = None) -> dict[str, Any]:
+        calls.append((method, path, body))
+        return {"status": "ok"}
+
+    monkeypatch.setattr(manager, "_request_json", fake_request)
+
+    point_id = manager.write_task_outcome_signature(
+        {
+            "event_type": "task_outcome",
+            "task_hash": "hash-only",
+            "route_id": "general",
+            "staff_mode": "security_reviewer",
+            "agent_target": "litellm",
+            "confidence_at_routing": 0.82,
+            "outcome_status": "success",
+            "latency_ms": 25,
+            "keyword_matches": ["credential"],
+            "hardware_tier": "low",
+            "user_feedback": "positive",
+            "created_at": "2026-05-08T00:00:00+00:00",
+            "approval_id": "approval-1",
+            "raw_input": raw_signature,
+        },
+        raw_signature,
+    )
+
+    assert point_id is not None
+    method, path, body = calls[0]
+    assert method == "PUT"
+    assert path == "/collections/merlin_audit/points?wait=true"
+    assert body is not None
+    point = body["points"][0]
+    assert point["vector"] == _vector(768)
+    payload = point["payload"]
+    assert payload["event_type"] == "task_outcome"
+    assert payload["approval_id"] == "approval-1"
+    assert payload["task_hash"] == "hash-only"
+    assert payload["raw_input_stored"] is False
+    assert "task_signature_hash" in payload
+    assert raw_signature not in str(payload)
+    assert "raw_input" not in payload
+
+
+def test_write_task_outcome_signature_requires_approval(monkeypatch: pytest.MonkeyPatch) -> None:
+    manager = _manager(monkeypatch)
+
+    def fail_embed(text: str) -> list[float]:
+        raise AssertionError("unapproved task outcomes must not be embedded")
+
+    monkeypatch.setattr(manager, "_embed_text", fail_embed)
+
+    assert manager.write_task_outcome_signature({"route_id": "general"}, "test") is None
+
+
+def test_search_task_outcomes_by_signature_filters_approved_payloads(monkeypatch: pytest.MonkeyPatch) -> None:
+    manager = _manager(monkeypatch)
+    calls: list[tuple[str, str, dict[str, Any] | None]] = []
+    monkeypatch.setattr(manager, "_embed_text", lambda text: _vector(768))
+
+    def fake_request(method: str, path: str, body: dict[str, Any] | None = None) -> dict[str, Any]:
+        calls.append((method, path, body))
+        return {
+            "result": [
+                {"id": "approved", "score": 0.9, "payload": {"route_id": "general", "approval_id": "a1"}},
+                {"id": "unapproved", "score": 0.8, "payload": {"route_id": "general"}},
+            ]
+        }
+
+    monkeypatch.setattr(manager, "_request_json", fake_request)
+
+    results = manager.search_task_outcomes_by_signature("explain qdrant", "general")
+
+    assert results == [{"id": "approved", "score": 0.9, "payload": {"route_id": "general", "approval_id": "a1"}}]
+    method, path, body = calls[0]
+    assert method == "POST"
+    assert path == "/collections/merlin_audit/points/search"
+    assert body is not None
+    assert body["with_payload"] is True
+    assert body["filter"]["must"][0] == {"key": "event_type", "match": {"value": "task_outcome"}}
+    assert body["filter"]["must"][1] == {"key": "route_id", "match": {"value": "general"}}

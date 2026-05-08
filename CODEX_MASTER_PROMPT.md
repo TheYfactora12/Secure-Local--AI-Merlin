@@ -35,8 +35,8 @@ work.
 
 Current verified queue:
 
-1. #89 Qdrant task-signature retrieval claim hardening.
-2. Close #8 only after remaining v1.6 children and CI are complete.
+1. #80 explicit `webhook_execution` gate under v1.7 Security Hardening.
+2. #85 evaluate additional Merlin staff skills without agent sprawl under v2.0.
 
 ## 2. REPO SNAPSHOT — WHAT EXISTS TODAY (2026-05-08)
 

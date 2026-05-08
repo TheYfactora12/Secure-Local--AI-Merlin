@@ -98,7 +98,8 @@
 | **v1.2 — Hardware Guide + Document Ingestion Planning** | ✅ Complete — 8GB-first hardware guide, free stack map, document ingestion plan |
 | **v1.3 — Reliability + Memory + Router** | ✅ Complete — retry contracts and local-first n8n ModelRouter starter |
 | **v1.5 — Memory Benchmarking** | ✅ Complete — offline benchmark harness and `wizard benchmark run` |
-| **v1.6 — Pi Intelligence + Observability** | 🔄 Active — #89 next, then close #8 after child work and CI |
+| **v1.6 — Pi Intelligence + Observability** | ✅ Complete — local JSONL observability, optional local Langfuse, memory/benchmark export, Qdrant retrieval hardening |
+| **v1.7 — Security Hardening** | 🔄 Next — #80 explicit `webhook_execution` gate |
 | **v2.0 — Merlin Staff Core** | ✅ Complete — Phase 2 core, #53 session memory bridge, and #60 staff router integration closed with CI validation |
 | **v3.x — Native Automation Runtime** | ⏳ Future — last-mile commercial supplement/replacement for n8n after workflows prove the owned runtime shape |
 

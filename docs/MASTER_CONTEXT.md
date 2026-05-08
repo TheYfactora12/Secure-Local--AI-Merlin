@@ -35,15 +35,18 @@ Current milestone position:
   approval-gated.
 - `v1.5 — Memory Benchmarking` is closed after #7 added the offline benchmark
   harness and `wizard benchmark run`.
-- Next in order: `v1.6 — Pi Intelligence + Observability`. #36 is closed as
-  the design-first parent. #8 is the active optional/profile-gated Langfuse
-  parent and is unblocked by #36.
+- `v1.6 — Pi Intelligence + Observability` is complete after #8 closure. #36
+  closed the design contract, and #86 through #89 closed the optional
+  local-only observability implementation.
 - #93 is closed. It added `docs/CANONICAL_PROJECT_STATE.md` as the
   GitHub-aligned state index.
 - #88 is complete. `wizard observability export --dry-run` now includes
   metadata-only memory read/write events plus benchmark events for optional
   local Langfuse export. It still performs no network calls in dry-run mode and
   refuses non-local Langfuse URLs.
+- #89 is complete. Routing retrieval feedback now prefers local Qdrant
+  task-signature vector retrieval for approved outcomes and falls back to local
+  JSONL when Qdrant or local embeddings are unavailable.
 - #8 implementation order: local JSONL `wizard score` first, optional
   self-hosted Langfuse profile later. Do not add Langfuse to the default
   Compose stack.
@@ -202,10 +205,9 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Finish the remaining active `v1.6` observability queue: #89.
-2. Keep #8 open until the remaining v1.6 child work is complete and CI is green.
-3. Keep signing/notarization deferred to #64; the v1.0 low/core installer path is green on this 8GB Mac.
-4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
+1. Move to `v1.7 — Security Hardening`: #80 explicit `webhook_execution` gate.
+2. Keep signing/notarization deferred to #64; the v1.0 low/core installer path is green on this 8GB Mac.
+3. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 
 ## Reasoning Summary
 
