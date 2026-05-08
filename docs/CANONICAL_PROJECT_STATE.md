@@ -84,7 +84,7 @@ flowchart LR
 | `v1.5 — Memory Benchmarking` | Closed | Offline deterministic benchmark harness complete. |
 | `v1.6 — Pi Intelligence + Observability` | Complete after #8 closure | JSONL baseline, optional local Langfuse profile/export, n8n trace emission, memory/benchmark metadata export, and Qdrant task-signature retrieval are complete. |
 | `v1.7 — Security Hardening` | Closed | #80 added the explicit fail-closed `webhook_execution` gate without changing webhook defaults. |
-| `v2.0 — Merlin Staff Core` | Mostly complete, follow-up queue open | Phase 2 runtime complete; remaining issues are follow-up visibility, approval, delete, and governance work. |
+| `v2.0 — Merlin Staff Core` | Mostly complete, memory follow-ups open | Phase 2 runtime complete; stale roadmap/queue/governance issues were closed on 2026-05-08. Remaining work is explicit user-facing memory approval and memory review/delete. |
 | `v2.1 — Dashboard Command Center` | Closed | Read-only Wizard HQ command center and security approvals panel complete. |
 | `v2.2 — Magic Mode` | Closed | Plan-only Magic Mode and local redacted audit viewer complete. |
 | `v3.0 — Public Product Release` | Active | Public packaging, onboarding, signing/notarization, installer branding, and release readiness. |

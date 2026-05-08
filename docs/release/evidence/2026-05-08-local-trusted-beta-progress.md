@@ -1638,3 +1638,138 @@ Brains before adding deeper governance layers.
 Improved but still incomplete. Public Beta still needs product-shell visual
 validation, status API persistence clarity, model-add UX, and installer retest
 evidence after final onboarding changes.
+
+## Closed Milestone Drift Review
+
+### Date/Time
+
+2026-05-08
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`dd98b68bfb91df38b43d122e3e7b348820904afa`
+
+### Target Issues
+
+- v1.0 through v2.2 closed milestone review
+- v2.0 open stale issue cleanup
+- v3.0 release readiness alignment
+
+### Scope
+
+Reviewed closed milestone state and open carryover issues to decide whether any
+completed milestone needs reopening, tweaking, or new follow-up issues.
+
+### Files Changed
+
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `docs/CANONICAL_PROJECT_STATE.md`
+
+No installer, runtime, policy, dashboard, memory, or API behavior changed.
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `gh api repos/TheYfactora12/home-ai-elite/milestones --jq ...` | PASS; listed open milestones. |
+| `gh issue list --state closed --limit 80 --json number,title,milestone,labels,closedAt --jq ...` | PASS; reviewed recently closed milestone issues. |
+| `gh api 'repos/TheYfactora12/home-ai-elite/milestones?state=all&per_page=100' --jq ...` | PASS; confirmed closed and open milestone counts. |
+| `gh issue list --state open --milestone 'v2.0 — Merlin Staff Core' --limit 20 --json number,title,labels --jq ...` | PASS; identified stale v2.0 carryover issues. |
+| `gh issue view 27/29/31/32/38/40 --json ...` | PASS after retry; first network attempt failed, later issue views succeeded. |
+| `rg -n "memory delete\|audit review\|no automatic learning\|model router visibility\|low-memory\|fallback" ...` | PASS; verified which v2.0 issues are already covered by code and which remain real gaps. |
+| `gh issue comment 27/29/38/40 --body-file ...` | PASS; posted evidence comments using safe body-file pattern. |
+| `gh issue close 27/29/38/40 --reason completed` | PASS; closed stale/satisfied v2.0 issues. |
+
+### Tests Skipped And Why
+
+No runtime tests were required for this governance-only pass. No runtime files
+changed. The latest pushed commit had green CI before this review.
+
+### Failures Found
+
+- `gh issue view` initially failed with `error connecting to api.github.com`.
+- `gh issue close --comment-file` failed because this installed GitHub CLI does
+  not support that flag.
+
+### Failure Category
+
+- Release tooling/operator environment
+- Documentation/governance drift
+
+### Root Cause Or Current Hypothesis
+
+- GitHub connectivity is intermittent on the current network.
+- This GitHub CLI version supports `gh issue comment --body-file` but not
+  `gh issue close --comment-file`.
+
+### Fix Applied
+
+- Retried GitHub issue views after the network failure.
+- Used the safe two-step pattern: `gh issue comment --body-file ...`, then
+  `gh issue close --reason completed`.
+- Updated canonical state to show that v2.0 now only has memory approval and
+  memory review/delete follow-up work.
+
+### Retest Result
+
+- `gh issue view 27`, `29`, `38`, and `40` returned `CLOSED`.
+- Milestone review confirmed v3.0 remains the active product-readiness track.
+
+### Regression Test Added
+
+No automated test added. This was GitHub issue hygiene, not repo runtime logic.
+The lesson is captured here as an operator runbook pattern.
+
+### Follow-Up Issues Created Or Recommended
+
+No new issues were required from this pass.
+
+Keep these open:
+
+- #31: explicit user-facing memory approval flow remains product-relevant.
+- #32: memory review/delete remains product-relevant.
+- #101/#102: Wizard HQ and first-run status API remain the next active product
+  work.
+
+Closed as stale or satisfied:
+
+- #27: superseded by canonical state and current roadmap.
+- #29: router visibility and low-memory fallback are implemented and tested;
+  product model/provider polish belongs to #101/#106.
+- #38: session alignment protocol is covered by canonical state and master
+  prompt smoke.
+- #40: stale v1/v2 queue superseded by v3.0 and v3.1-v3.7 milestones.
+
+### Lesson Learned
+
+Closed milestone review should distinguish completed acceptance criteria from
+product-follow-up work. Reopening old issues is usually worse than creating or
+keeping focused follow-up issues because old bodies often reference stale docs
+and stale ordering.
+
+### What Not To Repeat Next Time
+
+Do not leave old pinned queue issues open after canonical state and GitHub
+milestones move forward. They become a drift source for future Codex sessions.
+
+Do not use `gh issue close --comment-file`; this CLI does not support it. Use
+`gh issue comment --body-file` followed by `gh issue close --reason ...`.
+
+### Local Trusted Beta Impact
+
+Improved. The active backlog is cleaner and now points back to the real next
+product blockers: #102, #101, #31, and #32.
+
+### Public Beta Impact
+
+Improved. Stale v1/v2 queue issues no longer compete with the v3.0/v3.1 product
+track, but Public Beta remains blocked by Wizard HQ polish, full evidence,
+model-add UX, memory review/delete, and final packaging trust decisions.
