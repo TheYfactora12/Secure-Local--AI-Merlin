@@ -14,8 +14,11 @@ fail() {
 
 for section in \
   "Release Candidate Metadata" \
+  "Release Stage Gates" \
+  "Full Installer Retest Trigger" \
   "CI Baseline" \
   "8GB Low/Core Clean Install" \
+  "16GB+ Matrix Placeholder" \
   "Uninstall, Reinstall, And Upgrade" \
   "Service Health Validation" \
   "Dashboard Readiness Validation" \
@@ -23,6 +26,8 @@ for section in \
   "No Cloud Calls And No Surprise Model Downloads" \
   "Magic Mode And Audit Validation" \
   "Startup Logs Review" \
+  "startup_timing" \
+  "docs/release/evidence/assets" \
   "Evidence Table" \
   "Blocker Rule"; do
   grep -q "$section" "$DOC" || fail "missing evidence section: $section"

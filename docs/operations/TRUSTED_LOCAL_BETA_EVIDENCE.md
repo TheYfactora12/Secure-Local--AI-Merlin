@@ -14,6 +14,28 @@ evidence. This document is the runbook and evidence checklist for that signoff.
 The first target is the 8GB Mac low/core path. Higher-memory validation follows
 after the low/core path is green.
 
+## Release Stage Gates
+
+| Stage | Meaning | Required Evidence | Current Status |
+|---|---|---|---|
+| Engineering Alpha | Developer-facing repo is coherent and CI is green. | CI, static smokes, Python unit tests, protected installer checks. | Passed on current `main`. |
+| Local Trusted Beta | Controlled local install is proven on owned hardware. | This evidence pack filled for 8GB low/core with screenshots, logs, uninstall/reinstall/upgrade, offline launch, and no-cloud checks. | Not signed off until the manual run is complete. |
+| Public Beta | External users can install with clear trust signals. | Local Trusted Beta evidence, public onboarding, known blockers resolved, and package/signing state explained. | Not ready. |
+| Public Release | Broad distribution path is supportable. | Public Beta evidence, Developer ID/notarization path, release artifacts, support docs, and rollback plan. | Not ready. |
+
+## Full Installer Retest Trigger
+
+Run this full evidence pack whenever any of these change:
+
+- installer branding or package resources
+- startup/loading/readiness UI
+- dashboard onboarding or first-action UX
+- launchd behavior
+- status API or task API startup behavior
+- service startup order or profile separation
+- package signing/notarization behavior
+- before any Local Trusted Beta, Public Beta, or Public Release signoff
+
 ## Release Candidate Metadata
 
 Fill this block for each beta validation run:
@@ -77,6 +99,18 @@ Expected evidence:
 - no cloud/API keys are required
 - no hidden telemetry is enabled
 
+## 16GB+ Matrix Placeholder
+
+After the 8GB low/core run is green, repeat the evidence pack on a 16GB+ Mac.
+
+Additional evidence to capture:
+
+- hardware tier reported as `base` or higher
+- optional search profile can be started intentionally
+- no OpenHands or n8n profile starts by default
+- model recommendations remain explicit and do not auto-download without
+  confirmation
+
 ## Uninstall, Reinstall, And Upgrade
 
 Run all three before beta signoff:
@@ -104,6 +138,7 @@ Evidence to capture:
 ## Service Health Validation
 
 ```bash
+STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 bash scripts/doctor.sh
 bash tests/core-live-smoke.sh
 bash tests/merlin-status-api-smoke.sh
@@ -116,6 +151,8 @@ curl -fsS --max-time 3 http://localhost:8766/status/memory
 curl -fsS --max-time 3 http://localhost:6333/healthz
 curl -fsS --max-time 3 http://localhost:4000/health/readiness
 curl -fsS --max-time 3 http://localhost:3000 >/dev/null
+FINISHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+echo "startup_timing=${STARTED_AT}..${FINISHED_AT}"
 ```
 
 Expected evidence:
@@ -147,6 +184,9 @@ Manual screenshots to capture:
 - Wizard HQ with Qdrant down: memory vault degraded
 - Wizard HQ with Ollama down: local AI brain degraded/warming
 - Wizard HQ Sovereignty Status showing local-only/cloud-disabled posture
+
+Store screenshots under `docs/release/evidence/assets/<date>/` or attach them
+to the relevant GitHub issue comment if they should not live in git.
 
 Do not mark beta-ready if a service is down and Wizard HQ presents it as ready.
 

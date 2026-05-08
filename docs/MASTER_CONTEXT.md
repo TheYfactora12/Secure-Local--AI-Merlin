@@ -216,9 +216,9 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Complete #97: trusted local beta validation evidence pack.
-2. Continue #37/#64/#95 release hardening, signing/notarization, and product audit/retest work.
-3. The v1.0 low/core installer path is green on this 8GB Mac; rerun full installer tests after startup/onboarding/branding changes.
+1. Continue #37/#95: public onboarding hardening and product audit evidence collection without claiming Public Beta readiness.
+2. Continue #64: Developer ID signing/notarization path.
+3. Run the full Local Trusted Beta evidence pack on the 8GB low/core Mac after #94/#96/#97 user-facing changes.
 4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 
 ## Reasoning Summary

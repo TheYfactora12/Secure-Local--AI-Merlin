@@ -9,6 +9,25 @@ A local-first AI stack for chat, model routing, vector memory, private search, a
 
 ---
 
+## Release Readiness
+
+Merlin AI is currently being prepared for a controlled **Local Trusted Beta**.
+It is not being claimed as Public Beta ready yet.
+
+- Installer/downloader Merlin branding is complete and covered by
+  `tests/installer-branding-smoke.sh`.
+- Wizard HQ startup readiness is read-only and must show ready/degraded states
+  from live localhost checks, not hardcoded success.
+- The beta evidence runbook is
+  [`docs/operations/TRUSTED_LOCAL_BETA_EVIDENCE.md`](docs/operations/TRUSTED_LOCAL_BETA_EVIDENCE.md).
+- Public release packaging and onboarding hardening remain tracked in #37.
+- Developer ID signing/notarization remains tracked in #64.
+
+Before any public beta claim, the evidence pack must be filled on the 8GB
+low/core path after branding, loading, and onboarding changes.
+
+---
+
 > ⚠️ **macOS Users — `bash install.sh` is still the supported path**
 >
 > `docker compose up` is now safe on macOS because Docker Ollama is profile-gated,
