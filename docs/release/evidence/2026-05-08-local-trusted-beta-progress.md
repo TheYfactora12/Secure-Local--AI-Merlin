@@ -571,3 +571,128 @@ evidence run.
 
 Improved, but Public Beta remains blocked by signing/notarization and full
 package/onboarding evidence.
+
+---
+
+## Issue #37 First-Run Product Clarity Slice — 2026-05-08 UTC
+
+### Scope
+
+Advance public onboarding/package-hardening issue #37 without claiming Public
+Beta readiness: make Wizard HQ explain where Merlin lives today, how local chat
+relates to Qwen/Open WebUI, and which setup actions remain disabled or
+approval-gated.
+
+### Starting Commit SHA
+
+`a291ed3bf5e01ee3740a797b9655e7470a9714fe` —
+`fix(readiness): harden 8GB warmup diagnostics — closes #100`
+
+### Files Changed
+
+- `.github/workflows/ci.yml`
+- `dashboard/index.html`
+- `tests/dashboard-first-run-smoke.sh`
+- `tests/dashboard-merlin-status-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None. `install.sh`, `pkg/scripts/*`, uninstall behavior, model-pull defaults,
+service startup, status API, and task API behavior were not changed.
+
+### Commands Run
+
+| Command | Result |
+|---|---|
+| `gh issue view 37 --json number,title,state,labels,milestone,body` | PASS; #37 is open in `v3.0 — Public Product Release`. |
+| `bash -n tests/dashboard-first-run-smoke.sh` | PASS |
+| `bash tests/dashboard-first-run-smoke.sh` | FAIL first run; test falsely matched safety copy. PASS after test fix. |
+| `bash tests/dashboard-merlin-status-smoke.sh` | PASS |
+| `bash tests/dashboard-security-center-smoke.sh` | PASS |
+| `bash tests/dashboard-readiness-smoke.sh` | PASS |
+| `bash tests/beta-readiness-evidence-smoke.sh` | PASS |
+| `bash tests/release-readiness-readme-smoke.sh` | PASS |
+| `bash tests/installer-branding-smoke.sh` | PASS |
+| `bash tests/pkg-readiness-smoke.sh` | PASS |
+| `bash tests/uninstall-smoke.sh` | PASS |
+| `bash -n install.sh` | PASS |
+| `bash install.sh --help` | PASS; usage only, no install side effects. |
+| `bash scripts/doctor.sh` | PASS; 52 passed, 3 warnings, 0 failures. |
+| `bash scripts/status.sh` | PASS; core services running, optional profiles disabled. |
+| `git diff --check` | PASS |
+
+### Failures Found
+
+- New first-run smoke initially failed because the unsafe-action regex matched
+  the existing safety sentence that says the dashboard does not download models.
+
+### Failure Category
+
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+The test searched for broad phrases like `download model` instead of detecting
+actual controls, function names, or imperative unsafe actions.
+
+### Fix Applied
+
+Changed the smoke test to detect unsafe buttons/functions such as
+`downloadModel`, `pullModel`, `runShell`, `writeMemory`, or configure-provider
+controls while allowing safety copy that explains those actions are blocked.
+
+### Retest Result
+
+Passed:
+
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-merlin-status-smoke.sh`
+- `bash tests/dashboard-security-center-smoke.sh`
+- `bash tests/dashboard-readiness-smoke.sh`
+- `bash tests/beta-readiness-evidence-smoke.sh`
+- `bash tests/release-readiness-readme-smoke.sh`
+- `bash tests/installer-branding-smoke.sh`
+- `bash tests/pkg-readiness-smoke.sh`
+- `bash tests/uninstall-smoke.sh`
+- `bash -n install.sh`
+- `bash install.sh --help`
+- `bash scripts/doctor.sh`
+- `bash scripts/status.sh`
+- `git diff --check`
+
+### Regression Tests Added
+
+- `tests/dashboard-first-run-smoke.sh`
+
+Regression tests updated:
+
+- `tests/dashboard-merlin-status-smoke.sh`
+- `.github/workflows/ci.yml` now runs the first-run dashboard smoke in CI.
+
+### Runbook / Docs Updated
+
+- This evidence note records the #37 first-run slice and the test-design
+  failure pattern.
+
+### Lessons Learned
+
+The user-facing product needs to say plainly: Open WebUI/Qwen is the current
+local chat/model workspace, while Merlin is the routing, policy, memory, audit,
+and readiness layer. Hiding that relationship makes the product feel confusing
+even when the stack is technically healthy.
+
+### What Not To Repeat Next Time
+
+Do not treat safety copy as an unsafe action in static tests. Tests should look
+for controls and executable wiring, not block the words used to explain guardrails.
+
+### Local Trusted Beta Impact
+
+Improved. First-run users now get a clearer answer to "where is Merlin?" without
+adding write controls, model downloads, cloud setup, or memory actions.
+
+### Public Beta Impact
+
+Improved, but #37 remains open. Public Beta still requires full onboarding,
+package GUI evidence, backup/restore verification, and #64 signing/notarization.
