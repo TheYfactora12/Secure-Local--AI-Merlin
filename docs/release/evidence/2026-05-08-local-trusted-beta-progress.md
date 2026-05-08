@@ -54,6 +54,7 @@
 - `docs/MASTER_PROMPT.md`
 - `docs/MERLIN_IMPLEMENTATION_ROADMAP.md`
 - `docs/operations/TRUSTED_LOCAL_BETA_EVIDENCE.md`
+- `docs/operations/FAILURE_LEARNING_LOOP.md`
 - `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
 - `tests/beta-readiness-evidence-smoke.sh`
 - `tests/release-readiness-readme-smoke.sh`
@@ -89,6 +90,42 @@ returned usage only and had no install side effects.
 
 - Stale docs still described #97 as active after GitHub showed it closed.
   Corrected in canonical roadmap/context.
+- Local process gap: the repo had evidence notes but did not yet have a
+  canonical continuous failure-learning protocol. Added
+  `docs/operations/FAILURE_LEARNING_LOOP.md` and linked it from the beta
+  evidence pack.
+
+## Failure Category
+
+- Roadmap/governance drift
+- Test design gap
+
+## Root Cause Or Current Hypothesis
+
+Release evidence existed, but the failure capture contract was embedded in chat
+instructions instead of enforced by repo docs and static smokes.
+
+## Fix Applied
+
+- Added continuous failure-learning operations doc.
+- Linked it from the Local Trusted Beta evidence pack.
+- Extended `tests/beta-readiness-evidence-smoke.sh` so CI checks for the
+  failure-learning contract.
+
+## Retest Result
+
+Passed:
+
+- `bash tests/beta-readiness-evidence-smoke.sh`
+- `bash tests/release-readiness-readme-smoke.sh`
+- `bash tests/master-prompt-smoke.sh`
+- `bash -n tests/beta-readiness-evidence-smoke.sh`
+- `git diff --check`
+
+## Regression Test Added Or Reason Not Added
+
+Updated `tests/beta-readiness-evidence-smoke.sh` to assert the evidence pack and
+failure-learning protocol include the required release-readiness rules.
 
 ## Follow-Up Issues Created Or Recommended
 
@@ -104,6 +141,8 @@ returned usage only and had no install side effects.
 - The repo is improving faster because #94/#96/#97 now have CI-backed static
   checks, but Local Trusted Beta still depends on a real 8GB low/core installer
   retest after these user-facing changes.
+- Failure learning has to live in the repository, not just in a session prompt,
+  or future agents will skip it during a long validation run.
 
 ## What Not To Touch Next Time
 
@@ -112,6 +151,8 @@ returned usage only and had no install side effects.
 - Do not change installer/uninstaller behavior unless a verified defect is
   found during the evidence-pack retest.
 - Do not claim Public Beta readiness.
+- Do not fix installer or service failures without recording the failure
+  pattern, retest, release impact, and regression-test decision.
 
 ## Next Recommended Step
 

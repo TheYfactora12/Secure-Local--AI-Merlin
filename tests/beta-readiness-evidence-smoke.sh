@@ -4,6 +4,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DOC="${ROOT_DIR}/docs/operations/TRUSTED_LOCAL_BETA_EVIDENCE.md"
+FAILURE_DOC="${ROOT_DIR}/docs/operations/FAILURE_LEARNING_LOOP.md"
 
 fail() {
   echo "FAIL: $*" >&2
@@ -11,6 +12,7 @@ fail() {
 }
 
 [[ -f "$DOC" ]] || fail "missing trusted local beta evidence document"
+[[ -f "$FAILURE_DOC" ]] || fail "missing failure learning loop document"
 
 for section in \
   "Release Candidate Metadata" \
@@ -55,5 +57,26 @@ grep -q "api.anthropic.com" "$DOC" \
   || fail "evidence pack missing Anthropic cloud-call log review marker"
 grep -q "Do not close #95" "$DOC" \
   || fail "evidence pack missing beta blocker rule"
+grep -q "FAILURE_LEARNING_LOOP.md" "$DOC" \
+  || fail "evidence pack must link failure learning loop"
+grep -q "Failure Learning Appendix" "$DOC" \
+  || fail "evidence pack missing failure learning appendix"
+
+for required in \
+  "Continuous Failure Learning Loop" \
+  "Failure Response Rule" \
+  "Installer Failure Learning Rule" \
+  "Evidence Log Requirement" \
+  "Smarter After Every Failure Rule" \
+  "Known Failure Pattern Format" \
+  "Failure-To-Issue Rule" \
+  "Release Readiness Impact Rule" \
+  "Junior Engineer Safety Rule" \
+  "Local Trusted Beta blocker" \
+  "HOME_AI_SKIP_MODEL_PULLS=true" \
+  "Regression test added or reason not added" \
+  "What not to repeat next time"; do
+  grep -q "$required" "$FAILURE_DOC" || fail "failure learning doc missing: $required"
+done
 
 echo "PASS: trusted local beta evidence pack is complete"

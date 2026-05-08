@@ -14,6 +14,11 @@ evidence. This document is the runbook and evidence checklist for that signoff.
 The first target is the 8GB Mac low/core path. Higher-memory validation follows
 after the low/core path is green.
 
+Failure learning is mandatory. Use
+`docs/operations/FAILURE_LEARNING_LOOP.md` for every failed command, install,
+service start, smoke test, UI check, or confusing user experience found during
+this evidence run.
+
 ## Release Stage Gates
 
 | Stage | Meaning | Required Evidence | Current Status |
@@ -295,3 +300,57 @@ If any row fails, create or update a GitHub issue before beta signoff. Include:
 
 Do not close #95 or call v3.0 beta-ready until this evidence pack has a passing
 8GB low/core run and all release-blocking issues are linked.
+
+## Failure Learning Appendix
+
+For each failure, append a known failure pattern entry to the dated evidence note
+or a dedicated follow-up runbook. Required format:
+
+```markdown
+### Failure Pattern: <short name>
+
+**Date first seen:**
+YYYY-MM-DD
+
+**Category:**
+Installer / Dashboard / API / Memory / CI / etc.
+
+**Symptoms:**
+What the user or test saw.
+
+**Command or action:**
+Exact command or action that exposed it.
+
+**Expected:**
+What should have happened.
+
+**Actual:**
+What happened.
+
+**Likely root cause:**
+Best known explanation.
+
+**Confirmed root cause:**
+Fill in once proven.
+
+**Fix:**
+What fixed it.
+
+**Regression test:**
+Test added or updated.
+
+**Retest result:**
+Pass/fail and date.
+
+**Do not repeat:**
+What future Codex sessions must avoid.
+
+**Related issue/PR/commit:**
+Links or identifiers.
+```
+
+Release impact must be one of: No release impact, Local Trusted Beta blocker,
+Public Beta blocker, Public Release blocker, or Unknown needs investigation.
+Installer, uninstall, reinstall, upgrade, no-cloud default, surprise model
+download, service startup, Wizard HQ readiness, privacy, and local-only failures
+are Local Trusted Beta blockers until proven otherwise.
