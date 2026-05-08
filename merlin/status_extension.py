@@ -18,6 +18,10 @@ from merlin.task_endpoint import TASK_TRACE_BUFFER, app
 
 QDRANT_URL = "http://localhost:6333"
 OLLAMA_TAGS_URL = "http://localhost:11434/api/tags"
+LOW_MEMORY_MODEL_WARNING = (
+    "8GB/core systems should stay with qwen2.5:7b and nomic-embed-text unless "
+    "the user explicitly chooses a larger model after reviewing memory impact."
+)
 router = APIRouter(prefix="/status")
 
 SETTINGS_ACTIONS: list[dict[str, Any]] = [
@@ -39,7 +43,7 @@ SETTINGS_ACTIONS: list[dict[str, Any]] = [
         "state": "guidance_only",
         "summary": "Model additions are manual-only and must include low-memory warnings.",
         "approval_gates": ["model_download"],
-        "tracked_issue": "#115",
+        "tracked_issue": "#118",
         "allowed_from_dashboard": False,
         "secrets_displayed": False,
         "cloud_default": False,
@@ -256,6 +260,8 @@ def status_models() -> dict[str, Any]:
             "default_chat": alias == default_chat_alias,
             "default_embedding": alias == default_embedding_alias,
             "install_command": f"bash scripts/add-model.sh {model.model}",
+            "download_policy": "manual_only",
+            "confirmation_required": True,
         }
         local_models.append(record)
         if model.model_class == "embedding":
@@ -300,6 +306,8 @@ def status_models() -> dict[str, Any]:
         "local_models": local_models,
         "safe_install_guidance": f"bash scripts/add-model.sh {config.models.models[default_chat_alias].model}",
         "downloads": "manual_only",
+        "manual_confirmation_required": True,
+        "low_memory_warning": LOW_MEMORY_MODEL_WARNING,
     }
 
 

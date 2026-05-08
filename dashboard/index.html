@@ -570,6 +570,49 @@ textarea {
 .status-pill .off { color: var(--yellow); }
 .status-pill .locked { color: var(--yellow); }
 .status-pill .good { color: var(--green); }
+.surface-card.wide { grid-column: span 2; }
+.model-library-panel { display: grid; gap: 12px; }
+.model-warning {
+  border: 1px solid rgba(243, 201, 105, 0.32);
+  border-radius: 8px;
+  padding: 11px;
+  color: var(--yellow);
+  background: rgba(243, 201, 105, 0.06);
+}
+.model-table { width: 100%; border-collapse: collapse; }
+.model-table th {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: left;
+  padding: 7px 6px;
+  border-bottom: 1px solid var(--line);
+}
+.model-table td {
+  padding: 9px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: top;
+  font-size: 12px;
+}
+.model-table td:first-child { font-family: var(--mono); color: var(--cyan); }
+.model-table code { font-family: var(--mono); color: var(--cyan); overflow-wrap: anywhere; }
+.model-command-disclosure {
+  border: 1px solid rgba(103, 232, 249, 0.22);
+  border-radius: 8px;
+  padding: 9px;
+  background: rgba(5, 6, 7, 0.22);
+}
+.model-command-disclosure summary {
+  cursor: pointer;
+  color: var(--cyan);
+  font-size: 12px;
+}
+.model-command-disclosure code {
+  display: block;
+  margin-top: 8px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
 .provider-state {
   display: inline-flex;
   align-items: center;
@@ -621,6 +664,7 @@ textarea {
   .shell.tab-page { grid-template-columns: 250px 1fr; }
   .right { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .surface-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .surface-card.wide { grid-column: span 2; }
 }
 @media (max-width: 820px) {
   .topbar { align-items: flex-start; flex-direction: column; }
@@ -633,7 +677,9 @@ textarea {
 }
 @media (max-width: 560px) {
   .hero-grid, .gate-grid, .action-grid, .surface-grid { grid-template-columns: 1fr; }
+  .surface-card.wide { grid-column: auto; }
   .route-table { display: block; overflow-x: auto; }
+  .model-table { display: block; overflow-x: auto; }
 }
 </style>
 </head>
@@ -770,6 +816,14 @@ textarea {
           <div class="status-pill"><strong>Safe install</strong><span id="brains-safe-install">bash scripts/add-model.sh qwen2.5:7b</span></div>
         </div>
       </article>
+      <article class="surface-card wide">
+        <h3>Local Model Library</h3>
+        <p>Installed and missing local models are shown from Merlin status. Manual commands stay hidden until the low-memory warning is reviewed.</p>
+        <div id="brains-model-library" class="model-library-panel">
+          <div class="model-warning">8GB/core warning: review hardware impact before adding chat models. Merlin will not download models from the browser.</div>
+          <div class="empty">Checking local model library.</div>
+        </div>
+      </article>
       <article class="surface-card">
         <h3>Merlin Router</h3>
         <p>Policy-aware route registry that decides which local brain should handle a task.</p>
@@ -895,7 +949,7 @@ textarea {
         </div>
       </article>
       <article class="surface-card"><h3>Provider Connectors</h3><p>External provider setup is deferred until safe secret storage, explicit allow/not-allow choices, and approval gates are implemented.</p><div class="status-list"><div class="status-pill"><strong>API key fields</strong><span class="locked">not available</span></div><div class="status-pill"><strong>Cloud default</strong><span class="off">off</span></div><div class="status-pill"><strong>Future path</strong><span>policy-gated</span></div></div></article>
-      <article class="surface-card"><h3>Model Library</h3><p>Model additions should stay explicit, visible, and hardware-aware.</p><div class="status-list"><div class="status-pill"><strong>Downloads</strong><span class="locked">manual only</span></div><div class="status-pill"><strong>Add model</strong><span>bash scripts/add-model.sh</span></div><div class="status-pill"><strong>8GB warning</strong><span>required</span></div></div></article>
+      <article class="surface-card wide"><h3>Model Library</h3><p>Model additions stay explicit, visible, hardware-aware, and manual-only.</p><div id="settings-model-library" class="model-library-panel"><div class="model-warning">8GB/core warning: review hardware impact before adding chat models. Merlin will not download models from the browser.</div><div class="empty">Checking model library status.</div></div></article>
       <article class="surface-card"><h3>Memory Controls</h3><p>Remembering, deleting, and exporting memory need dedicated approval and review UX.</p><div class="status-list"><div class="status-pill"><strong>Auto-write</strong><span class="off">disabled</span></div><div class="status-pill"><strong>Review/delete</strong><span>#31 / #32</span></div><div class="status-pill"><strong>Raw memory</strong><span class="locked">not shown</span></div></div></article>
       <article class="surface-card"><h3>Privacy & Sovereignty</h3><p>Local-first defaults stay visible before advanced configuration exists.</p><div class="status-list"><div class="status-pill"><strong>Telemetry</strong><span class="good">off</span></div><div class="status-pill"><strong>Cloud escalation</strong><span class="off">disabled</span></div><div class="status-pill"><strong>Secrets</strong><span class="locked">protected</span></div></div></article>
       <article class="surface-card"><h3>Startup & APIs</h3><p>Wizard HQ depends on local status APIs for live route, approval, memory, and trace panels.</p><div class="status-list"><div class="status-pill"><strong>Status API</strong><span>wizard merlin status-api start</span></div><div class="status-pill"><strong>Task API</strong><span>bash scripts/merlin-task-api.sh start</span></div><div class="status-pill"><strong>macOS persistence</strong><span>bash launchd/install-launchd.sh</span></div></div></article>
@@ -944,13 +998,22 @@ function text(id, value) {
   if (el) el.textContent = value;
 }
 
-function selectTab(target) {
+function selectTab(target, updateHash = true) {
   document.querySelectorAll('[data-tab-page]').forEach(page => {
     page.classList.toggle('active', page.getAttribute('data-tab-page') === target);
   });
   document.querySelectorAll('[data-tab-target]').forEach(button => {
     button.classList.toggle('active', button.getAttribute('data-tab-target') === target);
   });
+  if (updateHash && window.location.hash !== `#${target}`) {
+    window.history.replaceState(null, '', `#${target}`);
+  }
+}
+
+function selectInitialTab() {
+  const target = window.location.hash.replace('#', '') || 'chat';
+  const valid = document.querySelector(`[data-tab-page="${CSS.escape(target)}"]`);
+  selectTab(valid ? target : 'chat', false);
 }
 
 function setChip(id, value, state) {
@@ -1050,6 +1113,66 @@ function modelReadinessCopy() {
     return 'Only nomic-embed-text is installed. That model powers memory embeddings, but it cannot answer chat. Install a chat model manually with bash scripts/add-model.sh qwen2.5:7b.';
   }
   return 'No chat-capable local model is installed. Install one manually with bash scripts/add-model.sh qwen2.5:7b. Merlin will not download models from the browser.';
+}
+
+function modelRole(model) {
+  if (model.default_chat) return 'default chat';
+  if (model.default_embedding) return 'memory embedding';
+  if (model.model_class === 'embedding') return 'embedding';
+  return `${safe(model.model_class, 'chat')} model`;
+}
+
+function modelStatus(model) {
+  if (model.installed) return '<span class="chip good">installed</span>';
+  if (model.model_class === 'embedding') return '<span class="chip warn">missing memory model</span>';
+  return '<span class="chip warn">missing chat model</span>';
+}
+
+function renderModelLibrary(data) {
+  const panels = [
+    document.getElementById('brains-model-library'),
+    document.getElementById('settings-model-library'),
+  ].filter(Boolean);
+  if (!panels.length) return;
+
+  const models = data.local_models || [];
+  const warning = data.low_memory_warning || '8GB/core warning: review hardware impact before adding chat models.';
+  const rows = models.map(model => `
+    <tr>
+      <td>${escapeHtml(model.alias)}</td>
+      <td>${escapeHtml(model.model)}</td>
+      <td>${escapeHtml(modelRole(model))}</td>
+      <td>${modelStatus(model)}</td>
+      <td>
+        <details class="model-command-disclosure">
+          <summary>Review warning to show manual command</summary>
+          <code>${escapeHtml(model.install_command || data.safe_install_guidance || 'manual model install required')}</code>
+        </details>
+      </td>
+    </tr>
+  `).join('');
+
+  const missingRecommended = models
+    .filter(model => !model.installed && (model.default_chat || model.default_embedding || model.enabled_by_default))
+    .map(model => `${model.alias} (${model.model})`)
+    .join(', ') || 'none';
+
+  const html = `
+    <div class="model-warning">${escapeHtml(warning)}</div>
+    <div class="status-list">
+      <div class="status-pill"><strong>Downloads</strong><span class="locked">${escapeHtml(data.downloads || 'manual_only')}</span></div>
+      <div class="status-pill"><strong>Confirmation</strong><span class="locked">${data.manual_confirmation_required === false ? 'not required' : 'required'}</span></div>
+      <div class="status-pill"><strong>Missing recommended</strong><span>${escapeHtml(missingRecommended)}</span></div>
+    </div>
+    <table class="model-table" aria-label="Local model library">
+      <thead><tr><th>Alias</th><th>Model</th><th>Role</th><th>Status</th><th>Manual setup</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5">No local model catalog loaded.</td></tr>'}</tbody>
+    </table>
+  `;
+
+  panels.forEach(panel => {
+    panel.innerHTML = html;
+  });
 }
 
 async function submitMerlinChat(event) {
@@ -1163,6 +1286,7 @@ function renderModelReadiness(data) {
   text('brains-safe-install', data.safe_install_guidance || 'manual model install required');
   text('brains-model-message', data.message || modelReadinessCopy());
   text('system-chat-model', data.chat_ready ? 'ready' : state);
+  renderModelLibrary(data);
 }
 
 async function loadModels() {
@@ -1454,6 +1578,8 @@ async function refreshAll() {
   renderReadiness();
 }
 
+selectInitialTab();
+window.addEventListener('hashchange', selectInitialTab);
 refreshAll();
 setInterval(refreshAll, 30000);
 </script>

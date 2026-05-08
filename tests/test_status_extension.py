@@ -156,6 +156,10 @@ def test_status_models_reports_embedding_only_as_missing_chat_model(monkeypatch)
     assert "memory" in body["message"]
     assert body["safe_install_guidance"] == "bash scripts/add-model.sh qwen2.5:7b"
     assert body["downloads"] == "manual_only"
+    assert body["manual_confirmation_required"] is True
+    assert "8GB/core systems" in body["low_memory_warning"]
+    assert all(model["download_policy"] == "manual_only" for model in body["local_models"])
+    assert all(model["confirmation_required"] is True for model in body["local_models"])
 
 
 def test_status_models_reports_default_chat_model_ready(monkeypatch) -> None:

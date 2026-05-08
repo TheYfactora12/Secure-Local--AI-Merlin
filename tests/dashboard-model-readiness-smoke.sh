@@ -30,10 +30,28 @@ grep -q "bash scripts/add-model.sh qwen2.5:7b" "$DASHBOARD_FILE" \
   || fail "dashboard missing safe explicit model install guidance"
 grep -q "brains-safe-install" "$DASHBOARD_FILE" \
   || fail "dashboard missing safe install guidance slot"
+grep -q "Local Model Library" "$DASHBOARD_FILE" \
+  || fail "dashboard missing local model library view"
+grep -q "brains-model-library" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Brains model library render target"
+grep -q "settings-model-library" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Settings model library render target"
+grep -q "renderModelLibrary" "$DASHBOARD_FILE" \
+  || fail "dashboard missing model library renderer"
+grep -q "Review warning to show manual command" "$DASHBOARD_FILE" \
+  || fail "dashboard must require warning review before showing manual command"
+grep -q "manual_confirmation_required" "$DASHBOARD_FILE" \
+  || fail "dashboard must render manual confirmation state"
+grep -q "low_memory_warning" "$DASHBOARD_FILE" \
+  || fail "dashboard must render low-memory warning from backend"
 grep -q "Merlin will not download models from the browser" "$DASHBOARD_FILE" \
   || fail "dashboard missing no browser model download guarantee"
 grep -q "downloads.*manual_only\\|manual_only" "$STATUS_EXTENSION" \
   || fail "model readiness endpoint must report manual-only downloads"
+grep -q "manual_confirmation_required" "$STATUS_EXTENSION" \
+  || fail "model readiness endpoint must report manual confirmation requirement"
+grep -q "LOW_MEMORY_MODEL_WARNING" "$STATUS_EXTENSION" \
+  || fail "model readiness endpoint must expose low-memory warning"
 
 if grep -qiE 'downloadModel|pullModel|ollama[[:space:]]+pull|/api/pull|addModel|installModel' "$DASHBOARD_FILE"; then
   fail "dashboard must not expose browser model pull/download controls"

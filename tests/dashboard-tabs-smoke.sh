@@ -16,6 +16,10 @@ grep -q 'aria-label="Wizard HQ product tabs"' "$DASHBOARD_FILE" \
   || fail "dashboard missing product tab navigation"
 grep -q 'function selectTab' "$DASHBOARD_FILE" \
   || fail "dashboard tabs are not wired"
+grep -q 'function selectInitialTab' "$DASHBOARD_FILE" \
+  || fail "dashboard tabs must support direct hash links"
+grep -q 'hashchange' "$DASHBOARD_FILE" \
+  || fail "dashboard tabs must react to hash changes"
 
 for tab in chat brains memory agents security system settings; do
   grep -q "data-tab-target=\"${tab}\"" "$DASHBOARD_FILE" \
@@ -80,6 +84,10 @@ grep -q "toggle-state" "$DASHBOARD_FILE" \
   || fail "dashboard missing provider allow/not-allow toggle state visual"
 grep -q "manual only" "$DASHBOARD_FILE" \
   || fail "dashboard missing no-surprise-download language"
+grep -q "Local Model Library" "$DASHBOARD_FILE" \
+  || fail "dashboard missing local model library view"
+grep -q "Review warning to show manual command" "$DASHBOARD_FILE" \
+  || fail "dashboard must require warning review before manual model commands"
 grep -q "8GB/core systems" "$DASHBOARD_FILE" \
   || fail "dashboard missing low-memory/core warning language"
 grep -q "approved memory only" "$DASHBOARD_FILE" \

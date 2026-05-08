@@ -3615,3 +3615,182 @@ install guidance and does not imply browser-driven downloads.
 Improved, but Public Beta still needs the final installer retest, onboarding
 polish, and whatever write-capable settings flows remain after #118 is reviewed
 in the browser.
+
+## #118 Richer Model Library Browser And Live API Pass
+
+### Date/Time
+
+2026-05-08T17:57:00-04:00
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`57d85e8`
+
+### Target Issues
+
+- #118
+- #114
+- #106
+
+### Scope
+
+Expand Wizard HQ from a single safe-install line into a richer read-only model
+library view that shows installed/missing local models, requires warning review
+before showing manual commands, and keeps downloads manual-only.
+
+### Files Changed
+
+- `merlin/status_extension.py`
+- `dashboard/index.html`
+- `tests/test_status_extension.py`
+- `tests/dashboard-model-readiness-smoke.sh`
+- `tests/dashboard-tabs-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+- `docs/release/evidence/assets/2026-05-08-wizard-hq/model-library-browser-open.png`
+- `docs/release/evidence/assets/2026-05-08-wizard-hq/model-library-brains-tab.png`
+
+### Protected Files Touched
+
+No installer, package script, router, policy engine, task execution behavior, or
+memory manager behavior changed. The Task API status extension was touched only
+to add read-only model-library metadata.
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `curl -fsS --max-time 5 http://localhost:3000 >/dev/null` | FAIL; wrong target for Wizard HQ. Port 3000 is Open WebUI. |
+| `curl -fsS --max-time 5 http://localhost:8766/status/models` | FAIL initially; Task API was down before this validation pass. |
+| `bash scripts/status.sh` | PASS; showed Wizard HQ on port 8888 and Open WebUI on port 3000. |
+| `bash scripts/merlin-status-api.sh start` | PASS; status API running on 8765 with execution disabled. |
+| `bash scripts/merlin-task-api.sh start` | PASS; task API started for validation. |
+| `curl -fsS --max-time 5 http://127.0.0.1:8888 \| rg ...` | PASS; live Wizard HQ served the new model-library markup. |
+| `curl -fsS --max-time 5 http://127.0.0.1:8766/status/models \| jq ...` | FAIL before restart; live API still served old fields with `manual_confirmation_required: null`. |
+| `bash scripts/merlin-task-api.sh restart` | PASS; restarted the stale listener. |
+| `/bin/zsh -lc "PYTHONPATH=. .venv-test/bin/python -m merlin.task_endpoint"` | PASS for foreground browser validation; later replaced by script-managed background service. |
+| `curl -fsS --max-time 5 http://127.0.0.1:8766/status/models \| jq ...` | PASS after restart; returned `manual_confirmation_required: true`, `downloads: manual_only`, and low-memory warning. |
+| `open -a Safari http://127.0.0.1:8888` | PASS; Wizard HQ opened in Safari. |
+| `osascript -e 'tell application "Safari" to do JavaScript ...'` | FAIL; Safari requires "Allow JavaScript from Apple Events" for scripted tab switching. |
+| `screencapture -x docs/release/evidence/assets/2026-05-08-wizard-hq/model-library-browser-open.png` | PASS; captured live Wizard HQ browser evidence. |
+| `open -a Safari http://127.0.0.1:8888/#brains` | PASS after adding hash-based tab routing; opened Wizard HQ directly on Brains. |
+| `screencapture -x docs/release/evidence/assets/2026-05-08-wizard-hq/model-library-brains-tab.png` | PASS; captured Brains tab and Local Model Library start. |
+| `.venv-test/bin/python -m pytest tests/test_status_extension.py -q` | PASS; 24 passed. |
+| `bash tests/dashboard-model-readiness-smoke.sh` | PASS. |
+| `bash tests/dashboard-tabs-smoke.sh` | PASS. |
+| `bash tests/dashboard-settings-policy-smoke.sh` | PASS. |
+| `bash tests/dashboard-first-run-smoke.sh` | PASS. |
+| `git diff --check` | PASS. |
+| combined static tests plus immediate live curl | FAIL once; localhost probe hit a transient Task API startup/race window. |
+| separated static tests and live `/status/models` curl | PASS; static tests passed and live endpoint returned the expected model-library fields. |
+
+### Test Output Summary
+
+The live status endpoint now exposes model-library metadata:
+`manual_confirmation_required: true`, `downloads: manual_only`, and an
+8GB/core low-memory warning. Wizard HQ serves the richer model-library markup
+and the static smokes enforce that no browser model pull/download controls were
+introduced.
+
+### Tests Skipped And Why
+
+No model download was run. The purpose of #118 is manual confirmation and
+guidance, not pulling models from the browser or installer.
+
+No full installer retest was run because installer/package behavior was not
+changed.
+
+### Failures Found
+
+1. The first validation check used port 3000 for Wizard HQ, but 3000 is Open
+   WebUI. Wizard HQ is port 8888.
+2. Task API was initially down before validation and then served stale
+   `/status/models` fields until restarted.
+3. Safari refused scripted tab switching because JavaScript from Apple Events is
+   disabled.
+4. A combined static-test-plus-live-curl command failed once because the live
+   localhost probe hit the Task API during a short service lifecycle window.
+
+### Failure Category
+
+- Wizard HQ/dashboard live validation
+- Status API / Task API service lifecycle
+- UX/readiness confusion
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+Port confusion came from the product split: Wizard HQ is the Merlin product hub
+on 8888, while Open WebUI remains the optional chat bridge on 3000.
+
+The stale API field behavior matches the known Task API listener pattern: code
+changes require an explicit restart before live browser validation.
+
+Safari Apple Events failure is a local browser-control limitation, not a Merlin
+runtime defect.
+
+The final live curl race is a #119 service lifecycle hardening concern. The
+service was reachable immediately afterward and the separated final validation
+passed.
+
+### Fix Applied
+
+- Added read-only model-library metadata to `/status/models`.
+- Added a rendered Local Model Library in Brains and Settings.
+- Required a warning review disclosure before manual model commands are shown.
+- Added backend/unit and dashboard static smoke assertions for manual-only
+  downloads, confirmation requirement, and low-memory warning.
+- Added hash-based tab routing so `#brains` can be opened directly for manual
+  review and evidence capture.
+- Restarted Task API and converted it back to script-managed background service
+  after the foreground validation pass.
+
+### Retest Result
+
+PASS. The script-managed Task API reports running and returns the new fields.
+Focused backend and dashboard smoke tests pass.
+
+### Regression Tests Added
+
+- `tests/test_status_extension.py` now checks `manual_confirmation_required`,
+  `low_memory_warning`, `download_policy`, and `confirmation_required`.
+- `tests/dashboard-model-readiness-smoke.sh` now checks the model-library render
+  targets, warning disclosure, backend confirmation field, and low-memory field.
+- `tests/dashboard-tabs-smoke.sh` now checks the Local Model Library and warning
+  review language, plus hash-based tab routing.
+
+### Follow-Up Issues Created Or Recommended
+
+No new issue was created. Existing #119 covers startup/API controls and remains
+the right place to harden stale listener handling further.
+
+### Lesson Learned
+
+Live browser validation needs the product-port split called out every time:
+Wizard HQ is 8888; Open WebUI is 3000. Also restart Task API before validating
+new status fields in the browser.
+
+### What Not To Repeat Next Time
+
+Do not validate Wizard HQ against port 3000. Do not trust a live status endpoint
+to reflect code changes until the owning service has been restarted and
+rechecked.
+
+### Next Recommended Step
+
+Review the Brains tab manually in Safari. If the model library feels right,
+finish #118 with the current read-only/manual-only implementation; otherwise
+make a small visual polish slice before moving to #119 startup/API controls.
+
+### Local Trusted Beta Impact
+
+Improved. Users now get a clearer local model library without surprise downloads
+or browser execution controls.
+
+### Public Beta Impact
+
+Improved, but Public Beta still depends on full installer retest, richer
+onboarding validation, and remaining write-capable Settings flows.
