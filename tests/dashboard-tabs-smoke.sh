@@ -52,6 +52,8 @@ grep -q "Open WebUI runs the chat engine today; Merlin owns routing, policy, mem
   || fail "dashboard missing honest chat bridge boundary"
 grep -q "Merlin Chat" "$DASHBOARD_FILE" \
   || fail "dashboard missing native Merlin Chat surface"
+grep -q "Merlin AI core face" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Merlin product face in hero"
 grep -q "submitMerlinChat" "$DASHBOARD_FILE" \
   || fail "dashboard missing Merlin Chat submit handler"
 grep -q 'fetch(`${TASK_API}/task`' "$DASHBOARD_FILE" \

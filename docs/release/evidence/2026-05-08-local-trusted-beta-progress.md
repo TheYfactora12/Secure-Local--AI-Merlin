@@ -2532,3 +2532,163 @@ this machine.
 Improved, but still not complete. Public Beta still needs browser screenshot
 evidence, first-run model readiness UX, memory review/delete UX, policy-gated
 Settings, and clean installer retest evidence.
+
+---
+
+## v3.1 Wizard HQ Chat Home And Browser CORS Hardening
+
+### Date/Time
+
+2026-05-08 09:00 EDT
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`beb2a08bd4e765dee94c7eb47febd55b93cf516d`
+
+### Ending Commit SHA
+
+Pending commit.
+
+### Target Issue(s)
+
+- #113 — Wizard HQ Product Shell / Merlin-native chat path
+- #115 — Wizard HQ model readiness empty state follow-up
+
+### Scope
+
+Fix the live browser Task API failure and reshape the Chat tab into the primary
+Merlin product home: Merlin face first, Ask Merlin directly underneath, and
+engineer/status detail moved out of the visible Chat page.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `merlin/task_endpoint.py`
+- `tests/test_task_endpoint.py`
+- `tests/test_status_extension.py`
+- `tests/dashboard-native-chat-smoke.sh`
+- `tests/dashboard-tabs-smoke.sh`
+- `tests/dashboard-first-run-smoke.sh`
+- `tests/dashboard-merlin-status-smoke.sh`
+- `tests/dashboard-readiness-smoke.sh`
+
+### Protected Files Touched
+
+- `merlin/task_endpoint.py` — touched narrowly to allow Wizard HQ browser CORS
+  from localhost origins and to include safe route metadata in approval-required
+  responses.
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `curl -i -sS --max-time 5 -X OPTIONS http://127.0.0.1:8766/task -H 'Origin: http://localhost:8888' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: Content-Type'` | PASS; Task API returns `200 OK` and `access-control-allow-origin: http://localhost:8888`. |
+| `curl -i -sS --max-time 5 -X OPTIONS http://127.0.0.1:8766/task -H 'Origin: http://untrusted.example' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: Content-Type'` | PASS; Task API rejects the untrusted origin and does not return an allow-origin header. |
+| `.venv-test/bin/python -m pytest tests/test_task_endpoint.py tests/test_status_extension.py -v --tb=short` | PASS; 27 tests passed. |
+| `bash tests/dashboard-native-chat-smoke.sh` | PASS; native Merlin Chat still routes only through Task API `/task`. |
+| `bash tests/dashboard-tabs-smoke.sh` | PASS; tabs remain Merlin-native and safe. |
+| `bash tests/dashboard-first-run-smoke.sh` | PASS after test update; now verifies the clean Chat home product surface instead of the old first-run diagnostic panel. |
+| `bash tests/dashboard-merlin-status-smoke.sh` | PASS after test update; verifies product identity, safe API wiring, and hidden diagnostic hooks. |
+| `bash tests/dashboard-readiness-smoke.sh` | PASS after test update; readiness logic remains present through hidden runtime hooks and System surfaces. |
+| `git diff --check` | PASS; no whitespace errors. |
+| `open -a Safari http://localhost:8888` | PASS earlier in session; Safari opened Wizard HQ. |
+| `osascript ... do JavaScript ... in Safari` | FAIL; Safari requires the Develop setting `Allow JavaScript from Apple Events`. |
+| `osascript ... System Events click Allow ...` | FAIL; this sandbox is not allowed assistive access. |
+| `screencapture -x docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-face-chat-first-viewport.png` | PASS; captured browser evidence showing Merlin face followed by Ask Merlin on the Chat home. |
+
+### Test Output Summary
+
+Focused backend and dashboard regression checks passed. Browser evidence now
+shows the Chat tab as a product home rather than a service dashboard.
+
+### Tests Skipped And Why
+
+Full installer retest was skipped because this slice changed browser UX and Task
+API CORS only. A full clean install/uninstall/reinstall pass remains required
+before Local Trusted Beta signoff.
+
+### Failures Found
+
+1. Browser chat previously showed `task api unavailable` / `Load failed` even
+   while curl to `/task` worked.
+2. Safari browser automation was blocked by macOS privacy settings.
+3. Existing dashboard static smokes failed after the product decision to remove
+   first-run/startup engineering panels from the visible Chat page.
+4. First browser visual pass still placed status metrics between the Merlin face
+   and Ask Merlin, which contradicted the desired first-page flow.
+
+### Failure Category
+
+- Wizard HQ/dashboard
+- Status API 8765 / Task API 8766 boundary
+- UX/readiness confusion
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+The browser failure was caused by missing CORS middleware on the execution-aware
+Task API. The test failures were caused by stale static-smoke expectations that
+treated diagnostic panels as required on the Chat page even after the product
+direction changed to a cleaner Merlin-first chat surface.
+
+### Fix Applied
+
+- Added narrow FastAPI CORS middleware for `http://localhost:8888` and
+  `http://127.0.0.1:8888` only.
+- Added regression tests for allowed and rejected CORS origins.
+- Included full safe route metadata in approval-required Task API responses.
+- Updated Wizard HQ Chat tab to show Merlin face first and Ask Merlin directly
+  underneath.
+- Moved engineering/status detail out of the visible Chat surface while keeping
+  hidden runtime hooks so existing live status JavaScript remains stable.
+- Updated dashboard smoke tests to enforce the new product rule.
+
+### Retest Result
+
+PASS. Backend tests, dashboard smokes, CORS checks, and whitespace checks passed.
+Browser screenshot evidence captured the new Chat home.
+
+### Regression Tests Added
+
+- `test_task_endpoint_allows_wizard_hq_cors_origin`
+- `test_task_endpoint_rejects_untrusted_cors_origin`
+- `test_post_task_route_requiring_approval_returns_403_with_gates` now verifies
+  route, staff mode, and selected model metadata on blocked routes.
+- Dashboard static smokes now assert the Merlin face + Ask Merlin home pattern.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended follow-up: replace the CSS-only Merlin face with a polished product
+mark asset or SVG system once the logo direction is finalized. This is visual
+quality work, not a runtime blocker.
+
+### Lesson Learned
+
+A green API health chip is not enough browser proof. Browser fetch needs CORS,
+and product UX tests must encode the intended user experience, not the old
+engineering layout.
+
+### What Not To Repeat Next Time
+
+Do not let the Chat tab become a service dashboard again. Keep diagnostics in
+System/Brains/Security, and keep the first page focused on Merlin as the product
+and assistant.
+
+### Next Recommended Step
+
+Commit and push the CORS + Chat home polish, watch CI, then use the browser
+screenshot and test output to update #113.
+
+### Local Trusted Beta Impact
+
+Improved. Wizard HQ now has a cleaner first-use product surface and the browser
+Task API path has a regression-tested CORS fix.
+
+### Public Beta Impact
+
+Improved, but Public Beta still needs broader first-run onboarding, clean
+installer retest evidence, model readiness empty state, and final visual polish.

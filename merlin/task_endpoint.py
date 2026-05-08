@@ -14,6 +14,7 @@ from typing import Any
 
 import httpx
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from merlin.memory_manager import MemoryManager
@@ -30,6 +31,12 @@ LITELLM_TIMEOUT_SECONDS = 90
 STACK_DIR = Path(__file__).resolve().parents[1]
 
 app = FastAPI(title="Merlin Task Endpoint")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8888", "http://127.0.0.1:8888"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"],
+)
 TASK_TRACE_BUFFER: deque[dict[str, Any]] = deque(maxlen=50)
 
 
@@ -201,6 +208,7 @@ def task(request: TaskRequest) -> TaskResponse:
             detail={
                 "message": "Approval required before Merlin can continue this route.",
                 "route_id": route.route_id,
+                "route": route.model_dump(),
                 "approval_gates": route.approval_gates,
             },
         )

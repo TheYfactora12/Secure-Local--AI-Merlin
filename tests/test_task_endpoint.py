@@ -81,6 +81,9 @@ def test_post_task_route_requiring_approval_returns_403_with_gates(monkeypatch) 
     assert response.status_code == 403
     detail = response.json()["detail"]
     assert detail["route_id"] == "code"
+    assert detail["route"]["route_id"] == "code"
+    assert detail["route"]["staff_mode"] == "software_engineer"
+    assert detail["route"]["selected_model_alias"]
     assert detail["approval_gates"] == [
         "service_start",
         "file_read",

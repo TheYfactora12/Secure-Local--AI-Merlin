@@ -10,9 +10,6 @@ fail() {
   exit 1
 }
 
-grep -q "Startup Readiness" "$DASHBOARD_FILE" \
-  || fail "dashboard missing startup readiness panel"
-
 for stage in \
   "Preparing Merlin Core" \
   "Checking local hardware" \
@@ -25,6 +22,9 @@ for stage in \
   "Ready / Degraded"; do
   grep -q "$stage" "$DASHBOARD_FILE" || fail "dashboard missing readiness stage: $stage"
 done
+
+grep -q 'class="diagnostic-cache"' "$DASHBOARD_FILE" \
+  || fail "dashboard missing hidden readiness/status runtime hooks"
 
 grep -q "renderReadiness" "$DASHBOARD_FILE" \
   || fail "dashboard does not compute readiness state"

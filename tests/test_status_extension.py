@@ -176,6 +176,34 @@ def test_status_providers_never_exposes_known_cloud_key_values(monkeypatch) -> N
         assert value not in response_text
 
 
+def test_task_endpoint_allows_wizard_hq_cors_origin() -> None:
+    response = client.options(
+        "/task",
+        headers={
+            "Origin": "http://localhost:8888",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "Content-Type",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:8888"
+    assert "POST" in response.headers["access-control-allow-methods"]
+
+
+def test_task_endpoint_rejects_untrusted_cors_origin() -> None:
+    response = client.options(
+        "/task",
+        headers={
+            "Origin": "http://untrusted.example",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "Content-Type",
+        },
+    )
+
+    assert "access-control-allow-origin" not in response.headers
+
+
 def test_task_endpoint_main_uses_8766_not_legacy_8765() -> None:
     source = task_endpoint.__loader__.get_source(task_endpoint.__name__)
     assert 'port=8766' in source

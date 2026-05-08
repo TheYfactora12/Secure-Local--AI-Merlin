@@ -12,6 +12,12 @@ fail() {
 
 grep -q "Merlin Chat" "$DASHBOARD_FILE" \
   || fail "dashboard missing native Merlin Chat heading"
+grep -q "Merlin AI core face" "$DASHBOARD_FILE" \
+  || fail "dashboard missing centered Merlin AI core face"
+grep -q "merlin-face" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Merlin face visual"
+grep -q "Talk to Merlin first" "$DASHBOARD_FILE" \
+  || fail "dashboard missing clean Merlin-first chat copy"
 grep -q 'id="merlin-chat-input"' "$DASHBOARD_FILE" \
   || fail "dashboard missing Merlin Chat input"
 grep -q 'id="merlin-chat-submit"' "$DASHBOARD_FILE" \
