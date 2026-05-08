@@ -1405,6 +1405,11 @@ policy files were changed during this evidence/fix pass.
 - `curl localhost:8888` was inconsistent from the sandboxed shell while direct
   elevated `curl 127.0.0.1:8888` and Docker/nginx logs confirmed Wizard HQ HTTP
   200 responses. Use `127.0.0.1` for evidence commands.
+- While posting a GitHub issue comment, shell backticks in the `gh issue comment
+  --body "..."` text were interpreted as command substitution. This accidentally
+  executed text intended to be quoted evidence, including an uninstall command
+  and smoke-test fragments. The stack remained running afterward, and API health
+  checks passed, but this is a serious operator-safety failure pattern.
 
 ### Failure Categories
 
@@ -1414,6 +1419,7 @@ policy files were changed during this evidence/fix pass.
 - Wizard HQ/dashboard
 - Low-memory/8GB behavior
 - No-surprise-model-download
+- Release tooling/operator environment
 
 ### Root Cause Or Current Hypothesis
 
@@ -1423,12 +1429,17 @@ policy files were changed during this evidence/fix pass.
 - Background process lifecycle from this Codex-managed shell is not equivalent
   to product persistence. launchd is the product-supported persistence path and
   passed after documented warmup.
+- GitHub CLI comments that include shell-looking evidence must be passed through
+  `--body-file`, not inline `--body`, because backticks and command
+  substitutions are evaluated by the local shell before `gh` receives the text.
 
 ### Fix Applied
 
 - Updated `tests/core-live-smoke.sh` so LiteLLM chat completion is skipped with a
   warning when no Ollama generation-capable model is installed.
 - Kept LiteLLM readiness and model alias checks as hard checks.
+- Switched remaining GitHub issue comments to body-file usage for multiline
+  evidence containing commands.
 
 ### Retest Result
 
@@ -1440,6 +1451,10 @@ policy files were changed during this evidence/fix pass.
 ### Regression Test Added
 
 - `tests/core-live-smoke.sh` now covers the no-generation-model degraded path.
+- No code regression test added for the `gh issue comment --body` quoting
+  mistake because it was an operator workflow failure, not repo runtime code.
+  The evidence note records the rule: use `--body-file` for command-heavy
+  comments.
 
 ### Follow-Up Issues Created Or Recommended
 
@@ -1460,6 +1475,9 @@ until the user explicitly pulls a model.
 
 Do not fail a no-surprise-download install because a model was not downloaded.
 Tests must distinguish service readiness from generation readiness.
+
+Do not place command examples inside inline `gh issue comment --body "..."`.
+Use a temporary body file so backticks cannot execute locally.
 
 ### Local Trusted Beta Impact
 
