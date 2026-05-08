@@ -2433,6 +2433,8 @@ None.
 | `bash scripts/status.sh` | PASS; Dashboard, Open WebUI, LiteLLM, Qdrant, and Ollama running; `qwen2.5:7b` listed in Ollama models. |
 | `gh issue create ...` for model-readiness UX follow-up | FAIL first attempt; shell interpreted Markdown backticks in the body before `gh` ran, and sandboxed network access blocked GitHub. |
 | `gh issue create ...` retried with safer body quoting and escalated network permission | PASS; created #115. |
+| `open -a "Google Chrome" http://localhost:8888` | FAIL; Chrome application name not found on this machine. |
+| `open -a Safari http://localhost:8888` | PASS; Wizard HQ opened in Safari for browser-level manual validation. |
 
 ### Tests Skipped And Why
 
@@ -2452,12 +2454,17 @@ backticks inside a double-quoted shell argument. `zsh` treated those as command
 substitution and attempted to execute model names and endpoint text. The command
 was retried with safer quoting and no Markdown backticks in the shell argument.
 
+The first browser-open attempt failed because Google Chrome is not installed or
+not registered under that application name on this machine. Safari opened Wizard
+HQ successfully.
+
 ### Failure Category
 
 - LiteLLM/model router runtime readiness
 - Wizard HQ/dashboard live validation
 - No-surprise-model-download release safety
 - Test design gap
+- Wizard HQ/dashboard browser validation
 
 ### Root Cause Or Current Hypothesis
 
@@ -2511,6 +2518,9 @@ Ollama model inventory against Merlin/LiteLLM aliases.
 Do not pass Markdown backticks inside double-quoted `gh --body` shell arguments.
 Use safe quoting, a body file, or remove shell-sensitive Markdown when creating
 issues from the command line.
+
+Do not assume Chrome is installed for browser evidence on this machine. Use the
+available default/Safari path unless a specific browser is verified first.
 
 ### Local Trusted Beta Impact
 
