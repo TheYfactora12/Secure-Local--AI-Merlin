@@ -58,6 +58,10 @@ Current milestone position:
 - #80 adds the explicit fail-closed `webhook_execution` policy gate under v1.7.
   Webhook execution remains disabled by default and still requires the existing
   network, service, API-key, and action-specific gates when those risks apply.
+- #85 is closed with `docs/architecture/MERLIN_STAFF_SKILL_EVALUATION.md`.
+  The decision is to keep the six-mode baseline and implement any future
+  Compliance Officer capability first as a Security Reviewer workflow/alias,
+  not a seventh autonomous staff mode.
 - #8 optional Langfuse lives only in `docker-compose.observability.yml` and
   starts only through `wizard start observability`. It remains off by default,
   localhost-only, separate from Open WebUI port `3000`, and guarded against
@@ -79,8 +83,9 @@ Current milestone position:
 - n8n ModelRouter starter workflows must not contain executable cloud provider
   HTTP nodes. Cloud branches are approval-required metadata only unless a
   future, explicit, policy-gated implementation is approved.
-- #85 tracks the future question of whether Merlin should add staff skills
-  beyond the current six modes. It belongs to v2.0 and must not expand v1.3.
+- #85 closed the staff-skill expansion question for now: keep six modes, add
+  future skills first as workflows/aliases, and consider Compliance Officer as
+  the first Security Reviewer workflow candidate.
 - v1.5 #7 intentionally used offline deterministic benchmark fixtures first.
   Do not add live Qdrant/Ollama benchmark profiles without an explicit
   integration-test gate such as `MERLIN_INTEGRATION_TESTS=1`.
@@ -211,7 +216,7 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Move to #85 under `v2.0 — Merlin Staff Core`: evaluate additional Merlin staff skills without agent sprawl.
+1. Move to #30/#39 under `v2.1 — Dashboard Command Center`: dashboard command center and security approvals panel.
 2. Keep signing/notarization deferred to #64; the v1.0 low/core installer path is green on this 8GB Mac.
 3. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
 

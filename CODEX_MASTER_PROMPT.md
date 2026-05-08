@@ -35,8 +35,8 @@ work.
 
 Current verified queue:
 
-1. #85 evaluate additional Merlin staff skills without agent sprawl under v2.0.
-2. #30/#39 dashboard command center and security center under v2.1.
+1. #30/#39 dashboard command center and security center under v2.1.
+2. #33/#34 Magic Mode plan-only UI and audit viewer under v2.2.
 
 ## 2. REPO SNAPSHOT — WHAT EXISTS TODAY (2026-05-08)
 

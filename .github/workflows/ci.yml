@@ -126,6 +126,7 @@ jobs:
           bash tests/coding-profile-smoke.sh
           bash tests/openwebui-local-first-smoke.sh
           bash tests/merlin-persona-smoke.sh
+          bash tests/merlin-staff-skills-smoke.sh
           bash tests/master-prompt-smoke.sh
           bash tests/merlin-policy-smoke.sh
           bash tests/merlin-routing-smoke.sh

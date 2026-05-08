@@ -48,6 +48,7 @@
 | [`MERLIN_BRAIN_SPEC.md`](./architecture/MERLIN_BRAIN_SPEC.md) | Merlin brain — memory, routing, policy, and cognition spec |
 | [`MERLIN_CONFIG_SPEC.md`](./architecture/MERLIN_CONFIG_SPEC.md) | Config file schema and canonical config tree |
 | [`MERLIN_STAFF_CORE.md`](./architecture/MERLIN_STAFF_CORE.md) | Staff mode system — 6 roles, routing profiles, swarm integration |
+| [`MERLIN_STAFF_SKILL_EVALUATION.md`](./architecture/MERLIN_STAFF_SKILL_EVALUATION.md) | Evaluation of possible future staff skills without agent sprawl |
 | [`MERLIN_ARCHITECTURE_SPEC.md`](./architecture/MERLIN_ARCHITECTURE_SPEC.md) | Merlin architecture component spec |
 | [`SWARM.md`](./architecture/SWARM.md) | Swarm coordinator design and agent coordination |
 | [`MAC_HARDWARE_TIERS.md`](./architecture/MAC_HARDWARE_TIERS.md) | Hardware tier definitions and model limits per RAM tier |

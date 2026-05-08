@@ -75,8 +75,9 @@ left behind.
   are forbidden in the starter workflow; cloud routes return
   `approval_required` metadata for `cloud_model_call`, `external_network`, and
   `api_key_use`.
-- #85 captures the future v2.0 design question of whether to add more Merlin
-  staff skills. It is intentionally not part of v1.3.
+- #85 closes the future staff-skill design question for now: keep six modes,
+  add skills first as workflows/aliases, and consider Compliance Officer as the
+  first Security Reviewer workflow candidate.
 - #7 is closed under `v1.5`; it adds an offline-safe benchmark harness first.
   Live Qdrant/Ollama benchmark profiles remain future integration work behind
   explicit test flags.

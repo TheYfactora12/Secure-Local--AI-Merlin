@@ -88,11 +88,10 @@ flowchart LR
 
 ## Active Execution Queue
 
-1. #85: Evaluate additional Merlin staff skills without agent sprawl in v2.0.
-2. #30 and #39: Dashboard command center and security center in v2.1.
-3. #33 and #34: Magic Mode plan-only UI and audit viewer in v2.2.
-4. #37 and #64: Public release hardening and Developer ID/notarization in v3.0.
-5. #92: Native Automation Runtime in v3.x.
+1. #30 and #39: Dashboard command center and security center in v2.1.
+2. #33 and #34: Magic Mode plan-only UI and audit viewer in v2.2.
+3. #37 and #64: Public release hardening and Developer ID/notarization in v3.0.
+4. #92: Native Automation Runtime in v3.x.
 
 Patent/IP issues #81 through #84 are cross-cutting governance work. They should
 not add novel claim language to public docs unless the inventor explicitly
