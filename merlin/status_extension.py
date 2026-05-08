@@ -17,6 +17,7 @@ from merlin.task_endpoint import TASK_TRACE_BUFFER, app
 
 
 QDRANT_URL = "http://localhost:6333"
+OLLAMA_TAGS_URL = "http://localhost:11434/api/tags"
 router = APIRouter(prefix="/status")
 
 
@@ -96,6 +97,24 @@ def _qdrant_collection(name: str) -> dict[str, Any]:
         return json.loads(response.read().decode("utf-8"))
 
 
+def _ollama_tags() -> set[str]:
+    req = request.Request(OLLAMA_TAGS_URL, method="GET")
+    with request.urlopen(req, timeout=2) as response:
+        data = json.loads(response.read().decode("utf-8"))
+    models = data.get("models", [])
+    installed: set[str] = set()
+    for model in models if isinstance(models, list) else []:
+        if not isinstance(model, dict):
+            continue
+        name = model.get("name")
+        if not isinstance(name, str) or not name:
+            continue
+        installed.add(name)
+        if ":" in name:
+            installed.add(name.split(":", 1)[0])
+    return installed
+
+
 @router.get("/memory")
 def status_memory() -> dict[str, Any]:
     manifest = _collection_manifest()
@@ -131,6 +150,82 @@ def status_memory() -> dict[str, Any]:
             collection["status"] = "degraded"
 
     return {"collections": collections, "total_vectors": total_vectors, "degraded": degraded}
+
+
+@router.get("/models")
+def status_models() -> dict[str, Any]:
+    config = _load_config_quietly()
+    default_chat_alias = config.models.defaults.default_chat_model
+    default_embedding_alias = config.models.defaults.default_embedding_model
+
+    try:
+        installed_models = _ollama_tags()
+        degraded = False
+    except (OSError, TimeoutError, error.URLError, json.JSONDecodeError):
+        installed_models = set()
+        degraded = True
+
+    local_models = []
+    chat_models = []
+    embedding_models = []
+    for alias, model in config.models.models.items():
+        if model.provider != "ollama" or not model.local:
+            continue
+        installed = model.model in installed_models
+        record = {
+            "alias": alias,
+            "model": model.model,
+            "model_class": model.model_class,
+            "installed": installed,
+            "enabled_by_default": model.enabled_by_default,
+            "default_chat": alias == default_chat_alias,
+            "default_embedding": alias == default_embedding_alias,
+            "install_command": f"bash scripts/add-model.sh {model.model}",
+        }
+        local_models.append(record)
+        if model.model_class == "embedding":
+            embedding_models.append(record)
+        else:
+            chat_models.append(record)
+
+    chat_ready = any(model["installed"] for model in chat_models)
+    default_chat_ready = any(model["default_chat"] and model["installed"] for model in chat_models)
+    embedding_ready = any(model["installed"] for model in embedding_models)
+    embedding_only_installed = embedding_ready and not chat_ready
+
+    if degraded:
+        state = "degraded"
+        message = "Ollama model list is unavailable. Merlin cannot verify local chat model readiness yet."
+    elif default_chat_ready:
+        state = "ready"
+        message = "Default local chat model is installed. Merlin Chat can use the local brain connector."
+    elif chat_ready:
+        state = "partial"
+        message = "A local chat model is installed, but the configured default chat model is missing."
+    elif embedding_only_installed:
+        state = "missing_chat_model"
+        message = "Only the embedding memory model is installed. nomic-embed-text supports memory, not chat."
+    else:
+        state = "missing_chat_model"
+        message = "No local chat model is installed. Merlin needs an explicit user-installed chat model."
+
+    return {
+        "state": state,
+        "message": message,
+        "degraded": degraded,
+        "chat_ready": chat_ready,
+        "default_chat_ready": default_chat_ready,
+        "embedding_ready": embedding_ready,
+        "embedding_only_installed": embedding_only_installed,
+        "default_chat_alias": default_chat_alias,
+        "default_embedding_alias": default_embedding_alias,
+        "installed_models": sorted(installed_models),
+        "chat_models": chat_models,
+        "embedding_models": embedding_models,
+        "local_models": local_models,
+        "safe_install_guidance": f"bash scripts/add-model.sh {config.models.models[default_chat_alias].model}",
+        "downloads": "manual_only",
+    }
 
 
 @router.get("/providers")

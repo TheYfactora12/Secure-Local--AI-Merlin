@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import httpx
 
 from fastapi.testclient import TestClient
@@ -18,6 +20,20 @@ class _FakeLiteLLMResponse:
 
     def json(self) -> dict:
         return {"choices": [{"message": {"content": "Merlin response"}}]}
+
+
+class _FakeUrlOpenResponse:
+    def __init__(self, payload: dict):
+        self.payload = payload
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback) -> None:
+        return None
+
+    def read(self) -> bytes:
+        return json.dumps(self.payload).encode("utf-8")
 
 
 def setup_function() -> None:
@@ -122,6 +138,53 @@ def test_status_memory_returns_correct_collection_names_from_memory_yaml(monkeyp
     config = load_all_configs()
     expected = set(config.memory.canonical) | set(config.memory.legacy)
     assert names == expected
+
+
+def test_status_models_reports_embedding_only_as_missing_chat_model(monkeypatch) -> None:
+    def fake_urlopen(*args, **kwargs):
+        return _FakeUrlOpenResponse({"models": [{"name": "nomic-embed-text:latest"}]})
+
+    monkeypatch.setattr("merlin.status_extension.request.urlopen", fake_urlopen)
+    response = client.get("/status/models")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["state"] == "missing_chat_model"
+    assert body["chat_ready"] is False
+    assert body["embedding_ready"] is True
+    assert body["embedding_only_installed"] is True
+    assert "memory" in body["message"]
+    assert body["safe_install_guidance"] == "bash scripts/add-model.sh qwen2.5:7b"
+    assert body["downloads"] == "manual_only"
+
+
+def test_status_models_reports_default_chat_model_ready(monkeypatch) -> None:
+    def fake_urlopen(*args, **kwargs):
+        return _FakeUrlOpenResponse({"models": [{"name": "qwen2.5:7b"}, {"name": "nomic-embed-text:latest"}]})
+
+    monkeypatch.setattr("merlin.status_extension.request.urlopen", fake_urlopen)
+    response = client.get("/status/models")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["state"] == "ready"
+    assert body["chat_ready"] is True
+    assert body["default_chat_ready"] is True
+    assert any(model["alias"] == "qwen7b" and model["installed"] for model in body["chat_models"])
+
+
+def test_status_models_degrades_without_ollama_tags(monkeypatch) -> None:
+    def raise_unreachable(*args, **kwargs):
+        raise OSError("ollama unavailable")
+
+    monkeypatch.setattr("merlin.status_extension.request.urlopen", raise_unreachable)
+    response = client.get("/status/models")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["state"] == "degraded"
+    assert body["degraded"] is True
+    assert body["chat_ready"] is False
 
 
 def test_status_providers_returns_local_first_registry() -> None:

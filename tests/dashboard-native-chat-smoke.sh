@@ -10,8 +10,8 @@ fail() {
   exit 1
 }
 
-grep -q "Merlin Chat" "$DASHBOARD_FILE" \
-  || fail "dashboard missing native Merlin Chat heading"
+grep -q "Ask Merlin" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Ask Merlin heading"
 grep -q "Merlin AI core face" "$DASHBOARD_FILE" \
   || fail "dashboard missing centered Merlin AI core face"
 grep -q "merlin-face" "$DASHBOARD_FILE" \

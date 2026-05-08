@@ -2713,3 +2713,144 @@ Retest:
 Lesson: when a product UX decision moves engineering detail out of the primary
 page, every static smoke that encodes the old layout must be audited, not only
 the first failing one.
+
+---
+
+## #115 Wizard HQ Model Readiness Empty State
+
+### Date / Time
+
+2026-05-08T14:01:10Z
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`deaa0b27c3457dd87199465b7b6a24dfc7f0a409`
+
+### Target Issue(s)
+
+- #115 Wizard HQ model readiness empty state and safe install guidance
+- Supports #95 product push audit evidence
+
+### Scope
+
+Add an honest, read-only model readiness path so Wizard HQ can explain the
+difference between an installed embedding model and an installed chat-capable
+local model. Preserve no-surprise-download and local-first defaults.
+
+### Files Changed
+
+- `.github/workflows/ci.yml`
+- `dashboard/index.html`
+- `merlin/status_extension.py`
+- `tests/dashboard-model-readiness-smoke.sh`
+- `tests/dashboard-native-chat-smoke.sh`
+- `tests/test_status_extension.py`
+
+### Protected Files Touched
+
+- `.github/workflows/ci.yml`: CI gate only; added one focused static smoke.
+- `merlin/status_extension.py`: read-only status endpoint only; no execution,
+  memory write, cloud call, or model download behavior added.
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `.venv-test/bin/python -m pytest tests/test_status_extension.py -v --tb=short` | PASS; 20 passed. |
+| `bash tests/dashboard-model-readiness-smoke.sh` | PASS after regex cleanup. |
+| `bash tests/dashboard-native-chat-smoke.sh` | PASS. |
+| `bash tests/dashboard-tabs-smoke.sh` | PASS. |
+| `bash tests/dashboard-readiness-smoke.sh` | PASS. |
+| `bash tests/dashboard-first-run-smoke.sh` | PASS. |
+| `bash tests/dashboard-merlin-status-smoke.sh` | PASS. |
+| `bash tests/dashboard-security-center-smoke.sh` | PASS. |
+| `bash tests/ci-actions-node-runtime-smoke.sh` | PASS. |
+| `git diff --check` | PASS. |
+
+### Test Output Summary
+
+The new `/status/models` endpoint reports local Ollama model readiness without
+pulling models. Static dashboard smokes verify that Wizard HQ explains
+embedding-only state, shows the safe manual install command, and does not expose
+browser model pull/download controls.
+
+### Tests Skipped And Why
+
+Full installer retest was skipped because this slice does not change installer,
+package, uninstall, launchd, startup order, or model-pull defaults. A clean
+installer retest is still required before Local Trusted Beta signoff.
+
+Live browser re-screenshot was skipped for this sub-slice because the change is
+a status/readiness copy and endpoint slice covered by static dashboard smokes
+and backend unit tests. Existing browser screenshot evidence for the Chat home
+remains valid.
+
+### Failures Found
+
+1. The new static smoke initially failed because it looked for literal
+   `/status/models` inside `status_extension.py`, but the endpoint is correctly
+   registered under the `/status` router as `@router.get("/models")`.
+2. The first regex version printed a BSD grep warning from function-call
+   parentheses in the unsafe-control check.
+
+### Failure Category
+
+- Test design gap
+- CI/static smoke gap
+
+### Root Cause Or Current Hypothesis
+
+The smoke test encoded implementation text too literally instead of matching the
+FastAPI router pattern. The regex warning came from a shell portability issue in
+BSD grep extended regular expressions.
+
+### Fix Applied
+
+- Changed the endpoint check to detect `@router.get("/models")`.
+- Simplified the unsafe-control regex to avoid shell-specific parenthesis
+  handling.
+- Reran the smoke cleanly.
+
+### Retest Result
+
+PASS. Backend tests and dashboard smokes pass cleanly with no grep warning.
+
+### Regression Tests Added
+
+- `test_status_models_reports_embedding_only_as_missing_chat_model`
+- `test_status_models_reports_default_chat_model_ready`
+- `test_status_models_degrades_without_ollama_tags`
+- `tests/dashboard-model-readiness-smoke.sh`
+
+### Follow-Up Issues Created Or Recommended
+
+No new issue required. #115 covers this model-readiness slice.
+
+### Lesson Learned
+
+Model readiness needs to be a first-class UX state, not inferred from generic
+service health. Ollama can be up while Merlin still lacks a chat-capable model.
+
+### What Not To Repeat Next Time
+
+Do not equate `Ollama ready` with `Merlin Chat ready`. Treat embedding-only
+installations as a clear missing-chat-model state.
+
+### Next Recommended Step
+
+Commit and push #115, watch CI, then close #115 if GitHub Actions passes.
+
+### Local Trusted Beta Impact
+
+Improved. A trusted local tester can now understand why Merlin Chat cannot
+answer when only `nomic-embed-text` is installed, without dashboard downloads or
+cloud fallback.
+
+### Public Beta Impact
+
+Improved but not sufficient for Public Beta. Public Beta still needs full clean
+installer retest evidence, onboarding polish, and broader browser/manual UAT.
