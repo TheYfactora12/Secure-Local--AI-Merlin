@@ -1189,3 +1189,141 @@ reinstall validation.
 
 Improved. Public Beta still needs live uninstall/reinstall evidence after the
 full-purge path lands.
+
+---
+
+## Issue #101 Wizard HQ Tab Shell Implementation — 2026-05-08 UTC
+
+### Scope
+
+Implemented the first read-only Wizard HQ product-shell slice so the dashboard
+feels like Merlin AI first, with Qwen/Ollama, Open WebUI, LiteLLM, local models,
+and future cloud APIs presented as replaceable brains/connectors under Merlin.
+
+### Starting Commit SHA
+
+`765a388976954057c3bdb0bfa31812164fc72c99` —
+`feat(uninstall): add full Merlin purge path`
+
+### Target Issues
+
+- #101 Wizard HQ Merlin-native front door and brains tab UX
+- #37 Public release onboarding and packaging hardening
+- #95 Product push audit / release-readiness evidence
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-tabs-smoke.sh`
+- `.github/workflows/ci.yml`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `.github/workflows/ci.yml` — touched only to add the new #101 dashboard tab
+  smoke to the existing static smoke gate. Test semantics stayed the same.
+
+### Commands Run
+
+| Command | Result |
+|---|---|
+| `git status --short --branch` | PASS; working tree had only dashboard slice changes before implementation. |
+| `gh issue view 101 --json number,title,state,body,labels,milestone` | PASS; confirmed #101 scope and acceptance criteria. |
+| `sed -n '1,260p' dashboard/index.html` | PASS |
+| `sed -n '261,620p' dashboard/index.html` | PASS |
+| `sed -n '621,1040p' dashboard/index.html` | PASS |
+| `sed -n '1,220p' tests/dashboard-readiness-smoke.sh` | PASS |
+| `sed -n '1,220p' tests/dashboard-merlin-status-smoke.sh` | PASS |
+| `sed -n '1,220p' tests/dashboard-security-center-smoke.sh` | PASS |
+| `sed -n '1,220p' tests/dashboard-first-run-smoke.sh` | PASS |
+| `bash -n tests/dashboard-tabs-smoke.sh` | PASS |
+| `bash tests/dashboard-tabs-smoke.sh` | PASS |
+| `bash tests/dashboard-readiness-smoke.sh` | PASS |
+| `bash tests/dashboard-merlin-status-smoke.sh` | PASS |
+| `bash tests/dashboard-first-run-smoke.sh` | PASS |
+| `bash tests/dashboard-security-center-smoke.sh` | PASS |
+| `bash tests/beta-readiness-evidence-smoke.sh` | PASS |
+| `bash tests/release-workflow-smoke.sh` | PASS |
+| `bash tests/master-prompt-smoke.sh` | PASS |
+| `git diff --check` | PASS |
+
+### Tests Skipped And Why
+
+- Live browser/dashboard smoke was skipped because the local product stack is
+  intentionally uninstalled/reset for the later clean install validation run.
+- No Docker/Ollama/Qdrant live checks were required for this static UI shell
+  slice.
+
+### Failures Found
+
+None in local static validation.
+
+### Failure Category
+
+No failure.
+
+### Root Cause Or Current Hypothesis
+
+Not applicable.
+
+### Fix Applied
+
+- Added a premium, Merlin-first tab shell:
+  - Chat
+  - Brains
+  - Memory
+  - Agents
+  - Security
+  - System
+  - Settings
+- Added safe read-only status surfaces for brains/connectors, memory, agents,
+  sovereignty/security, system health, and conservative settings.
+- Added `selectTab()` client-side tab switching.
+- Mirrored existing read-only service probes into new tab status fields.
+- Added `tests/dashboard-tabs-smoke.sh`.
+- Wired the new smoke into CI.
+
+### Retest Result
+
+All local static dashboard/release checks listed above passed.
+
+### Regression Test Added
+
+- `tests/dashboard-tabs-smoke.sh` verifies:
+  - all seven tab labels and tab pages exist,
+  - Merlin is presented as the product owner,
+  - models/providers are presented as connectors,
+  - Open WebUI is framed as a bridge, not product identity,
+  - cloud is disabled by default,
+  - no surprise-download language is preserved,
+  - low-memory/8GB warning language exists,
+  - approval-gated learning language exists,
+  - no POST/execution calls, unsafe controls, secret fields, or secret-like
+    values are introduced.
+
+### Follow-Up Issues Created Or Recommended
+
+- No new issue required. #101 remains open until live clean-install/browser
+  validation confirms the tab shell renders correctly in the installed product.
+
+### Lesson Learned
+
+The right near-term path is not to replace Open WebUI internally yet. The safer
+product step is to make Wizard HQ the Merlin front door and present Open WebUI
+as the current local chat bridge.
+
+### What Not To Repeat Next Time
+
+Do not add Settings controls that collect API keys, download models, enable
+cloud routing, write memory, or execute approvals until each has a dedicated
+policy-gated backend issue and tests.
+
+### Local Trusted Beta Impact
+
+Improved. Wizard HQ now has the first product shell needed for a non-technical
+trusted tester to understand Merlin as the app.
+
+### Public Beta Impact
+
+Improved but incomplete. Public Beta still requires live install/browser
+evidence, onboarding polish, known limitations, and release hardening.
