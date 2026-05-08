@@ -1025,7 +1025,7 @@ log_to_file "[DONE] install.sh completed successfully"
 
 echo ""
 echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}${BOLD}║     WIZARD AI IS READY  ✓  v1.6                         ║${NC}"
+echo -e "${GREEN}${BOLD}║     MERLIN AI CORE INSTALLED  ✓  v1.6                   ║${NC}"
 echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  ${BOLD}Install Profile:${NC} ${INSTALL_PROFILE} (${INSTALL_CAPABILITIES:-core only})"

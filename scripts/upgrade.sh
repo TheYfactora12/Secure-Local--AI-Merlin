@@ -251,7 +251,12 @@ main() {
   echo "  ║   ✅ Upgrade complete!                   ║"
   echo "  ╠══════════════════════════════════════════╣"
   echo "  ║  Open WebUI  → http://localhost:3000     ║"
-  echo "  ║  n8n         → http://localhost:5678     ║"
+  if [[ " ${CAPABILITIES} " == *" automation "* ]]; then
+    echo "  ║  n8n         → http://localhost:5678     ║"
+  fi
+  if [[ " ${CAPABILITIES} " == *" search "* ]]; then
+    echo "  ║  Perplexica  → http://localhost:3002     ║"
+  fi
   echo "  ║  Qdrant      → http://localhost:6333     ║"
   echo "  ╚══════════════════════════════════════════╝"
   echo -e "${RESET}"

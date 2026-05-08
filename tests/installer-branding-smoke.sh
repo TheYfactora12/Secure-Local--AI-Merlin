@@ -19,6 +19,11 @@ grep -q 'Private Intelligence. Locally Owned.' "${STACK_DIR}/install.sh" \
   || fail "terminal installer header missing Merlin tagline"
 grep -q 'Sovereign local-first AI command center' "${STACK_DIR}/install.sh" \
   || fail "terminal installer header missing local-first positioning"
+grep -q 'MERLIN AI CORE INSTALLED' "${STACK_DIR}/install.sh" \
+  || fail "terminal installer final banner does not use Merlin core installed language"
+if grep -q 'WIZARD AI IS READY' "${STACK_DIR}/install.sh"; then
+  fail "installer still contains stale Wizard AI ready banner"
+fi
 
 grep -q 'Merlin AI' "${STACK_DIR}/pkg/resources/welcome.html" \
   || fail "package welcome missing Merlin AI brand"

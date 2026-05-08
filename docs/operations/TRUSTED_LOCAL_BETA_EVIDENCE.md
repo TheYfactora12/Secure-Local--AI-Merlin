@@ -239,8 +239,8 @@ Magic Mode remains plan-only for beta readiness.
 ```bash
 bash tests/merlin-magic-plan-smoke.sh
 bash tests/merlin-audit-view-smoke.sh
-bash cli/wizard merlin magic-plan "prepare a local-first beta readiness checklist"
-bash cli/wizard merlin audit recent
+bash cli/wizard merlin magic plan "prepare a local-first beta readiness checklist"
+bash cli/wizard merlin audit list
 ```
 
 Expected evidence:

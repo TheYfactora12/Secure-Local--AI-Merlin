@@ -72,5 +72,8 @@ grep -q "pull --quiet dashboard qdrant litellm open-webui" "$LOG" \
   || fail "upgrade.sh dry-run did not target core pull services"
 grep -q "up -d --remove-orphans dashboard qdrant litellm open-webui" "$LOG" \
   || fail "upgrade.sh dry-run did not target core up services"
+if grep -q "n8n         → http://localhost:5678" "$LOG"; then
+  fail "upgrade.sh advertised n8n for core profile"
+fi
 
 echo "PASS: update and upgrade stay profile-aware"
