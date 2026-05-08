@@ -19,6 +19,7 @@ usage() {
 Usage:
   scripts/merlin-task-api.sh start [options]
   scripts/merlin-task-api.sh stop [options]
+  scripts/merlin-task-api.sh restart [options]
   scripts/merlin-task-api.sh status [options]
   scripts/merlin-task-api.sh run [options]
 
@@ -43,7 +44,7 @@ fail() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    start|stop|status|run)
+    start|stop|restart|status|run)
       COMMAND="$1"
       shift
       break
@@ -53,7 +54,7 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     *)
-      fail "expected command: start, stop, status, or run"
+      fail "expected command: start, stop, restart, status, or run"
       ;;
   esac
 done
@@ -245,12 +246,20 @@ status_api() {
   echo "log_file: $LOG_FILE"
 }
 
+restart_api() {
+  stop_api >/dev/null
+  start_api
+}
+
 case "$COMMAND" in
   start)
     start_api
     ;;
   stop)
     stop_api
+    ;;
+  restart)
+    restart_api
     ;;
   status)
     status_api

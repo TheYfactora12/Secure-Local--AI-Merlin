@@ -20,6 +20,8 @@ fail() {
 bash -n "$TASK_MANAGER" || fail "task API manager syntax failed"
 bash "$TASK_MANAGER" --help | grep -q 'scripts/merlin-task-api.sh start' \
   || fail "task API manager help missing start command"
+bash "$TASK_MANAGER" --help | grep -q 'scripts/merlin-task-api.sh restart' \
+  || fail "task API manager help missing restart command"
 
 grep -q 'MERLIN_TASK_API_PORT:-8766' "$TASK_MANAGER" \
   || fail "task API manager must default to port 8766"
@@ -29,6 +31,14 @@ grep -q 'uvicorn merlin.task_endpoint:app' "$TASK_MANAGER" \
   || fail "task API manager must run merlin.task_endpoint through uvicorn"
 grep -q 'PYTHONPATH="$STACK_DIR"' "$TASK_MANAGER" \
   || fail "task API manager must set repo PYTHONPATH"
+grep -q 'start|stop|restart|status|run' "$TASK_MANAGER" \
+  || fail "task API manager parser must accept restart command"
+grep -q 'restart_api()' "$TASK_MANAGER" \
+  || fail "task API manager missing restart function"
+grep -A5 'restart_api()' "$TASK_MANAGER" | grep -q 'stop_api' \
+  || fail "task API restart must stop before starting"
+grep -A5 'restart_api()' "$TASK_MANAGER" | grep -q 'start_api' \
+  || fail "task API restart must start after stopping"
 
 grep -q 'scripts/merlin-task-api.sh run' "$TASK_PLIST" \
   || fail "launchd plist must run task API manager in foreground"

@@ -2881,3 +2881,122 @@ cloud fallback.
 
 Improved but not sufficient for Public Beta. Public Beta still needs full clean
 installer retest evidence, onboarding polish, and broader browser/manual UAT.
+
+---
+
+## #116 Task API Restart Lifecycle Hardening
+
+### Date / Time
+
+2026-05-08T14:15:06Z
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`672598c353c6cd251f75047976cdb9a6581402f9`
+
+### Target Issue(s)
+
+- #116 Task API restart command or restart runbook
+- Supports #95 product push audit evidence
+
+### Scope
+
+Add a supported `restart` command to the Merlin Task API lifecycle manager so
+operators do not guess unsupported commands during local testing.
+
+### Files Changed
+
+- `scripts/merlin-task-api.sh`
+- `tests/merlin-task-api-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `scripts/merlin-task-api.sh`: lifecycle manager only. No installer, model
+  download, cloud, memory write, routing, or API behavior changes.
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `bash -n scripts/merlin-task-api.sh` | PASS. |
+| `bash scripts/merlin-task-api.sh --help` | PASS; help lists `restart`. |
+| `bash tests/merlin-task-api-smoke.sh` | PASS. |
+| `bash tests/launchd-core-smoke.sh` | PASS. |
+| `git diff --check` | PASS. |
+| `/bin/zsh -lc "bash scripts/merlin-task-api.sh restart && curl -fsS --max-time 5 http://localhost:8766/status/routes >/dev/null && curl -fsS --max-time 5 http://localhost:8766/status/models >/dev/null && echo task-api-restart-ok"` | PASS; returned `task-api-restart-ok`. |
+
+### Test Output Summary
+
+The Task API manager now accepts `restart`, stops the managed API, starts it
+again, and preserves the expected status endpoints on port 8766.
+
+### Tests Skipped And Why
+
+Full installer retest was skipped because this slice only changes a local API
+lifecycle helper and its smoke coverage. Installer behavior, uninstall behavior,
+postinstall, package resources, and model-pull defaults were not changed.
+
+### Failures Found
+
+None in the #116 implementation. The issue was created from the #115 failure
+learning where `restart` was not supported.
+
+### Failure Category
+
+- Launchd/autostart
+- Test design gap
+- Runbook/operator friction
+
+### Root Cause Or Current Hypothesis
+
+The lifecycle manager had start/stop/status/run support but no restart command,
+even though restart is the natural operator action after code changes.
+
+### Fix Applied
+
+- Added `restart` to the command parser and help text.
+- Implemented `restart_api()` as stop-then-start.
+- Extended the lifecycle smoke to assert restart support and behavior shape.
+
+### Retest Result
+
+PASS. Static lifecycle smokes passed and the live local restart check verified
+both `/status/routes` and `/status/models` after restart.
+
+### Regression Tests Added
+
+- Extended `tests/merlin-task-api-smoke.sh` to cover restart help, parser, and
+  stop/start behavior shape.
+
+### Follow-Up Issues Created Or Recommended
+
+None.
+
+### Lesson Learned
+
+If a developer naturally tries a command during validation, the lifecycle helper
+should either support it or clearly document the supported alternative.
+
+### What Not To Repeat Next Time
+
+Do not leave obvious lifecycle verbs unsupported after they show up in real
+validation. Add the narrow command and smoke it.
+
+### Next Recommended Step
+
+Commit, push, watch CI, then close #116 if GitHub Actions passes.
+
+### Local Trusted Beta Impact
+
+Improved. Local testers and operators can refresh the Task API without manually
+stopping processes or guessing launchd behavior.
+
+### Public Beta Impact
+
+Small improvement. Public Beta still requires full installer retest evidence and
+broader onboarding polish.
