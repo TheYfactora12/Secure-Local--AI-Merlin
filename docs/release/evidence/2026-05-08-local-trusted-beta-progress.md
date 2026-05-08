@@ -1911,3 +1911,116 @@ users without changing protected installer behavior.
 Improved but incomplete. Public Beta still requires browser screenshot evidence,
 model-add UX, memory review/delete, final onboarding pass, and later packaging
 trust decisions.
+
+## Issue #101 Browser Evidence Attempt
+
+### Date/Time
+
+2026-05-08 07:03:57 EDT
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`4ef6245a98031a47206071fcba036d09474942b7`
+
+### Target Issues
+
+- #101: Wizard HQ Merlin-native front door and Brains tab UX
+- #95: product push audit / release readiness evidence
+
+### Scope
+
+Attempt browser/screenshot validation for the Wizard HQ product shell and record
+what evidence could be collected from this session.
+
+### Files Changed
+
+- `docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-http-snapshot.html`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None.
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `bash scripts/status.sh` | PASS; reported Wizard HQ, Open WebUI, LiteLLM, Qdrant, and Ollama running. |
+| `curl -v --max-time 5 http://127.0.0.1:8888/` with host-level permission | PASS; HTTP 200 from nginx, returned Wizard HQ HTML. |
+| `docker compose ps dashboard` | PASS; `swarm-dashboard` running on `127.0.0.1:8888->80/tcp`. |
+| `docker logs --tail 30 swarm-dashboard` | FAIL; Docker socket permission denied from this shell. |
+| `osascript ... open location "http://127.0.0.1:8888"` | PASS; Safari open command completed. |
+| `screencapture -x docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-chat.png` | FAIL; `could not create image from display`. |
+| `curl -fsS --max-time 5 http://127.0.0.1:8888/ -o docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-http-snapshot.html` | PASS; saved 51K HTML snapshot as evidence artifact. |
+| `rg -n "Wizard HQ\|Merlin AI\|data-tab-target=\"chat\"\|data-tab-target=\"brains\"\|Open WebUI Bridge\|cloud disabled by default\|bash launchd/install-launchd.sh" docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-http-snapshot.html` | PASS; snapshot contains Merlin product shell, tabs, Open WebUI bridge framing, cloud-disabled copy, and launchd first-run command. |
+
+### Tests Skipped And Why
+
+No new runtime tests were added in this attempt. #101 remains open because true
+browser screenshot evidence could not be captured from this shell.
+
+### Failures Found
+
+- Sandbox `curl` to `127.0.0.1:8888` failed even though host-level curl and
+  `scripts/status.sh` verified the dashboard was running.
+- `docker logs` failed due Docker socket permission from this shell.
+- `screencapture` failed with `could not create image from display`.
+
+### Failure Category
+
+- Wizard HQ/dashboard
+- Test design gap
+- Release tooling/operator environment
+
+### Root Cause Or Current Hypothesis
+
+- Localhost access can differ between the sandboxed shell and host-level command
+  path in this environment.
+- Docker socket access from this shell is restricted.
+- macOS screenshot capture likely lacks display/session or Screen Recording
+  permission in this Codex environment.
+
+### Fix Applied
+
+No product fix applied. Captured an HTML snapshot as partial evidence and kept
+#101 open for manual visual screenshot capture.
+
+### Retest Result
+
+Host-level HTTP evidence passed and the HTML snapshot contains the expected
+Merlin-native product shell markers.
+
+### Regression Test Added
+
+No regression test added. Existing static tests already cover the tab shell and
+unsafe control boundaries. The missing item is manual visual evidence, not a
+code behavior gap.
+
+### Follow-Up Issues Created Or Recommended
+
+No new issue required. Keep #101 open until manual browser screenshots are
+captured or a reliable screenshot tool is added to the evidence workflow.
+
+### Lesson Learned
+
+Do not treat missing screenshots as proof the dashboard is down. Verify with
+host-level HTTP and container status first, then record screenshot-tool failures
+separately.
+
+### What Not To Repeat Next Time
+
+Do not close #101 with static grep evidence alone. It needs actual browser
+visual evidence or an explicit documented reason from the manual QA run.
+
+### Local Trusted Beta Impact
+
+Partial improvement. HTML evidence confirms the installed Wizard HQ product shell
+is being served, but Local Trusted Beta visual evidence still needs screenshots.
+
+### Public Beta Impact
+
+Still blocked on browser screenshot evidence and manual first-impression review.

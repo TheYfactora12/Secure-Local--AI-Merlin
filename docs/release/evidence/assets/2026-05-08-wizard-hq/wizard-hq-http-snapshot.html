@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wizard HQ — Merlin AI</title>
+<style>
+:root {
+  --bg: #0b0d10;
+  --panel: #11161c;
+  --panel-2: #151c24;
+  --line: #26313d;
+  --text: #edf2f7;
+  --muted: #9aa8b6;
+  --dim: #6e7b88;
+  --green: #42d392;
+  --yellow: #f3c969;
+  --red: #ff6b6b;
+  --cyan: #67e8f9;
+  --violet: #b7a1ff;
+  --ink: #050607;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); }
+body { font-size: 14px; line-height: 1.45; }
+button, input, textarea { font: inherit; }
+
+.app { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 22px;
+  background: rgba(11, 13, 16, 0.92);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.mark {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(103, 232, 249, 0.7);
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: var(--cyan);
+  font-weight: 800;
+  letter-spacing: 0;
+  box-shadow: 0 0 26px rgba(103, 232, 249, 0.18);
+}
+.brand h1 { margin: 0; font-size: 18px; letter-spacing: 0; }
+.brand p { margin: 1px 0 0; color: var(--muted); font-size: 12px; }
+.top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+
+.tabbar-wrap {
+  position: sticky;
+  top: 63px;
+  z-index: 4;
+  padding: 10px 18px 0;
+  background: linear-gradient(180deg, rgba(11, 13, 16, 0.94), rgba(11, 13, 16, 0.78));
+  backdrop-filter: blur(14px);
+}
+.tabbar {
+  max-width: 1500px;
+  margin: 0 auto;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 5px;
+  background: rgba(17, 22, 28, 0.72);
+}
+.tab-button {
+  border: 0;
+  border-radius: 6px;
+  min-height: 34px;
+  padding: 7px 12px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tab-button:hover { color: var(--text); background: rgba(255, 255, 255, 0.05); }
+.tab-button.active {
+  color: var(--cyan);
+  background: rgba(103, 232, 249, 0.10);
+  box-shadow: inset 0 0 0 1px rgba(103, 232, 249, 0.20);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.chip.good { color: var(--green); border-color: rgba(66, 211, 146, 0.35); background: rgba(66, 211, 146, 0.08); }
+.chip.warn { color: var(--yellow); border-color: rgba(243, 201, 105, 0.35); background: rgba(243, 201, 105, 0.08); }
+.chip.bad { color: var(--red); border-color: rgba(255, 107, 107, 0.35); background: rgba(255, 107, 107, 0.08); }
+.chip.info { color: var(--cyan); border-color: rgba(103, 232, 249, 0.35); background: rgba(103, 232, 249, 0.08); }
+.chip.neutral { color: var(--muted); }
+.refresh {
+  border: 1px solid rgba(103, 232, 249, 0.42);
+  background: rgba(103, 232, 249, 0.12);
+  color: var(--cyan);
+  border-radius: 8px;
+  min-height: 32px;
+  padding: 6px 11px;
+  cursor: pointer;
+}
+.refresh:hover { background: rgba(103, 232, 249, 0.18); }
+
+.shell {
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr) 340px;
+  gap: 18px;
+  padding: 18px;
+  max-width: 1500px;
+  width: 100%;
+  margin: 0 auto;
+}
+.tab-page {
+  max-width: 1500px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 18px;
+  display: none;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+.tab-page.active { display: grid; }
+.shell.tab-page { grid-template-columns: 270px minmax(0, 1fr) 340px; }
+.column { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 15px;
+  min-width: 0;
+}
+.panel h2 {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.panel h3 { margin: 0 0 6px; font-size: 15px; }
+.panel p { margin: 0; color: var(--muted); }
+
+.ai-core {
+  width: min(210px, 48vw);
+  aspect-ratio: 1;
+  margin: 2px auto 4px;
+  border: 1px solid rgba(103, 232, 249, 0.32);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle, rgba(103, 232, 249, 0.42) 0 4%, transparent 5%),
+    radial-gradient(circle, rgba(103, 232, 249, 0.16), transparent 44%),
+    conic-gradient(from 90deg, transparent, rgba(66, 211, 146, 0.28), transparent, rgba(103, 232, 249, 0.30), transparent);
+  box-shadow: 0 0 70px rgba(103, 232, 249, 0.12), inset 0 0 40px rgba(103, 232, 249, 0.08);
+}
+.ai-core::before {
+  content: "";
+  width: 48%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(237, 242, 247, 0.32);
+  transform: rotate(45deg);
+  background: linear-gradient(135deg, rgba(103, 232, 249, 0.18), rgba(66, 211, 146, 0.08));
+  box-shadow: 0 0 28px rgba(103, 232, 249, 0.24);
+}
+
+.hero {
+  min-height: 330px;
+  display: grid;
+  align-content: space-between;
+  gap: 18px;
+  background:
+    radial-gradient(circle at 18% 10%, rgba(103, 232, 249, 0.10), transparent 34%),
+    radial-gradient(circle at 50% 34%, rgba(103, 232, 249, 0.11), transparent 35%),
+    linear-gradient(135deg, rgba(21, 28, 36, 0.98), rgba(12, 16, 20, 0.98));
+}
+.hero-title { max-width: 760px; margin: 0 auto; text-align: center; }
+.hero-title h2 {
+  color: var(--text);
+  font-size: clamp(26px, 4vw, 46px);
+  line-height: 1.05;
+  letter-spacing: 0;
+  text-transform: none;
+  margin: 0 0 10px;
+}
+.hero-title p { font-size: 15px; max-width: 720px; margin: 0 auto; }
+.hero-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+
+.metric {
+  background: rgba(5, 6, 7, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 11px;
+  min-height: 74px;
+}
+.metric span { display: block; color: var(--muted); font-size: 11px; margin-bottom: 6px; }
+.metric strong { display: block; font-family: var(--mono); font-size: 15px; overflow-wrap: anywhere; }
+.metric.good strong { color: var(--green); }
+.metric.warn strong { color: var(--yellow); }
+.metric.bad strong { color: var(--red); }
+
+.rows { display: flex; flex-direction: column; gap: 8px; }
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.row:first-child { border-top: 0; padding-top: 0; }
+.label { min-width: 0; }
+.label strong { display: block; font-size: 13px; overflow-wrap: anywhere; }
+.label span { display: block; color: var(--dim); font-size: 12px; margin-top: 2px; overflow-wrap: anywhere; }
+.value { font-family: var(--mono); color: var(--cyan); font-size: 12px; text-align: right; overflow-wrap: anywhere; }
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  background: var(--dim);
+}
+.status-dot.good { background: var(--green); box-shadow: 0 0 16px rgba(66, 211, 146, 0.36); }
+.status-dot.warn { background: var(--yellow); }
+.status-dot.bad { background: var(--red); }
+
+.gate-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.gate {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  padding: 9px;
+  min-height: 70px;
+}
+.gate strong { display: block; font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+.gate span { display: inline-flex; margin-top: 7px; font-size: 11px; }
+.gate.high span, .gate.critical span { color: var(--red); }
+.gate.medium span { color: var(--yellow); }
+.gate.low span { color: var(--green); }
+
+.route-table { width: 100%; border-collapse: collapse; }
+.route-table th {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: left;
+  padding: 8px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.route-table td {
+  padding: 9px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: top;
+  font-size: 12px;
+}
+.route-table td:first-child { font-family: var(--mono); color: var(--cyan); }
+.keywords { color: var(--dim); max-width: 360px; overflow-wrap: anywhere; }
+
+.trace {
+  display: grid;
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.trace:first-child { border-top: 0; padding-top: 0; }
+.trace-line { display: flex; gap: 8px; align-items: center; justify-content: space-between; min-width: 0; }
+.trace-code { font-family: var(--mono); color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+
+.empty, .degraded {
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.02);
+}
+.degraded { border-color: rgba(243, 201, 105, 0.35); color: var(--yellow); }
+
+.readonly-note {
+  border-left: 3px solid var(--cyan);
+  padding: 10px 12px;
+  background: rgba(103, 232, 249, 0.07);
+  color: var(--muted);
+  border-radius: 6px;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.action-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  padding: 11px;
+  min-height: 128px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: space-between;
+}
+.action-card strong { display: block; font-size: 13px; }
+.action-card span { display: block; color: var(--dim); font-size: 12px; }
+.action-card a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  border: 1px solid rgba(103, 232, 249, 0.34);
+  border-radius: 8px;
+  color: var(--cyan);
+  background: rgba(103, 232, 249, 0.08);
+  text-decoration: none;
+  font-size: 12px;
+}
+.action-card a:hover { background: rgba(103, 232, 249, 0.14); }
+.action-card .locked {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  border: 1px solid rgba(243, 201, 105, 0.28);
+  border-radius: 8px;
+  color: var(--yellow);
+  background: rgba(243, 201, 105, 0.06);
+  font-size: 12px;
+}
+
+.stage-list { display: grid; gap: 8px; }
+.stage {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.stage:first-child { border-top: 0; padding-top: 0; }
+.stage strong { display: block; font-size: 13px; }
+.stage span { display: block; color: var(--dim); font-size: 12px; margin-top: 2px; overflow-wrap: anywhere; }
+.stage-state { font-family: var(--mono); font-size: 11px; color: var(--muted); text-align: right; }
+.stage.good .stage-state { color: var(--green); }
+.stage.warn .stage-state { color: var(--yellow); }
+.stage.bad .stage-state { color: var(--red); }
+.stage.good .status-dot { background: var(--green); box-shadow: 0 0 16px rgba(66, 211, 146, 0.36); }
+.stage.warn .status-dot { background: var(--yellow); }
+.stage.bad .status-dot { background: var(--red); }
+
+.page-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 2px 0 0;
+}
+.page-head h2 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 34px);
+  letter-spacing: 0;
+}
+.page-head p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  max-width: 760px;
+}
+.surface-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.surface-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(21, 28, 36, 0.92), rgba(14, 18, 23, 0.92));
+  padding: 14px;
+  min-height: 150px;
+}
+.surface-card h3 { margin: 0 0 8px; font-size: 15px; }
+.surface-card p { margin: 0 0 12px; color: var(--muted); }
+.status-list { display: grid; gap: 8px; }
+.status-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 8px;
+  color: var(--muted);
+}
+.status-pill:first-child { border-top: 0; padding-top: 0; }
+.status-pill strong { color: var(--text); font-size: 13px; }
+.status-pill span { font-family: var(--mono); font-size: 11px; color: var(--cyan); text-align: right; }
+.status-pill .off { color: var(--yellow); }
+.status-pill .locked { color: var(--yellow); }
+.status-pill .good { color: var(--green); }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 1180px) {
+  .shell.tab-page { grid-template-columns: 250px 1fr; }
+  .right { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .surface-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 820px) {
+  .topbar { align-items: flex-start; flex-direction: column; }
+  .tabbar-wrap { position: static; padding: 10px 12px 0; }
+  .shell.tab-page { grid-template-columns: 1fr; padding: 12px; }
+  .tab-page { padding: 12px; }
+  .page-head { grid-template-columns: 1fr; }
+  .right { display: flex; }
+  .hero-grid, .gate-grid, .action-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .hero-grid, .gate-grid, .action-grid, .surface-grid { grid-template-columns: 1fr; }
+  .route-table { display: block; overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">M</div>
+      <div>
+        <h1>Wizard HQ</h1>
+        <p>Merlin AI · Private Intelligence. Locally Owned.</p>
+      </div>
+    </div>
+    <div class="top-actions" aria-label="Current Merlin state">
+      <span class="chip good" id="chip-local">local_only</span>
+      <span class="chip good" id="chip-cloud">cloud_disabled</span>
+      <span class="chip info" id="chip-tier">tier: checking</span>
+      <span class="chip warn" id="chip-readiness">readiness: checking</span>
+      <span class="chip warn" id="chip-task-api">task_api: checking</span>
+      <button class="refresh" type="button" onclick="refreshAll()" aria-label="Refresh dashboard">Refresh</button>
+    </div>
+  </header>
+
+  <nav class="tabbar-wrap" aria-label="Wizard HQ product tabs">
+    <div class="tabbar">
+      <button class="tab-button active" type="button" data-tab-target="chat" onclick="selectTab('chat')">Chat</button>
+      <button class="tab-button" type="button" data-tab-target="brains" onclick="selectTab('brains')">Brains</button>
+      <button class="tab-button" type="button" data-tab-target="memory" onclick="selectTab('memory')">Memory</button>
+      <button class="tab-button" type="button" data-tab-target="agents" onclick="selectTab('agents')">Agents</button>
+      <button class="tab-button" type="button" data-tab-target="security" onclick="selectTab('security')">Security</button>
+      <button class="tab-button" type="button" data-tab-target="system" onclick="selectTab('system')">System</button>
+      <button class="tab-button" type="button" data-tab-target="settings" onclick="selectTab('settings')">Settings</button>
+    </div>
+  </nav>
+
+  <main class="shell tab-page active" data-tab-page="chat">
+    <aside class="column">
+      <section class="panel">
+        <h2>System Doctor</h2>
+        <div class="rows" id="service-list">
+          <div class="row"><div class="label"><strong>Merlin Status API</strong><span>127.0.0.1:8765</span></div><span class="status-dot" id="dot-8765"></span></div>
+          <div class="row"><div class="label"><strong>Merlin Task API</strong><span>127.0.0.1:8766</span></div><span class="status-dot" id="dot-8766"></span></div>
+          <div class="row"><div class="label"><strong>Open WebUI</strong><span>localhost:3000</span></div><span class="status-dot" id="dot-3000"></span></div>
+          <div class="row"><div class="label"><strong>LiteLLM</strong><span>localhost:4000</span></div><span class="status-dot" id="dot-4000"></span></div>
+          <div class="row"><div class="label"><strong>Qdrant</strong><span>localhost:6333</span></div><span class="status-dot" id="dot-6333"></span></div>
+          <div class="row"><div class="label"><strong>Ollama</strong><span>localhost:11434</span></div><span class="status-dot" id="dot-11434"></span></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Sovereignty Status</h2>
+        <div class="rows">
+          <div class="row"><div class="label"><strong>Air-gapped mode</strong><span>External providers disabled by default</span></div><div class="value">active</div></div>
+          <div class="row"><div class="label"><strong>Telemetry</strong><span>Local dashboard only</span></div><div class="value">off</div></div>
+          <div class="row"><div class="label"><strong>Execution Allowed</strong><span>Legacy 8765 status API</span></div><div class="value" id="execution-allowed">false</div></div>
+          <div class="row"><div class="label"><strong>Cloud Allowed</strong><span>Default policy</span></div><div class="value" id="cloud-allowed">false</div></div>
+          <div class="row"><div class="label"><strong>Online mode</strong><span>Default policy</span></div><div class="value" id="online-mode">false</div></div>
+          <div class="row"><div class="label"><strong>Secrets Protected</strong><span>No protected values shown in Wizard HQ</span></div><div class="value">enabled</div></div>
+          <div class="row"><div class="label"><strong>Approval gates</strong><span>Fail closed</span></div><div class="value" id="gate-total">15</div></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Read-Only Boundary</h2>
+        <div class="readonly-note">
+          This dashboard performs read-only GET requests against localhost status APIs.
+          It does not approve gates, run shell commands, write files, download models,
+          start services, write memory, or execute Magic Mode steps.
+        </div>
+      </section>
+    </aside>
+
+    <section class="column">
+      <section class="panel" aria-labelledby="startup-readiness-title">
+        <h2 id="startup-readiness-title">Startup Readiness</h2>
+        <div class="stage-list" id="readiness-stages" aria-live="polite">
+          <div class="stage warn" id="stage-core"><span class="status-dot warn"></span><div><strong>Preparing Merlin Core</strong><span>Waiting for localhost status API.</span></div><div class="stage-state">checking</div></div>
+          <div class="stage warn" id="stage-hardware"><span class="status-dot warn"></span><div><strong>Checking local hardware</strong><span>Waiting for hardware tier.</span></div><div class="stage-state">checking</div></div>
+          <div class="stage warn" id="stage-brain"><span class="status-dot warn"></span><div><strong>Starting local AI brain</strong><span>Checking Ollama native runtime.</span></div><div class="stage-state">checking</div></div>
+          <div class="stage warn" id="stage-memory"><span class="status-dot warn"></span><div><strong>Starting memory vault</strong><span>Checking Qdrant and memory status.</span></div><div class="stage-state">checking</div></div>
+          <div class="stage warn" id="stage-router"><span class="status-dot warn"></span><div><strong>Starting model router</strong><span>Checking LiteLLM and route registry.</span></div><div class="stage-state">checking</div></div>
+          <div class="stage good" id="stage-dashboard"><span class="status-dot good"></span><div><strong>Starting dashboard</strong><span>Wizard HQ static shell loaded from localhost.</span></div><div class="stage-state">loaded</div></div>
+          <div class="stage warn" id="stage-privacy"><span class="status-dot warn"></span><div><strong>Verifying privacy mode</strong><span>Checking local-only, cloud-disabled policy.</span></div><div class="stage-state">checking</div></div>
+          <div class="stage warn" id="stage-doctor"><span class="status-dot warn"></span><div><strong>Running system doctor</strong><span>Probing core local services with read-only GET requests.</span></div><div class="stage-state">checking</div></div>
+          <div class="stage warn" id="stage-final"><span class="status-dot warn"></span><div><strong>Ready / Degraded</strong><span>Final state appears only after live checks complete.</span></div><div class="stage-state">checking</div></div>
+        </div>
+      </section>
+
+      <section class="panel hero">
+        <div class="hero-title">
+          <h2>Merlin AI</h2>
+          <p>Wizard HQ is the sovereign command surface. Merlin routes, guards, audits, and explains the local AI stack while the local chat workspace runs the current model engine underneath it.</p>
+        </div>
+        <div class="ai-core" aria-hidden="true"></div>
+        <div class="hero-grid">
+          <div class="metric good"><span>Privacy mode</span><strong id="metric-privacy">local_only</strong></div>
+          <div class="metric"><span>Hardware tier</span><strong id="metric-tier">checking</strong></div>
+          <div class="metric"><span>Routes</span><strong id="metric-routes">—</strong></div>
+          <div class="metric"><span>Memory vectors</span><strong id="metric-vectors">—</strong></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="first-run-title">
+        <h2 id="first-run-title">First Run</h2>
+        <div class="action-grid">
+          <div class="action-card">
+            <div>
+              <strong>Open Merlin Local Chat</strong>
+              <span>Use the local chat workspace powered by Open WebUI and the active Ollama model. Merlin status remains visible here.</span>
+            </div>
+            <a href="http://localhost:3000" target="_blank" rel="noreferrer">Open local chat</a>
+          </div>
+          <div class="action-card">
+            <div>
+              <strong>Understand the Brain</strong>
+              <span>Qwen is a current local model engine. Merlin is the routing, policy, memory, and audit layer around local models.</span>
+            </div>
+            <a href="http://localhost:8888" aria-label="Stay in Wizard HQ">Stay in Wizard HQ</a>
+          </div>
+          <div class="action-card">
+            <div>
+              <strong>Setup Center</strong>
+              <span>External providers, model downloads, memory writes, and agent actions are disabled or approval-gated by default.</span>
+            </div>
+            <span class="locked">configure later</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Brain Status</h2>
+        <div class="hero-grid">
+          <div class="metric warn" id="brain-local-model"><span>Local Model</span><strong>checking</strong></div>
+          <div class="metric warn" id="brain-runtime"><span>Runtime</span><strong>checking</strong></div>
+          <div class="metric warn" id="brain-acceleration"><span>Acceleration</span><strong>hardware-dependent</strong></div>
+          <div class="metric good" id="brain-routing"><span>Routing</span><strong>Local-First</strong></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Route Registry</h2>
+        <div id="routes-panel" class="empty">Waiting for `http://localhost:8766/status/routes`.</div>
+        <div class="readonly-note">
+          If routes stay unavailable after install, start the task API with <code>bash scripts/merlin-task-api.sh start</code>
+          or install persistent macOS agents with <code>bash launchd/install-launchd.sh</code>, then wait 35-40 seconds and run <code>bash scripts/doctor.sh</code>.
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Recent Traces</h2>
+        <div id="traces-panel" class="empty">No trace data loaded. Raw prompts and model responses are never displayed here.</div>
+      </section>
+    </section>
+
+    <aside class="column right">
+      <section class="panel">
+        <h2>Agent Control</h2>
+        <div class="rows" style="margin-bottom: 12px;">
+          <div class="row"><div class="label"><strong>Research Agent</strong><span>Routes through policy gates</span></div><div class="value">standby</div></div>
+          <div class="row"><div class="label"><strong>Coding Agent</strong><span>File and shell actions blocked here</span></div><div class="value">standby</div></div>
+          <div class="row"><div class="label"><strong>Automation Agent</strong><span>Webhook execution requires approval</span></div><div class="value">guarded</div></div>
+        </div>
+        <div class="hero-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 10px;">
+          <div class="metric"><span>Total</span><strong id="approval-total">—</strong></div>
+          <div class="metric good"><span>Open</span><strong id="approval-open">—</strong></div>
+          <div class="metric bad"><span>Closed</span><strong id="approval-closed">—</strong></div>
+        </div>
+        <div id="gates-panel" class="empty">Waiting for `http://localhost:8766/status/approvals`.</div>
+      </section>
+
+      <section class="panel">
+        <h2>Memory Vault</h2>
+        <div id="memory-panel" class="empty">Waiting for `http://localhost:8766/status/memory`.</div>
+      </section>
+
+      <section class="panel">
+        <h2>Knowledge Graph</h2>
+        <div class="readonly-note">
+          Concept target: connected projects, documents, goals, and decisions. MVP shows status only; interactive graph editing is deferred until memory review/delete flows are policy-gated.
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Safe Next Commands</h2>
+        <div class="rows">
+          <div class="row"><div class="label"><strong>Authoritative status</strong><span>CLI read-only summary</span></div><div class="value">wizard merlin status</div></div>
+          <div class="row"><div class="label"><strong>Start status API</strong><span>Local read-only bridge</span></div><div class="value">wizard merlin status-api start</div></div>
+          <div class="row"><div class="label"><strong>Persistent APIs</strong><span>macOS launchd, 35-40s warmup</span></div><div class="value">bash launchd/install-launchd.sh</div></div>
+          <div class="row"><div class="label"><strong>Start task API</strong><span>Route/status panels on 8766</span></div><div class="value">bash scripts/merlin-task-api.sh start</div></div>
+          <div class="row"><div class="label"><strong>Open local chat</strong><span>Current model workspace</span></div><div class="value">localhost:3000</div></div>
+          <div class="row"><div class="label"><strong>Review approvals</strong><span>No dashboard approve button</span></div><div class="value">wizard merlin approvals list</div></div>
+          <div class="row"><div class="label"><strong>Preview routing</strong><span>No side effects</span></div><div class="value">wizard merlin dry-run "goal"</div></div>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <main class="tab-page" data-tab-page="brains">
+    <div class="page-head">
+      <div>
+        <h2>Brains</h2>
+        <p>Merlin owns the experience. Local models, Open WebUI, LiteLLM, and optional cloud APIs are replaceable brain connectors under Merlin control.</p>
+      </div>
+      <span class="chip good">cloud disabled by default</span>
+    </div>
+    <section class="surface-grid" aria-label="Merlin brain connector status">
+      <article class="surface-card">
+        <h3>Local Ollama Brain</h3>
+        <p>Primary local model runtime for private inference on owned hardware.</p>
+        <div class="status-list">
+          <div class="status-pill"><strong>Runtime</strong><span id="brains-ollama">checking</span></div>
+          <div class="status-pill"><strong>Current engine</strong><span>Qwen / local model</span></div>
+          <div class="status-pill"><strong>Downloads</strong><span class="locked">manual only</span></div>
+        </div>
+      </article>
+      <article class="surface-card">
+        <h3>Merlin Router</h3>
+        <p>Policy-aware route registry that decides which local brain should handle a task.</p>
+        <div class="status-list">
+          <div class="status-pill"><strong>LiteLLM</strong><span id="brains-litellm">checking</span></div>
+          <div class="status-pill"><strong>Task API</strong><span id="brains-task-api">checking</span></div>
+          <div class="status-pill"><strong>Mode</strong><span class="good">local-first</span></div>
+        </div>
+      </article>
+      <article class="surface-card">
+        <h3>Open WebUI Bridge</h3>
+        <p>Current local chat workspace. It is an option inside Merlin, not the Merlin product identity.</p>
+        <div class="status-list">
+          <div class="status-pill"><strong>Workspace</strong><span id="brains-openwebui">checking</span></div>
+          <div class="status-pill"><strong>Role</strong><span>local chat bridge</span></div>
+          <div class="status-pill"><strong>Brand surface</strong><span>Wizard HQ</span></div>
+        </div>
+      </article>
+      <article class="surface-card">
+        <h3>Cloud Providers</h3>
+        <p>External APIs remain unavailable until the user explicitly configures and approves them in a future gated flow.</p>
+        <div class="status-list">
+          <div class="status-pill"><strong>Cloud escalation</strong><span class="off">disabled</span></div>
+          <div class="status-pill"><strong>API keys</strong><span class="locked">not shown</span></div>
+          <div class="status-pill"><strong>Telemetry</strong><span class="good">off</span></div>
+        </div>
+      </article>
+      <article class="surface-card">
+        <h3>Low-Memory Protection</h3>
+        <p>8GB/core systems stay protected by warnings, lazy startup, and no surprise model pulls.</p>
+        <div class="status-list">
+          <div class="status-pill"><strong>Hardware tier</strong><span id="brains-tier">checking</span></div>
+          <div class="status-pill"><strong>Heavy profiles</strong><span class="locked">optional</span></div>
+          <div class="status-pill"><strong>Model pulls</strong><span class="locked">not automatic</span></div>
+        </div>
+      </article>
+      <article class="surface-card">
+        <h3>Future Merlin Model</h3>
+        <p>Merlin can grow toward its own tuned local model later. Today, it safely orchestrates available local engines.</p>
+        <div class="status-list">
+          <div class="status-pill"><strong>Current state</strong><span>orchestration layer</span></div>
+          <div class="status-pill"><strong>Training</strong><span class="locked">not active</span></div>
+          <div class="status-pill"><strong>Learning</strong><span>approved memory only</span></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <main class="tab-page" data-tab-page="memory">
+    <div class="page-head">
+      <div>
+        <h2>Memory</h2>
+        <p>The memory vault shows readiness and collection health without exposing raw private content or writing memory from the browser.</p>
+      </div>
+      <span class="chip info">read-only vault</span>
+    </div>
+    <section class="surface-grid">
+      <article class="surface-card"><h3>Vector Memory</h3><p>Qdrant collections store approved semantic memory and audit records.</p><div class="status-list"><div class="status-pill"><strong>Qdrant</strong><span id="tab-memory-qdrant">checking</span></div><div class="status-pill"><strong>Vectors</strong><span id="tab-memory-vectors">checking</span></div></div></article>
+      <article class="surface-card"><h3>Document Indexing</h3><p>Document memory remains local and dimension-guarded.</p><div class="status-list"><div class="status-pill"><strong>Raw contents</strong><span class="locked">hidden</span></div><div class="status-pill"><strong>Writes</strong><span class="locked">approval-gated</span></div></div></article>
+      <article class="surface-card"><h3>Snapshots</h3><p>Backup and restore status belongs here as the product matures.</p><div class="status-list"><div class="status-pill"><strong>Backup/restore</strong><span>CLI managed</span></div><div class="status-pill"><strong>Dashboard action</strong><span class="locked">not enabled</span></div></div></article>
+    </section>
+  </main>
+
+  <main class="tab-page" data-tab-page="agents">
+    <div class="page-head">
+      <div>
+        <h2>Agents</h2>
+        <p>Agents are supervised capabilities behind policy gates. Wizard HQ displays status; it does not execute agent actions.</p>
+      </div>
+      <span class="chip warn">approval required for actions</span>
+    </div>
+    <section class="surface-grid">
+      <article class="surface-card"><h3>Research Agent</h3><p>Search and synthesis capabilities remain policy-gated and local-first where possible.</p><div class="status-list"><div class="status-pill"><strong>Status</strong><span>standby</span></div><div class="status-pill"><strong>Execution</strong><span class="locked">not from dashboard</span></div></div></article>
+      <article class="surface-card"><h3>Coding Agent</h3><p>Code work requires explicit user approval outside this read-only surface.</p><div class="status-list"><div class="status-pill"><strong>Status</strong><span>standby</span></div><div class="status-pill"><strong>File writes</strong><span class="locked">blocked here</span></div></div></article>
+      <article class="surface-card"><h3>Automation Agent</h3><p>n8n and future automation runtime stay optional and profile-gated.</p><div class="status-list"><div class="status-pill"><strong>Webhooks</strong><span class="locked">approval-gated</span></div><div class="status-pill"><strong>Native runtime</strong><span>future issue</span></div></div></article>
+    </section>
+  </main>
+
+  <main class="tab-page" data-tab-page="security">
+    <div class="page-head">
+      <div>
+        <h2>Security</h2>
+        <p>Sovereignty is visible: local-only defaults, telemetry off, secrets hidden, and approvals fail closed.</p>
+      </div>
+      <span class="chip good">secrets protected</span>
+    </div>
+    <section class="surface-grid">
+      <article class="surface-card"><h3>Privacy Mode</h3><p>Merlin defaults to owned hardware and localhost services.</p><div class="status-list"><div class="status-pill"><strong>Local-only</strong><span class="good">enabled</span></div><div class="status-pill"><strong>Cloud escalation</strong><span class="off">disabled</span></div></div></article>
+      <article class="surface-card"><h3>Approval Gates</h3><p>Dangerous operations must be approved outside this browser view.</p><div class="status-list"><div class="status-pill"><strong>Gates</strong><span id="tab-security-gates">checking</span></div><div class="status-pill"><strong>Approve buttons</strong><span class="locked">not present</span></div></div></article>
+      <article class="surface-card"><h3>Telemetry</h3><p>Wizard HQ does not add analytics, tracking pixels, or external telemetry.</p><div class="status-list"><div class="status-pill"><strong>Telemetry</strong><span class="good">off</span></div><div class="status-pill"><strong>Protected values</strong><span class="locked">not displayed</span></div></div></article>
+    </section>
+  </main>
+
+  <main class="tab-page" data-tab-page="system">
+    <div class="page-head">
+      <div>
+        <h2>System</h2>
+        <p>Core service health, startup readiness, and release-safe diagnostics remain visible without turning the dashboard into a control plane.</p>
+      </div>
+      <span class="chip info">doctor view</span>
+    </div>
+    <section class="surface-grid">
+      <article class="surface-card"><h3>Core APIs</h3><p>Status and task APIs stay separate.</p><div class="status-list"><div class="status-pill"><strong>Status API 8765</strong><span id="system-8765">checking</span></div><div class="status-pill"><strong>Task API 8766</strong><span id="system-8766">checking</span></div></div></article>
+      <article class="surface-card"><h3>Local Services</h3><p>Local model, memory, router, and chat services report as ready, warming, or degraded.</p><div class="status-list"><div class="status-pill"><strong>Ollama</strong><span id="system-11434">checking</span></div><div class="status-pill"><strong>Qdrant</strong><span id="system-6333">checking</span></div><div class="status-pill"><strong>LiteLLM</strong><span id="system-4000">checking</span></div></div></article>
+      <article class="surface-card"><h3>Release Diagnostics</h3><p>Use CLI commands for authoritative install and health checks.</p><div class="status-list"><div class="status-pill"><strong>Doctor</strong><span>wizard merlin status</span></div><div class="status-pill"><strong>Clean install</strong><span>evidence required</span></div></div></article>
+    </section>
+  </main>
+
+  <main class="tab-page" data-tab-page="settings">
+    <div class="page-head">
+      <div>
+        <h2>Settings</h2>
+        <p>Settings are intentionally conservative for this slice. Provider setup, secrets, model downloads, and memory writes require future policy-gated flows.</p>
+      </div>
+      <span class="chip warn">configuration locked</span>
+    </div>
+    <section class="surface-grid">
+      <article class="surface-card"><h3>Provider Settings</h3><p>External provider setup is deferred until safe secret storage and explicit enablement are implemented.</p><div class="status-list"><div class="status-pill"><strong>API key fields</strong><span class="locked">not available</span></div><div class="status-pill"><strong>Cloud default</strong><span class="off">off</span></div></div></article>
+      <article class="surface-card"><h3>Model Settings</h3><p>Model additions should stay explicit, visible, and hardware-aware.</p><div class="status-list"><div class="status-pill"><strong>Downloads</strong><span class="locked">manual only</span></div><div class="status-pill"><strong>8GB warning</strong><span>required</span></div></div></article>
+      <article class="surface-card"><h3>Memory Settings</h3><p>Remembering, deleting, and exporting memory need dedicated approval and review UX.</p><div class="status-list"><div class="status-pill"><strong>Auto-write</strong><span class="off">disabled</span></div><div class="status-pill"><strong>Review flow</strong><span>future gated issue</span></div></div></article>
+    </section>
+  </main>
+</div>
+
+<script>
+// Static data sources:
+// http://localhost:8765/status
+// http://localhost:8766/status/routes
+// http://localhost:8766/status/approvals
+// http://localhost:8766/status/memory
+// http://localhost:8766/status/traces
+const STATUS_API = 'http://localhost:8765';
+const TASK_API = 'http://localhost:8766';
+const SERVICE_PROBE_TIMEOUT_MS = 5000;
+const STATUS_PANEL_TIMEOUT_MS = 7000;
+const WARMING_COPY = 'Warming on low-memory systems can take 35-40 seconds after launchd registration.';
+const SERVICE_CHECKS = [
+  ['8765', `${STATUS_API}/healthz`],
+  ['8766', `${TASK_API}/status/routes`],
+  ['3000', 'http://localhost:3000'],
+  ['4000', 'http://localhost:4000/health/readiness'],
+  ['6333', 'http://localhost:6333/healthz'],
+  ['11434', 'http://localhost:11434/api/tags'],
+];
+const readinessState = {
+  services: {},
+  status: null,
+  routes: null,
+  memory: null,
+  probesComplete: false,
+};
+
+function text(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function selectTab(target) {
+  document.querySelectorAll('[data-tab-page]').forEach(page => {
+    page.classList.toggle('active', page.getAttribute('data-tab-page') === target);
+  });
+  document.querySelectorAll('[data-tab-target]').forEach(button => {
+    button.classList.toggle('active', button.getAttribute('data-tab-target') === target);
+  });
+}
+
+function setChip(id, value, state) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = value;
+  el.className = `chip ${state || ''}`.trim();
+}
+
+function dot(id, state) {
+  const el = document.getElementById(`dot-${id}`);
+  if (el) el.className = `status-dot ${state || ''}`.trim();
+}
+
+function metricState(id, state, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = `metric ${state || ''}`.trim();
+  const strong = el.querySelector('strong');
+  if (strong) strong.textContent = value;
+}
+
+function setStage(id, state, label, detail) {
+  const el = document.getElementById(`stage-${id}`);
+  if (!el) return;
+  el.className = `stage ${state || ''}`.trim();
+  const dotEl = el.querySelector('.status-dot');
+  if (dotEl) dotEl.className = `status-dot ${state || ''}`.trim();
+  const stateEl = el.querySelector('.stage-state');
+  if (stateEl) stateEl.textContent = label;
+  const detailEl = el.querySelector('span:not(.status-dot)');
+  if (detailEl && detail) detailEl.textContent = detail;
+}
+
+function safe(value, fallback = '—') {
+  return value === undefined || value === null || value === '' ? fallback : String(value);
+}
+
+function riskClass(risk) {
+  const normalized = String(risk || '').toLowerCase();
+  if (normalized === 'critical') return 'critical';
+  if (normalized === 'high') return 'high';
+  if (normalized === 'medium') return 'medium';
+  return 'low';
+}
+
+async function getJson(url, timeout = STATUS_PANEL_TIMEOUT_MS) {
+  const response = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(timeout) });
+  if (!response.ok) throw new Error(`${url} returned ${response.status}`);
+  return response.json();
+}
+
+async function checkServices() {
+  await Promise.all(SERVICE_CHECKS.map(async ([id, url]) => {
+    try {
+      await fetch(url, { method: 'GET', signal: AbortSignal.timeout(SERVICE_PROBE_TIMEOUT_MS) });
+      readinessState.services[id] = true;
+      dot(id, 'good');
+      text(`system-${id}`, 'ready');
+    } catch (_) {
+      readinessState.services[id] = false;
+      dot(id, 'bad');
+      text(`system-${id}`, 'warming');
+    }
+  }));
+  text('brains-ollama', readinessState.services['11434'] ? 'ready' : 'warming');
+  text('brains-litellm', readinessState.services['4000'] ? 'ready' : 'warming');
+  text('brains-task-api', readinessState.services['8766'] ? 'ready' : 'warming');
+  text('brains-openwebui', readinessState.services['3000'] ? 'ready' : 'warming');
+  text('tab-memory-qdrant', readinessState.services['6333'] ? 'ready' : 'warming');
+  readinessState.probesComplete = true;
+}
+
+async function loadMerlinStatus() {
+  try {
+    const data = await getJson(`${STATUS_API}/status`);
+    readinessState.status = data;
+    text('metric-privacy', safe(data.privacy_mode, 'local_only'));
+    text('metric-tier', safe(data.hardware_tier, 'unknown'));
+    text('execution-allowed', String(Boolean(data.execution_allowed)));
+    text('cloud-allowed', String(Boolean(data.cloud_allowed)));
+    text('online-mode', String(Boolean(data.online_mode)));
+    text('brains-tier', safe(data.hardware_tier, 'unknown'));
+    setChip('chip-local', safe(data.privacy_mode, 'local_only'), 'good');
+    setChip('chip-cloud', data.cloud_allowed ? 'cloud_enabled' : 'cloud_disabled', data.cloud_allowed ? 'warn' : 'good');
+    setChip('chip-tier', `tier: ${safe(data.hardware_tier, 'unknown')}`, data.hardware_tier === 'low' ? 'warn' : 'info');
+  } catch (_) {
+    readinessState.status = null;
+    text('metric-tier', 'unknown');
+    text('brains-tier', 'unknown');
+    setChip('chip-tier', 'tier: unknown', 'warn');
+  }
+}
+
+async function loadRoutes() {
+  const panel = document.getElementById('routes-panel');
+  try {
+    const data = await getJson(`${TASK_API}/status/routes`);
+    readinessState.routes = data;
+    setChip('chip-task-api', 'task_api: online', 'good');
+    text('metric-routes', safe(data.total, '0'));
+    const rows = (data.routes || []).map(route => `
+      <tr>
+        <td>${safe(route.route_id)}</td>
+        <td>${safe(route.staff_mode)}</td>
+        <td>${safe(route.preferred_model_alias)}</td>
+        <td>${route.requires_approval ? '<span class="chip warn">approval_required</span>' : '<span class="chip good">open</span>'}</td>
+        <td class="keywords">${(route.approval_gates || []).join(', ') || 'none'}</td>
+      </tr>
+    `).join('');
+    panel.className = '';
+    panel.innerHTML = `
+      <table class="route-table">
+        <thead><tr><th>Route</th><th>Staff</th><th>Model</th><th>State</th><th>Gates</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  } catch (_) {
+    readinessState.routes = null;
+    setChip('chip-task-api', 'task_api: warming', 'warn');
+    text('metric-routes', 'warming');
+    panel.className = 'degraded';
+    panel.textContent = `Task API is warming or unavailable. ${WARMING_COPY} This dashboard remains read-only.`;
+  }
+}
+
+async function loadApprovals() {
+  const panel = document.getElementById('gates-panel');
+  try {
+    const data = await getJson(`${TASK_API}/status/approvals`);
+    text('gate-total', safe(data.total));
+    text('tab-security-gates', safe(data.total));
+    text('approval-total', safe(data.total));
+    text('approval-open', safe(data.open_count));
+    text('approval-closed', safe(data.closed_count));
+    const gates = (data.gates || []).map(gate => `
+      <div class="gate ${riskClass(gate.risk_tier)}">
+        <strong>${safe(gate.gate_name)}</strong>
+        <span>${safe(gate.risk_tier, 'unknown')} · ${gate.requires_approval ? 'approval required' : 'open'}</span>
+      </div>
+    `).join('');
+    panel.className = 'gate-grid';
+    panel.innerHTML = gates || '<div class="empty">No gates returned.</div>';
+  } catch (_) {
+    panel.className = 'degraded';
+    panel.textContent = `Approval status is warming or unavailable. ${WARMING_COPY} Policy remains fail-closed if the API cannot load gates.`;
+  }
+}
+
+async function loadMemory() {
+  const panel = document.getElementById('memory-panel');
+  try {
+    const data = await getJson(`${TASK_API}/status/memory`);
+    readinessState.memory = data;
+    text('metric-vectors', safe(data.total_vectors, '0'));
+    text('tab-memory-vectors', safe(data.total_vectors, '0'));
+    const collections = (data.collections || []).map(collection => `
+      <div class="row">
+        <div class="label"><strong>${safe(collection.name)}</strong><span>${safe(collection.dimensions)} dimensions · ${safe(collection.status)}</span></div>
+        <div class="value">${safe(collection.vector_count, '0')}</div>
+      </div>
+    `).join('');
+    panel.className = data.degraded ? 'degraded' : 'rows';
+    panel.innerHTML = data.degraded ? 'Memory API degraded. Merlin continues without exposing raw memory data.' : collections;
+  } catch (_) {
+    readinessState.memory = null;
+    text('metric-vectors', 'warming');
+    text('tab-memory-vectors', 'warming');
+    panel.className = 'degraded';
+    panel.textContent = `Memory status is warming or unavailable. ${WARMING_COPY} No memory contents or protected values are displayed.`;
+  }
+}
+
+async function loadTraces() {
+  const panel = document.getElementById('traces-panel');
+  try {
+    const data = await getJson(`${TASK_API}/status/traces`);
+    const traces = data.traces || [];
+    if (!traces.length) {
+      panel.className = 'empty';
+      panel.textContent = 'No traces recorded in the current in-memory buffer.';
+      return;
+    }
+    panel.className = '';
+    panel.innerHTML = traces.slice(0, 8).map(trace => `
+      <div class="trace">
+        <div class="trace-line"><strong>${safe(trace.route_id)}</strong><span class="chip ${trace.approved ? 'good' : 'warn'}">${trace.approved ? 'approved' : 'blocked'}</span></div>
+        <div class="trace-code">hash=${safe(trace.input_hash).slice(0, 18)}… · staff=${safe(trace.staff_mode)} · latency=${safe(trace.latency_ms)}ms · memory=${safe(trace.memory_written)}</div>
+      </div>
+    `).join('');
+  } catch (_) {
+    panel.className = 'degraded';
+    panel.textContent = 'Trace status unavailable. Raw prompts and model responses are never stored here.';
+  }
+}
+
+function renderReadiness() {
+  const service = id => readinessState.services[id];
+  const status = readinessState.status;
+  const routes = readinessState.routes;
+  const memory = readinessState.memory;
+  const privacyGood = Boolean(status && status.cloud_allowed === false && status.online_mode === false);
+
+  setStage(
+    'core',
+    service('8765') ? 'good' : 'warn',
+    service('8765') ? 'ready' : 'warming',
+    service('8765') ? 'Status API responded on localhost:8765.' : `${WARMING_COPY} If it stays unavailable, run: wizard merlin status-api start or bash launchd/install-launchd.sh.`
+  );
+  setStage(
+    'hardware',
+    status && status.hardware_tier ? 'good' : 'warn',
+    status && status.hardware_tier ? 'ready' : 'warming',
+    status && status.hardware_tier ? `Hardware tier: ${status.hardware_tier}.` : 'Hardware tier unavailable until status API responds.'
+  );
+  setStage(
+    'brain',
+    service('11434') ? 'good' : 'warn',
+    service('11434') ? 'ready' : 'degraded',
+    service('11434') ? 'Ollama native runtime responded on localhost:11434.' : 'Ollama is unavailable; local model features are warming or degraded.'
+  );
+  setStage(
+    'memory',
+    service('6333') && memory && !memory.degraded ? 'good' : 'warn',
+    service('6333') && memory && !memory.degraded ? 'ready' : 'warming',
+    service('6333') ? 'Qdrant responded; memory status loads after the Task API finishes warming.' : 'Qdrant is unavailable; memory vault is degraded.'
+  );
+  setStage(
+    'router',
+    service('4000') && service('8766') && routes ? 'good' : 'warn',
+    service('4000') && service('8766') && routes ? 'ready' : 'warming',
+    service('4000') && service('8766') ? 'LiteLLM and route registry responded.' : `${WARMING_COPY} Routing status is not ready until LiteLLM and Task API respond. Start manually with bash scripts/merlin-task-api.sh start or use bash launchd/install-launchd.sh.`
+  );
+  setStage(
+    'privacy',
+    privacyGood ? 'good' : (status ? 'bad' : 'warn'),
+    privacyGood ? 'verified' : (status ? 'fix needed' : 'checking'),
+    privacyGood ? 'Local-only policy confirmed; cloud and online modes are disabled.' : 'Privacy policy state could not be verified as local-only/cloud-disabled.'
+  );
+  setStage(
+    'doctor',
+    readinessState.probesComplete ? 'good' : 'warn',
+    readinessState.probesComplete ? 'complete' : 'checking',
+    readinessState.probesComplete ? 'Read-only service probes completed.' : 'Service probes are still running.'
+  );
+
+  const requiredReady = service('8765') && service('8766') && service('6333') && service('11434') && service('4000') && privacyGood;
+  setStage(
+    'final',
+    requiredReady ? 'good' : 'warn',
+    requiredReady ? 'ready' : 'warming',
+    requiredReady ? 'Core local services and privacy checks are ready.' : 'One or more core checks are warming, degraded, or need attention.'
+  );
+  setChip('chip-readiness', requiredReady ? 'readiness: ready' : 'readiness: warming', requiredReady ? 'good' : 'warn');
+  metricState('brain-local-model', service('11434') ? 'good' : 'warn', service('11434') ? 'available' : 'degraded');
+  metricState('brain-runtime', service('11434') ? 'good' : 'warn', service('11434') ? 'Ollama Native' : 'unavailable');
+  metricState('brain-acceleration', status && status.hardware_tier === 'low' ? 'warn' : 'info', status && status.hardware_tier ? `${status.hardware_tier} tier` : 'checking');
+  metricState('brain-routing', service('4000') && service('8766') ? 'good' : 'warn', service('4000') && service('8766') ? 'Local-First' : 'degraded');
+}
+
+async function refreshAll() {
+  await Promise.all([
+    checkServices(),
+    loadMerlinStatus(),
+    loadRoutes(),
+    loadApprovals(),
+    loadMemory(),
+    loadTraces(),
+  ]);
+  renderReadiness();
+}
+
+refreshAll();
+setInterval(refreshAll, 30000);
+</script>
+</body>
+</html>
