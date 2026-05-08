@@ -79,7 +79,7 @@ flowchart LR
 | `v1.3 — Reliability + Memory + Router` | Closed | n8n retry contracts and local-first ModelRouter starter complete. |
 | `v1.5 — Memory Benchmarking` | Closed | Offline deterministic benchmark harness complete. |
 | `v1.6 — Pi Intelligence + Observability` | Complete after #8 closure | JSONL baseline, optional local Langfuse profile/export, n8n trace emission, memory/benchmark metadata export, and Qdrant task-signature retrieval are complete. |
-| `v1.7 — Security Hardening` | Active | #80 adds the explicit fail-closed `webhook_execution` gate; broader security hardening remains open. |
+| `v1.7 — Security Hardening` | Closed | #80 added the explicit fail-closed `webhook_execution` gate without changing webhook defaults. |
 | `v2.0 — Merlin Staff Core` | Mostly complete, follow-up queue open | Phase 2 runtime complete; remaining issues are follow-up visibility, approval, delete, and governance work. |
 | `v2.1 — Dashboard Command Center` | Future | Read-only/status-first dashboard improvements. |
 | `v2.2 — Magic Mode` | Future | Plan-first supervised orchestration only. |

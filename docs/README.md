@@ -99,7 +99,7 @@
 | **v1.3 — Reliability + Memory + Router** | ✅ Complete — retry contracts and local-first n8n ModelRouter starter |
 | **v1.5 — Memory Benchmarking** | ✅ Complete — offline benchmark harness and `wizard benchmark run` |
 | **v1.6 — Pi Intelligence + Observability** | ✅ Complete — local JSONL observability, optional local Langfuse, memory/benchmark export, Qdrant retrieval hardening |
-| **v1.7 — Security Hardening** | 🔄 Active — #80 explicit `webhook_execution` gate added; broader hardening continues |
+| **v1.7 — Security Hardening** | ✅ Complete — #80 explicit `webhook_execution` gate added, fail-closed and off by default |
 | **v2.0 — Merlin Staff Core** | ✅ Complete — Phase 2 core, #53 session memory bridge, and #60 staff router integration closed with CI validation |
 | **v3.x — Native Automation Runtime** | ⏳ Future — last-mile commercial supplement/replacement for n8n after workflows prove the owned runtime shape |
 

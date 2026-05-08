@@ -38,6 +38,8 @@ Current milestone position:
 - `v1.6 — Pi Intelligence + Observability` is complete after #8 closure. #36
   closed the design contract, and #86 through #89 closed the optional
   local-only observability implementation.
+- `v1.7 — Security Hardening` is closed after #80 added the explicit
+  fail-closed `webhook_execution` gate without changing webhook defaults.
 - #93 is closed. It added `docs/CANONICAL_PROJECT_STATE.md` as the
   GitHub-aligned state index.
 - #88 is complete. `wizard observability export --dry-run` now includes
