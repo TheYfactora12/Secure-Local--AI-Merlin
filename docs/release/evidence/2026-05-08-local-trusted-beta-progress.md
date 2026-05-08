@@ -3150,10 +3150,17 @@ PASS. Focused unit/static tests and live `/status/settings` check passed.
 
 ### Follow-Up Issues Created Or Recommended
 
-No new issue required for this first #114 slice. Deeper write-capable Settings
-flows should remain separate follow-up issues because provider secrets, model
-downloads, memory delete, and service controls each require their own policy and
-rollback tests.
+Created focused child issues for the write-capable Settings work so #114 can
+remain the parent without becoming a broad mixed implementation:
+
+- #117 `v3.1 settings: provider connector setup with secret presence-only storage`
+- #118 `v3.1 settings: model library manual download confirmations`
+- #119 `v3.1 settings: startup and API service controls with rollback guidance`
+- #120 `v3.1 settings: memory review and delete controls after memory governance gates`
+
+Issue creation initially failed when using a non-existent `security` label.
+The repo's current labels were checked with `gh label list --limit 100`, and
+the issues were recreated with existing labels only.
 
 ### Lesson Learned
 
@@ -3168,8 +3175,9 @@ and rollback path exist.
 
 ### Next Recommended Step
 
-Commit and push the #116 hardening correction separately, then commit/push the
-#114 Settings manifest slice and watch CI.
+Keep #114 open as the parent for policy-gated Settings flows. Implement #117
+first because provider connectors are the clearest next user-facing Settings
+path, but keep secrets presence-only and cloud disabled by default.
 
 ### Local Trusted Beta Impact
 
