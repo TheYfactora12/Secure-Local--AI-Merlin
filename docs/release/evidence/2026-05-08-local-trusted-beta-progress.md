@@ -179,8 +179,12 @@ before #95 can close.
 
 ### Ending Commit SHA
 
-Pending commit. This live evidence run produced local changes that must be
-committed after final validation.
+`1a7ad16` —
+`fix(beta): harden local trusted beta readiness evidence — refs #95 #99 #100`
+
+### GitHub Actions
+
+CI run `25533751581` passed on `main`.
 
 ### Target Issues
 
@@ -319,6 +323,9 @@ Privacy checks passed after the Qdrant telemetry fix:
    inline shell string containing command examples and caused local shell
    expansion/execution. The hung process was killed and the issue was recreated
    safely with `--body-file`.
+10. Tooling failure repeated on an inline `gh issue comment --body "..."` with
+    backticks in the body. The issue had already been closed successfully; a
+    safe follow-up comment was posted with `--body-file`.
 
 ### Failure Categories
 
@@ -367,6 +374,8 @@ Privacy checks passed after the Qdrant telemetry fix:
   failure traceability.
 - Killed the malformed `gh issue create` process and recreated the diagnostics
   follow-up as #100 using `--body-file /private/tmp/homeai-issue-100.md`.
+- Reposted the #99 completion comment using
+  `--body-file /private/tmp/homeai-issue-99-close-comment.md`.
 
 ### Retest Result
 
@@ -405,7 +414,8 @@ Regression tests updated:
 ### Follow-Up Issues Created Or Recommended
 
 - Created #99: `v3.0: Align installer final readiness banner with Merlin brand
-  and partial readiness`.
+  and partial readiness`. Fixed in `1a7ad16`, verified by CI `25533751581`,
+  and closed.
 - Created #100: `v3.0: Harden 8GB warmup diagnostics for Merlin API readiness`.
 - Recommended follow-up: tune dashboard/task API polling for 8GB warmup so
   transient 3-second endpoint timeouts display as `warming`, not failure.
