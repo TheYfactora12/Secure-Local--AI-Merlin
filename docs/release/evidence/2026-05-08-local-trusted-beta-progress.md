@@ -92,7 +92,8 @@ returned usage only and had no install side effects.
 
 ## Follow-Up Issues Created Or Recommended
 
-- No new issue created during this pass.
+- #98 created for the GitHub Actions Node.js 20 deprecation warning observed in
+  green CI run `25532642692`.
 - Continue existing #37 for public onboarding/release packaging hardening.
 - Continue existing #64 for Developer ID signing/notarization.
 - Continue existing #95 as the umbrella until the evidence pack is filled with
