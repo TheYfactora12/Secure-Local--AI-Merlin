@@ -3935,3 +3935,127 @@ unsafe browser execution.
 
 Improved, but Public Beta still needs cross-platform installer/readiness
 validation on macOS and Linux.
+
+## ClosClaw / Policy-Gated Web Comprehension Triage
+
+### Date/Time
+
+2026-05-08, late session.
+
+### Starting Commit SHA
+
+`b85140f8e2e0f6b8d53e8171e037329c63ca6385`
+
+### Target Issues
+
+- #106
+- #108
+- #117
+- #119
+- #121
+
+### Scope
+
+Validated the ClosClaw/OpenClaw product idea from the external planning note
+against the current repo, sprint board, canonical state, and live GitHub issue
+queue.
+
+### Commands Run
+
+- `git status --short && git rev-parse HEAD`
+- `rg -n "ClosClaw|OpenClaw|web_fetch|web comprehension|Consent-Gated Web|PATENT_CLAIM_5|SPRINT_BOARD|SCRUM_MANAGEMENT|#118|#82|#83" docs merlin tests`
+- `ls docs/ip && rg -n "\[YOUR FULL LEGAL NAME|PATENT_CLAIM_5|MerlinFlow|Element 6|Consent-Gated|ClosClaw" docs/ip docs/CANONICAL_PROJECT_STATE.md docs/scrum`
+- `sed -n '1,220p' docs/CANONICAL_PROJECT_STATE.md`
+- `gh issue list --state open --limit 80 --json number,title,state,milestone,labels`
+- `gh issue view 106 --json number,title,state,milestone,labels,body`
+- `gh issue view 117 --json number,title,state,milestone,labels,body`
+- `gh issue view 119 --json number,title,state,milestone,labels,body`
+- `gh label list --limit 100`
+- `gh issue view 108 --json number,title,state,milestone,labels,body`
+- `gh issue view 107 --json number,title,state,milestone,labels,body`
+- `gh issue view 104 --json number,title,state,milestone,labels,body`
+- `gh issue create --title "v3.7 design: policy-gated web comprehension connector" ...`
+
+### Test Output Summary
+
+- Worktree was clean at `b85140f8e2e0f6b8d53e8171e037329c63ca6385` before this
+  evidence note update.
+- No existing `ClosClaw`, `OpenClaw`, `web_fetch`, or `Consent-Gated Web`
+  implementation was found in repo code/docs/tests.
+- Live GitHub issue queue confirmed #106, #114, #117, #119, and #120 remain the
+  v3.1 Wizard HQ Product Shell / Settings work.
+- #108 is the closest existing parent area for local fallback/degraded behavior.
+- Created #121 as the design-only tracking issue for policy-gated web
+  comprehension.
+
+### Failures Found
+
+No command failure. Product drift risk found: the ClosClaw idea is valid, but it
+would introduce external network access if implemented inside the current v3.1
+Settings work.
+
+### Failure Category
+
+- Roadmap/governance drift
+- No-cloud/default privacy
+- UX/readiness confusion risk
+
+### Root Cause Or Current Hypothesis
+
+The idea came from an external planning note and was not yet represented in
+GitHub issues or canonical execution order. Without triage, it could be
+mistakenly pulled into #117 provider setup or #119 service controls.
+
+### Fix Applied
+
+Created GitHub issue #121:
+`v3.7 design: policy-gated web comprehension connector`.
+
+The issue keeps this as future design work, with explicit constraints:
+
+- no default web access,
+- no browser automation,
+- no silent memory writes,
+- no routing confidence changes,
+- no public patent/IP claim language,
+- backend policy gate and local audit required before any network fetch.
+
+### Regression Test Added Or Reason Not Added
+
+No code regression test added because this was governance triage only. Future
+implementation child issues must add static tests for no-default-network,
+no-secret-logging, redaction, offline/degraded behavior, and no browser shell
+execution.
+
+### Follow-Up Issues Created Or Recommended
+
+- Created #121.
+
+### Lesson Learned
+
+Network-capable features need to enter through a design issue first. Even a
+useful web comprehension layer can weaken Merlin's local-first promise if it is
+added before policy gates, redaction, audit payloads, and offline behavior are
+specified.
+
+### What Not To Repeat Next Time
+
+Do not add web fetch, crawler, browser automation, or "current info" features to
+Wizard HQ just because the UX would benefit. First define the policy gate,
+redaction boundary, and degraded/offline state.
+
+### Next Recommended Step
+
+Return to the active v3.1 queue: #117 provider connector setup or #120 memory
+review/delete controls, with #119 backend service controls left open until a
+policy-gated service action design exists.
+
+### Local Trusted Beta Impact
+
+Improved governance. The future web-comprehension idea is now tracked without
+changing local-first runtime behavior.
+
+### Public Beta Impact
+
+Improved risk control. Public Beta should not claim web comprehension until
+#121 design and child implementation issues are complete and tested.
