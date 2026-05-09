@@ -1,6 +1,6 @@
 # Merlin AI Control Plane Strategy
 
-Last verified: 2026-05-08
+Last verified: 2026-05-09
 Status: Product strategy and milestone alignment
 
 This document validates the commercial direction for Merlin AI against the
@@ -14,6 +14,9 @@ Merlin AI should evolve from a local-first AI stack into a private AI control
 plane:
 
 - a Merlin-native Wizard HQ front door,
+- Merlin Chat as the default conversation surface,
+- Rooms for local chat history and scoped project context,
+- approval-gated memory extraction from saved conversations,
 - a local model and provider registry,
 - approval-gated memory and action governance,
 - AI asset inventory,
@@ -24,9 +27,13 @@ plane:
 - governance evidence and reports,
 - optional native automation runtime after workflows prove the shape.
 
-The strongest wedge is not "another chatbot." The wedge is owned AI
-infrastructure that makes local models, cloud providers, agents, memory, and
-automation visible and governable from one private command center.
+The strongest wedge is not "another chatbot" and not "a pile of AI tools." The
+wedge is a private AI that remembers the user's work in local Rooms, lets the
+user choose what becomes durable memory, and makes local models, optional cloud
+providers, agents, and automation visible and governable from one command
+center. Cloud providers remain optional connectors, never defaults. In roadmap
+terms, cloud providers are optional future/connector scope, not the core
+product loop.
 
 ## Validated Market Signals
 
@@ -73,6 +80,9 @@ Current Merlin has the foundation for this direction:
 
 Current Merlin does not yet provide:
 
+- durable Merlin-native chat history,
+- Rooms/project context containers,
+- export/import brain,
 - production DLP blocking,
 - automatic AI asset discovery,
 - multi-user RBAC,
@@ -158,7 +168,7 @@ flowchart LR
 | Milestone | Working Title | Product Outcome |
 | --- | --- | --- |
 | v3.0 | Public Product Release hardening | Installer, evidence, onboarding, Wizard HQ foundation, local trusted beta path |
-| v3.1 | Wizard HQ Product Shell, issue #106 | Merlin-native product surface with Chat, Brains, Memory, Agents, Security, System, Settings |
+| v3.1 | Wizard HQ Product Shell, issues #106 and #135 | Merlin-native product surface with Chat, Rooms, Brains, Memory, Agents, Security, System, Settings |
 | v3.2 | AI Asset Inventory + Identity Graph, issue #105 | Inventory of local models, providers, tools, agents, and trust state |
 | v3.3 | Access Control + Reviews, issue #103 | Actor/resource permissions, approval history, review workflows |
 | v3.4 | Monitoring, IDS Signals + Drift, issue #104 | Activity events, anomaly signals, failed gate trends, drift baseline |
@@ -183,6 +193,7 @@ For v3.1, the first sprint remains product-shell work, not enterprise security:
 
 - close the first-run status persistence gap,
 - validate Wizard HQ visually in a browser,
+- design Merlin Rooms, local chat history, and save-to-Room memory boundaries,
 - make Brains show model/provider status honestly,
 - keep Open WebUI as a brain option rather than Merlin's identity,
 - avoid browser execution controls until policy-gated APIs are ready.
@@ -191,6 +202,10 @@ For v3.1, the first sprint remains product-shell work, not enterprise security:
 
 - Native MerlinFlow execution runtime before v3.1-v3.7 prove the owned control
   plane shape.
+- ClosClaw/web comprehension before Merlin Chat, Rooms, and memory review are
+  useful.
+- More provider/cloud routing UI unless it directly supports the Merlin
+  Chat/Rooms loop.
 - Enterprise RBAC before a single-user owner workflow is clear.
 - DLP blocking before data classification, false-positive handling, and local
   evidence are designed.

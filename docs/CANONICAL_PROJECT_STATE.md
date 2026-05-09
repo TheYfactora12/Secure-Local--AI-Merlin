@@ -34,14 +34,21 @@ Home AI Elite has a working local-first foundation:
   Security, System, and Settings information architecture,
 - read-only provider connector capability catalog for local Ollama, LiteLLM,
   ChatGPT/OpenAI, Claude/Anthropic, Perplexity Sonar, Gemini/Google AI,
-  Mistral AI, and OpenRouter.
+  Mistral AI, and OpenRouter,
+- a backend-only provider connector presence-marker setup path for #117 that
+  requires approval metadata and never returns or persists raw provider keys.
 
 It is not yet the final commercial Home AI Elite product. The remaining product
-gaps are first-run API persistence, dashboard command-center polish, visual
-Wizard HQ validation, supervised Magic Mode UX, public packaging evidence, and a
-future native automation runtime that supplements or replaces n8n after workflow
-patterns are proven. Developer ID signing/notarization remains tracked by #64
+gaps are Merlin-native local chat history, Rooms/project context, save-to-Room
+flow, approved memory extraction, memory review/delete, export/import brain,
+dashboard command-center polish, visual Wizard HQ validation, and public
+packaging evidence. Developer ID signing/notarization remains tracked by #64
 but is deferred until the product surface is more complete.
+
+The current product soul is governed by `docs/product/PRODUCT_NORTH_STAR.md`:
+Merlin must become the user-owned AI chat, memory, project context, and action
+surface before future web comprehension, automation runtime, governance
+reporting, or public-release polish takes priority.
 
 ## Current Architecture Diagram
 
@@ -100,17 +107,20 @@ flowchart LR
 1. #106: Wizard HQ Product Shell parent; keep Chat, Brains, Memory, Agents,
    Security, System, and Settings aligned before deeper governance features.
 2. #114: policy-gated Wizard HQ Settings backend parent.
-3. #117: provider connector setup with secret presence-only storage and
-   explicit allow/not-allow flow. The read-only capability catalog is complete;
-   write-capable setup remains open.
-4. #118, #119, and #120: model library confirmations, startup/API service
+3. #135: Merlin Rooms for local chat history and scoped context; design this
+   before adding more peripheral provider, automation, or web-comprehension
+   surfaces.
+4. #117: provider connector setup with secret presence-only storage and
+   explicit allow/not-allow flow. Backend presence-marker setup exists; Wizard
+   HQ UI and real secret-vault/cloud-routing slices remain separate.
+5. #118, #119, and #120: model library confirmations, startup/API service
    controls, and memory review/delete controls as separate policy-gated
-   Settings slices.
-5. #37 and #95: public onboarding hardening and product audit evidence
+   Settings slices. #120 is directly related to #135 and should stay close.
+6. #37 and #95: public onboarding hardening and product audit evidence
    collection under v3.0.
-6. #64: Developer ID signing/notarization under v3.0, deferred until the
+7. #64: Developer ID signing/notarization under v3.0, deferred until the
    installer, Wizard HQ, and release evidence are otherwise product-complete.
-7. #92: Native Automation Runtime in v3.x after release readiness work and
+8. #92: Native Automation Runtime in v3.x after release readiness work and
    control-plane product milestones.
 
 Patent/IP issues #81 through #84 are cross-cutting governance work. They should
@@ -122,6 +132,7 @@ approves the disclosure and the relevant evidence exists in code.
 | Doc | Owner | Purpose |
 | --- | --- | --- |
 | `docs/CANONICAL_PROJECT_STATE.md` | Scrum master / governance | Current GitHub-aligned state, queue, and doc hierarchy. |
+| `docs/product/PRODUCT_NORTH_STAR.md` | Product owner | Canonical product soul: Merlin as local chat, memory, Rooms, export/import brain, and supervised action surface. |
 | `docs/MASTER_CONTEXT.md` | Session bootstrap | Full operational context and current milestone position. |
 | `docs/MASTER_PROMPT.md` | Session bootstrap | Agent behavior rules and current next recommendation. |
 | `CODEX_MASTER_PROMPT.md` | Root repo operating contract | High-level security, engineering, and patent-sensitive rules. Treat embedded backlog lists as subordinate to GitHub truth and this doc. |

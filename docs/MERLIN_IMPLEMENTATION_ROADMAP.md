@@ -8,6 +8,16 @@
 
 Ship Merlin as a useful local-first product before expanding into supervised execution. The installer remains protected. The first implementation slices should be docs/config/health/CLI/dashboard layers, not broad service rewrites.
 
+The current product soul is narrower than the full control-plane roadmap:
+
+1. Merlin Chat is the primary user experience.
+2. Rooms are the local project/context containers.
+3. Saved chat history is not the same as approved memory.
+4. Merlin learns from approved memory extraction, not silent transcript mining.
+5. Providers, models, agents, web comprehension, and automation are supporting
+   connectors. They wait unless they directly improve the chat/history/Rooms
+   loop.
+
 ## GitHub Milestone Ladder
 
 | Milestone | Purpose | Current rule |
@@ -23,7 +33,7 @@ Ship Merlin as a useful local-first product before expanding into supervised exe
 | `v2.1 — Dashboard Command Center` | Read-only/user-facing control center | No privileged mutation in dashboard v1 |
 | `v2.2 — Magic Mode` | Supervised orchestration | Plan-first, approval-gated |
 | `v3.0 — Public Product Release` | Public packaging/onboarding polish | Only after stable lower milestones |
-| `v3.1 — Wizard HQ Product Shell` | Merlin-native front door, Chat, Brains, Memory, Agents, Security, System, Settings | Product shell before deeper governance features |
+| `v3.1 — Wizard HQ Product Shell` | Merlin-native front door, Chat, Rooms, Brains, Memory, Agents, Security, System, Settings | Chat + Rooms + approved memory before deeper governance features |
 | `v3.2 — AI Asset Inventory + Identity Graph` | Local inventory of models, providers, tools, agents, and trust state | Design-first; no hidden scanning beyond explicit local scope |
 | `v3.3 — Access Control + Reviews` | Permission matrix and review workflows | Approval-gated and local audit first |
 | `v3.4 — Monitoring, IDS Signals + Drift` | AI activity events, failed gate trends, drift baseline | Detection before prevention claims |
@@ -138,10 +148,16 @@ left behind.
 - #106 is open under `v3.1` for the Wizard HQ Product Shell. #113 and #115 are
   closed; #114 remains the Settings parent, with #117 through #120 split into
   focused policy-gated Settings slices.
-- #117 has a current read-only provider capability catalog for local Ollama,
-  LiteLLM, ChatGPT/OpenAI, Claude/Anthropic, Perplexity Sonar, Gemini/Google AI,
-  Mistral AI, and OpenRouter. The write-capable credential and allow-toggle
-  setup flow remains open.
+- #117 has a provider capability catalog for local Ollama, LiteLLM,
+  ChatGPT/OpenAI, Claude/Anthropic, Perplexity Sonar, Gemini/Google AI, Mistral
+  AI, and OpenRouter. It also has a backend-only presence-marker setup path that
+  requires approval metadata and never returns or persists raw keys. Wizard HQ
+  key-entry UI, real secret vaulting, and cloud routing remain separate future
+  slices.
+- #135 is open under `v3.1` for Merlin Rooms: local chat history, scoped context
+  containers, save-to-Room UX, user-selected storage location, reference policy,
+  and approval-gated memory extraction. This is now the product-core path for
+  v3.1 and should be designed before adding more peripheral features.
 - #37 and #95 remain open under `v3.0` for public onboarding/release hardening
   and release readiness audit/evidence collection.
 - #64 remains open under `v3.0`, but Developer ID/notarization is deferred until
@@ -159,7 +175,8 @@ The validated commercial direction is captured in
 The roadmap is:
 
 1. v3.0: public product release hardening and local trusted beta evidence.
-2. v3.1: Wizard HQ product shell and Merlin-native first-run experience.
+2. v3.1: Wizard HQ product shell, Merlin Chat, Rooms, local chat history, and
+   approval-gated memory extraction.
 3. v3.2: AI asset inventory and identity/trust graph.
 4. v3.3: access control and review workflows.
 5. v3.4: monitoring, IDS signals, and drift detection.
@@ -181,6 +198,8 @@ enterprise governance suite.
 - Do not make cloud calls default.
 - Do not make heavy services mandatory.
 - Do not silently learn into memory.
+- Do not build features that do not directly help Merlin become the user's
+  private chat, local context, Rooms, memory, and supervised action product.
 - Do not add a heavy agent framework before core is stable.
 - Do not merge port 8766 FastAPI execution-aware behavior into the port 8765 read-only status server.
 - Do not auto-push, auto-PR, or auto-merge; user approval is required.

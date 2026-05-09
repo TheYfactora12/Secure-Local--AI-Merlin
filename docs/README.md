@@ -1,7 +1,7 @@
 # docs/ — Home AI Elite Documentation
 
 > **Product team navigation index.** Read this first. Every file in this folder has a purpose — find it here.
-> Last updated: 2026-05-08
+> Last updated: 2026-05-09
 
 ---
 
@@ -12,7 +12,7 @@
 | New contributor or onboarding | [`ARCHITECTURE.md`](./ARCHITECTURE.md) → [`MASTER_CONTEXT.md`](./MASTER_CONTEXT.md) |
 | Starting a Codex session | [`CANONICAL_PROJECT_STATE.md`](./CANONICAL_PROJECT_STATE.md) → [`MASTER_CONTEXT.md`](./MASTER_CONTEXT.md) → [`MASTER_PROMPT.md`](./MASTER_PROMPT.md) |
 | Working on the current sprint | [`MERLIN_IMPLEMENTATION_ROADMAP.md`](./MERLIN_IMPLEMENTATION_ROADMAP.md) → [`MERLIN_STAFF_CORE.md`](./architecture/MERLIN_STAFF_CORE.md) |
-| Making a product decision | [`product/HOME_AI_ELITE_PRODUCT_PLAN.md`](./product/HOME_AI_ELITE_PRODUCT_PLAN.md) → [`product/MERLIN_V1_MVP.md`](./product/MERLIN_V1_MVP.md) |
+| Making a product decision | [`product/PRODUCT_NORTH_STAR.md`](./product/PRODUCT_NORTH_STAR.md) → [`product/DASHBOARD_PRODUCT_SPEC.md`](./product/DASHBOARD_PRODUCT_SPEC.md) |
 | Reviewing security posture | [`security/SECURITY_MODEL.md`](./security/SECURITY_MODEL.md) → [`security/SECURITY_REVIEW.md`](./security/SECURITY_REVIEW.md) |
 | Debugging a failure | [`operations/FAILURE_MAP.md`](./operations/FAILURE_MAP.md) → [`operations/DO_NOT_BREAK.md`](./operations/DO_NOT_BREAK.md) |
 
@@ -24,6 +24,7 @@
 | File | Purpose |
 |---|---|
 | [`CANONICAL_PROJECT_STATE.md`](./CANONICAL_PROJECT_STATE.md) | GitHub-aligned project state, current queue, canonical docs, and drift rules |
+| [`product/PRODUCT_NORTH_STAR.md`](./product/PRODUCT_NORTH_STAR.md) | Product soul and focus filter: Merlin Chat, Rooms, memory, export/import brain, and supervised action |
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Canonical system architecture — single source of truth |
 | [`MASTER_CONTEXT.md`](./MASTER_CONTEXT.md) | Full project context for Codex and team orientation |
 | [`MASTER_PROMPT.md`](./MASTER_PROMPT.md) | Active Codex agent config and rules |
@@ -36,6 +37,7 @@
 ### 📁 product/ — What we are building and why
 | File | Purpose |
 |---|---|
+| [`PRODUCT_NORTH_STAR.md`](./product/PRODUCT_NORTH_STAR.md) | Canonical product focus: Merlin as user-owned chat, Rooms, memory, export/import brain, and supervised action |
 | [`HOME_AI_ELITE_PRODUCT_PLAN.md`](./product/HOME_AI_ELITE_PRODUCT_PLAN.md) | Top-level product plan and vision |
 | [`MERLIN_V1_MVP.md`](./product/MERLIN_V1_MVP.md) | v1 MVP scope, constraints, and acceptance criteria |
 | [`DASHBOARD_PRODUCT_SPEC.md`](./product/DASHBOARD_PRODUCT_SPEC.md) | Dashboard product requirements |

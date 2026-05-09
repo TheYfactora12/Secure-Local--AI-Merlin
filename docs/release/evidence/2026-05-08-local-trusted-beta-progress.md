@@ -4355,3 +4355,150 @@ without weakening local-first defaults.
 
 Improved foundation. Public Beta still requires real secret vault/keychain
 design before external providers should be considered usable.
+
+## #135 Product Soul / Rooms Roadmap Alignment
+
+### Date/Time
+
+2026-05-09, early session.
+
+### Starting Commit SHA
+
+`d2e57f581d381ee890800e9362ddaccd5bf2e408`
+
+### Target Issues
+
+- #135
+- #106
+- #117
+- #120
+- #95
+
+### Scope
+
+Aligned the Markdown roadmap and product docs around the clarified product
+focus: Merlin Chat, Rooms, local chat history, scoped context, and
+approval-gated memory extraction. This pass explicitly defers features that do
+not directly support that loop.
+
+### Files Changed
+
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/MERLIN_IMPLEMENTATION_ROADMAP.md`
+- `docs/product/DASHBOARD_PRODUCT_SPEC.md`
+- `docs/product/MERLIN_CONTROL_PLANE_STRATEGY.md`
+- `docs/README.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+No runtime protected files touched in this docs-only alignment pass.
+
+### Commands Run
+
+- `rg -n "Room|Rooms|chat history|transcript|conversation history|local chat|project memory|workspace memory" docs merlin dashboard tests .github | head -160`
+- `gh issue list --state open --limit 80 --json number,title,state,milestone,labels ...`
+- `gh issue create --title "v3.1: Merlin Rooms for local chat history and scoped context" ...`
+- `git status --short && git rev-parse HEAD`
+- `sed -n '1,220p' docs/MERLIN_IMPLEMENTATION_ROADMAP.md`
+- `sed -n '1,220p' docs/product/DASHBOARD_PRODUCT_SPEC.md`
+- `sed -n '1,220p' docs/product/MERLIN_CONTROL_PLANE_STRATEGY.md`
+- `gh run list --limit 3 --json databaseId,headSha,status,conclusion,workflowName,url`
+- `gh issue view 135 --json number,title,state,milestone,labels,body`
+
+### Test Output Summary
+
+- GitHub issue lookup initially failed due API/network connectivity, then
+  succeeded on retry.
+- Existing issue search found #120 as related memory review/delete work but no
+  existing Rooms/chat-history issue.
+- Created #135 under `v3.1 — Wizard HQ Product Shell`.
+- CI for the preceding #117 backend commit passed on run `25600208322`.
+- First `bash tests/control-plane-strategy-smoke.sh` run failed because the
+  edited strategy doc no longer contained the exact required phrase
+  `cloud providers`.
+- Retest passed after restoring explicit `cloud providers` wording.
+- `bash tests/release-readiness-readme-smoke.sh`: PASS.
+- `bash tests/provider-connector-policy-smoke.sh`: PASS.
+- `git diff --check`: PASS.
+
+### Tests Skipped And Why
+
+No runtime test was run for this docs-only alignment before editing. Static
+docs/roadmap checks are run after the final diff.
+
+### Failures Found
+
+1. GitHub issue lookup initially failed with `error connecting to api.github.com`.
+2. Push for the #117 backend commit was rejected because remote `main` advanced
+   with product north-star docs.
+3. Control-plane strategy smoke failed after a wording change removed a phrase
+   the smoke test intentionally checks.
+
+### Failure Category
+
+- GitHub/network availability.
+- Roadmap/governance drift risk.
+- Collaboration race on `main`.
+
+### Root Cause Or Current Hypothesis
+
+The session was active while new product-direction commits landed remotely. The
+first issue lookup also hit a transient GitHub/API connection failure.
+
+### Fix Applied
+
+- Retried GitHub issue lookup with network access.
+- Created #135 only after confirming no existing Rooms issue.
+- Fetched and rebased the #117 backend commit on top of remote `main`.
+- Re-ran focused #117 tests after rebase before pushing.
+- Updated roadmap and product docs to make `PRODUCT_NORTH_STAR.md` the product
+  decision filter.
+- Restored the explicit `cloud providers` wording in the strategy doc while
+  preserving the new rule that they remain optional connectors, never defaults.
+
+### Regression Test Added Or Reason Not Added
+
+No new automated test added for the GitHub connectivity failure because it was
+environment/network-specific. The process improvement is documented here:
+always fetch/rebase and re-check product-direction docs before roadmap edits.
+For doc smokes, preserve exact safety phrases unless the smoke is intentionally
+updated in the same slice.
+
+### Follow-Up Issues Created Or Recommended
+
+- Created #135: `v3.1: Merlin Rooms for local chat history and scoped context`.
+
+Recommended next child issue after #135 design:
+
+- `v3.1: Room data model and local transcript boundary`
+- `v3.1: Wizard HQ Room picker and reference policy copy`
+- `v3.1: Save chat to Room flow, no memory extraction by default`
+
+### Lesson Learned
+
+The product direction is now sharper: Merlin wins by becoming the user's
+private chat/history/Rooms/memory system. Provider connectors, ClosClaw,
+automation, and governance are supporting layers, not the center.
+
+### What Not To Repeat Next Time
+
+Do not keep building peripheral connector surfaces if Merlin Chat, Rooms,
+memory review, and export/import brain are not moving forward. Do not edit
+roadmaps from stale local state after a push rejection; fetch and read the new
+product docs first.
+
+### Next Recommended Step
+
+Run docs/static checks, commit the roadmap alignment, push, and then start #135
+design before adding any new peripheral feature.
+
+### Local Trusted Beta Impact
+
+Improved focus. Local Trusted Beta should demonstrate a user-owned Merlin
+conversation and memory path, not a broad unfinished control panel.
+
+### Public Beta Impact
+
+Improved positioning. Public Beta claims should center on Merlin Chat, Rooms,
+local memory, and export/import brain once evidence exists.
