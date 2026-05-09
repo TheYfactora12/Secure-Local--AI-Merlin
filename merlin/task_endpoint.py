@@ -17,6 +17,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from merlin.approval_store import (
+    ApprovalRecord,
+    create_room_transcript_approval,
+    decide_approval,
+    require_room_transcript_approval,
+)
 from merlin.memory_manager import MemoryManager
 from merlin.outcome_observer import observe_task_outcome
 from merlin.persona_injector import build_system_prompt
@@ -72,6 +78,54 @@ class RoomTranscriptSaveResponse(BaseModel):
     audit_id: str | None
     memory_written: bool
     memory_extraction: str
+
+
+class RoomTranscriptApprovalRequest(BaseModel):
+    room_id: str
+    room_name: str | None = None
+    user_input: str
+    merlin_response: str
+    session_id: str
+
+
+class RoomTranscriptApprovalResponse(BaseModel):
+    approval_request_id: str
+    status: str
+    action: str
+    approval_gates: list[str]
+    execution_allowed: bool
+    payload_hash: str
+    payload_summary: dict[str, Any]
+
+
+class ApprovalDecisionResponse(BaseModel):
+    approval_request_id: str
+    status: str
+    action: str
+    execution_allowed: bool
+    decision_recorded: bool
+
+
+def _approval_response(record: ApprovalRecord) -> RoomTranscriptApprovalResponse:
+    return RoomTranscriptApprovalResponse(
+        approval_request_id=record.approval_request_id,
+        status=record.status,
+        action=record.action,
+        approval_gates=record.approval_gates,
+        execution_allowed=record.execution_allowed,
+        payload_hash=record.payload_hash,
+        payload_summary=record.payload_summary,
+    )
+
+
+def _decision_response(record: ApprovalRecord) -> ApprovalDecisionResponse:
+    return ApprovalDecisionResponse(
+        approval_request_id=record.approval_request_id,
+        status=record.status,
+        action=record.action,
+        execution_allowed=record.execution_allowed,
+        decision_recorded=record.decision_recorded,
+    )
 
 
 def _input_hash(user_input: str) -> str:
@@ -331,6 +385,25 @@ def save_room_transcript_endpoint(request: RoomTranscriptSaveRequest) -> RoomTra
         )
 
     try:
+        require_room_transcript_approval(
+            approval_id=approval_id,
+            room_id=request.room_id,
+            room_name=request.room_name,
+            user_input=request.user_input,
+            merlin_response=request.merlin_response,
+            session_id=request.session_id,
+        )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": str(exc),
+                "approval_gates": ["file_write"],
+                "memory_extraction": "not_performed_requires_separate_approval",
+            },
+        ) from exc
+
+    try:
         result = save_room_transcript(
             room_id=request.room_id,
             room_name=request.room_name,
@@ -360,6 +433,41 @@ def save_room_transcript_endpoint(request: RoomTranscriptSaveRequest) -> RoomTra
         memory_written=False,
         memory_extraction=result.memory_extraction,
     )
+
+
+@app.post("/approvals/room-transcript", response_model=RoomTranscriptApprovalResponse)
+def create_room_transcript_approval_endpoint(
+    request: RoomTranscriptApprovalRequest,
+) -> RoomTranscriptApprovalResponse:
+    try:
+        record = create_room_transcript_approval(
+            room_id=request.room_id,
+            room_name=request.room_name,
+            user_input=request.user_input,
+            merlin_response=request.merlin_response,
+            session_id=request.session_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return _approval_response(record)
+
+
+@app.post("/approvals/{approval_id}/approve", response_model=ApprovalDecisionResponse)
+def approve_room_transcript_approval_endpoint(approval_id: str) -> ApprovalDecisionResponse:
+    try:
+        record = decide_approval(approval_id, "approved")
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="approval id not found") from exc
+    return _decision_response(record)
+
+
+@app.post("/approvals/{approval_id}/deny", response_model=ApprovalDecisionResponse)
+def deny_room_transcript_approval_endpoint(approval_id: str) -> ApprovalDecisionResponse:
+    try:
+        record = decide_approval(approval_id, "denied")
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="approval id not found") from exc
+    return _decision_response(record)
 
 
 from merlin import status_extension  # noqa: E402,F401  Register status routes after app setup.

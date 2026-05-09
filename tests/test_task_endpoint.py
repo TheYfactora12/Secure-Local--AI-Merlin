@@ -153,7 +153,30 @@ def test_save_room_transcript_writes_local_file_without_memory(tmp_path, monkeyp
             return "audit-room-1"
 
     monkeypatch.setenv("MERLIN_ROOMS_ROOT", str(tmp_path / "rooms"))
+    monkeypatch.setenv("MERLIN_APPROVAL_LOG", str(tmp_path / "approvals.jsonl"))
     monkeypatch.setattr("merlin.task_endpoint.MemoryManager", FakeMemoryManager)
+
+    approval_response = client.post(
+        "/approvals/room-transcript",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "What are we building?",
+            "merlin_response": "Merlin Rooms.",
+            "session_id": "session-1",
+        },
+    )
+    approval_body = approval_response.json()
+    approval_id = approval_body["approval_request_id"]
+    decision_response = client.post(f"/approvals/{approval_id}/approve")
+
+    assert approval_response.status_code == 200
+    assert approval_body["status"] == "required_pending"
+    assert approval_body["execution_allowed"] is False
+    assert approval_body["payload_summary"]["raw_content_in_approval"] is False
+    assert "What are we building?" not in str(approval_body)
+    assert decision_response.status_code == 200
+    assert decision_response.json()["execution_allowed"] is True
 
     response = client.post(
         "/rooms/transcripts",
@@ -163,7 +186,7 @@ def test_save_room_transcript_writes_local_file_without_memory(tmp_path, monkeyp
             "user_input": "What are we building?",
             "merlin_response": "Merlin Rooms.",
             "session_id": "session-1",
-            "approval_id": "approval-room-1",
+            "approval_id": approval_id,
         },
     )
     body = response.json()
@@ -179,14 +202,74 @@ def test_save_room_transcript_writes_local_file_without_memory(tmp_path, monkeyp
     assert "What are we building?" in transcript_text
     assert "Merlin Rooms." in transcript_text
     assert audit_calls[0][0] == "room_transcript_save"
-    assert audit_calls[0][1]["approval_id"] == "approval-room-1"
+    assert audit_calls[0][1]["approval_id"] == approval_id
     assert audit_calls[0][1]["raw_transcript_in_audit"] is False
     assert "What are we building?" not in str(audit_calls[0][1])
     assert "Merlin Rooms." not in str(audit_calls[0][1])
 
 
+def test_save_room_transcript_rejects_unapproved_or_mismatched_approval(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("MERLIN_ROOMS_ROOT", str(tmp_path / "rooms"))
+    monkeypatch.setenv("MERLIN_APPROVAL_LOG", str(tmp_path / "approvals.jsonl"))
+
+    approval_response = client.post(
+        "/approvals/room-transcript",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "What are we building?",
+            "merlin_response": "Merlin Rooms.",
+            "session_id": "session-1",
+        },
+    )
+    approval_id = approval_response.json()["approval_request_id"]
+
+    pending_response = client.post(
+        "/rooms/transcripts",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "What are we building?",
+            "merlin_response": "Merlin Rooms.",
+            "session_id": "session-1",
+            "approval_id": approval_id,
+        },
+    )
+    assert pending_response.status_code == 403
+    assert "not approved" in pending_response.json()["detail"]["message"]
+
+    client.post(f"/approvals/{approval_id}/approve")
+    mismatched_response = client.post(
+        "/rooms/transcripts",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "Changed input",
+            "merlin_response": "Merlin Rooms.",
+            "session_id": "session-1",
+            "approval_id": approval_id,
+        },
+    )
+    assert mismatched_response.status_code == 403
+    assert "payload hash" in mismatched_response.json()["detail"]["message"]
+
+
 def test_save_room_transcript_rejects_unsafe_room_id(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("MERLIN_ROOMS_ROOT", str(tmp_path / "rooms"))
+    monkeypatch.setenv("MERLIN_APPROVAL_LOG", str(tmp_path / "approvals.jsonl"))
+
+    approval_response = client.post(
+        "/approvals/room-transcript",
+        json={
+            "room_id": "../bad",
+            "room_name": "Bad",
+            "user_input": "hello",
+            "merlin_response": "hi",
+            "session_id": "session-1",
+        },
+    )
+    approval_id = approval_response.json()["approval_request_id"]
+    client.post(f"/approvals/{approval_id}/approve")
 
     response = client.post(
         "/rooms/transcripts",
@@ -196,7 +279,7 @@ def test_save_room_transcript_rejects_unsafe_room_id(tmp_path, monkeypatch) -> N
             "user_input": "hello",
             "merlin_response": "hi",
             "session_id": "session-1",
-            "approval_id": "approval-room-1",
+            "approval_id": approval_id,
         },
     )
 

@@ -61,7 +61,9 @@ for required in \
   "Cloud/synced folders are treated as user-selected filesystem paths" \
   "Browser-side filesystem writes" \
   "POST http://localhost:8766/rooms/transcripts" \
-  "This endpoint requires \`approval_id\`"; do
+  "This endpoint requires \`approval_id\`" \
+  "POST http://localhost:8766/approvals/room-transcript" \
+  "rejects approvals that are still"; do
   grep -Fq "$required" "$ROOMS_DOC" || fail "Rooms doc missing: $required"
 done
 

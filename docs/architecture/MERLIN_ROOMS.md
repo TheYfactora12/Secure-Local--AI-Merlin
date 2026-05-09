@@ -121,6 +121,19 @@ local Markdown transcript, and records audit metadata without raw transcript
 text. It does not perform memory extraction and does not create browser-side
 file controls.
 
+The `approval_id` must come from the Task API approval lifecycle:
+
+```text
+POST http://localhost:8766/approvals/room-transcript
+POST http://localhost:8766/approvals/{approval_id}/approve
+POST http://localhost:8766/approvals/{approval_id}/deny
+```
+
+The approval request stores a redacted payload hash and Room/session metadata.
+It does not store raw user input or raw Merlin response text. The transcript
+save endpoint re-computes the payload hash and rejects approvals that are still
+pending, denied, missing, or bound to different transcript content.
+
 ## Runtime Work To Split
 
 Before writable Room support ships, split #135 into implementation issues:

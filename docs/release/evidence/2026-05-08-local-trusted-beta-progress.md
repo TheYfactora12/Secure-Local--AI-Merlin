@@ -5642,3 +5642,135 @@ transcripts or implying approved memory.
 
 Positive foundation. Public Beta remains blocked on the full save/reload/review
 Room flow and clean install evidence.
+
+## #135 Room Transcript Approval Lifecycle
+
+### Date/Time
+
+2026-05-09 EDT
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`e2e04a44ff3e5fff2b99dbac8e84db2ed785a2a6`
+
+### Ending Commit SHA
+
+Pending commit for this approval lifecycle slice.
+
+### Target Issues
+
+- #135 Merlin Rooms
+- #31 Memory Approval Flow boundary
+- #122 Product Focus Cut
+
+### Scope
+
+Add a real backend approval lifecycle for Room transcript saves before exposing
+browser controls. The lifecycle creates a redacted approval request, records an
+approve/deny decision, and requires the final save request to match the approved
+payload hash exactly.
+
+### Files Changed
+
+- `merlin/approval_store.py`
+- `merlin/task_endpoint.py`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `tests/test_task_endpoint.py`
+- `tests/dashboard-rooms-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `merlin/task_endpoint.py`: adds Task API approval endpoints and strengthens
+  `POST /rooms/transcripts`.
+
+### Commands Run
+
+- `.venv-test/bin/python -m pytest tests/test_task_endpoint.py tests/test_room_store.py tests/test_status_extension.py -q`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- `52 passed in 3.29s`
+- `PASS: Wizard HQ native Merlin Chat is policy-gated through Task API`
+- `PASS: Merlin Rooms surface is local, explicit, and non-writing`
+- `git diff --check` returned clean.
+
+### Tests Skipped And Why
+
+No live service or browser test was required for this backend/offline approval
+slice. Full UI/browser validation belongs to the later approval-card slice.
+
+### Failures Found
+
+None.
+
+### Failure Category
+
+No failure observed.
+
+### Root Cause Or Current Hypothesis
+
+No failure observed.
+
+### Fix Applied
+
+No failure fix required.
+
+### Retest Result
+
+All focused endpoint, Room, status, and dashboard static tests passed.
+
+### Regression Test Added
+
+- Room transcript save now requires an approved approval id.
+- Pending approval cannot write a Room transcript.
+- Approved but payload-mismatched approval cannot write a Room transcript.
+- Approval proposal response does not contain raw user input.
+- Rooms architecture smoke checks the approval lifecycle endpoints.
+
+### Follow-Up Issues Created Or Recommended
+
+Next focused issue:
+
+**Title:** `v3.1 Wizard HQ: Room transcript approval card`
+
+Acceptance criteria:
+
+- UI proposes a Room transcript save after a Merlin response.
+- User can approve or deny through Task API approval endpoints.
+- UI calls `POST /rooms/transcripts` only after an approved matching approval id.
+- No raw transcript appears in approval logs.
+- Static smokes allow only these specific Task API approval/save POST paths.
+
+### Lesson Learned
+
+The approval id alone was not enough. It must be bound to the exact transcript
+payload hash so a stale or generic approval cannot authorize a different local
+file write.
+
+### What Not To Repeat Next Time
+
+Do not add browser save controls until the backend can prove the approval
+matches the action payload.
+
+### Next Recommended Step
+
+Commit and push this backend approval lifecycle, then build the narrow Wizard HQ
+approval card against these endpoints.
+
+### Local Trusted Beta Impact
+
+Improves. Merlin now has a stronger save-to-Room trust boundary: local history
+can be saved only after a specific approved payload.
+
+### Public Beta Impact
+
+Positive foundation. Public Beta still needs the complete user-facing approval
+card, Room reload/history UX, memory review/delete, and clean installer evidence.
