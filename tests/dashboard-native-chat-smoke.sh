@@ -94,9 +94,21 @@ grep -q "Local by default" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing local-by-default proof"
 grep -q "Memory writes require approval" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing approval-gated memory copy"
+grep -q "Save latest chat to Room" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat missing Room transcript save surface"
+grep -q "requestRoomTranscriptApproval" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat missing Room save approval request flow"
+grep -q "allowRoomTranscriptSave" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat missing explicit local Room save flow"
+grep -q "/approvals/room-transcript" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat missing Room transcript approval endpoint"
+grep -q "/rooms/transcripts" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat missing approved Room transcript save endpoint"
+grep -q "memory not written" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must show Room save does not write memory"
 
 POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
-[[ "$POST_COUNT" == "1" ]] || fail "dashboard must have exactly one POST: Merlin Task API /task"
+[[ "$POST_COUNT" == "2" ]] || fail "dashboard must use only Task POST and shared policy-gated POST helper"
 
 if grep -q "api/generate\\|/api/chat\\|/v1/chat/completions\\|localhost:4000/v1" "$DASHBOARD_FILE"; then
   fail "native chat must not call model backends directly"

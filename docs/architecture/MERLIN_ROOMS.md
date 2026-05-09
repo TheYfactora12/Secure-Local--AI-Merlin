@@ -79,8 +79,10 @@ Wizard HQ should show:
 - memory extraction state,
 - delete/export status.
 
-Read-only design state is acceptable until backend file, index, migration, and
-audit paths are implemented.
+Discovery remains read-only. The current dashboard may request an approved save
+for the latest completed Merlin exchange only through the Task API approval
+lifecycle. Arbitrary browser filesystem controls, folder picking, indexing, and
+memory extraction remain locked.
 
 ## Current Runtime Slice
 
@@ -110,7 +112,7 @@ timestamps for already-saved local transcripts. It does not read or return raw
 transcript content, create folders, write transcripts, index content, or extract
 memory.
 
-Current implementation also exposes a backend-only write path:
+Current implementation also exposes an approval-gated write path:
 
 ```text
 POST http://localhost:8766/rooms/transcripts
@@ -120,6 +122,16 @@ This endpoint requires `approval_id`, validates a safe Room slug, writes a
 local Markdown transcript, and records audit metadata without raw transcript
 text. It does not perform memory extraction and does not create browser-side
 file controls.
+
+Wizard HQ currently uses this path only for:
+
+- the latest completed Merlin response,
+- the default `merlin-build` Room,
+- explicit "Prepare Room save" then "Allow local save" clicks,
+- local transcript history only.
+
+It does not save degraded/blocked responses, does not index the Room for future
+context, and does not write approved memory.
 
 The `approval_id` must come from the Task API approval lifecycle:
 

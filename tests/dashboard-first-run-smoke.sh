@@ -74,9 +74,17 @@ if grep -qiE '<input|type="password"|api[_-]?key|token[[:space:]]*[:=]|password[
 fi
 
 POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
-[[ "$POST_COUNT" == "1" ]] || fail "dashboard must have exactly one POST: Merlin Task API /task"
+[[ "$POST_COUNT" == "2" ]] || fail "dashboard must use only the Task POST and shared policy-gated POST helper"
 grep -q 'fetch(`${TASK_API}/task`' "$DASHBOARD_FILE" \
-  || fail "dashboard POST must route only through Merlin Task API /task"
+  || fail "dashboard chat POST must route through Merlin Task API /task"
+grep -q 'function postJson' "$DASHBOARD_FILE" \
+  || fail "dashboard missing shared policy-gated POST helper"
+grep -q '/approvals/room-transcript' "$DASHBOARD_FILE" \
+  || fail "dashboard missing Room transcript approval request path"
+grep -q '/rooms/transcripts' "$DASHBOARD_FILE" \
+  || fail "dashboard missing approved Room transcript save path"
+grep -q "saved to the local Room" "$DASHBOARD_FILE" \
+  || fail "dashboard missing explicit local Room save copy"
 
 if grep -q "api/generate\\|/api/chat\\|/v1/chat/completions\\|localhost:4000/v1" "$DASHBOARD_FILE"; then
   fail "dashboard first-run must not call model backends directly"

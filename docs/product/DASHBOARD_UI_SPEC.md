@@ -54,6 +54,10 @@ Merlin Chat:
 - Responses show the selected staff mode, route confidence, model alias, and whether memory was used.
 - Approval-required responses are shown inline with the blocked gate names and a safe next command.
 - Raw prompts, secrets, API keys, and model response text are never written to dashboard logs.
+- Room transcript saves are allowed only for the latest completed Merlin
+  response, only through the Task API approval lifecycle, and only as local
+  Markdown history. The dashboard must show that the save is **not** approved
+  memory and that memory extraction is a separate future approval flow.
 
 Magic Mode:
 

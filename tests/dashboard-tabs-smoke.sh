@@ -127,7 +127,11 @@ grep -q "Cloud escalation" "$DASHBOARD_FILE" \
   || fail "dashboard missing cloud escalation setting"
 
 POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
-[[ "$POST_COUNT" == "1" ]] || fail "dashboard must have exactly one POST: Merlin Task API /task"
+[[ "$POST_COUNT" == "2" ]] || fail "dashboard must use only Task POST and shared policy-gated POST helper"
+grep -q "/approvals/room-transcript" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Room transcript approval path"
+grep -q "/rooms/transcripts" "$DASHBOARD_FILE" \
+  || fail "dashboard missing approved Room transcript save path"
 
 if grep -q "api/generate\\|/api/chat\\|/v1/chat/completions\\|localhost:4000/v1" "$DASHBOARD_FILE"; then
   fail "dashboard tab shell must not call model backends directly"

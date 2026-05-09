@@ -6419,3 +6419,216 @@ and approval-gated boundaries.
 
 Positive UX foundation. Public Beta still requires clean installer retest,
 reliable browser visual QA, and memory/Room approval UX evidence.
+
+---
+
+## 2026-05-09 — Room-Aware Chat Save UX
+
+### Date/Time
+
+2026-05-09 10:29:29 EDT.
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`7c21c75` (`feat(dashboard): integrate Merlin chat shell direction`)
+
+### Ending Commit SHA
+
+Pending commit.
+
+### Target Issues
+
+- #135 Merlin Rooms for local chat history and scoped context
+- #106 Wizard HQ Product Shell
+- #122 Product Focus Cut
+- #134 Product Value Checkpoint
+
+### Scope
+
+Wire the Merlin Chat surface to the existing Room transcript approval/save
+backend for the latest completed Merlin response.
+
+Implemented:
+
+- "Save latest chat to Room" panel in Merlin Chat,
+- explicit prepare step through `POST /approvals/room-transcript`,
+- explicit allow step through `POST /approvals/{approval_id}/approve`,
+- approved local transcript write through `POST /rooms/transcripts`,
+- default Room target `merlin-build` / `Merlin Build`,
+- UI copy that saved transcripts are local Markdown history, not approved
+  memory,
+- Room manifest refresh after a save.
+
+Not implemented:
+
+- arbitrary Room picker,
+- user-selected filesystem path changes,
+- Room indexing or context injection,
+- memory extraction from transcripts,
+- delete/archive Room.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-native-chat-smoke.sh`
+- `tests/dashboard-first-run-smoke.sh`
+- `tests/dashboard-tabs-smoke.sh`
+- `tests/dashboard-readiness-smoke.sh`
+- `docs/product/DASHBOARD_UI_SPEC.md`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None. No installer, package script, router, memory manager, policy engine, or
+Task API backend behavior changed.
+
+### Commands Run
+
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `bash tests/dashboard-readiness-smoke.sh`
+- `.venv-test/bin/python -m pytest tests/test_task_endpoint.py`
+- `git diff --check`
+- `curl -fsS --max-time 5 http://127.0.0.1:8888/ -o docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-room-save-ux-snapshot.html`
+- `open -a Safari 'http://127.0.0.1:8888/?room-save=20260509#chat'`
+- `screencapture -x docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-room-save-ux.png`
+
+### Test Output Summary
+
+- `bash tests/dashboard-native-chat-smoke.sh`: PASS — Wizard HQ native Merlin
+  Chat is policy-gated through Task API.
+- `bash tests/dashboard-first-run-smoke.sh`: PASS — Chat home product clarity
+  remains safe and read-only for startup/setup surfaces.
+- `bash tests/dashboard-tabs-smoke.sh`: PASS after test contract update.
+- `bash tests/dashboard-readiness-smoke.sh`: PASS after test contract update.
+- `.venv-test/bin/python -m pytest tests/test_task_endpoint.py`: PASS, 14 passed
+  in 1.84 seconds on final run.
+- `git diff --check`: PASS.
+- Live dashboard HTTP snapshot: PASS.
+- Browser screenshot captured:
+  `docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-room-save-ux.png`.
+
+### Tests Skipped And Why
+
+Live browser click automation was skipped because Safari JavaScript automation
+is still blocked in this local environment. The screenshot captures the Chat
+surface, but not the post-response save panel because that requires a successful
+Merlin response and click sequence. Backend Room approval/save behavior was
+covered by `tests/test_task_endpoint.py`; dashboard wiring was covered by static
+smokes.
+
+### Failures Found
+
+Two static smokes failed on the first run:
+
+- `bash tests/dashboard-tabs-smoke.sh`
+- `bash tests/dashboard-readiness-smoke.sh`
+
+Both failed with:
+
+```text
+FAIL: dashboard must have exactly one POST: Merlin Task API /task
+```
+
+### Failure Category
+
+- Test design gap
+- Roadmap/governance drift
+
+### Root Cause Or Current Hypothesis
+
+The old dashboard test contract assumed Merlin Chat would have exactly one
+browser POST forever. #135 already has audited backend Room transcript approval
+and save endpoints, so the correct contract is now narrower and more accurate:
+the browser may only use the Task API chat POST plus approved Room transcript
+POSTs. It still must not call model backends, cloud APIs, shell routes, model
+downloads, or memory writes directly.
+
+### Fix Applied
+
+Updated the dashboard smoke tests to allow:
+
+- `POST /task`,
+- `POST /approvals/room-transcript`,
+- `POST /approvals/{approval_id}/approve`,
+- `POST /approvals/{approval_id}/deny`,
+- `POST /rooms/transcripts`.
+
+The tests still assert:
+
+- no direct model backend calls,
+- no external UI dependencies,
+- no browser shell controls,
+- no model downloads,
+- no approved memory write from Room save,
+- Room transcript save copy remains explicit.
+
+### Retest Result
+
+PASS after test contract update.
+
+### Regression Tests Added
+
+Static dashboard smokes now assert:
+
+- Room transcript save surface exists,
+- Room approval request flow exists,
+- explicit local Room save flow exists,
+- approved Room transcript endpoint is referenced,
+- Room save reports `memory not written`,
+- broader tab/readiness tests allow only the policy-gated Room save expansion.
+
+Existing backend tests continue to assert:
+
+- transcript save requires approval id,
+- pending/mismatched approvals are rejected,
+- unsafe Room ids are rejected,
+- local transcript save writes Markdown without writing memory,
+- audit metadata does not include raw transcript text.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended:
+
+**Title:** `v3.1 Rooms: add Room picker and local storage path migration tests`
+
+Scope:
+
+- replace default-only `merlin-build` save target with a Room picker,
+- keep reference policy default at no Room context,
+- test local path migration before allowing user-selected path changes,
+- keep memory extraction as a separate approve/edit/deny flow.
+
+### Lesson Learned
+
+Guardrails should encode allowed boundaries, not stale implementation counts.
+The old "one POST" rule was useful while Chat only talked to `/task`; after #135
+backend approval endpoints existed, it became a false blocker. The safer rule is
+an explicit allowlist of policy-gated local Task API paths.
+
+### What Not To Repeat Next Time
+
+Do not add new browser POSTs without updating the static tests to name the exact
+allowed endpoints and the forbidden behaviors that remain blocked.
+
+### Next Recommended Step
+
+Run final focused tests, `git diff --check`, capture a browser screenshot if the
+visual state changed enough, then commit/push/watch CI.
+
+### Local Trusted Beta Impact
+
+Improves the core product loop: Merlin can now offer user-owned local transcript
+history without converting chat into approved memory.
+
+### Public Beta Impact
+
+Positive progress, but Public Beta still requires Room picker UX, delete/export
+behavior, reliable browser automation, clean installer retest, and complete
+memory review/delete evidence.
