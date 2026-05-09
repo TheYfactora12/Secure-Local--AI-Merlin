@@ -36,12 +36,28 @@ grep -q "approval required" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must handle approval-required routes"
 grep -q "Task API is classifying the request and checking policy gates" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing policy-gate routing copy"
+grep -q "Safe Merlin starter prompts" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat missing safe starter prompt group"
+grep -q "function setMerlinPrompt" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat missing safe prompt-fill helper"
+grep -q "message-thread" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat missing message thread layout"
+grep -q "source-line" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat missing local/source proof line"
+grep -q "Local by default" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat missing local-by-default proof"
+grep -q "Memory writes require approval" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat missing approval-gated memory copy"
 
 POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
 [[ "$POST_COUNT" == "1" ]] || fail "dashboard must have exactly one POST: Merlin Task API /task"
 
 if grep -q "api/generate\\|/api/chat\\|/v1/chat/completions\\|localhost:4000/v1" "$DASHBOARD_FILE"; then
   fail "native chat must not call model backends directly"
+fi
+
+if grep -q "fonts.googleapis.com\\|fonts.gstatic.com\\|unpkg.com\\|cdn.jsdelivr.net" "$DASHBOARD_FILE"; then
+  fail "native chat must not introduce external UI dependencies"
 fi
 
 if grep -qiE 'approveGate|denyGate|data-action="approve"|data-action="deny"|writeMemory|runShell|downloadModel|pullModel' "$DASHBOARD_FILE"; then

@@ -5376,3 +5376,144 @@ backend approval boundary while keeping reusable memory separate.
 Improved foundation, but Public Beta remains blocked until the UI flow,
 Room reload/history display, memory review/delete, and clean installer evidence
 are complete.
+
+## #106/#135 Merlin Chat Product Shell Polish
+
+### Date/Time
+
+2026-05-09 EDT
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`1c8295ab8f58073b4ac901aa8694e6ba3ef051bc`
+
+### Ending Commit SHA
+
+Pending commit for this UI slice.
+
+### Target Issues
+
+- #106 Wizard HQ Product Shell
+- #135 Merlin Rooms
+- #122 Product Focus Cut
+
+### Scope
+
+Apply the safe parts of the local Merlin chat concept reference to Wizard HQ:
+cleaner centered Merlin chat, starter prompts, message-thread layout, and local
+source/proof chips. This is UI-only. It does not add browser writes, direct model
+calls, external UI dependencies, cloud behavior, or a second POST.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-native-chat-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None. No installer, policy engine, router, memory manager, status API, or Task
+API behavior changed in this slice.
+
+### Commands Run
+
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-merlin-status-smoke.sh`
+- `bash tests/dashboard-readiness-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- `PASS: Wizard HQ native Merlin Chat is policy-gated through Task API`
+- `Dashboard Merlin status smoke test passed`
+- `PASS: Wizard HQ readiness surface is honest and read-only`
+- `PASS: Merlin Rooms surface is local, explicit, and non-writing`
+- `PASS: Wizard HQ tab shell is Merlin-native and read-only`
+- `PASS: Wizard HQ Settings is backend-manifested and policy-gated`
+- `PASS: Wizard HQ Chat home product clarity is safe and read-only`
+- `git diff --check` returned clean.
+
+### Tests Skipped And Why
+
+Live browser and live service checks are not required for this static UI-only
+slice. They remain appropriate before a clean local beta installer pass.
+
+### Failures Found
+
+None in this UI slice.
+
+### Failure Category
+
+No failure observed.
+
+### Root Cause Or Current Hypothesis
+
+No current failure observed in this slice yet.
+
+### Fix Applied
+
+No failure fix required.
+
+### Retest Result
+
+All focused dashboard/static smokes passed after the UI changes.
+
+### Regression Test Added
+
+`tests/dashboard-native-chat-smoke.sh` now checks for:
+
+- safe starter prompts,
+- message-thread layout,
+- local/source proof line,
+- memory approval copy,
+- no external UI CDNs,
+- still exactly one browser POST to Merlin Task API `/task`.
+
+### Follow-Up Issues Created Or Recommended
+
+Create a focused child issue for the next functional step:
+
+**Title:** `v3.1 Wizard HQ: save current Merlin Chat response to Room`
+
+Acceptance criteria:
+
+- User sees a Save to Room card only after a Merlin response.
+- UI does not create an approval id itself.
+- Backend call remains `POST /rooms/transcripts`.
+- Memory extraction remains separate and requires approve/edit/deny.
+- Static smoke confirms no direct browser file controls and no second unsafe
+  execution path.
+
+### Lesson Learned
+
+Use design references as product direction, not as source code. Keep the parts
+that strengthen the local-first chat experience and reject anything that adds
+external dependencies, fake actions, or browser-side authority.
+
+### What Not To Repeat Next Time
+
+Do not copy demo chat controls such as web search, share, live agents, or memory
+toggles until Merlin has real policy-gated backend support for each action.
+
+### Next Recommended Step
+
+Validate this UI slice, commit it, push it, and watch CI. Then proceed to the
+explicit save-to-Room approval card.
+
+### Local Trusted Beta Impact
+
+Improves first-use trust and product clarity: Wizard HQ reads more like Merlin's
+own chat surface instead of a technical status page with a prompt box.
+
+### Public Beta Impact
+
+Positive but not sufficient. Public Beta still requires clean installer evidence,
+Room history reload, approved memory review/delete, and release/onboarding proof.
