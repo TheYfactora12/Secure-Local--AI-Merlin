@@ -5,44 +5,55 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DASHBOARD_FILE="${ROOT_DIR}/dashboard/index.html"
 
-grep -q "Wizard HQ" "$DASHBOARD_FILE"
-grep -q "Merlin AI" "$DASHBOARD_FILE"
-grep -q "Private Intelligence. Locally Owned." "$DASHBOARD_FILE"
-grep -q "Merlin AI core face" "$DASHBOARD_FILE"
-grep -q ">Ask Merlin<" "$DASHBOARD_FILE"
-grep -q "Talk to Merlin first" "$DASHBOARD_FILE"
-grep -q "chat-home tab-page active" "$DASHBOARD_FILE"
-grep -q "Memory" "$DASHBOARD_FILE"
-grep -q "Agents" "$DASHBOARD_FILE"
-grep -q "Security" "$DASHBOARD_FILE"
-grep -q "System" "$DASHBOARD_FILE"
-grep -q "wizard merlin status" "$DASHBOARD_FILE"
-grep -q "wizard merlin status-api start" "$DASHBOARD_FILE"
-grep -q "bash scripts/merlin-task-api.sh start" "$DASHBOARD_FILE"
-grep -q "bash launchd/install-launchd.sh" "$DASHBOARD_FILE"
-grep -q "35-40 seconds" "$DASHBOARD_FILE"
-grep -q "localhost:3000" "$DASHBOARD_FILE"
-grep -q "local_only" "$DASHBOARD_FILE"
-grep -q "Cloud Allowed" "$DASHBOARD_FILE"
-grep -q "Execution Allowed" "$DASHBOARD_FILE"
-grep -q "Chat uses one policy-gated POST" "$DASHBOARD_FILE"
-grep -q "http://localhost:8765/status" "$DASHBOARD_FILE"
-grep -q "http://localhost:8766/status/routes" "$DASHBOARD_FILE"
-grep -q "http://localhost:8766/status/approvals" "$DASHBOARD_FILE"
-grep -q "http://localhost:8766/status/memory" "$DASHBOARD_FILE"
-grep -q "http://localhost:8766/status/traces" "$DASHBOARD_FILE"
-grep -q "loadMerlinStatus" "$DASHBOARD_FILE"
-grep -q "loadApprovals" "$DASHBOARD_FILE"
-grep -q "loadRoutes" "$DASHBOARD_FILE"
-grep -q "loadMemory" "$DASHBOARD_FILE"
-grep -q "loadTraces" "$DASHBOARD_FILE"
-grep -q "Ask Merlin" "$DASHBOARD_FILE"
-grep -q "submitMerlinChat" "$DASHBOARD_FILE"
-grep -q 'fetch(`${TASK_API}/task`' "$DASHBOARD_FILE"
+fail() {
+  echo "FAIL: $1" >&2
+  exit 1
+}
+
+require() {
+  grep -q "$1" "$DASHBOARD_FILE" || fail "$2"
+}
+
+require "Wizard HQ" "dashboard missing Wizard HQ title"
+require "Merlin AI" "dashboard missing Merlin AI brand"
+require "Private Intelligence. Locally Owned." "dashboard missing local-owned tagline"
+require "Merlin AI core face" "dashboard missing Merlin core face asset label"
+require ">Ask Merlin<" "dashboard missing Ask Merlin heading"
+require "Talk to Merlin first" "dashboard missing Merlin chat intro copy"
+require "chat-home tab-page active" "dashboard missing active chat home tab"
+require "Memory" "dashboard missing Memory tab"
+require "Agents" "dashboard missing Agents tab"
+require "Security" "dashboard missing Security tab"
+require "System" "dashboard missing System tab"
+require "wizard merlin status" "dashboard missing Wizard status recovery command"
+require "wizard merlin status-api start" "dashboard missing status API start command"
+require "bash scripts/merlin-task-api.sh start" "dashboard missing Task API start command"
+require "bash launchd/install-launchd.sh" "dashboard missing launchd install command"
+require "35-40 seconds" "dashboard missing warmup timing copy"
+require "localhost:3000" "dashboard missing local dashboard URL"
+require "local_only" "dashboard missing local-only privacy mode"
+require "Cloud Allowed" "dashboard missing cloud policy surface"
+require "Execution Allowed" "dashboard missing execution policy surface"
+require "Chat uses policy-gated Task API POSTs" "dashboard missing policy-gated chat and Room POST boundary"
+require "http://localhost:8765/status" "dashboard missing read-only status API fetch"
+require "http://localhost:8766/status/routes" "dashboard missing routes status fetch"
+require "http://localhost:8766/status/approvals" "dashboard missing approvals status fetch"
+require "http://localhost:8766/status/memory" "dashboard missing memory status fetch"
+require "http://localhost:8766/status/traces" "dashboard missing trace status fetch"
+require "loadMerlinStatus" "dashboard missing Merlin status loader"
+require "loadApprovals" "dashboard missing approvals loader"
+require "loadRoutes" "dashboard missing routes loader"
+require "loadMemory" "dashboard missing memory loader"
+require "loadTraces" "dashboard missing traces loader"
+require "Ask Merlin" "dashboard missing Merlin chat surface"
+require "submitMerlinChat" "dashboard missing Merlin chat submit handler"
+require 'fetch(`${TASK_API}/task`' "dashboard missing policy-gated Task API POST"
+require '/approvals/room-transcript' "dashboard missing Room transcript approval request"
+require '/rooms/transcripts' "dashboard missing approved Room transcript save"
 
 POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
-if [[ "$POST_COUNT" != "1" ]]; then
-  echo "Dashboard must have exactly one POST: Merlin Task API /task" >&2
+if [[ "$POST_COUNT" != "2" ]]; then
+  echo "Dashboard must use only Task POST and shared policy-gated POST helper" >&2
   exit 1
 fi
 

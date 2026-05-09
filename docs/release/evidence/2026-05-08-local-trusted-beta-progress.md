@@ -6662,3 +6662,124 @@ history without converting chat into approved memory.
 Positive progress, but Public Beta still requires Room picker UX, delete/export
 behavior, reliable browser automation, clean installer retest, and complete
 memory review/delete evidence.
+
+---
+
+## CI Smoke Repair Follow-Up — 2026-05-09
+
+### Date / Time
+
+2026-05-09 EDT.
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`053307b` — `fix(dashboard): align room save smokes and clean chat center`
+
+### Target Issues
+
+- #95: release-readiness evidence and CI guardrail repair.
+- #106/#135: Wizard HQ Chat and Rooms smoke coverage.
+
+### Scope
+
+Repair the remaining stale CI dashboard guardrail after Room transcript save was
+added through the existing Task API approval lifecycle.
+
+### Files Changed
+
+- `tests/dashboard-merlin-status-smoke.sh`
+
+### Protected Files Touched
+
+None.
+
+### Commands Run
+
+- `bash -x tests/dashboard-merlin-status-smoke.sh`
+- `bash tests/dashboard-merlin-status-smoke.sh`
+- `bash tests/dashboard-security-center-smoke.sh`
+- `bash tests/dashboard-readiness-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-model-readiness-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `git diff --check`
+- `.venv-test/bin/python -m pytest tests/test_task_endpoint.py`
+
+### Test Output Summary
+
+- Dashboard smoke sequence passed after the guardrail update.
+- `git diff --check` passed.
+- `tests/test_task_endpoint.py` passed: 14 tests.
+
+### Failures Found
+
+CI run `25604096871` still failed after the first smoke alignment because
+`tests/dashboard-merlin-status-smoke.sh` retained the old "one POST" contract.
+The local failure initially exited with no `FAIL:` message.
+
+### Failure Category
+
+- Test design gap
+- CI/static smoke gap
+
+### Root Cause Or Current Hypothesis
+
+The dashboard status smoke had two stale assumptions:
+
+- it still expected the old exact copy `Chat uses one policy-gated POST`;
+- it still required exactly one browser POST instead of the current explicit
+  allowlist: Task API chat POST plus approved Room transcript save flow.
+
+Because the script used raw `grep -q` under `set -e`, the missing copy failed
+silently and slowed diagnosis.
+
+### Fix Applied
+
+- Converted the smoke to use `fail()` and `require()` helpers so missing
+  dashboard contracts print a clear reason.
+- Updated the allowed browser POST contract to require the Task API chat route
+  and Room transcript approval/save endpoints.
+- Kept the forbidden behavior checks for direct model backends and browser
+  execution controls.
+
+### Retest Result
+
+PASS locally for the dashboard smoke sequence and backend Room transcript tests.
+
+### Regression Test Added Or Reason Not Added
+
+Updated the existing regression smoke instead of adding a duplicate test. The
+same CI gate now catches missing Room transcript approval/save wiring with a
+clear failure message.
+
+### Follow-Up Issues Created Or Recommended
+
+Continue the existing recommended follow-up:
+
+**Title:** `v3.1 Rooms: add Room picker and local storage path migration tests`
+
+### Lesson Learned
+
+Every static smoke that protects a user trust boundary should print an explicit
+failure reason. Silent `grep` failures are acceptable only for exploratory
+commands, not release gates.
+
+### What Not To Repeat Next Time
+
+Do not leave raw `grep -q` checks in CI-critical smoke tests when a failure would
+not explain the missing product contract.
+
+### Local Trusted Beta Impact
+
+Positive. This improves CI reliability without changing runtime behavior.
+
+### Public Beta Impact
+
+Positive, but Public Beta still requires full manual installer/browser evidence.
