@@ -50,6 +50,7 @@
 |---|---|
 | [`ARCHITECTURE_CHALLENGE.md`](./architecture/ARCHITECTURE_CHALLENGE.md) | Architecture decisions, gap analysis, v2/v3 direction (canonical merge) |
 | [`MERLIN_BRAIN_SPEC.md`](./architecture/MERLIN_BRAIN_SPEC.md) | Merlin brain — memory, routing, policy, and cognition spec |
+| [`MERLIN_ROOMS.md`](./architecture/MERLIN_ROOMS.md) | Merlin Rooms — local chat history, scoped context, and memory boundary contract |
 | [`MERLIN_CONFIG_SPEC.md`](./architecture/MERLIN_CONFIG_SPEC.md) | Config file schema and canonical config tree |
 | [`MERLIN_STAFF_CORE.md`](./architecture/MERLIN_STAFF_CORE.md) | Staff mode system — 6 roles, routing profiles, swarm integration |
 | [`MERLIN_STAFF_SKILL_EVALUATION.md`](./architecture/MERLIN_STAFF_SKILL_EVALUATION.md) | Evaluation of possible future staff skills without agent sprawl |

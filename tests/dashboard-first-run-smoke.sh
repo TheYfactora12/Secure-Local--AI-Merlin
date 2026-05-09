@@ -20,6 +20,14 @@ grep -q "placeholder=\"Ask Merlin...\"" "$DASHBOARD_FILE" \
   || fail "Chat home missing clean Ask Merlin input"
 grep -q "Talk to Merlin first" "$DASHBOARD_FILE" \
   || fail "Chat home missing Merlin-first explanation"
+grep -q 'id="sovereignty-indicator"' "$DASHBOARD_FILE" \
+  || fail "dashboard missing persistent Sovereignty Indicator"
+grep -q "Sovereignty Indicator: Local Mode" "$DASHBOARD_FILE" \
+  || fail "Sovereignty Indicator must default to Local Mode"
+grep -q "Cloud Bridge Active" "$DASHBOARD_FILE" \
+  || fail "Sovereignty Indicator must have explicit cloud bridge state"
+grep -q "Offline / Warming" "$DASHBOARD_FILE" \
+  || fail "Sovereignty Indicator must have explicit offline/warming state"
 grep -q "Qwen is a current local model engine" "$DASHBOARD_FILE" \
   || fail "Brains tab does not explain Qwen as a model engine"
 grep -q "Merlin can grow toward its own tuned local model later" "$DASHBOARD_FILE" \

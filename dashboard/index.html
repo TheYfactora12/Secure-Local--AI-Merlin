@@ -66,6 +66,31 @@ textarea {
 .brand h1 { margin: 0; font-size: 18px; letter-spacing: 0; }
 .brand p { margin: 1px 0 0; color: var(--muted); font-size: 12px; }
 .top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.sovereignty-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 6px 11px;
+  border: 1px solid rgba(66, 211, 146, 0.38);
+  border-radius: 999px;
+  background: rgba(66, 211, 146, 0.08);
+  color: var(--green);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.sovereignty-indicator.warn {
+  color: var(--yellow);
+  border-color: rgba(243, 201, 105, 0.38);
+  background: rgba(243, 201, 105, 0.08);
+}
+.sovereignty-indicator.bad {
+  color: var(--red);
+  border-color: rgba(255, 107, 107, 0.38);
+  background: rgba(255, 107, 107, 0.08);
+}
+.sovereignty-indicator strong { font-weight: 700; }
+.sovereignty-icon { font-size: 13px; line-height: 1; }
 
 .tabbar-wrap {
   position: sticky;
@@ -721,6 +746,10 @@ textarea {
       </div>
     </div>
     <div class="top-actions" aria-label="Current Merlin state">
+      <span class="sovereignty-indicator" id="sovereignty-indicator" aria-label="Sovereignty Indicator: Local Mode">
+        <span class="sovereignty-icon" aria-hidden="true">●</span>
+        <strong id="sovereignty-label">Local Mode</strong>
+      </span>
       <span class="chip good" id="chip-local">local_only</span>
       <span class="chip good" id="chip-cloud">cloud_disabled</span>
       <span class="chip info" id="chip-tier">tier: checking</span>
@@ -733,6 +762,7 @@ textarea {
   <nav class="tabbar-wrap" aria-label="Wizard HQ product tabs">
     <div class="tabbar">
       <button class="tab-button active" type="button" data-tab-target="chat" onclick="selectTab('chat')">Chat</button>
+      <button class="tab-button" type="button" data-tab-target="rooms" onclick="selectTab('rooms')">Rooms</button>
       <button class="tab-button" type="button" data-tab-target="brains" onclick="selectTab('brains')">Brains</button>
       <button class="tab-button" type="button" data-tab-target="memory" onclick="selectTab('memory')">Memory</button>
       <button class="tab-button" type="button" data-tab-target="agents" onclick="selectTab('agents')">Agents</button>
@@ -761,6 +791,10 @@ textarea {
       <div id="chat-model-readiness" class="model-readiness">
         <span class="chip info">checking local brain</span>
         <p>Merlin is checking whether a chat-capable local model is installed.</p>
+      </div>
+      <div class="model-readiness" id="chat-room-context">
+        <span class="chip warn">Room context not active yet</span>
+        <p>Rooms will keep local chat history and project context separate from approved memory. Current chat is not silently saved or promoted into memory.</p>
       </div>
       <form class="chat-form" id="merlin-chat-form" onsubmit="submitMerlinChat(event)">
         <label class="sr-only" for="merlin-chat-input">Ask Merlin</label>
@@ -813,6 +847,64 @@ textarea {
       <a id="open-chat-workspace" href="http://localhost:3000">Open chat</a>
       <div>Read-Only Boundary. This dashboard performs read-only GET requests against localhost status APIs. Chat uses one policy-gated POST to Merlin Task API <code>/task</code>.</div>
     </div>
+  </main>
+
+  <main class="tab-page" data-tab-page="rooms">
+    <div class="page-head">
+      <div>
+        <h2>Rooms</h2>
+        <p>Rooms are local project spaces for chat history and context. They keep work separated so Merlin can eventually reference the right project without turning every transcript into memory.</p>
+      </div>
+      <span class="chip warn">design surface</span>
+    </div>
+    <section class="surface-grid" aria-label="Merlin Rooms design surface">
+      <article class="surface-card">
+        <h3>Active Room</h3>
+        <p>No Room is active in this runtime slice. Merlin Chat works, but Room-backed history is not writing files yet.</p>
+        <div class="status-list">
+          <div class="status-pill"><strong>Active Room</strong><span>not selected</span></div>
+          <div class="status-pill"><strong>Reference policy</strong><span class="locked">none until #135 runtime</span></div>
+          <div class="status-pill"><strong>Cloud sync</strong><span class="off">not automatic</span></div>
+        </div>
+      </article>
+      <article class="surface-card">
+        <h3>Room Storage</h3>
+        <p>Room files will live where the user chooses. A synced folder is treated as a local filesystem path, not cloud inference.</p>
+        <div class="status-list">
+          <div class="status-pill"><strong>Default path</strong><span>~/Merlin/brain/rooms</span></div>
+          <div class="status-pill"><strong>User-selected path</strong><span class="locked">future policy gate</span></div>
+          <div class="status-pill"><strong>Format</strong><span>human-readable markdown</span></div>
+        </div>
+      </article>
+      <article class="surface-card">
+        <h3>Transcript Boundary</h3>
+        <p>Saving a transcript preserves history. It does not make Merlin reuse that content as long-term memory.</p>
+        <div class="status-list">
+          <div class="status-pill"><strong>Saved transcript</strong><span>local history</span></div>
+          <div class="status-pill"><strong>Indexed context</strong><span class="locked">requires explicit setup</span></div>
+          <div class="status-pill"><strong>Approved memory</strong><span class="locked">approve/edit/deny</span></div>
+        </div>
+      </article>
+      <article class="surface-card wide">
+        <h3>Reference Controls</h3>
+        <p>Before Merlin uses Room context, the policy must be visible: no Room context, active Room only, selected Rooms, or all Rooms. The default remains no Room context until the user chooses.</p>
+        <div class="status-list">
+          <div class="status-pill"><strong>No Room context</strong><span class="good">default</span></div>
+          <div class="status-pill"><strong>Active Room only</strong><span class="locked">planned</span></div>
+          <div class="status-pill"><strong>Selected Rooms</strong><span class="locked">planned</span></div>
+          <div class="status-pill"><strong>All Rooms</strong><span class="locked">explicit only</span></div>
+        </div>
+      </article>
+      <article class="surface-card">
+        <h3>Save To Room</h3>
+        <p>Save flow stays locked until a backend can validate path permissions, write locally, update an audit record, and recover on failure.</p>
+        <div class="status-list">
+          <div class="status-pill"><strong>Save current chat</strong><span class="locked">not enabled</span></div>
+          <div class="status-pill"><strong>Memory extraction</strong><span class="locked">separate approval</span></div>
+          <div class="status-pill"><strong>Delete Room</strong><span class="locked">must show linked memory</span></div>
+        </div>
+      </article>
+    </section>
   </main>
 
   <main class="tab-page" data-tab-page="brains">
@@ -975,6 +1067,15 @@ textarea {
           <div class="status-pill"><strong>Settings backend</strong><span>checking</span></div>
         </div>
       </article>
+      <article class="surface-card wide">
+        <h3>Brain Storage Location</h3>
+        <p>Where Merlin keeps its local brain is visible here. Storage location and inference location are different: a synced folder is still a file path choice, not cloud model use.</p>
+        <div id="settings-storage-panel" class="status-list">
+          <div class="status-pill"><strong>Brain root</strong><span>checking</span></div>
+          <div class="status-pill"><strong>Change location</strong><span class="locked">locked until policy-gated migration</span></div>
+        </div>
+        <div class="boundary-note">Changing this location is disabled until #130 / #123 / #135 have backend validation, migration, rollback, and audit tests.</div>
+      </article>
       <article class="surface-card"><h3>Provider Connectors</h3><p>External provider setup is deferred until safe secret storage, explicit allow/not-allow choices, and approval gates are implemented.</p><div class="status-list"><div class="status-pill"><strong>API key fields</strong><span class="locked">not available</span></div><div class="status-pill"><strong>Cloud default</strong><span class="off">off</span></div><div class="status-pill"><strong>Future path</strong><span>policy-gated</span></div></div></article>
       <article class="surface-card wide"><h3>Model Library</h3><p>Model additions stay explicit, visible, hardware-aware, and manual-only.</p><div id="settings-model-library" class="model-library-panel"><div class="model-warning">8GB/core warning: review hardware impact before adding chat models. Merlin will not download models from the browser.</div><div class="empty">Checking model library status.</div></div></article>
       <article class="surface-card"><h3>Memory Controls</h3><p>Remembering, deleting, and exporting memory need dedicated approval and review UX.</p><div class="status-list"><div class="status-pill"><strong>Auto-write</strong><span class="off">disabled</span></div><div class="status-pill"><strong>Review/delete</strong><span>#31 / #32</span></div><div class="status-pill"><strong>Raw memory</strong><span class="locked">not shown</span></div></div></article>
@@ -1063,6 +1164,19 @@ function setChip(id, value, state) {
   if (!el) return;
   el.textContent = value;
   el.className = `chip ${state || ''}`.trim();
+}
+
+function setSovereignty(state, label) {
+  const el = document.getElementById('sovereignty-indicator');
+  const labelEl = document.getElementById('sovereignty-label');
+  if (!el || !labelEl) return;
+  const normalized = state || 'local';
+  const className = normalized === 'local'
+    ? 'sovereignty-indicator'
+    : `sovereignty-indicator ${normalized === 'cloud_bridge' ? 'warn' : 'bad'}`;
+  el.className = className;
+  labelEl.textContent = label;
+  el.setAttribute('aria-label', `Sovereignty Indicator: ${label}`);
 }
 
 function dot(id, state) {
@@ -1390,9 +1504,29 @@ async function loadProviders() {
 
 async function loadSettings() {
   const panel = document.getElementById('settings-policy-panel');
+  const storagePanel = document.getElementById('settings-storage-panel');
   try {
     const data = await getJson(`${TASK_API}/status/settings`);
     readinessState.settings = data;
+    if (storagePanel) {
+      const storage = data.storage || {};
+      const dedicatedRoot = storage.dedicated_brain_root || {};
+      const roomsRoot = storage.rooms_root || {};
+      const audit = storage.audit || {};
+      const backup = storage.backup || {};
+      const vectorStore = storage.memory_vector_store || {};
+      storagePanel.innerHTML = `
+        <div class="status-pill"><strong>Brain root</strong><span>${escapeHtml(storage.data_root || 'default local app storage')}</span></div>
+        <div class="status-pill"><strong>Root source</strong><span>${escapeHtml(storage.data_root_source || 'default_stack_root')}</span></div>
+        <div class="status-pill"><strong>Dedicated brain folder</strong><span>${dedicatedRoot.configured ? escapeHtml(dedicatedRoot.path) : 'not yet configured / default location'}</span></div>
+        <div class="status-pill"><strong>Rooms folder</strong><span>${roomsRoot.configured ? escapeHtml(roomsRoot.path) : 'not yet configured / #135'}</span></div>
+        <div class="status-pill"><strong>Memory/vector store</strong><span>${escapeHtml(vectorStore.adapter || 'local_qdrant')} · ${escapeHtml(vectorStore.url || 'localhost')}</span></div>
+        <div class="status-pill"><strong>Audit trail</strong><span>${escapeHtml(audit.log_dir || 'logs')}</span></div>
+        <div class="status-pill"><strong>Backup/export root</strong><span>${escapeHtml(backup.default_root || 'home backup folder')}</span></div>
+        <div class="status-pill"><strong>Change location</strong><span class="locked">${storage.change_location_enabled ? 'available' : 'locked until policy-gated migration'}</span></div>
+        <div class="status-pill"><strong>Cloud inference</strong><span class="good">disabled by default</span></div>
+      `;
+    }
     if (!panel) return;
     const rows = (data.actions || []).map(action => {
       const gates = (action.approval_gates || []).join(', ') || 'none';
@@ -1414,6 +1548,9 @@ async function loadSettings() {
     if (panel) {
       panel.innerHTML = '<div class="status-pill"><strong>Settings backend</strong><span>warming</span></div>';
     }
+    if (storagePanel) {
+      storagePanel.innerHTML = '<div class="status-pill"><strong>Brain root</strong><span>warming</span></div><div class="status-pill"><strong>Change location</strong><span class="locked">locked until policy-gated migration</span></div>';
+    }
   }
 }
 
@@ -1429,12 +1566,14 @@ async function loadMerlinStatus() {
     text('brains-tier', safe(data.hardware_tier, 'unknown'));
     setChip('chip-local', safe(data.privacy_mode, 'local_only'), 'good');
     setChip('chip-cloud', data.cloud_allowed ? 'cloud_enabled' : 'cloud_disabled', data.cloud_allowed ? 'warn' : 'good');
+    setSovereignty(data.cloud_allowed ? 'cloud_bridge' : 'local', data.cloud_allowed ? 'Cloud Bridge Active' : 'Local Mode');
     setChip('chip-tier', `tier: ${safe(data.hardware_tier, 'unknown')}`, data.hardware_tier === 'low' ? 'warn' : 'info');
   } catch (_) {
     readinessState.status = null;
     text('metric-tier', 'unknown');
     text('brains-tier', 'unknown');
     setChip('chip-tier', 'tier: unknown', 'warn');
+    setSovereignty('offline', 'Offline / Warming');
   }
 }
 

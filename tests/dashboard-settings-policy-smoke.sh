@@ -33,10 +33,24 @@ grep -q "/status/settings" "$DASHBOARD_FILE" \
   || fail "dashboard must load settings policy manifest"
 grep -q "settings-policy-panel" "$DASHBOARD_FILE" \
   || fail "dashboard missing settings policy panel"
+grep -q "settings-storage-panel" "$DASHBOARD_FILE" \
+  || fail "dashboard missing brain storage location panel"
 grep -q "function loadSettings" "$DASHBOARD_FILE" \
   || fail "dashboard missing settings loader"
 grep -q "Policy-Gated Settings" "$DASHBOARD_FILE" \
   || fail "dashboard missing policy-gated settings copy"
+grep -q "Brain Storage Location" "$DASHBOARD_FILE" \
+  || fail "dashboard missing brain storage location copy"
+grep -q "Where Merlin keeps its local brain is visible here" "$DASHBOARD_FILE" \
+  || fail "dashboard must explain local brain storage visibility"
+grep -q "Storage location and inference location are different" "$DASHBOARD_FILE" \
+  || fail "dashboard must distinguish storage from inference"
+grep -q "not yet configured / default location" "$DASHBOARD_FILE" \
+  || fail "dashboard must show explicit default storage state"
+grep -q "locked until policy-gated migration" "$DASHBOARD_FILE" \
+  || fail "dashboard must keep change-location locked"
+grep -q "data.storage" "$DASHBOARD_FILE" \
+  || fail "dashboard must render storage manifest from settings endpoint"
 grep -q "Actions remain locked unless a backend policy gate exists" "$DASHBOARD_FILE" \
   || fail "dashboard must explain settings remain locked"
 grep -q "Startup & APIs" "$DASHBOARD_FILE" \

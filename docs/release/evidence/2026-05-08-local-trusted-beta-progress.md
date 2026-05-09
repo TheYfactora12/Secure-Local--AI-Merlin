@@ -4650,3 +4650,418 @@ Merlin Chat/Rooms/memory loop.
 
 Improved governance. Public Beta claims remain blocked until the product value
 demo and local context flow are evidenced.
+
+## #130 Read-Only Brain Storage Location Slice
+
+### Date/Time
+
+2026-05-09 08:00:28 EDT.
+
+### Starting Commit SHA
+
+`53a9dc7bf53a176344955af2e035d78088b41af3`
+
+### Target Issues
+
+- #130
+- #123
+- #135
+- #106
+
+### Scope
+
+Added a read-only Wizard HQ Settings surface showing where Merlin keeps local
+brain/context-related data today. This is visibility only: changing the storage
+location remains locked until backend policy gates, migration validation,
+rollback, and audit tests exist.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `docs/product/DASHBOARD_PRODUCT_SPEC.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+- `merlin/status_extension.py`
+- `tests/dashboard-settings-policy-smoke.sh`
+- `tests/dashboard-tabs-smoke.sh`
+- `tests/test_status_extension.py`
+
+### Protected Files Touched
+
+- `dashboard/index.html`: Settings UI only; no new browser write controls.
+- `merlin/status_extension.py`: read-only `/status/settings` manifest only; no
+  execution path or setting mutation added.
+
+### Commands Run
+
+- `git status --short`
+- `git rev-parse HEAD`
+- `gh issue view 130 --json number,title,state,milestone,labels,body`
+- `sed -n '1,260p' dashboard/index.html`
+- `sed -n '620,1040p' dashboard/index.html`
+- `sed -n '1040,1500p' dashboard/index.html`
+- `sed -n '240,470p' merlin/status_extension.py`
+- `sed -n '260,460p' tests/test_status_extension.py`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `.venv-test/bin/python -m pytest tests/test_status_extension.py -q`
+- `git diff --check`
+
+### Test Output Summary
+
+- `bash tests/dashboard-settings-policy-smoke.sh`: PASS.
+- `bash tests/dashboard-tabs-smoke.sh`: PASS.
+- `.venv-test/bin/python -m pytest tests/test_status_extension.py -q`: PASS,
+  29 passed.
+- `git diff --check`: PASS.
+
+### Tests Skipped And Why
+
+- No live browser screenshot yet; the user asked to keep coding and check in a
+  few minutes. Static dashboard tests cover this read-only slice.
+- No installer/package tests because installer/package behavior did not change.
+- No live Qdrant/Ollama/Docker tests because `/status/settings` storage
+  manifest is static/read-only and does not require live services.
+
+### Failures Found
+
+No failures in this slice.
+
+### Failure Category
+
+None.
+
+### Root Cause Or Current Hypothesis
+
+No failure observed.
+
+### Fix Applied
+
+Implemented #130 read-only visibility:
+
+- `status_settings()` now includes a `storage` manifest with data root, optional
+  dedicated brain root, optional Rooms root, local Qdrant vector store, audit
+  paths, backup/export root, and locked migration state.
+- Wizard HQ Settings renders a Brain Storage Location card.
+- Static tests verify storage/inference distinction, default/not-configured
+  copy, locked migration copy, and no unsafe browser controls.
+
+### Regression Test Added
+
+- `tests/dashboard-settings-policy-smoke.sh` now checks the storage card and
+  locked migration copy.
+- `tests/dashboard-tabs-smoke.sh` now requires the Brain Storage Location
+  Settings card.
+- `tests/test_status_extension.py` now verifies the read-only storage manifest
+  and environment-reflected local paths.
+
+### Follow-Up Issues Created Or Recommended
+
+No new issue required. Future writable storage migration remains in existing
+#130 / #123 / #135 scope.
+
+### Lesson Learned
+
+The user trust signal can be improved without adding risky controls. Showing the
+brain path is useful now; moving it must wait for migration and rollback tests.
+
+### What Not To Repeat Next Time
+
+Do not add browser folder pickers, file moves, or storage mutation controls
+before the backend policy-gated migration path exists.
+
+### Next Recommended Step
+
+Run broader dashboard/static tests, commit this #130 slice, push, and watch CI.
+Then proceed to the #135 Rooms design/runtime slice.
+
+### Local Trusted Beta Impact
+
+Improved. A first-time user can now answer where Merlin's local brain/context
+data is rooted and see that changing it is not yet available.
+
+### Public Beta Impact
+
+Improved, but Public Beta remains blocked until the product value demo, Rooms,
+memory review/delete, and clean installer retest evidence are complete.
+
+## #135 Rooms Design Surface Slice
+
+### Date/Time
+
+2026-05-09 08:03:16 EDT.
+
+### Starting Commit SHA
+
+`53a9dc7bf53a176344955af2e035d78088b41af3`
+
+### Target Issues
+
+- #135
+- #106
+- #123
+- #31
+- #32
+
+### Scope
+
+Added a read-only Wizard HQ Rooms tab and a Rooms architecture contract. This
+slice defines the user/product boundary before runtime file writes: Rooms are
+local chat/project containers, saved transcripts are not approved memory, and
+Room context is not used until the user chooses a visible reference policy.
+
+### Files Changed
+
+- `.github/workflows/ci.yml`
+- `dashboard/index.html`
+- `docs/README.md`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `docs/product/DASHBOARD_PRODUCT_SPEC.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+- `tests/dashboard-rooms-smoke.sh`
+- `tests/dashboard-tabs-smoke.sh`
+
+### Protected Files Touched
+
+- `.github/workflows/ci.yml`: added a static Rooms smoke to existing CI gates.
+- `dashboard/index.html`: added read-only UI copy only; no Room write, delete,
+  approval, filesystem, or shell controls.
+
+### Commands Run
+
+- `gh issue view 135 --json number,title,state,milestone,labels,body`
+- `rg -n "Rooms|Room|Project Realm|reference policy|transcript|chat history" dashboard/index.html docs tests merlin | head -200`
+- `sed -n '240,360p' docs/product/PRODUCT_NORTH_STAR.md`
+- `sed -n '1,220p' tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `ruby -e 'require "yaml"; YAML.load_file(".github/workflows/ci.yml"); puts "workflow-yaml-ok"'`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- First `bash tests/dashboard-rooms-smoke.sh`: FAIL due to grep regex behavior
+  on the Markdown phrase `**No Room context**`.
+- Retest `bash tests/dashboard-rooms-smoke.sh`: PASS.
+- `bash tests/dashboard-tabs-smoke.sh`: PASS.
+- `bash tests/dashboard-native-chat-smoke.sh`: PASS.
+- Workflow YAML parse: PASS; `workflow-yaml-ok`.
+- `bash tests/dashboard-settings-policy-smoke.sh`: PASS.
+- `git diff --check`: PASS.
+
+### Tests Skipped And Why
+
+- No live Room save/delete tests because writable Room runtime does not exist in
+  this slice and should not be implied.
+- No installer/package tests because installer/package behavior did not change.
+- No browser screenshot yet; this is a static UI/design contract pass.
+
+### Failures Found
+
+The first Rooms smoke failed with `grep: repetition-operator operand invalid`.
+
+### Failure Category
+
+- Test design gap.
+
+### Root Cause Or Current Hypothesis
+
+The test used regex `grep -q` against a Markdown string containing `**`, which
+can be interpreted as an invalid repetition pattern.
+
+### Fix Applied
+
+Changed the Rooms doc phrase checks to `grep -Fq` so Markdown emphasis is
+matched as a fixed string.
+
+### Retest Result
+
+Passed after the test fix:
+
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `git diff --check`
+
+### Regression Test Added
+
+`tests/dashboard-rooms-smoke.sh` now verifies:
+
+- Rooms tab/page exists,
+- chat surface shows Room context state,
+- no silent transcript-to-memory implication,
+- reference policies are visible,
+- save-to-Room and memory extraction are locked/separate,
+- Room deletion must account for linked memory,
+- no unsafe browser controls,
+- no secret-like values.
+
+### Follow-Up Issues Created Or Recommended
+
+Existing #135 should be split before writable runtime work:
+
+- Room data model and local file schema.
+- Save chat transcript to Room through Task API policy gate.
+- Room picker and reference policy persistence.
+- Local index rebuild from Room Markdown files.
+- Memory proposal flow from transcript/summary.
+- Delete/archive Room with linked-memory warning.
+
+### Lesson Learned
+
+Rooms can be made visible before they become writable. That helps product
+clarity while keeping the local memory approval boundary intact.
+
+### What Not To Repeat Next Time
+
+Do not jump from a Rooms concept directly to browser file writes. The product
+needs backend policy gates and rollback before any local transcript mutation.
+
+### Next Recommended Step
+
+Run the broader static suite for the combined #130/#135 working set, then
+commit/push/watch CI when the user is back or after final local validation.
+
+### Local Trusted Beta Impact
+
+Improved. Wizard HQ now shows the intended Rooms mental model: local history,
+visible storage, visible reference policy, and separate approved memory.
+
+### Public Beta Impact
+
+Improved UX direction, but Public Beta remains blocked until Rooms can actually
+save/reload local chat history with evidence and memory review/delete is
+complete.
+
+## Wizard HQ Sovereignty Indicator Slice
+
+### Date/Time
+
+2026-05-09 08:04:40 EDT.
+
+### Starting Commit SHA
+
+`53a9dc7bf53a176344955af2e035d78088b41af3`
+
+### Target Issues
+
+- #106
+- #122
+- #130
+
+### Scope
+
+Added a named persistent Sovereignty Indicator to the Wizard HQ top bar. The
+existing local/cloud chips already exposed raw state; this slice makes the user
+trust signal explicit with Local Mode, Cloud Bridge Active, and Offline /
+Warming states.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-first-run-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `dashboard/index.html`: visual/read-only state indicator only.
+
+### Commands Run
+
+- `date '+%Y-%m-%d %H:%M:%S %Z'`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-readiness-smoke.sh`
+- `bash tests/dashboard-model-readiness-smoke.sh`
+- `bash tests/dashboard-security-center-smoke.sh`
+- `.venv-test/bin/python -m pytest tests/test_status_extension.py -q`
+- `bash tests/codex-master-prompt-v2-smoke.sh`
+- `bash tests/provider-connector-policy-smoke.sh`
+- `bash tests/release-readiness-readme-smoke.sh`
+- `ruby -e 'require "yaml"; YAML.load_file(".github/workflows/ci.yml"); puts "workflow-yaml-ok"'`
+- `git diff --check`
+
+### Test Output Summary
+
+- `bash tests/dashboard-first-run-smoke.sh`: PASS.
+- `bash tests/dashboard-rooms-smoke.sh`: PASS.
+- `bash tests/dashboard-tabs-smoke.sh`: PASS.
+- `bash tests/dashboard-settings-policy-smoke.sh`: PASS.
+- `bash tests/dashboard-native-chat-smoke.sh`: PASS.
+- `bash tests/dashboard-readiness-smoke.sh`: PASS.
+- `bash tests/dashboard-model-readiness-smoke.sh`: PASS.
+- `bash tests/dashboard-security-center-smoke.sh`: PASS.
+- `.venv-test/bin/python -m pytest tests/test_status_extension.py -q`: PASS,
+  29 passed.
+- `bash tests/codex-master-prompt-v2-smoke.sh`: PASS.
+- `bash tests/provider-connector-policy-smoke.sh`: PASS.
+- `bash tests/release-readiness-readme-smoke.sh`: PASS.
+- Workflow YAML parse: PASS; `workflow-yaml-ok`.
+- `git diff --check`: PASS.
+
+### Tests Skipped And Why
+
+- No installer/package tests because installer/package behavior did not change.
+- No live service tests because this was a static UI/read-only status manifest
+  slice.
+
+### Failures Found
+
+No additional failures in the combined retest.
+
+### Failure Category
+
+None for this slice.
+
+### Root Cause Or Current Hypothesis
+
+No failure observed for this slice.
+
+### Fix Applied
+
+Added:
+
+- `#sovereignty-indicator` in the top bar,
+- `setSovereignty()` state renderer,
+- Local Mode default,
+- Cloud Bridge Active state when cloud is allowed,
+- Offline / Warming state when status cannot be verified,
+- static first-run smoke assertions.
+
+### Regression Test Added
+
+`tests/dashboard-first-run-smoke.sh` now verifies the persistent Sovereignty
+Indicator and all three user-facing states.
+
+### Follow-Up Issues Created Or Recommended
+
+No new issue. This supports the #106 Wizard HQ shell and #122 focus contract.
+
+### Lesson Learned
+
+Raw local/cloud chips are technically useful, but the product needs a named
+trust primitive that a normal user can recognize immediately.
+
+### What Not To Repeat Next Time
+
+Do not bury sovereignty/local-cloud state inside engineering-only labels.
+
+### Next Recommended Step
+
+Commit or continue with the next tightly related product-shell slice. Writable
+Room history should wait for a smaller dedicated backend task.
+
+### Local Trusted Beta Impact
+
+Improved first-run trust. The user can see the local/cloud mode without opening
+Settings.
+
+### Public Beta Impact
+
+Improved UX clarity, but Public Beta remains blocked by runtime Room history,
+memory review/delete, installer retest evidence, and broader onboarding polish.

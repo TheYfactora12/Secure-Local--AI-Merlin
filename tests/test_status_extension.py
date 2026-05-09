@@ -295,6 +295,10 @@ def test_status_settings_returns_policy_gated_manifest() -> None:
     assert body["cloud_default"] is False
     assert body["secrets_displayed"] is False
     assert body["model_downloads"] == "manual_only"
+    assert body["storage"]["mode"] == "read_only_storage_manifest"
+    assert body["storage"]["change_location_enabled"] is False
+    assert body["storage"]["memory_vector_store"]["adapter"] == "local_qdrant"
+    assert body["storage"]["memory_vector_store"]["url"] == "http://localhost:6333"
     assert body["total"] == 6
     assert {action["action_id"] for action in body["actions"]} == {
         "provider_connectors",
@@ -304,6 +308,31 @@ def test_status_settings_returns_policy_gated_manifest() -> None:
         "startup_apis",
         "backup_recovery",
     }
+
+
+def test_status_settings_storage_manifest_reflects_local_paths(tmp_path, monkeypatch) -> None:
+    brain_root = tmp_path / "MerlinBrain"
+    rooms_root = tmp_path / "Rooms"
+    backup_root = tmp_path / "Backups"
+    monkeypatch.setenv("HOME_AI_STACK_DIR", str(tmp_path / "stack"))
+    monkeypatch.setenv("MERLIN_BRAIN_ROOT", str(brain_root))
+    monkeypatch.setenv("MERLIN_ROOMS_ROOT", str(rooms_root))
+    monkeypatch.setenv("HOME_AI_BACKUP_DIR", str(backup_root))
+
+    response = client.get("/status/settings")
+    storage = response.json()["storage"]
+
+    assert response.status_code == 200
+    assert storage["data_root"] == str(tmp_path / "stack")
+    assert storage["data_root_source"] == "HOME_AI_STACK_DIR"
+    assert storage["dedicated_brain_root"]["configured"] is True
+    assert storage["dedicated_brain_root"]["path"] == str(brain_root)
+    assert storage["rooms_root"]["configured"] is True
+    assert storage["rooms_root"]["path"] == str(rooms_root)
+    assert storage["backup"]["default_root"] == str(backup_root)
+    assert storage["change_location_state"] == "locked_until_policy_gated_migration"
+    assert storage["tracked_issue"] == "#130 / #123 / #135"
+    assert "cloud inference remains disabled" in storage["cloud_inference_warning"]
 
 
 def test_status_settings_provider_connectors_are_locked_and_gate_secrets() -> None:

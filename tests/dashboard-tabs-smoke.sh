@@ -21,7 +21,7 @@ grep -q 'function selectInitialTab' "$DASHBOARD_FILE" \
 grep -q 'hashchange' "$DASHBOARD_FILE" \
   || fail "dashboard tabs must react to hash changes"
 
-for tab in chat brains memory agents security system settings; do
+for tab in chat rooms brains memory agents security system settings; do
   grep -q "data-tab-target=\"${tab}\"" "$DASHBOARD_FILE" \
     || fail "dashboard missing tab button: ${tab}"
   grep -q "data-tab-page=\"${tab}\"" "$DASHBOARD_FILE" \
@@ -30,6 +30,7 @@ done
 
 for label in \
   "Chat" \
+  "Rooms" \
   "Brains" \
   "Memory" \
   "Agents" \
@@ -99,6 +100,7 @@ grep -q "not available" "$DASHBOARD_FILE" \
 
 for setting in \
   "Provider Connectors" \
+  "Brain Storage Location" \
   "Model Library" \
   "Memory Controls" \
   "Privacy & Sovereignty" \

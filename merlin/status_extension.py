@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import io
 import json
+import os
 from contextlib import redirect_stdout
+from pathlib import Path
 from typing import Any
 from urllib import error, request
 
@@ -30,6 +32,7 @@ LOW_MEMORY_MODEL_WARNING = (
     "the user explicitly chooses a larger model after reviewing memory impact."
 )
 router = APIRouter(prefix="/status")
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 SETTINGS_ACTIONS: list[dict[str, Any]] = [
     {
@@ -148,6 +151,60 @@ def _connector_public_payload(record: ProviderConnectorRecord) -> dict[str, Any]
         "updated_at": record.updated_at,
         "storage_mode": record.storage_mode,
         "secret_persisted": record.secret_persisted,
+    }
+
+
+def _path_payload(path: str | Path | None) -> dict[str, Any]:
+    if not path:
+        return {"configured": False, "path": None}
+    value = Path(path).expanduser()
+    return {
+        "configured": True,
+        "path": str(value),
+        "exists": value.exists(),
+        "is_dir": value.is_dir(),
+    }
+
+
+def _storage_manifest() -> dict[str, Any]:
+    stack_dir_env = os.environ.get("HOME_AI_STACK_DIR")
+    data_root = Path(stack_dir_env).expanduser() if stack_dir_env else REPO_ROOT
+    log_dir = Path(os.environ.get("MERLIN_LOG_DIR", data_root / "logs")).expanduser()
+    trace_log = Path(os.environ.get("MERLIN_TRACE_LOG", log_dir / "merlin-route-decisions.jsonl")).expanduser()
+    approval_log = Path(os.environ.get("MERLIN_APPROVAL_LOG", log_dir / "merlin-approvals.jsonl")).expanduser()
+    backup_root = Path(os.environ.get("HOME_AI_BACKUP_DIR", Path.home() / "home-ai-elite-backups")).expanduser()
+    memory_collections_file = Path(
+        os.environ.get("MERLIN_MEMORY_COLLECTIONS_FILE", data_root / "configs" / "merlin" / "memory-collections.env")
+    ).expanduser()
+
+    return {
+        "mode": "read_only_storage_manifest",
+        "data_root": str(data_root),
+        "data_root_source": "HOME_AI_STACK_DIR" if stack_dir_env else "default_stack_root",
+        "dedicated_brain_root": _path_payload(os.environ.get("MERLIN_BRAIN_ROOT")),
+        "rooms_root": _path_payload(os.environ.get("MERLIN_ROOMS_ROOT")),
+        "memory_vector_store": {
+            "adapter": "local_qdrant",
+            "url": QDRANT_URL,
+            "collections_file": str(memory_collections_file),
+        },
+        "audit": {
+            "log_dir": str(log_dir),
+            "trace_log": str(trace_log),
+            "approval_log": str(approval_log),
+        },
+        "backup": {
+            "default_root": str(backup_root),
+            "configured_by": "HOME_AI_BACKUP_DIR" if os.environ.get("HOME_AI_BACKUP_DIR") else "default_home_backup_root",
+        },
+        "change_location_enabled": False,
+        "change_location_state": "locked_until_policy_gated_migration",
+        "tracked_issue": "#130 / #123 / #135",
+        "cloud_inference_warning": (
+            "Storage location is not model location. A synced folder may copy files through "
+            "the user's sync provider, but Merlin cloud inference remains disabled unless "
+            "explicitly configured."
+        ),
     }
 
 
@@ -409,6 +466,7 @@ def status_settings() -> dict[str, Any]:
         "cloud_default": False,
         "secrets_displayed": False,
         "model_downloads": "manual_only",
+        "storage": _storage_manifest(),
         "actions": actions,
         "total": len(actions),
     }

@@ -156,6 +156,7 @@ jobs:
           bash tests/dashboard-first-run-smoke.sh
           bash tests/dashboard-tabs-smoke.sh
           bash tests/dashboard-native-chat-smoke.sh
+          bash tests/dashboard-rooms-smoke.sh
           bash tests/dashboard-model-readiness-smoke.sh
           bash tests/dashboard-settings-policy-smoke.sh
           bash tests/provider-connector-policy-smoke.sh

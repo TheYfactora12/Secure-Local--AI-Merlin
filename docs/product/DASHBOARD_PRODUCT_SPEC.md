@@ -61,7 +61,8 @@ The v3.0 front-door layout should use an Apple-level, tabbed product shell:
 - **Merlin Chat:** the main conversation surface. Early versions may link to the
   local chat workspace, but the target is a Merlin-native chat that routes
   through the Merlin task API with staff mode/model/approval metadata visible.
-- **Rooms:** local chat history and project-context containers. A Room can be a
+- **Rooms:** local chat history and project-context containers, backed by
+  `docs/architecture/MERLIN_ROOMS.md`. A Room can be a
   project, topic, person, or purpose. Users choose where Room files live, decide
   whether Merlin can reference active/selected/all Rooms, and approve any
   memory extraction separately from saving transcript history.
@@ -78,7 +79,7 @@ The v3.0 front-door layout should use an Apple-level, tabbed product shell:
 - **System:** startup readiness, hardware tier, service health, doctor output,
   and low-memory warnings.
 - **Settings:** future safe configuration surface for providers, models,
-  privacy, backups, and advanced developer controls.
+  privacy, brain storage location, backups, and advanced developer controls.
 
 MVP for this front-door slice should be status-first and tightly scoped: tabs,
 information architecture, provider/model status cards, clear empty states, safe
@@ -115,6 +116,7 @@ tests.
 | Open WebUI | `http://localhost:3000` | Current local chat bridge remains linked until native Merlin Chat is policy-gated |
 | Ollama model list | `http://localhost:11434/api/tags` | Localhost only |
 | Qdrant health | `http://localhost:6333/healthz` | Local memory |
+| Brain storage manifest | `http://localhost:8766/status/settings` | Read-only #130 storage paths and locked migration state |
 
 ## Product Risks
 
@@ -133,6 +135,9 @@ tests.
 - Chat transcript storage must be local and user-visible.
 - Saved transcripts do not become reusable memory until the user approves
   extraction.
+- Brain/context storage location must be visible before change-location controls
+  exist. Changing that location requires a future backend policy gate,
+  migration validation, rollback, and audit trail.
 - The 8765 status server remains read-only and separate from 8766.
 
 ## Success Criteria
