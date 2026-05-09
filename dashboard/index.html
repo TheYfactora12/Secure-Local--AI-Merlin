@@ -1530,14 +1530,14 @@ async function loadRooms() {
       <div class="status-pill"><strong>Root source</strong><span>${escapeHtml(data.rooms_root_source || 'default_brain_rooms')}</span></div>
       <div class="status-pill"><strong>Active Room</strong><span>${data.active_room ? escapeHtml(data.active_room) : 'not selected'}</span></div>
       <div class="status-pill"><strong>Reference policy</strong><span>${escapeHtml(data.reference_policy || 'no_room_context')}</span></div>
-      <div class="status-pill"><strong>Save to Room</strong><span class="locked">${data.save_to_room_enabled ? 'enabled' : 'locked until Task API write gate'}</span></div>
+      <div class="status-pill"><strong>Save to Room</strong><span class="locked">${data.save_to_room_api_enabled ? 'backend approval required' : 'locked until Task API write gate'}</span></div>
       <div class="status-pill"><strong>Memory extraction</strong><span class="locked">${data.memory_extraction_enabled ? 'enabled' : 'requires approve/edit/deny'}</span></div>
       ${roomRows || '<div class="status-pill"><strong>Existing Rooms</strong><span>none discovered</span></div>'}
     `;
   } catch (_) {
     readinessState.rooms = null;
     if (panel) {
-      panel.innerHTML = '<div class="status-pill"><strong>Rooms manifest</strong><span>warming</span></div><div class="status-pill"><strong>Save to Room</strong><span class="locked">locked until Task API write gate</span></div>';
+      panel.innerHTML = '<div class="status-pill"><strong>Rooms manifest</strong><span>warming</span></div><div class="status-pill"><strong>Save to Room</strong><span class="locked">backend approval required</span></div>';
     }
   }
 }

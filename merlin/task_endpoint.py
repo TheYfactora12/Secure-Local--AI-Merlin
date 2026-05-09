@@ -21,6 +21,7 @@ from merlin.memory_manager import MemoryManager
 from merlin.outcome_observer import observe_task_outcome
 from merlin.persona_injector import build_system_prompt
 from merlin.policy_engine import ApprovalRequiredError, requires_approval
+from merlin.room_store import RoomTranscriptSaveResult, save_room_transcript
 from merlin.router import RouteDecision, route_task
 
 
@@ -52,6 +53,25 @@ class TaskResponse(BaseModel):
     session_id: str
     memory_written: bool
     degraded: bool = False
+
+
+class RoomTranscriptSaveRequest(BaseModel):
+    room_id: str
+    room_name: str | None = None
+    user_input: str
+    merlin_response: str
+    session_id: str
+    approval_id: str | None = None
+
+
+class RoomTranscriptSaveResponse(BaseModel):
+    status: str
+    room_id: str
+    transcript_id: str
+    transcript_path: str
+    audit_id: str | None
+    memory_written: bool
+    memory_extraction: str
 
 
 def _input_hash(user_input: str) -> str:
@@ -177,6 +197,30 @@ def _write_session_memory(session_id: str, user_input: str, merlin_response: str
     return point_id is not None
 
 
+def _write_room_transcript_audit(result: RoomTranscriptSaveResult, request: RoomTranscriptSaveRequest) -> str | None:
+    metadata = {
+        "room_id": result.room_id,
+        "room_name": result.room_name,
+        "transcript_id": result.transcript_id,
+        "transcript_path": result.transcript_path,
+        "metadata_file": result.metadata_file,
+        "session_id": request.session_id,
+        "approval_id": result.approval_id,
+        "created_at": result.created_at,
+        "bytes_written": result.bytes_written,
+        "user_input_hash": _input_hash(request.user_input),
+        "merlin_response_hash": _input_hash(request.merlin_response),
+        "memory_extraction": result.memory_extraction,
+        "approved_memory_written": result.approved_memory_written,
+        "cloud_sync_default": False,
+        "raw_transcript_in_audit": False,
+    }
+    try:
+        return MemoryManager().write_audit_event("room_transcript_save", metadata)
+    except Exception:
+        return None
+
+
 @app.post("/task", response_model=TaskResponse)
 def task(request: TaskRequest) -> TaskResponse:
     started = time.perf_counter()
@@ -270,6 +314,51 @@ def task(request: TaskRequest) -> TaskResponse:
         approved=True,
         session_id=session_id,
         memory_written=memory_written,
+    )
+
+
+@app.post("/rooms/transcripts", response_model=RoomTranscriptSaveResponse)
+def save_room_transcript_endpoint(request: RoomTranscriptSaveRequest) -> RoomTranscriptSaveResponse:
+    approval_id = (request.approval_id or "").strip()
+    if not approval_id:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": "Saving a Room transcript requires explicit approval.",
+                "approval_gates": ["file_write"],
+                "memory_extraction": "not_performed_requires_separate_approval",
+            },
+        )
+
+    try:
+        result = save_room_transcript(
+            room_id=request.room_id,
+            room_name=request.room_name,
+            user_input=request.user_input,
+            merlin_response=request.merlin_response,
+            session_id=request.session_id,
+            approval_id=approval_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "Room transcript could not be saved locally.",
+                "error": exc.__class__.__name__,
+            },
+        ) from exc
+
+    audit_id = _write_room_transcript_audit(result, request)
+    return RoomTranscriptSaveResponse(
+        status="saved_local_transcript_only",
+        room_id=result.room_id,
+        transcript_id=result.transcript_id,
+        transcript_path=result.transcript_path,
+        audit_id=audit_id,
+        memory_written=False,
+        memory_extraction=result.memory_extraction,
     )
 
 

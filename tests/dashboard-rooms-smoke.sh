@@ -44,8 +44,8 @@ grep -q "All Rooms" "$DASHBOARD_FILE" \
   || fail "Rooms page must show all-Rooms reference policy as explicit"
 grep -q "Save current chat" "$DASHBOARD_FILE" \
   || fail "Rooms page must show save-to-Room state"
-grep -q "locked until Task API write gate" "$DASHBOARD_FILE" \
-  || fail "Rooms save flow must remain locked until Task API gate"
+grep -q "backend approval required" "$DASHBOARD_FILE" \
+  || fail "Rooms save flow must require backend approval"
 grep -q "separate approval" "$DASHBOARD_FILE" \
   || fail "Rooms page must separate transcript save from memory extraction"
 grep -q "must show linked memory" "$DASHBOARD_FILE" \
@@ -56,7 +56,8 @@ for required in \
   "Default policy is **No Room context**" \
   "Cloud/synced folders are treated as user-selected filesystem paths" \
   "Browser-side filesystem writes" \
-  "Save chat transcript to Room through Task API policy gate"; do
+  "POST http://localhost:8766/rooms/transcripts" \
+  "This endpoint requires \`approval_id\`"; do
   grep -Fq "$required" "$ROOMS_DOC" || fail "Rooms doc missing: $required"
 done
 

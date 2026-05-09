@@ -5198,3 +5198,181 @@ instead of only static product copy.
 
 Improved foundation, but Public Beta remains blocked until users can actually
 save/reload Rooms, review/delete memory, and pass clean install evidence.
+
+## #135 Save Room Transcript Through Task API Gate
+
+### Date/Time
+
+2026-05-09 08:16:25 EDT.
+
+### Starting Commit SHA
+
+`74c8edacc14b158c1f95b1f2e5566d70b161849a`
+
+### Target Issues
+
+- #135
+- #106
+- #123
+- #31
+- #32
+
+### Scope
+
+Added a backend-only save-to-Room transcript path:
+
+```text
+POST /rooms/transcripts
+```
+
+The endpoint requires `approval_id`, validates a safe Room slug, writes a local
+Markdown transcript, and writes audit metadata without raw transcript text. It
+does not extract memory, write Qdrant memory, add browser file controls, or
+enable cloud sync.
+
+### Files Changed
+
+- `docs/architecture/MERLIN_ROOMS.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+- `dashboard/index.html`
+- `merlin/room_store.py`
+- `merlin/task_endpoint.py`
+- `tests/dashboard-rooms-smoke.sh`
+- `tests/test_room_store.py`
+- `tests/test_status_extension.py`
+- `tests/test_task_endpoint.py`
+
+### Protected Files Touched
+
+- `merlin/task_endpoint.py`: added policy-bound Room transcript endpoint on
+  execution-aware port 8766.
+- `dashboard/index.html`: copy only; still no browser save/delete controls.
+
+### Commands Run
+
+- `sed -n '1,220p' docs/CODEX_MASTER_PROMPT_V2.md`
+- `sed -n '1,180p' docs/operations/FAILURE_LEARNING_LOOP.md`
+- `sed -n '1,180p' docs/security/PRIVACY_AND_MEMORY_MODEL.md`
+- `sed -n '1,160p' docs/architecture/MERLIN_ROOMS.md`
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py -q`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `git diff --check`
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_status_extension.py tests/test_task_endpoint.py -q`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-readiness-smoke.sh`
+- `bash tests/provider-connector-policy-smoke.sh`
+- `bash tests/codex-master-prompt-v2-smoke.sh`
+- `bash tests/release-readiness-readme-smoke.sh`
+- `bash tests/dashboard-security-center-smoke.sh`
+
+### Test Output Summary
+
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py -q`: PASS,
+  20 passed.
+- First `bash tests/dashboard-rooms-smoke.sh`: FAIL due to stale doc-smoke
+  expectation after moving save-to-Room from future work to current backend
+  endpoint.
+- Retest `bash tests/dashboard-rooms-smoke.sh`: PASS.
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_status_extension.py tests/test_task_endpoint.py -q`: PASS,
+  50 passed.
+- `bash tests/dashboard-native-chat-smoke.sh`: PASS.
+- `bash tests/dashboard-tabs-smoke.sh`: PASS.
+- `bash tests/dashboard-settings-policy-smoke.sh`: PASS.
+- `bash tests/dashboard-first-run-smoke.sh`: PASS.
+- `bash tests/dashboard-readiness-smoke.sh`: PASS.
+- `bash tests/provider-connector-policy-smoke.sh`: PASS.
+- `bash tests/codex-master-prompt-v2-smoke.sh`: PASS.
+- `bash tests/release-readiness-readme-smoke.sh`: PASS.
+- `bash tests/dashboard-security-center-smoke.sh`: PASS.
+- `git diff --check`: PASS.
+
+### Tests Skipped And Why
+
+- No live browser test because the dashboard still has no save-to-Room control.
+- No installer/package tests because installer/package behavior did not change.
+- No live Qdrant test because audit writes are best-effort and mocked in unit
+  tests for this endpoint.
+
+### Failures Found
+
+The Rooms smoke expected `Save chat transcript to Room through Task API policy
+gate` in the future-work section after the endpoint had moved into the current
+implementation section.
+
+### Failure Category
+
+- Documentation mismatch.
+- Test design gap.
+
+### Root Cause Or Current Hypothesis
+
+The architecture doc was correctly updated to describe the current endpoint,
+but the static smoke still checked the old future-work phrase.
+
+### Fix Applied
+
+Updated `tests/dashboard-rooms-smoke.sh` to assert the current endpoint contract:
+
+- `POST http://localhost:8766/rooms/transcripts`
+- endpoint requires `approval_id`
+
+### Retest Result
+
+Passed after the smoke update:
+
+- `bash tests/dashboard-rooms-smoke.sh`
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_status_extension.py tests/test_task_endpoint.py -q`
+- all related dashboard/static smokes listed above
+
+### Regression Test Added
+
+- `tests/test_room_store.py` now covers local transcript Markdown writes,
+  approval requirement, unsafe Room ID rejection, and no memory extraction.
+- `tests/test_task_endpoint.py` now covers `POST /rooms/transcripts` approval
+  failure, local file write, audit metadata without raw transcript text, no
+  memory write, and unsafe Room ID rejection.
+- `tests/dashboard-rooms-smoke.sh` now checks the current backend endpoint
+  contract and keeps browser controls absent.
+
+### Follow-Up Issues Created Or Recommended
+
+Next focused #135 child issue:
+
+**Title:** `v3.1 Rooms: Wizard HQ save-to-Room approval card`
+
+Scope:
+
+- UI card after a Merlin Chat response.
+- User explicitly chooses Save to Room.
+- Calls `POST /rooms/transcripts` only after approval id exists.
+- Shows transcript saved, memory extraction not performed.
+- No memory write and no cloud sync.
+
+### Lesson Learned
+
+When a design item becomes implemented, static smokes must move from future
+language checks to current endpoint checks in the same patch.
+
+### What Not To Repeat Next Time
+
+Do not leave tests asserting old roadmap copy after promoting a capability into
+current implementation.
+
+### Next Recommended Step
+
+Commit/push/watch CI. Then build the Wizard HQ save-to-Room approval card as a
+separate UI slice, still without memory extraction by default.
+
+### Local Trusted Beta Impact
+
+Improved. Merlin can now persist a local chat transcript to a Room through a
+backend approval boundary while keeping reusable memory separate.
+
+### Public Beta Impact
+
+Improved foundation, but Public Beta remains blocked until the UI flow,
+Room reload/history display, memory review/delete, and clean installer evidence
+are complete.

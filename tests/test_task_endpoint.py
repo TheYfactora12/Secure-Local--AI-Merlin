@@ -124,3 +124,80 @@ def test_system_prompt_contains_guardian_ethos_commitment_text() -> None:
 def test_pi_warmth_block_is_present_in_every_system_prompt() -> None:
     prompt = build_system_prompt(route_task("explain how RAG works"))
     assert PI_WARMTH_BLOCK in prompt
+
+
+def test_save_room_transcript_requires_approval_id() -> None:
+    response = client.post(
+        "/rooms/transcripts",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "What are we building?",
+            "merlin_response": "Merlin Rooms.",
+            "session_id": "session-1",
+        },
+    )
+
+    assert response.status_code == 403
+    detail = response.json()["detail"]
+    assert "file_write" in detail["approval_gates"]
+    assert detail["memory_extraction"] == "not_performed_requires_separate_approval"
+
+
+def test_save_room_transcript_writes_local_file_without_memory(tmp_path, monkeypatch) -> None:
+    audit_calls = []
+
+    class FakeMemoryManager:
+        def write_audit_event(self, event_type: str, metadata: dict) -> str:
+            audit_calls.append((event_type, metadata))
+            return "audit-room-1"
+
+    monkeypatch.setenv("MERLIN_ROOMS_ROOT", str(tmp_path / "rooms"))
+    monkeypatch.setattr("merlin.task_endpoint.MemoryManager", FakeMemoryManager)
+
+    response = client.post(
+        "/rooms/transcripts",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "What are we building?",
+            "merlin_response": "Merlin Rooms.",
+            "session_id": "session-1",
+            "approval_id": "approval-room-1",
+        },
+    )
+    body = response.json()
+    transcript_text = (tmp_path / "rooms" / "merlin-build" / "transcripts" / f"{body['transcript_id']}.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert response.status_code == 200
+    assert body["status"] == "saved_local_transcript_only"
+    assert body["memory_written"] is False
+    assert body["memory_extraction"] == "not_performed_requires_separate_approval"
+    assert body["audit_id"] == "audit-room-1"
+    assert "What are we building?" in transcript_text
+    assert "Merlin Rooms." in transcript_text
+    assert audit_calls[0][0] == "room_transcript_save"
+    assert audit_calls[0][1]["approval_id"] == "approval-room-1"
+    assert audit_calls[0][1]["raw_transcript_in_audit"] is False
+    assert "What are we building?" not in str(audit_calls[0][1])
+    assert "Merlin Rooms." not in str(audit_calls[0][1])
+
+
+def test_save_room_transcript_rejects_unsafe_room_id(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("MERLIN_ROOMS_ROOT", str(tmp_path / "rooms"))
+
+    response = client.post(
+        "/rooms/transcripts",
+        json={
+            "room_id": "../bad",
+            "room_name": "Bad",
+            "user_input": "hello",
+            "merlin_response": "hi",
+            "session_id": "session-1",
+            "approval_id": "approval-room-1",
+        },
+    )
+
+    assert response.status_code == 400

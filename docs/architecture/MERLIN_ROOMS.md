@@ -98,6 +98,7 @@ The manifest reports:
 - active Room state,
 - reference policy,
 - save-to-Room locked state,
+- backend save-to-Room approval requirement,
 - memory extraction locked state,
 - cloud sync default off,
 - browser file controls disabled.
@@ -106,16 +107,26 @@ Discovery requires a safe Room folder name and a `room.md` metadata file. The
 endpoint does not create folders, write transcripts, index content, extract
 memory, or return raw transcript text.
 
+Current implementation also exposes a backend-only write path:
+
+```text
+POST http://localhost:8766/rooms/transcripts
+```
+
+This endpoint requires `approval_id`, validates a safe Room slug, writes a
+local Markdown transcript, and records audit metadata without raw transcript
+text. It does not perform memory extraction and does not create browser-side
+file controls.
+
 ## Runtime Work To Split
 
 Before writable Room support ships, split #135 into implementation issues:
 
 1. Room data model and local file schema.
-2. Save chat transcript to Room through Task API policy gate.
-3. Room picker and reference policy persistence.
-4. Local index rebuild from Room Markdown files.
-5. Memory proposal flow from transcript/summary.
-6. Delete/archive Room with linked-memory warning.
+2. Room picker and reference policy persistence.
+3. Local index rebuild from Room Markdown files.
+4. Memory proposal flow from transcript/summary.
+5. Delete/archive Room with linked-memory warning.
 
 ## Out Of Scope
 

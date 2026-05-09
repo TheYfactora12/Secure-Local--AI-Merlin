@@ -351,9 +351,12 @@ def test_status_rooms_returns_read_only_manifest(tmp_path, monkeypatch) -> None:
     assert body["active_room"] is None
     assert body["reference_policy"] == "no_room_context"
     assert body["save_to_room_enabled"] is False
+    assert body["save_to_room_api_enabled"] is True
+    assert body["save_to_room_policy"] == "backend_approval_required"
     assert body["memory_extraction_enabled"] is False
     assert body["cloud_sync_default"] is False
     assert body["browser_file_controls_enabled"] is False
+    assert body["browser_save_controls_enabled"] is False
     assert body["rooms"][0]["room_id"] == "merlin-build"
     assert body["rooms"][0]["name"] == "Merlin Build"
 
