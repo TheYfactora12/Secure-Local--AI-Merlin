@@ -44,6 +44,24 @@ grep -q "front-sidebar" "$DASHBOARD_FILE" \
   || fail "dashboard missing local chat sidebar"
 grep -q "front-composer-wrap" "$DASHBOARD_FILE" \
   || fail "dashboard missing premium composer wrapper"
+grep -q "composer-tools" "$DASHBOARD_FILE" \
+  || fail "dashboard missing chat composer tool rail"
+grep -q "composer-mode-selector" "$DASHBOARD_FILE" \
+  || fail "dashboard missing composer mode selector"
+grep -q "data-chat-mode=\"fast\"" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Fast mode option"
+grep -q "data-chat-mode=\"smart\"" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Smart mode option"
+grep -q "data-chat-mode=\"deep\"" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Deep mode option"
+grep -q "function selectChatMode" "$DASHBOARD_FILE" \
+  || fail "dashboard missing mode selector state binding"
+grep -q "selectedChatMode" "$DASHBOARD_FILE" \
+  || fail "dashboard missing selected chat mode state"
+grep -q "Mode: " "$DASHBOARD_FILE" \
+  || fail "dashboard response metadata must display selected UI mode"
+grep -q "UI mode" "$DASHBOARD_FILE" \
+  || fail "dashboard route metadata must include UI mode"
 grep -q "Talk to Merlin first" "$DASHBOARD_FILE" \
   || fail "dashboard missing clean Merlin-first chat copy"
 grep -q 'id="merlin-chat-input"' "$DASHBOARD_FILE" \

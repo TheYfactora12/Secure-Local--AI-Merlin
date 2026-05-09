@@ -34,6 +34,12 @@ grep -q "merlinOrbBreathe" "$DASHBOARD_FILE" \
   || fail "Chat home missing subtle Merlin orb motion"
 grep -q "prefers-reduced-motion: reduce" "$DASHBOARD_FILE" \
   || fail "Chat home orb motion must respect reduced-motion preference"
+grep -q "composer-tools" "$DASHBOARD_FILE" \
+  || fail "Chat home missing clean composer tool rail"
+grep -q "composer-mode-selector" "$DASHBOARD_FILE" \
+  || fail "Chat home missing mode selector in composer"
+grep -q "Smart mode selected. Merlin router still chooses the actual local model." "$DASHBOARD_FILE" \
+  || fail "Chat home missing honest mode-to-router copy"
 grep -q "New conversation" "$DASHBOARD_FILE" \
   || fail "Chat home missing local chat workspace affordance"
 grep -q ">Ask Merlin<" "$DASHBOARD_FILE" \

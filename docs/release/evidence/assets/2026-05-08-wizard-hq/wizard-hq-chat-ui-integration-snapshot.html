@@ -1657,10 +1657,6 @@ const readinessState = {
 };
 let selectedChatMode = 'smart';
 
-if ('scrollRestoration' in window.history) {
-  window.history.scrollRestoration = 'manual';
-}
-
 function text(id, value) {
   const el = document.getElementById(id);
   if (el) el.textContent = value;
@@ -1676,10 +1672,6 @@ function selectTab(target, updateHash = true) {
   if (updateHash && window.location.hash !== `#${target}`) {
     window.history.replaceState(null, '', `#${target}`);
   }
-  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-  const activePage = document.querySelector(`[data-tab-page="${CSS.escape(target)}"]`);
-  const scroller = activePage && activePage.querySelector('.front-chat-scroll');
-  if (scroller) scroller.scrollTop = 0;
 }
 
 function selectInitialTab() {

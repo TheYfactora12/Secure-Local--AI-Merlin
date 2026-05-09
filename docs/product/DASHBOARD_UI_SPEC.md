@@ -42,6 +42,14 @@ Merlin Chat:
 
 - The composer is the primary action, with large readable text and an obvious send button.
 - Native chat routes through Merlin Task API, then shows route/staff/model metadata inline.
+- The Chat screen should use a dedicated conversation rail, compact Merlin brand
+  header, centered Merlin identity orb, rounded suggestion chips, and a premium
+  composer so the first impression feels like a real Merlin app rather than a
+  service dashboard.
+- Fast / Smart / Deep mode controls are allowed in the UI, but until the
+  backend exposes an audited mode hint contract they are **UI intent only**. The
+  actual model must still come from the Merlin router and be shown from
+  `selected_model_alias`.
 - Open WebUI remains linked as an alternate local chat bridge while Merlin owns routing, policy, memory, audit, and readiness around it.
 - Responses show the selected staff mode, route confidence, model alias, and whether memory was used.
 - Approval-required responses are shown inline with the blocked gate names and a safe next command.

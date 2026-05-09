@@ -6221,3 +6221,201 @@ premium product while staying local-only and read-only.
 
 Positive UI polish foundation. Public Beta still requires live browser
 screenshots, installer retest, and memory/Room approval UX evidence.
+
+---
+
+## 2026-05-09 — Merlin Chat UI Direction Integration
+
+### Date/Time
+
+2026-05-09 morning, America/New_York.
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`fd872f3` (`feat(dashboard): animate Merlin orb safely`)
+
+### Ending Commit SHA
+
+Pending commit.
+
+### Target Issues
+
+- #106 Wizard HQ Product Shell
+- #122 Product Focus Cut
+- #134 Product Value Checkpoint
+
+### Scope
+
+Adapt the user-provided Merlin Chat standalone HTML direction into the existing
+Wizard HQ Chat tab without turning it into a separate product page yet.
+
+Integrated now:
+
+- cleaner conversation rail,
+- compact Merlin brand treatment,
+- premium composer tool rail,
+- Fast / Smart / Deep mode selector,
+- selected UI mode shown in response metadata,
+- first-load scroll reset so Chat opens on the Merlin face/orb instead of a
+  retained previous scroll position,
+- local-only safety copy preserved.
+
+Preserved constraints:
+
+- no Google Fonts or external UI dependencies,
+- no fake canned Merlin replies,
+- no direct LiteLLM/Ollama browser calls,
+- no browser approval/write/shell controls,
+- exactly one browser POST path: Merlin Task API `/task`.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-native-chat-smoke.sh`
+- `tests/dashboard-first-run-smoke.sh`
+- `docs/product/DASHBOARD_UI_SPEC.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None. No installer, package script, policy, memory, router, status API, or Task
+API behavior changed.
+
+### Commands Run
+
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `bash tests/dashboard-readiness-smoke.sh`
+- `git diff --check`
+- `curl -fsS --max-time 5 http://127.0.0.1:8888/ -o docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-chat-ui-integration-snapshot.html`
+- `open -a Safari 'http://127.0.0.1:8888/?chat-ui=20260509#chat'`
+- `screencapture -x docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-chat-ui-integration-top.png`
+
+Earlier browser QA commands in this pass:
+
+- `lsof -nP -iTCP:8888 -sTCP:LISTEN`
+- `curl -fsS --max-time 5 http://127.0.0.1:8888/`
+- `docker compose ps`
+- `docker compose logs --tail=80 dashboard`
+- `bash scripts/status.sh`
+- `open -a Safari http://127.0.0.1:8888`
+- `screencapture -x docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-living-orb-browser.png`
+- Safari automation attempts with `osascript`
+
+### Test Output Summary
+
+- `bash tests/dashboard-native-chat-smoke.sh`: PASS — Wizard HQ native Merlin
+  Chat remains policy-gated through Task API.
+- `bash tests/dashboard-first-run-smoke.sh`: PASS — Chat home product clarity is
+  safe and read-only.
+- `bash tests/dashboard-tabs-smoke.sh`: PASS — tab shell remains Merlin-native
+  and read-only.
+- `bash tests/dashboard-readiness-smoke.sh`: PASS — readiness surface remains
+  honest and read-only.
+- `git diff --check`: PASS — no whitespace errors.
+- Live HTTP snapshot: PASS — dashboard served from `127.0.0.1:8888`.
+- Browser screenshot: captured
+  `docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-chat-ui-integration-top.png`.
+
+### Tests Skipped And Why
+
+No live browser DOM-click automation was run. Safari JavaScript automation is
+blocked in this local environment, so this slice used static smokes, live HTTP
+checks, and screenshot evidence instead.
+
+### Failures Found
+
+Two browser-QA failures were found before this UI integration:
+
+1. Initial `curl` to `127.0.0.1:8888` failed even though `lsof` showed Docker
+   listening. Follow-up `docker compose ps`, dashboard logs, `scripts/status.sh`,
+   and later `curl` checks confirmed Wizard HQ was reachable. Current hypothesis:
+   transient Docker/port readiness timing.
+2. Safari could not run JavaScript from Apple Events or from Smart Search field,
+   even after enabling developer features through preferences. Safari page DOM
+   automation is not reliable in this local test environment.
+
+### Failure Category
+
+- Wizard HQ/dashboard
+- UX/readiness confusion
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+The transient `curl` failure was likely local Docker port readiness timing. The
+Safari automation failure appears to be a browser configuration / macOS
+automation limitation, not a Merlin defect.
+
+### Fix Applied
+
+No product fix applied for the Safari automation limitation. The QA approach
+shifted to static smoke tests, direct HTTP checks, and screenshots.
+
+Product-side UI fix applied from screenshot review:
+
+- disabled browser scroll restoration for Wizard HQ,
+- reset page and Chat scroller position when tabs are selected.
+
+### Retest Result
+
+PASS for the UI integration slice. Focused dashboard smokes passed after the
+scroll reset and mode selector integration.
+
+### Regression Test Added
+
+Static dashboard smokes now assert:
+
+- composer tool rail exists,
+- mode selector exists in the composer,
+- Fast / Smart / Deep choices exist,
+- selected mode state is tracked,
+- response metadata shows the selected UI mode,
+- honest mode-to-router copy explains that Merlin router still chooses the
+  actual local model.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended:
+
+**Title:** `v3.1 QA: add reliable browser automation path for Wizard HQ`
+
+Scope:
+
+- choose one supported local browser automation path,
+- avoid Safari-only Apple Events blockers,
+- capture Chat / Rooms / Brains / Settings screenshots,
+- verify no overlap at split-screen, desktop, and mobile widths.
+
+### Lesson Learned
+
+The standalone chat concept is the correct product direction, but it must be
+integrated into Wizard HQ through the existing Task API and safety contracts.
+Mode controls should not pretend to select models until the backend supports an
+audited mode hint.
+
+### What Not To Repeat Next Time
+
+Do not rely on Safari JavaScript automation for Wizard HQ QA unless the required
+Safari Developer settings are confirmed first.
+
+### Next Recommended Step
+
+Commit, push, and watch CI. Next product slice should wire the same Chat shell
+into Room-backed local transcript storage only after the memory approval/delete
+contracts stay intact.
+
+### Local Trusted Beta Impact
+
+Improves the first usable Merlin Chat impression while preserving local-first
+and approval-gated boundaries.
+
+### Public Beta Impact
+
+Positive UX foundation. Public Beta still requires clean installer retest,
+reliable browser visual QA, and memory/Room approval UX evidence.
