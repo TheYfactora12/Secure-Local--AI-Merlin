@@ -32,6 +32,14 @@ grep -q "merlin-face" "$DASHBOARD_FILE" \
   || fail "dashboard missing Merlin face visual"
 grep -q "merlin-front-shell" "$DASHBOARD_FILE" \
   || fail "dashboard missing Merlin front-page shell"
+grep -q "merlin-orb-stage" "$DASHBOARD_FILE" \
+  || fail "dashboard missing living Merlin orb stage"
+grep -q "@keyframes merlinOrbBreathe" "$DASHBOARD_FILE" \
+  || fail "dashboard missing subtle Merlin orb breath animation"
+grep -q "@keyframes merlinOrbHalo" "$DASHBOARD_FILE" \
+  || fail "dashboard missing subtle Merlin orb halo animation"
+grep -q "@media (prefers-reduced-motion: reduce)" "$DASHBOARD_FILE" \
+  || fail "dashboard Merlin orb motion must respect reduced-motion preference"
 grep -q "front-sidebar" "$DASHBOARD_FILE" \
   || fail "dashboard missing local chat sidebar"
 grep -q "front-composer-wrap" "$DASHBOARD_FILE" \

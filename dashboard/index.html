@@ -221,6 +221,40 @@ textarea {
   margin: 0;
 }
 .front-brand .merlin-face span { display: none; }
+.merlin-orb-stage {
+  position: relative;
+  width: min(230px, 50vw);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+}
+.merlin-orb-stage::before,
+.merlin-orb-stage::after {
+  content: "";
+  position: absolute;
+  inset: 4%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.merlin-orb-stage::before {
+  z-index: -1;
+  border: 1px solid rgba(103, 232, 249, 0.22);
+  box-shadow:
+    0 0 34px rgba(103, 232, 249, 0.20),
+    inset 0 0 38px rgba(66, 211, 146, 0.10);
+  animation: merlinOrbHalo 7s ease-in-out infinite;
+}
+.merlin-orb-stage::after {
+  inset: 12%;
+  z-index: 1;
+  background:
+    conic-gradient(from 180deg, transparent 0 70deg, rgba(103, 232, 249, 0.18) 100deg, transparent 138deg 360deg);
+  mix-blend-mode: screen;
+  opacity: 0.42;
+  animation: merlinOrbScan 12s linear infinite;
+}
 .merlin-orb-image {
   width: min(210px, 46vw);
   aspect-ratio: 1;
@@ -228,9 +262,12 @@ textarea {
   border-radius: 50%;
   object-fit: cover;
   display: block;
+  position: relative;
+  z-index: 0;
   box-shadow:
     0 0 46px rgba(103, 232, 249, 0.22),
     0 0 120px rgba(66, 211, 146, 0.12);
+  animation: merlinOrbBreathe 5.8s ease-in-out infinite;
 }
 .front-brand-orb {
   width: 38px;
@@ -247,6 +284,37 @@ textarea {
   display: block;
   color: var(--muted);
   font-size: 11px;
+}
+@keyframes merlinOrbBreathe {
+  0%, 100% {
+    filter: brightness(0.98) saturate(1.02);
+    transform: scale(1);
+  }
+  45% {
+    filter: brightness(1.08) saturate(1.12);
+    transform: scale(1.018);
+  }
+}
+@keyframes merlinOrbHalo {
+  0%, 100% {
+    opacity: 0.48;
+    transform: scale(0.985);
+  }
+  50% {
+    opacity: 0.84;
+    transform: scale(1.045);
+  }
+}
+@keyframes merlinOrbScan {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .merlin-orb-image,
+  .merlin-orb-stage::before,
+  .merlin-orb-stage::after {
+    animation: none;
+  }
 }
 .front-sidebar-card {
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -1115,7 +1183,9 @@ textarea {
 
         <div class="front-chat-scroll">
           <div class="front-empty">
-            <img class="merlin-orb-image" src="assets/merlin-orb.png" alt="Merlin AI core face" width="210" height="210" loading="eager">
+            <div class="merlin-orb-stage">
+              <img class="merlin-orb-image" src="assets/merlin-orb.png" alt="Merlin AI core face" width="210" height="210" loading="eager">
+            </div>
             <div class="hero-title">
               <h2>Merlin AI</h2>
               <p>Private Intelligence. Locally Owned.</p>

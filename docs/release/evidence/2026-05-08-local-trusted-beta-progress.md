@@ -2551,7 +2551,7 @@ Settings, and clean installer retest evidence.
 
 ### Ending Commit SHA
 
-Pending commit.
+`4753ded` (`feat(dashboard): add Merlin M browser mark`)
 
 ### Target Issue(s)
 
@@ -6098,3 +6098,126 @@ look like Merlin AI instead of a generic local dashboard.
 
 Positive visual identity foundation. Public Beta still requires full clean
 installer retest and browser screenshot evidence after UI polish stabilizes.
+
+---
+
+## 2026-05-09 — Wizard HQ Living Merlin Orb
+
+### Date/Time
+
+2026-05-09 morning, America/New_York.
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`4753ded` (`feat(dashboard): add Merlin M browser mark`)
+
+### Ending Commit SHA
+
+Pending commit.
+
+### Target Issues
+
+- #106 Wizard HQ Product Shell
+- #122 Product Focus Cut
+- #134 Product Value Checkpoint
+
+### Scope
+
+Make the central Merlin Chat orb feel alive with subtle local CSS motion while
+preserving the readiness contract. The animation is a visual presence layer,
+not a service-ready signal.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-native-chat-smoke.sh`
+- `tests/dashboard-first-run-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None. No installer, package script, policy, memory, router, status API, or Task
+API behavior changed.
+
+### Commands Run
+
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `bash tests/dashboard-readiness-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- `PASS: Wizard HQ native Merlin Chat is policy-gated through Task API`
+- `PASS: Wizard HQ Chat home product clarity is safe and read-only`
+- `PASS: Wizard HQ tab shell is Merlin-native and read-only`
+- `PASS: Wizard HQ readiness surface is honest and read-only`
+- `git diff --check` returned clean.
+
+### Tests Skipped And Why
+
+Live browser screenshot retest skipped for this static CSS motion slice. It
+should be captured with the broader Wizard HQ visual QA pass after the next
+front-page polish round.
+
+### Failures Found
+
+None in this slice.
+
+### Failure Category
+
+None.
+
+### Root Cause Or Current Hypothesis
+
+No failure diagnosed.
+
+### Fix Applied
+
+No failure fix required.
+
+### Retest Result
+
+All focused dashboard smokes passed on first run after the motion wiring.
+
+### Regression Test Added
+
+Static dashboard smokes now assert:
+
+- the Merlin orb has a dedicated `merlin-orb-stage`,
+- the subtle breathe/halo animation keyframes exist,
+- the animation respects `prefers-reduced-motion: reduce`.
+
+### Follow-Up Issues Created Or Recommended
+
+No separate follow-up needed for the CSS motion slice. Browser screenshot
+validation remains required before Local Trusted Beta visual signoff.
+
+### Lesson Learned
+
+Motion is part of product trust. It can make Merlin feel alive, but it must not
+claim readiness, imply hidden work, or ignore accessibility preferences.
+
+### What Not To Repeat Next Time
+
+Do not use animation as a substitute for real status. Readiness still comes
+from the status/task API checks and documented service state.
+
+### Next Recommended Step
+
+Run focused dashboard smokes, commit, push, and watch CI.
+
+### Local Trusted Beta Impact
+
+Improves first impression and makes the Merlin Chat page feel more like a
+premium product while staying local-only and read-only.
+
+### Public Beta Impact
+
+Positive UI polish foundation. Public Beta still requires live browser
+screenshots, installer retest, and memory/Room approval UX evidence.

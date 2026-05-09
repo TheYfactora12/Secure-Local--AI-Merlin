@@ -28,6 +28,12 @@ grep -q 'src="assets/merlin-m-sigil.png"' "$DASHBOARD_FILE" \
   || fail "local Merlin M sigil asset file missing"
 grep -q "merlin-front-shell" "$DASHBOARD_FILE" \
   || fail "Chat home missing premium Merlin front shell"
+grep -q "merlin-orb-stage" "$DASHBOARD_FILE" \
+  || fail "Chat home missing living Merlin orb stage"
+grep -q "merlinOrbBreathe" "$DASHBOARD_FILE" \
+  || fail "Chat home missing subtle Merlin orb motion"
+grep -q "prefers-reduced-motion: reduce" "$DASHBOARD_FILE" \
+  || fail "Chat home orb motion must respect reduced-motion preference"
 grep -q "New conversation" "$DASHBOARD_FILE" \
   || fail "Chat home missing local chat workspace affordance"
 grep -q ">Ask Merlin<" "$DASHBOARD_FILE" \
