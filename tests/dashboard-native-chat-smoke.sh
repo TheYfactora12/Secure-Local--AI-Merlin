@@ -14,8 +14,18 @@ grep -q "Ask Merlin" "$DASHBOARD_FILE" \
   || fail "dashboard missing Ask Merlin heading"
 grep -q "Merlin AI core face" "$DASHBOARD_FILE" \
   || fail "dashboard missing centered Merlin AI core face"
+grep -q 'assets/merlin-orb.png' "$DASHBOARD_FILE" \
+  || fail "dashboard missing local Merlin orb image asset reference"
+[[ -f "${ROOT_DIR}/dashboard/assets/merlin-orb.png" ]] \
+  || fail "dashboard missing local Merlin orb image asset"
 grep -q "merlin-face" "$DASHBOARD_FILE" \
   || fail "dashboard missing Merlin face visual"
+grep -q "merlin-front-shell" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Merlin front-page shell"
+grep -q "front-sidebar" "$DASHBOARD_FILE" \
+  || fail "dashboard missing local chat sidebar"
+grep -q "front-composer-wrap" "$DASHBOARD_FILE" \
+  || fail "dashboard missing premium composer wrapper"
 grep -q "Talk to Merlin first" "$DASHBOARD_FILE" \
   || fail "dashboard missing clean Merlin-first chat copy"
 grep -q 'id="merlin-chat-input"' "$DASHBOARD_FILE" \

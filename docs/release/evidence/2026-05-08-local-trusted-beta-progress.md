@@ -5774,3 +5774,177 @@ can be saved only after a specific approved payload.
 
 Positive foundation. Public Beta still needs the complete user-facing approval
 card, Room reload/history UX, memory review/delete, and clean installer evidence.
+
+## #106 Merlin Chat Front Page Orb Shell
+
+### Date/Time
+
+2026-05-09 EDT
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`3f590f067b03c54e49213ae7700466f3a1476741`
+
+### Ending Commit SHA
+
+Pending commit for this front-page UI slice.
+
+### Target Issues
+
+- #106 Wizard HQ Product Shell
+- #122 Product Focus Cut
+- #135 Merlin Rooms
+
+### Scope
+
+Adapt the safe parts of `/Users/kevinmedeiros/Downloads/merlin-chat-2.html`
+into Wizard HQ:
+
+- local Merlin orb center mark,
+- premium chat workspace shell,
+- local sidebar/context rail,
+- mode/readiness strip,
+- safe starter prompts,
+- premium composer framing.
+
+Rejected from the reference:
+
+- Google Fonts / external font calls,
+- external S3 image dependency,
+- fake demo responses,
+- web search, file attach, memory toggle, share, and Round Table buttons,
+- direct model backend calls,
+- browser-side save/write controls.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `dashboard/assets/merlin-orb.png`
+- `tests/dashboard-native-chat-smoke.sh`
+- `tests/dashboard-first-run-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None. No installer, policy, memory, router, status API, or Task API behavior
+changed in this UI slice.
+
+### Commands Run
+
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `git diff --check`
+- `bash tests/dashboard-readiness-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `bash tests/dashboard-model-readiness-smoke.sh`
+
+### Test Output Summary
+
+Initial pass:
+
+- `PASS: Wizard HQ native Merlin Chat is policy-gated through Task API`
+- `PASS: Wizard HQ Chat home product clarity is safe and read-only`
+- `PASS: Wizard HQ tab shell is Merlin-native and read-only`
+- `git diff --check` returned clean.
+- `PASS: Merlin Rooms surface is local, explicit, and non-writing`
+- `PASS: Wizard HQ Settings is backend-manifested and policy-gated`
+- `PASS: Wizard HQ model readiness UX is explicit and no-download`
+
+One failure was found and fixed:
+
+- `bash tests/dashboard-readiness-smoke.sh` failed with
+  `FAIL: dashboard contains fake/static readiness language`
+
+### Tests Skipped And Why
+
+Live browser screenshot is not required for this static UI slice, but should be
+run before installer/local beta evidence signoff.
+
+### Failures Found
+
+The new local "New conversation" helper copy said:
+
+`Merlin is ready for a fresh local question.`
+
+### Failure Category
+
+- UX/readiness confusion.
+- CI/static smoke gap caught successfully.
+
+### Root Cause Or Current Hypothesis
+
+The copy used the word `ready` as conversational language, but the dashboard
+readiness contract reserves readiness claims for verified service state.
+
+### Fix Applied
+
+Changed the copy to:
+
+`Start a fresh local question here. Nothing was saved, deleted, or written to memory.`
+
+### Retest Result
+
+Passed after copy fix:
+
+- `PASS: Wizard HQ readiness surface is honest and read-only`
+- `PASS: Wizard HQ native Merlin Chat is policy-gated through Task API`
+- `PASS: Wizard HQ Chat home product clarity is safe and read-only`
+- `PASS: Wizard HQ tab shell is Merlin-native and read-only`
+- `PASS: Merlin Rooms surface is local, explicit, and non-writing`
+- `PASS: Wizard HQ Settings is backend-manifested and policy-gated`
+- `PASS: Wizard HQ model readiness UX is explicit and no-download`
+- `git diff --check` returned clean.
+
+### Regression Test Added
+
+Existing `tests/dashboard-readiness-smoke.sh` already caught this pattern. New
+chat/front-page smoke checks verify:
+
+- local orb asset is referenced and exists,
+- premium Merlin front shell exists,
+- no external UI dependencies,
+- browser still has exactly one Task API POST.
+
+### Follow-Up Issues Created Or Recommended
+
+Next focused issue:
+
+**Title:** `v3.1 Wizard HQ: browser-validated Merlin Chat screenshots`
+
+Scope:
+
+- launch Wizard HQ locally,
+- capture desktop/mobile screenshots,
+- verify orb, sidebar, composer, and tab layout do not overlap,
+- verify no browser console errors,
+- keep screenshots in release evidence assets.
+
+### Lesson Learned
+
+Readiness language is a protected product contract. Even friendly chat copy
+must not use "Merlin is ready" unless the runtime readiness state proves it.
+
+### What Not To Repeat Next Time
+
+Do not use static "ready" wording in UI helper copy. Use neutral action copy
+unless it is bound to live service checks.
+
+### Next Recommended Step
+
+Retest the dashboard smokes, commit, push, and watch CI.
+
+### Local Trusted Beta Impact
+
+Improves first impression: Wizard HQ now presents Merlin as the primary chat
+product surface with a local identity asset and cleaner user path.
+
+### Public Beta Impact
+
+Positive UI foundation. Public Beta still needs browser screenshot evidence,
+Room approval-card UX, memory review/delete, and clean installer evidence.

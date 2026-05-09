@@ -14,6 +14,14 @@ grep -q 'class="chat-home tab-page active"' "$DASHBOARD_FILE" \
   || fail "Chat tab must be the primary product home"
 grep -q "Merlin AI core face" "$DASHBOARD_FILE" \
   || fail "Chat home missing centered Merlin face"
+grep -q 'assets/merlin-orb.png' "$DASHBOARD_FILE" \
+  || fail "Chat home missing local Merlin orb asset"
+[[ -f "${ROOT_DIR}/dashboard/assets/merlin-orb.png" ]] \
+  || fail "local Merlin orb asset file missing"
+grep -q "merlin-front-shell" "$DASHBOARD_FILE" \
+  || fail "Chat home missing premium Merlin front shell"
+grep -q "New conversation" "$DASHBOARD_FILE" \
+  || fail "Chat home missing local chat workspace affordance"
 grep -q ">Ask Merlin<" "$DASHBOARD_FILE" \
   || fail "Chat home missing Ask Merlin heading/button"
 grep -q "placeholder=\"Ask Merlin...\"" "$DASHBOARD_FILE" \
