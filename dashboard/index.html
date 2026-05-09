@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wizard HQ — Merlin AI</title>
+<link rel="icon" type="image/png" href="assets/merlin-m-sigil.png">
+<link rel="apple-touch-icon" href="assets/merlin-m-sigil.png">
 <style>
 :root {
   --bg: #0b0d10;
@@ -58,10 +60,15 @@ textarea {
   border-radius: 9px;
   display: grid;
   place-items: center;
-  color: var(--cyan);
-  font-weight: 800;
-  letter-spacing: 0;
+  overflow: hidden;
+  background: rgba(103, 232, 249, 0.06);
   box-shadow: 0 0 26px rgba(103, 232, 249, 0.18);
+}
+.mark img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 .brand h1 { margin: 0; font-size: 18px; letter-spacing: 0; }
 .brand p { margin: 1px 0 0; color: var(--muted); font-size: 12px; }
@@ -1026,7 +1033,9 @@ textarea {
 <div class="app">
   <header class="topbar">
     <div class="brand">
-      <div class="mark" aria-hidden="true">M</div>
+      <div class="mark" aria-hidden="true">
+        <img src="assets/merlin-m-sigil.png" alt="" width="34" height="34" loading="eager">
+      </div>
       <div>
         <h1>Wizard HQ</h1>
         <p>Merlin AI · Private Intelligence. Locally Owned.</p>

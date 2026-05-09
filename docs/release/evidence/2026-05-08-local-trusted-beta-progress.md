@@ -5948,3 +5948,153 @@ product surface with a local identity asset and cleaner user path.
 
 Positive UI foundation. Public Beta still needs browser screenshot evidence,
 Room approval-card UX, memory review/delete, and clean installer evidence.
+
+---
+
+## 2026-05-09 — Wizard HQ Merlin M Browser Mark
+
+### Date/Time
+
+2026-05-09 morning, America/New_York.
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`876d217` (`feat(dashboard): add Merlin orb front page shell`)
+
+### Ending Commit SHA
+
+Pending commit.
+
+### Target Issues
+
+- #106 Wizard HQ Product Shell
+- #122 Product Focus Cut
+- #134 Product Value Checkpoint
+
+### Scope
+
+Add the finalized Merlin M sigil as a local browser/corner identity asset for
+Wizard HQ. The center Merlin orb remains the chat identity; the M sigil becomes
+the favicon, Apple touch icon, and top-left dashboard brand mark.
+
+### Files Changed
+
+- `dashboard/assets/merlin-m-sigil.png`
+- `dashboard/index.html`
+- `tests/dashboard-native-chat-smoke.sh`
+- `tests/dashboard-first-run-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None. No installer, package script, policy, memory, router, status API, or Task
+API behavior changed.
+
+### Asset Source
+
+Local user-provided image:
+
+`/Users/kevinmedeiros/Downloads/Merlin_M_sigil_—_teal_plasma_trademark_mark_on_black.png`
+
+Copied into the repo as:
+
+`dashboard/assets/merlin-m-sigil.png`
+
+### Commands Run
+
+- `shasum -a 256 dashboard/assets/merlin-m-sigil.png`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `bash tests/dashboard-readiness-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- `5acd0c17c10c78e3b9c8466d9fa36acb3b68bbd82f512a599ebefc2c634468f3  dashboard/assets/merlin-m-sigil.png`
+- `PASS: Wizard HQ native Merlin Chat is policy-gated through Task API`
+- `PASS: Wizard HQ Chat home product clarity is safe and read-only`
+- `PASS: Wizard HQ tab shell is Merlin-native and read-only`
+- `PASS: Wizard HQ readiness surface is honest and read-only`
+- `git diff --check` returned clean.
+
+### Tests Skipped And Why
+
+Live browser screenshot retest skipped for this static asset wiring slice. It
+should be captured with the broader Wizard HQ visual QA pass after the next
+front-page polish round.
+
+### Failures Found
+
+None in this slice.
+
+### Failure Category
+
+None.
+
+### Root Cause Or Current Hypothesis
+
+No failure diagnosed.
+
+### Fix Applied
+
+No failure fix required.
+
+### Retest Result
+
+All focused dashboard smokes passed on first run after the asset wiring.
+
+### Regression Test Added
+
+Static dashboard smokes now assert:
+
+- `assets/merlin-m-sigil.png` exists locally,
+- Wizard HQ declares the M sigil as browser favicon,
+- Wizard HQ declares the M sigil as Apple touch icon,
+- Wizard HQ uses the M sigil as the top-left corner mark.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended follow-up:
+
+**Title:** `v3.1 Wizard HQ: make Merlin orb feel alive without fake readiness`
+
+Scope:
+
+- add subtle orb motion/pulse on the Merlin Chat front page,
+- bind motion/state language to actual readiness or chat activity where possible,
+- respect `prefers-reduced-motion`,
+- keep center orb as the Merlin chat identity and M sigil as the browser/corner
+  product mark,
+- capture browser screenshots after implementation.
+
+Browser screenshot validation remains part of the broader Wizard HQ visual QA
+follow-up.
+
+### Lesson Learned
+
+Brand identity has two distinct jobs in the dashboard: the M sigil identifies
+the product/browser shell, while the orb/face identifies the Merlin chat brain.
+
+### What Not To Repeat Next Time
+
+Do not replace the central chat face with the corner logo. They serve different
+UX roles.
+
+### Next Recommended Step
+
+Run focused dashboard smokes, commit, push, and watch CI.
+
+### Local Trusted Beta Impact
+
+Improves first-run product ownership: browser chrome and dashboard header now
+look like Merlin AI instead of a generic local dashboard.
+
+### Public Beta Impact
+
+Positive visual identity foundation. Public Beta still requires full clean
+installer retest and browser screenshot evidence after UI polish stabilizes.

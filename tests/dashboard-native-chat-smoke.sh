@@ -18,6 +18,16 @@ grep -q 'assets/merlin-orb.png' "$DASHBOARD_FILE" \
   || fail "dashboard missing local Merlin orb image asset reference"
 [[ -f "${ROOT_DIR}/dashboard/assets/merlin-orb.png" ]] \
   || fail "dashboard missing local Merlin orb image asset"
+grep -q 'rel="icon" type="image/png" href="assets/merlin-m-sigil.png"' "$DASHBOARD_FILE" \
+  || fail "dashboard missing Merlin M browser favicon"
+grep -q 'rel="apple-touch-icon" href="assets/merlin-m-sigil.png"' "$DASHBOARD_FILE" \
+  || fail "dashboard missing Merlin M Apple touch icon"
+grep -q 'class="mark"' "$DASHBOARD_FILE" \
+  || fail "dashboard missing Merlin M corner mark container"
+grep -q 'src="assets/merlin-m-sigil.png"' "$DASHBOARD_FILE" \
+  || fail "dashboard missing Merlin M corner mark image"
+[[ -f "${ROOT_DIR}/dashboard/assets/merlin-m-sigil.png" ]] \
+  || fail "dashboard missing local Merlin M sigil asset"
 grep -q "merlin-face" "$DASHBOARD_FILE" \
   || fail "dashboard missing Merlin face visual"
 grep -q "merlin-front-shell" "$DASHBOARD_FILE" \

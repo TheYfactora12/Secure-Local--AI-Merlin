@@ -18,6 +18,14 @@ grep -q 'assets/merlin-orb.png' "$DASHBOARD_FILE" \
   || fail "Chat home missing local Merlin orb asset"
 [[ -f "${ROOT_DIR}/dashboard/assets/merlin-orb.png" ]] \
   || fail "local Merlin orb asset file missing"
+grep -q 'rel="icon" type="image/png" href="assets/merlin-m-sigil.png"' "$DASHBOARD_FILE" \
+  || fail "Chat home missing Merlin M browser favicon"
+grep -q 'rel="apple-touch-icon" href="assets/merlin-m-sigil.png"' "$DASHBOARD_FILE" \
+  || fail "Chat home missing Merlin M Apple touch icon"
+grep -q 'src="assets/merlin-m-sigil.png"' "$DASHBOARD_FILE" \
+  || fail "Chat home missing Merlin M corner logo"
+[[ -f "${ROOT_DIR}/dashboard/assets/merlin-m-sigil.png" ]] \
+  || fail "local Merlin M sigil asset file missing"
 grep -q "merlin-front-shell" "$DASHBOARD_FILE" \
   || fail "Chat home missing premium Merlin front shell"
 grep -q "New conversation" "$DASHBOARD_FILE" \
