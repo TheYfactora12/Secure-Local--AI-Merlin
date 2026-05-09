@@ -82,6 +82,30 @@ Wizard HQ should show:
 Read-only design state is acceptable until backend file, index, migration, and
 audit paths are implemented.
 
+## Current Runtime Slice
+
+Current implementation exposes a read-only Task API manifest:
+
+```text
+GET http://localhost:8766/status/rooms
+```
+
+The manifest reports:
+
+- brain root,
+- Rooms root,
+- discovered Room metadata folders,
+- active Room state,
+- reference policy,
+- save-to-Room locked state,
+- memory extraction locked state,
+- cloud sync default off,
+- browser file controls disabled.
+
+Discovery requires a safe Room folder name and a `room.md` metadata file. The
+endpoint does not create folders, write transcripts, index content, extract
+memory, or return raw transcript text.
+
 ## Runtime Work To Split
 
 Before writable Room support ships, split #135 into implementation issues:

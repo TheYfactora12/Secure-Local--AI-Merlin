@@ -21,6 +21,7 @@ from merlin.provider_connector_store import (
     upsert_provider_connector,
 )
 from merlin.provider_registry import build_provider_registry
+from merlin.room_store import room_manifest
 from merlin.router import STAFF_ROUTE_RULES
 from merlin.task_endpoint import TASK_TRACE_BUFFER, app
 
@@ -470,6 +471,11 @@ def status_settings() -> dict[str, Any]:
         "actions": actions,
         "total": len(actions),
     }
+
+
+@router.get("/rooms")
+def status_rooms() -> dict[str, Any]:
+    return room_manifest()
 
 
 @router.post("/settings/provider-connectors")

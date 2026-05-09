@@ -18,6 +18,16 @@ grep -q 'data-tab-target="rooms"' "$DASHBOARD_FILE" \
   || fail "dashboard missing Rooms tab"
 grep -q 'data-tab-page="rooms"' "$DASHBOARD_FILE" \
   || fail "dashboard missing Rooms page"
+grep -q "/status/rooms" "$DASHBOARD_FILE" \
+  || fail "dashboard must load read-only Rooms manifest"
+grep -q "function loadRooms" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Rooms manifest loader"
+grep -q "rooms-manifest-panel" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Rooms manifest panel"
+grep -q "discovery only" "$DASHBOARD_FILE" \
+  || fail "Rooms manifest must be discovery-only"
+grep -q "browser cannot create, edit, save, or delete Room files" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must forbid browser file controls"
 grep -q "Rooms are local project spaces" "$DASHBOARD_FILE" \
   || fail "dashboard must explain Rooms in plain language"
 grep -q "Room context not active yet" "$DASHBOARD_FILE" \
@@ -34,6 +44,8 @@ grep -q "All Rooms" "$DASHBOARD_FILE" \
   || fail "Rooms page must show all-Rooms reference policy as explicit"
 grep -q "Save current chat" "$DASHBOARD_FILE" \
   || fail "Rooms page must show save-to-Room state"
+grep -q "locked until Task API write gate" "$DASHBOARD_FILE" \
+  || fail "Rooms save flow must remain locked until Task API gate"
 grep -q "separate approval" "$DASHBOARD_FILE" \
   || fail "Rooms page must separate transcript save from memory extraction"
 grep -q "must show linked memory" "$DASHBOARD_FILE" \

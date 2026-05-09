@@ -5065,3 +5065,136 @@ Settings.
 
 Improved UX clarity, but Public Beta remains blocked by runtime Room history,
 memory review/delete, installer retest evidence, and broader onboarding polish.
+
+## #135 Read-Only Rooms Manifest Runtime Slice
+
+### Date/Time
+
+2026-05-09 08:09:26 EDT.
+
+### Starting Commit SHA
+
+`eee78a233510846efc830985a3b99e582163f5b8`
+
+### Target Issues
+
+- #135
+- #106
+- #123
+
+### Scope
+
+Added the first backend-safe Rooms runtime foundation: a read-only Room manifest
+module and Task API status endpoint. This lets Wizard HQ discover existing local
+Room metadata without creating folders, saving transcripts, indexing content,
+extracting memory, or exposing browser file controls.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+- `merlin/room_store.py`
+- `merlin/status_extension.py`
+- `tests/dashboard-rooms-smoke.sh`
+- `tests/test_room_store.py`
+- `tests/test_status_extension.py`
+
+### Protected Files Touched
+
+- `dashboard/index.html`: read-only manifest display only.
+- `merlin/status_extension.py`: added `GET /status/rooms`; no writes or
+  execution actions.
+
+### Commands Run
+
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_status_extension.py -q`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-readiness-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_status_extension.py -q`: PASS,
+  34 passed.
+- `bash tests/dashboard-rooms-smoke.sh`: PASS.
+- `bash tests/dashboard-tabs-smoke.sh`: PASS.
+- `bash tests/dashboard-native-chat-smoke.sh`: PASS.
+- `bash tests/dashboard-settings-policy-smoke.sh`: PASS.
+- `bash tests/dashboard-first-run-smoke.sh`: PASS.
+- `bash tests/dashboard-readiness-smoke.sh`: PASS.
+- `git diff --check`: PASS.
+
+### Tests Skipped And Why
+
+- No live browser screenshot yet; this is backend/static runtime plumbing.
+- No save-to-Room live test because writable Room storage is intentionally out
+  of scope for this slice.
+- No installer/package tests because installer/package behavior did not change.
+
+### Failures Found
+
+No failures in this slice.
+
+### Failure Category
+
+None.
+
+### Root Cause Or Current Hypothesis
+
+No failure observed.
+
+### Fix Applied
+
+Added:
+
+- `merlin/room_store.py` read-only Room manifest helper,
+- `GET /status/rooms`,
+- Wizard HQ Rooms manifest panel,
+- unit tests for default no-context manifest and metadata discovery,
+- static smoke checks that the dashboard loads `/status/rooms` while remaining
+  non-writing.
+
+### Regression Test Added
+
+- `tests/test_room_store.py`
+- `tests/test_status_extension.py::test_status_rooms_returns_read_only_manifest`
+- expanded `tests/dashboard-rooms-smoke.sh`
+
+### Follow-Up Issues Created Or Recommended
+
+No new issue created yet. The next #135 implementation issue should be:
+
+**Title:** `v3.1 Rooms: save Merlin Chat transcript through Task API gate`
+
+Scope should include local transcript file write, explicit user action, audit
+record, rollback/error handling, and no memory extraction by default.
+
+### Lesson Learned
+
+Rooms can become real incrementally. A read-only manifest creates a stable
+contract for UI and tests before any file mutation exists.
+
+### What Not To Repeat Next Time
+
+Do not implement transcript writes in the browser. The save path must be a
+backend Task API action with policy/audit coverage.
+
+### Next Recommended Step
+
+Commit/push/watch CI for the read-only manifest slice. Then split writable
+save-to-Room into a focused issue before coding it.
+
+### Local Trusted Beta Impact
+
+Improved. Merlin can now expose an honest, test-covered Room runtime state
+instead of only static product copy.
+
+### Public Beta Impact
+
+Improved foundation, but Public Beta remains blocked until users can actually
+save/reload Rooms, review/delete memory, and pass clean install evidence.

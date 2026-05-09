@@ -867,6 +867,14 @@ textarea {
           <div class="status-pill"><strong>Cloud sync</strong><span class="off">not automatic</span></div>
         </div>
       </article>
+      <article class="surface-card wide">
+        <h3>Rooms Manifest</h3>
+        <p>Merlin reads existing local Room metadata from the Task API. This is discovery only; the browser cannot create, edit, save, or delete Room files.</p>
+        <div id="rooms-manifest-panel" class="status-list">
+          <div class="status-pill"><strong>Rooms manifest</strong><span>checking</span></div>
+          <div class="status-pill"><strong>Save to Room</strong><span class="locked">locked until Task API write gate</span></div>
+        </div>
+      </article>
       <article class="surface-card">
         <h3>Room Storage</h3>
         <p>Room files will live where the user chooses. A synced folder is treated as a local filesystem path, not cloud inference.</p>
@@ -1109,6 +1117,7 @@ textarea {
 // http://localhost:8766/status/memory
 // http://localhost:8766/status/models
 // http://localhost:8766/status/providers
+// http://localhost:8766/status/rooms
 // http://localhost:8766/status/settings
 // http://localhost:8766/status/traces
 const STATUS_API = 'http://localhost:8765';
@@ -1132,6 +1141,7 @@ const readinessState = {
   memory: null,
   models: null,
   providers: null,
+  rooms: null,
   settings: null,
   probesComplete: false,
 };
@@ -1502,6 +1512,36 @@ async function loadProviders() {
   }
 }
 
+async function loadRooms() {
+  const panel = document.getElementById('rooms-manifest-panel');
+  try {
+    const data = await getJson(`${TASK_API}/status/rooms`);
+    readinessState.rooms = data;
+    if (!panel) return;
+    const rooms = data.rooms || [];
+    const roomRows = rooms.map(room => `
+      <div class="status-pill">
+        <strong>${escapeHtml(room.name || room.room_id)}</strong>
+        <span>${escapeHtml(room.reference_policy || 'no_room_context')} · transcripts: ${escapeHtml(room.transcript_count || 0)} · memory: ${escapeHtml(room.memory_extraction || 'requires_approval')}</span>
+      </div>
+    `).join('');
+    panel.innerHTML = `
+      <div class="status-pill"><strong>Rooms root</strong><span>${escapeHtml(data.rooms_root || '~/Merlin/brain/rooms')}</span></div>
+      <div class="status-pill"><strong>Root source</strong><span>${escapeHtml(data.rooms_root_source || 'default_brain_rooms')}</span></div>
+      <div class="status-pill"><strong>Active Room</strong><span>${data.active_room ? escapeHtml(data.active_room) : 'not selected'}</span></div>
+      <div class="status-pill"><strong>Reference policy</strong><span>${escapeHtml(data.reference_policy || 'no_room_context')}</span></div>
+      <div class="status-pill"><strong>Save to Room</strong><span class="locked">${data.save_to_room_enabled ? 'enabled' : 'locked until Task API write gate'}</span></div>
+      <div class="status-pill"><strong>Memory extraction</strong><span class="locked">${data.memory_extraction_enabled ? 'enabled' : 'requires approve/edit/deny'}</span></div>
+      ${roomRows || '<div class="status-pill"><strong>Existing Rooms</strong><span>none discovered</span></div>'}
+    `;
+  } catch (_) {
+    readinessState.rooms = null;
+    if (panel) {
+      panel.innerHTML = '<div class="status-pill"><strong>Rooms manifest</strong><span>warming</span></div><div class="status-pill"><strong>Save to Room</strong><span class="locked">locked until Task API write gate</span></div>';
+    }
+  }
+}
+
 async function loadSettings() {
   const panel = document.getElementById('settings-policy-panel');
   const storagePanel = document.getElementById('settings-storage-panel');
@@ -1755,6 +1795,7 @@ async function refreshAll() {
     loadMemory(),
     loadModels(),
     loadProviders(),
+    loadRooms(),
     loadSettings(),
     loadTraces(),
   ]);

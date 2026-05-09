@@ -335,6 +335,29 @@ def test_status_settings_storage_manifest_reflects_local_paths(tmp_path, monkeyp
     assert "cloud inference remains disabled" in storage["cloud_inference_warning"]
 
 
+def test_status_rooms_returns_read_only_manifest(tmp_path, monkeypatch) -> None:
+    rooms_root = tmp_path / "rooms"
+    room = rooms_root / "merlin-build"
+    room.mkdir(parents=True)
+    (room / "room.md").write_text("name: Merlin Build\n", encoding="utf-8")
+    monkeypatch.setenv("MERLIN_ROOMS_ROOT", str(rooms_root))
+
+    response = client.get("/status/rooms")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["mode"] == "read_only_rooms_manifest"
+    assert body["rooms_root"] == str(rooms_root)
+    assert body["active_room"] is None
+    assert body["reference_policy"] == "no_room_context"
+    assert body["save_to_room_enabled"] is False
+    assert body["memory_extraction_enabled"] is False
+    assert body["cloud_sync_default"] is False
+    assert body["browser_file_controls_enabled"] is False
+    assert body["rooms"][0]["room_id"] == "merlin-build"
+    assert body["rooms"][0]["name"] == "Merlin Build"
+
+
 def test_status_settings_provider_connectors_are_locked_and_gate_secrets() -> None:
     response = client.get("/status/settings")
     actions = {action["action_id"]: action for action in response.json()["actions"]}
