@@ -95,6 +95,7 @@ The manifest reports:
 - brain root,
 - Rooms root,
 - discovered Room metadata folders,
+- latest transcript metadata by Room,
 - active Room state,
 - reference policy,
 - save-to-Room locked state,
@@ -104,8 +105,10 @@ The manifest reports:
 - browser file controls disabled.
 
 Discovery requires a safe Room folder name and a `room.md` metadata file. The
-endpoint does not create folders, write transcripts, index content, extract
-memory, or return raw transcript text.
+endpoint may return transcript ids, file paths, byte counts, and modified
+timestamps for already-saved local transcripts. It does not read or return raw
+transcript content, create folders, write transcripts, index content, or extract
+memory.
 
 Current implementation also exposes a backend-only write path:
 

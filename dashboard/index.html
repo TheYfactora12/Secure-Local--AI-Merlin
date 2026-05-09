@@ -1669,12 +1669,21 @@ async function loadRooms() {
     readinessState.rooms = data;
     if (!panel) return;
     const rooms = data.rooms || [];
-    const roomRows = rooms.map(room => `
-      <div class="status-pill">
-        <strong>${escapeHtml(room.name || room.room_id)}</strong>
-        <span>${escapeHtml(room.reference_policy || 'no_room_context')} · transcripts: ${escapeHtml(room.transcript_count || 0)} · memory: ${escapeHtml(room.memory_extraction || 'requires_approval')}</span>
-      </div>
-    `).join('');
+    const roomRows = rooms.map(room => {
+      const transcripts = (room.transcripts || []).slice(0, 3).map(transcript => `
+        <div class="status-pill">
+          <strong>${escapeHtml(transcript.transcript_id || 'transcript')}</strong>
+          <span>${escapeHtml(transcript.size_bytes || 0)} bytes · raw hidden</span>
+        </div>
+      `).join('');
+      return `
+        <div class="status-pill">
+          <strong>${escapeHtml(room.name || room.room_id)}</strong>
+          <span>${escapeHtml(room.reference_policy || 'no_room_context')} · transcripts: ${escapeHtml(room.transcript_count || 0)} · memory: ${escapeHtml(room.memory_extraction || 'requires_approval')}</span>
+        </div>
+        ${transcripts ? `<div class="readonly-note"><strong>Latest transcripts</strong>${transcripts}</div>` : ''}
+      `;
+    }).join('');
     panel.innerHTML = `
       <div class="status-pill"><strong>Rooms root</strong><span>${escapeHtml(data.rooms_root || '~/Merlin/brain/rooms')}</span></div>
       <div class="status-pill"><strong>Root source</strong><span>${escapeHtml(data.rooms_root_source || 'default_brain_rooms')}</span></div>

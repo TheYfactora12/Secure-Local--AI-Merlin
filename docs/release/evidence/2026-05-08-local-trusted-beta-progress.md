@@ -5517,3 +5517,128 @@ own chat surface instead of a technical status page with a prompt box.
 
 Positive but not sufficient. Public Beta still requires clean installer evidence,
 Room history reload, approved memory review/delete, and release/onboarding proof.
+
+## #135 Room History Metadata Visibility
+
+### Date/Time
+
+2026-05-09 EDT
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`ae52cea654c0434a01fb8b82cc0cdfd53ac47680`
+
+### Ending Commit SHA
+
+Pending commit for this Room metadata slice.
+
+### Target Issues
+
+- #135 Merlin Rooms
+- #106 Wizard HQ Product Shell
+- #122 Product Focus Cut
+
+### Scope
+
+Expose already-saved Room transcript metadata through the read-only Rooms
+manifest and render it in Wizard HQ. Metadata includes transcript id, local path,
+file size, and modified timestamp only. Raw transcript text remains local and is
+not loaded into the manifest.
+
+### Files Changed
+
+- `merlin/room_store.py`
+- `dashboard/index.html`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `tests/test_room_store.py`
+- `tests/test_status_extension.py`
+- `tests/dashboard-rooms-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `merlin/room_store.py`: read-only manifest helper extended with transcript
+  metadata. No policy, router, installer, or execution boundary changed.
+
+### Commands Run
+
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_status_extension.py -q`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- `38 passed in 3.02s`
+- `PASS: Merlin Rooms surface is local, explicit, and non-writing`
+- `PASS: Wizard HQ native Merlin Chat is policy-gated through Task API`
+- `git diff --check` returned clean.
+
+### Tests Skipped And Why
+
+Live service checks are not required for this offline metadata/static slice.
+
+### Failures Found
+
+None.
+
+### Failure Category
+
+No failure observed.
+
+### Root Cause Or Current Hypothesis
+
+No failure observed yet.
+
+### Fix Applied
+
+No failure fix required.
+
+### Retest Result
+
+All focused Room metadata/static checks passed.
+
+### Regression Test Added
+
+- transcript metadata is returned without raw content,
+- status endpoint includes transcript metadata,
+- dashboard renders "Latest transcripts" and "raw hidden",
+- browser still has only one Task API POST.
+
+### Follow-Up Issues Created Or Recommended
+
+Next issue remains the real approval-card flow:
+
+**Title:** `v3.1 Wizard HQ: save current Merlin Chat response to Room`
+
+This should wait for a real approval id / approve-edit-deny flow rather than
+inventing browser authority.
+
+### Lesson Learned
+
+When a write path exists but the UI approval flow is not ready, show read-only
+evidence of saved local state first. That improves product clarity without
+weakening governance.
+
+### What Not To Repeat Next Time
+
+Do not create a browser Save button until the policy-gated approval lifecycle is
+real and testable.
+
+### Next Recommended Step
+
+Validate and commit this metadata visibility slice.
+
+### Local Trusted Beta Impact
+
+Improves: users can see that local Room history exists without exposing raw
+transcripts or implying approved memory.
+
+### Public Beta Impact
+
+Positive foundation. Public Beta remains blocked on the full save/reload/review
+Room flow and clean install evidence.

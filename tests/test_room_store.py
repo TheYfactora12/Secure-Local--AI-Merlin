@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from merlin.room_store import list_rooms, room_manifest, save_room_transcript
+from merlin.room_store import list_room_transcripts, list_rooms, room_manifest, save_room_transcript
 
 
 def test_room_manifest_defaults_to_read_only_no_context(monkeypatch, tmp_path) -> None:
@@ -42,10 +42,28 @@ def test_list_rooms_discovers_metadata_without_reading_transcripts(tmp_path) -> 
     assert record.room_id == "merlin-build"
     assert record.name == "Merlin Build"
     assert record.transcript_count == 1
+    assert len(record.transcripts) == 1
+    assert record.transcripts[0].transcript_id == "2026-05-09"
+    assert record.transcripts[0].raw_content_loaded is False
     assert record.summary_count == 1
     assert record.reference_policy == "no_room_context"
     assert record.memory_extraction == "requires_approval"
     assert "raw chat stays local" not in record.model_dump_json()
+
+
+def test_list_room_transcripts_returns_metadata_without_raw_content(tmp_path) -> None:
+    room = tmp_path / "merlin-build"
+    transcripts = room / "transcripts"
+    transcripts.mkdir(parents=True)
+    (transcripts / "2026-05-09-a.md").write_text("private transcript one", encoding="utf-8")
+    (transcripts / "2026-05-09-b.md").write_text("private transcript two", encoding="utf-8")
+
+    records = list_room_transcripts(room)
+
+    assert [record.transcript_id for record in records] == ["2026-05-09-b", "2026-05-09-a"]
+    assert all(record.size_bytes > 0 for record in records)
+    assert all(record.raw_content_loaded is False for record in records)
+    assert "private transcript" not in str([record.model_dump() for record in records])
 
 
 def test_list_rooms_ignores_unsafe_or_incomplete_room_dirs(tmp_path) -> None:

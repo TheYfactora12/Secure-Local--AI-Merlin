@@ -46,6 +46,10 @@ grep -q "Save current chat" "$DASHBOARD_FILE" \
   || fail "Rooms page must show save-to-Room state"
 grep -q "backend approval required" "$DASHBOARD_FILE" \
   || fail "Rooms save flow must require backend approval"
+grep -q "Latest transcripts" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must show read-only transcript metadata"
+grep -q "raw hidden" "$DASHBOARD_FILE" \
+  || fail "Rooms manifest must not imply raw transcript content is loaded"
 grep -q "separate approval" "$DASHBOARD_FILE" \
   || fail "Rooms page must separate transcript save from memory extraction"
 grep -q "must show linked memory" "$DASHBOARD_FILE" \

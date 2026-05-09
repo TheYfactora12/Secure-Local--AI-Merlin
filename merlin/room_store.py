@@ -15,7 +15,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 DEFAULT_BRAIN_ROOT = Path.home() / "Merlin" / "brain"
@@ -28,9 +28,18 @@ class RoomRecord(BaseModel):
     path: str
     metadata_file: str
     transcript_count: int = 0
+    transcripts: list["RoomTranscriptRecord"] = Field(default_factory=list)
     summary_count: int = 0
     reference_policy: str = "no_room_context"
     memory_extraction: str = "requires_approval"
+
+
+class RoomTranscriptRecord(BaseModel):
+    transcript_id: str
+    path: str
+    size_bytes: int
+    modified_at: str | None = None
+    raw_content_loaded: bool = False
 
 
 class RoomTranscriptSaveResult(BaseModel):
@@ -81,6 +90,44 @@ def _count_markdown_files(path: Path) -> int:
         return 0
 
 
+def _file_modified_at(path: Path) -> str | None:
+    try:
+        return datetime.fromtimestamp(path.stat().st_mtime, UTC).isoformat()
+    except OSError:
+        return None
+
+
+def list_room_transcripts(room_path: Path, limit: int = 5) -> list[RoomTranscriptRecord]:
+    transcripts_path = room_path / "transcripts"
+    if not transcripts_path.exists() or not transcripts_path.is_dir():
+        return []
+
+    try:
+        transcript_files = [
+            item
+            for item in transcripts_path.iterdir()
+            if item.is_file() and item.suffix.lower() == ".md" and not item.name.startswith(".")
+        ]
+    except OSError:
+        return []
+
+    records: list[RoomTranscriptRecord] = []
+    for item in sorted(transcript_files, key=lambda path: path.name, reverse=True)[:limit]:
+        try:
+            size_bytes = item.stat().st_size
+        except OSError:
+            size_bytes = 0
+        records.append(
+            RoomTranscriptRecord(
+                transcript_id=item.stem,
+                path=str(item),
+                size_bytes=size_bytes,
+                modified_at=_file_modified_at(item),
+            )
+        )
+    return records
+
+
 def _room_name_from_metadata(metadata_file: Path, fallback: str) -> str:
     try:
         for line in metadata_file.read_text(encoding="utf-8").splitlines()[:20]:
@@ -116,6 +163,7 @@ def list_rooms(root: Path | None = None) -> list[RoomRecord]:
                 path=str(child),
                 metadata_file=str(metadata_file),
                 transcript_count=_count_markdown_files(child / "transcripts"),
+                transcripts=list_room_transcripts(child),
                 summary_count=_count_markdown_files(child / "summaries"),
             )
         )

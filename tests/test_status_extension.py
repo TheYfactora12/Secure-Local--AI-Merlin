@@ -338,8 +338,10 @@ def test_status_settings_storage_manifest_reflects_local_paths(tmp_path, monkeyp
 def test_status_rooms_returns_read_only_manifest(tmp_path, monkeypatch) -> None:
     rooms_root = tmp_path / "rooms"
     room = rooms_root / "merlin-build"
-    room.mkdir(parents=True)
+    transcripts = room / "transcripts"
+    transcripts.mkdir(parents=True)
     (room / "room.md").write_text("name: Merlin Build\n", encoding="utf-8")
+    (transcripts / "2026-05-09.md").write_text("raw transcript stays local", encoding="utf-8")
     monkeypatch.setenv("MERLIN_ROOMS_ROOT", str(rooms_root))
 
     response = client.get("/status/rooms")
@@ -359,6 +361,10 @@ def test_status_rooms_returns_read_only_manifest(tmp_path, monkeypatch) -> None:
     assert body["browser_save_controls_enabled"] is False
     assert body["rooms"][0]["room_id"] == "merlin-build"
     assert body["rooms"][0]["name"] == "Merlin Build"
+    assert body["rooms"][0]["transcript_count"] == 1
+    assert body["rooms"][0]["transcripts"][0]["transcript_id"] == "2026-05-09"
+    assert body["rooms"][0]["transcripts"][0]["raw_content_loaded"] is False
+    assert "raw transcript stays local" not in str(body["rooms"][0])
 
 
 def test_status_settings_provider_connectors_are_locked_and_gate_secrets() -> None:
