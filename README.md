@@ -1,11 +1,40 @@
-# 🧠 Home AI Elite
+# 🧙 Merlin AI
 
-> **Local AI on hardware you own. 8GB entry point, scales by profile. Zero required subscriptions.**
+> **A secure local AI brain for projects. Runs on hardware you own, stores approved context where you choose, and governs powerful actions through explicit approvals.**
 
-A local-first AI stack for chat, model routing, vector memory, private search, automation, and autonomous coding. The target architecture is core-first: start with the lightweight local AI core, then enable heavier profiles such as search, automation, coding agents, and server operations when the machine can handle them.
+Merlin AI is a local-first AI control plane and project brain. It helps you run local models, route approved providers, manage memory, review evidence, and govern agents from one protected workspace.
+
+Merlin protects the user's AI realm:
+
+- **Wizard HQ** is the command surface.
+- **The Watchtower** shows readiness, privacy, models, services, and safe next actions.
+- **The Vault** stores approved memory and project context.
+- **The Round Table** governs approvals, agent permissions, and revocation.
+- **Knights** are scoped agents assigned to projects.
+- **Excalibur** represents high-risk execution authority and stays sheathed until the user approves a scoped action.
+- **The Chronicle** records redacted evidence of what happened.
+
+The product is intentionally local-first: start with the lightweight core profile, keep cloud disabled by default, and enable heavier profiles such as search, automation, coding agents, and server operations only when the machine and the user are ready.
 
 [![Version](https://img.shields.io/badge/version-0.2-blue)]
 [![License](https://img.shields.io/badge/license-MIT-green)]
+
+---
+
+## Brand and Repository Rename Status
+
+Merlin AI is the public product name. This repository may still appear as
+`home-ai-elite` until the GitHub repository slug and compatibility paths are
+renamed safely.
+
+Do not assume every internal path, package name, launchd label, or Docker volume
+has been renamed yet. Product-facing language should say **Merlin AI**; legacy
+names remain only where needed for compatibility or historical archives.
+
+See [`docs/product/MERLIN_MYTHOLOGY_BRAND_SYSTEM.md`](docs/product/MERLIN_MYTHOLOGY_BRAND_SYSTEM.md)
+for the mythology naming system that maps Merlin, the Realm, Round Table,
+Knights, Excalibur, Vault, Watchtower, Gatehouse, and Chronicle to real product
+functions.
 
 ---
 
@@ -24,7 +53,8 @@ It is not being claimed as Public Beta ready yet.
 - Developer ID signing/notarization remains tracked in #64.
 
 Before any public beta claim, the evidence pack must be filled on the 8GB
-low/core path after branding, loading, and onboarding changes.
+low/core path after branding, loading, onboarding, first-10-minute journey, and
+storage-location visibility changes.
 
 ---
 
@@ -53,6 +83,13 @@ Laptop-safe default:
 git clone https://github.com/TheYfactora12/home-ai-elite.git
 cd home-ai-elite
 bash install.sh
+```
+
+After the GitHub repository slug is renamed, existing clones can update their
+remote with:
+
+```bash
+git remote set-url origin https://github.com/TheYfactora12/merlin-ai.git
 ```
 
 Profile-aware install:
@@ -278,7 +315,7 @@ Optional profiles:
 
 Package signing:
 
-- Local/trusted testing can use a self-signed package identity named `Home AI Elite Local Signing`.
+- Local/trusted testing can use a self-signed package identity named `Home AI Elite Local Signing` until the signing identity is renamed.
 - Build unsigned with `bash pkg/build-pkg.sh`, then sign with `bash scripts/sign-pkg.sh --version <version>`.
 - The package builder signs both the component package and final distribution package when signing is enabled.
 - macOS privileged installs do not trust a current-user self-signed installer certificate by default. Self-signed `.pkg` testing needs System keychain trust, `installer -allowUntrusted` in controlled local tests, or a future Developer ID Installer/notarized release path.
