@@ -4502,3 +4502,151 @@ conversation and memory path, not a broad unfinished control panel.
 
 Improved positioning. Public Beta claims should center on Merlin Chat, Rooms,
 local memory, and export/import brain once evidence exists.
+
+## Coding Master Prompt v2 Alignment
+
+### Date/Time
+
+2026-05-09, early session.
+
+### Starting Commit SHA
+
+`8e928e127f0fc8dbb09ff4a33de3b9e608ecaff0`
+
+### Target Issues
+
+- #122
+- #123
+- #134
+- #135
+- #106
+- #31
+- #32
+
+### Scope
+
+Added a current Merlin AI coding master prompt v2 as a repo documentation
+artifact and CI-covered focus contract. The prompt encodes the clarified product
+direction: Merlin Chat, Rooms, user-owned local context, approved memory,
+Export/Import Brain, and governed actions.
+
+### Files Changed
+
+- `.github/workflows/ci.yml`
+- `docs/CODEX_MASTER_PROMPT_V2.md`
+- `docs/README.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+- `tests/codex-master-prompt-v2-smoke.sh`
+
+### Protected Files Touched
+
+- `.github/workflows/ci.yml`: added the new prompt smoke to existing static
+  smoke gates. No CI gate was removed or weakened.
+
+### Commands Run
+
+- `git status --short && git rev-parse HEAD`
+- `gh issue list --state open --limit 120 --json number,title,state,milestone,labels ...`
+- `sed -n '1,260p' docs/product/PRODUCT_NORTH_STAR.md`
+- `rg -n "Sovereignty|Rooms|Round Table|Product Value|#134|#123|#130|#135|Fast|Smart|CODEX_MASTER_PROMPT_V2|Governed Intelligence" docs README.md dashboard tests merlin | head -200`
+- `sed -n '1,160p' tests/master-prompt-smoke.sh`
+- `sed -n '1,120p' CODEX_MASTER_PROMPT.md 2>/dev/null || true && sed -n '1,120p' docs/engineering/CODEX_MASTER_PROMPT.md`
+- `sed -n '1,80p' docs/README.md`
+- `rg --files merlin | rg 'workflow_synthesizer|preference_extractor|router|session_reflector'`
+- `rg -n "PATENT CLAIM ANCHOR|negation_suppressed_confidence|NO_RETRAINING_CONSTRAINT|blend_route_confidence|time_decay_weight" merlin docs/ip | head -80`
+- `bash -n tests/codex-master-prompt-v2-smoke.sh && bash tests/codex-master-prompt-v2-smoke.sh`
+- `bash tests/master-prompt-smoke.sh`
+- `bash tests/release-readiness-readme-smoke.sh`
+- `ruby -e 'require "yaml"; YAML.load_file(".github/workflows/ci.yml"); puts "workflow-yaml-ok"' && git diff --check`
+
+### Test Output Summary
+
+- Live issue validation confirmed #122 through #135 exist, including #122,
+  #123, #134, and #135.
+- `bash tests/master-prompt-smoke.sh`: PASS.
+- `bash tests/release-readiness-readme-smoke.sh`: PASS.
+- `bash -n tests/codex-master-prompt-v2-smoke.sh && bash tests/codex-master-prompt-v2-smoke.sh`: PASS after fixing the docs-index link expectation.
+- Workflow YAML parse: PASS; `workflow-yaml-ok`.
+- `git diff --check`: PASS.
+- First run of `tests/codex-master-prompt-v2-smoke.sh` failed because the smoke
+  expected `docs/CODEX_MASTER_PROMPT_V2.md` while `docs/README.md` correctly
+  links the file relative to the docs directory as `CODEX_MASTER_PROMPT_V2.md`.
+
+### Tests Skipped And Why
+
+- No runtime tests were run because this is docs/CI-smoke alignment only.
+- No browser screenshot was captured because no Wizard HQ UI changed.
+
+### Failures Found
+
+The new v2 prompt smoke test had an incorrect docs-index path expectation.
+
+### Failure Category
+
+- Test design gap.
+
+### Root Cause Or Current Hypothesis
+
+The smoke test used a repo-root path while the docs index uses docs-relative
+Markdown links.
+
+### Fix Applied
+
+Updated `tests/codex-master-prompt-v2-smoke.sh` to check
+`CODEX_MASTER_PROMPT_V2.md`, matching the real docs index link.
+
+### Retest Result
+
+Passed after the smoke expectation was corrected:
+
+- `bash -n tests/codex-master-prompt-v2-smoke.sh && bash tests/codex-master-prompt-v2-smoke.sh`
+- `bash tests/master-prompt-smoke.sh`
+- `bash tests/release-readiness-readme-smoke.sh`
+- `ruby -e 'require "yaml"; YAML.load_file(".github/workflows/ci.yml"); puts "workflow-yaml-ok"'`
+- `git diff --check`
+
+### Regression Test Added
+
+`tests/codex-master-prompt-v2-smoke.sh` verifies the v2 prompt includes:
+
+- product soul,
+- architecture constraints,
+- issue priorities,
+- 8765/8766 boundary,
+- no silent memory writes,
+- no secret display,
+- Sovereignty Indicator,
+- Round Table Approval Card,
+- first-run flow,
+- next concrete build steps,
+- deferral of web browsing/peripheral systems until the core loop is useful.
+
+### Follow-Up Issues Created Or Recommended
+
+No new issue created in this slice. Existing #122, #123, #134, and #135 now
+govern the next product work.
+
+### Lesson Learned
+
+The prompt is useful only if it is enforced by tests and grounded in live issue
+state. Prompt files should not become another stale roadmap.
+
+### What Not To Repeat Next Time
+
+Do not paste a broad master prompt into repo docs without validating live issue
+numbers, checking current implementation truth, and adding a smoke test.
+
+### Next Recommended Step
+
+Commit, push, and watch CI. Then start #130 or #135 depending on which most
+directly advances the product value demo.
+
+### Local Trusted Beta Impact
+
+Improved. Future sessions now have a CI-covered focus contract centered on the
+Merlin Chat/Rooms/memory loop.
+
+### Public Beta Impact
+
+Improved governance. Public Beta claims remain blocked until the product value
+demo and local context flow are evidenced.

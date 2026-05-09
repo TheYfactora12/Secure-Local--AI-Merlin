@@ -11,6 +11,7 @@
 |---|---|
 | New contributor or onboarding | [`ARCHITECTURE.md`](./ARCHITECTURE.md) → [`MASTER_CONTEXT.md`](./MASTER_CONTEXT.md) |
 | Starting a Codex session | [`CANONICAL_PROJECT_STATE.md`](./CANONICAL_PROJECT_STATE.md) → [`MASTER_CONTEXT.md`](./MASTER_CONTEXT.md) → [`MASTER_PROMPT.md`](./MASTER_PROMPT.md) |
+| Starting with the new Merlin product focus | [`CODEX_MASTER_PROMPT_V2.md`](./CODEX_MASTER_PROMPT_V2.md) → [`product/PRODUCT_NORTH_STAR.md`](./product/PRODUCT_NORTH_STAR.md) |
 | Working on the current sprint | [`MERLIN_IMPLEMENTATION_ROADMAP.md`](./MERLIN_IMPLEMENTATION_ROADMAP.md) → [`MERLIN_STAFF_CORE.md`](./architecture/MERLIN_STAFF_CORE.md) |
 | Making a product decision | [`product/PRODUCT_NORTH_STAR.md`](./product/PRODUCT_NORTH_STAR.md) → [`product/DASHBOARD_PRODUCT_SPEC.md`](./product/DASHBOARD_PRODUCT_SPEC.md) |
 | Reviewing security posture | [`security/SECURITY_MODEL.md`](./security/SECURITY_MODEL.md) → [`security/SECURITY_REVIEW.md`](./security/SECURITY_REVIEW.md) |
@@ -25,6 +26,7 @@
 |---|---|
 | [`CANONICAL_PROJECT_STATE.md`](./CANONICAL_PROJECT_STATE.md) | GitHub-aligned project state, current queue, canonical docs, and drift rules |
 | [`product/PRODUCT_NORTH_STAR.md`](./product/PRODUCT_NORTH_STAR.md) | Product soul and focus filter: Merlin Chat, Rooms, memory, export/import brain, and supervised action |
+| [`CODEX_MASTER_PROMPT_V2.md`](./CODEX_MASTER_PROMPT_V2.md) | Current coding prompt for issue-driven Merlin Chat, Rooms, memory, and governed-action work |
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Canonical system architecture — single source of truth |
 | [`MASTER_CONTEXT.md`](./MASTER_CONTEXT.md) | Full project context for Codex and team orientation |
 | [`MASTER_PROMPT.md`](./MASTER_PROMPT.md) | Active Codex agent config and rules |
