@@ -131,6 +131,7 @@ approves the disclosure and the relevant evidence exists in code.
 | `docs/observability-guide.md` | v1.6 feature owner | JSONL baseline, optional local Langfuse, trace export, and related tests. |
 | `docs/architecture/MERLIN_STAFF_CORE.md` | Merlin core owner | Staff router, swarm context, policy gates, team modes, and Phase 2 boundary. |
 | `docs/architecture/AUTOMATION_RUNTIME_STRATEGY.md` | Product/architecture | Why n8n remains optional today and how a native runtime becomes a v3.x milestone. |
+| `docs/architecture/CLOSCLAW_WEB_COMPREHENSION.md` | Product/security architecture | Future #121 policy-gated web comprehension design; no runtime implementation yet. |
 | `docs/security/SECURITY_MODEL.md` | Security reviewer | Local-first security model and observability privacy boundary. |
 | `docs/ip/INVENTOR_RECORD.md` | Inventor/IP record | Implemented patent evidence and future design targets. |
 

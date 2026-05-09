@@ -163,6 +163,7 @@ jobs:
           bash tests/container-image-policy-smoke.sh
           bash tests/installer-branding-smoke.sh
           bash tests/control-plane-strategy-smoke.sh
+          bash tests/closclaw-design-smoke.sh
           bash tests/beta-readiness-evidence-smoke.sh
           bash tests/release-readiness-readme-smoke.sh
           bash tests/ci-actions-node-runtime-smoke.sh

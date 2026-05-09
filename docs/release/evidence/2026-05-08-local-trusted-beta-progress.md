@@ -4059,3 +4059,147 @@ changing local-first runtime behavior.
 
 Improved risk control. Public Beta should not claim web comprehension until
 #121 design and child implementation issues are complete and tested.
+
+## #121 ClosClaw Design Slice
+
+### Date/Time
+
+2026-05-08, late session.
+
+### Starting Commit SHA
+
+`8e7fbcb43093c2857a1add9cb0935ff7825c655e`
+
+### Target Issues
+
+- #121
+- #108
+- #106
+- #95
+
+### Scope
+
+Advanced #121 as design-only work. No runtime web fetch, browser automation,
+external network call, memory write, routing change, or dashboard action control
+was added.
+
+### Files Changed
+
+- `.github/workflows/ci.yml`
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/architecture/CLOSCLAW_WEB_COMPREHENSION.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+- `tests/closclaw-design-smoke.sh`
+
+### Protected Files Touched
+
+- `.github/workflows/ci.yml` was touched only to add the new static smoke test
+  to CI. No CI gate was removed or weakened.
+
+### Commands Run
+
+- `git status --short && git rev-parse HEAD`
+- `gh issue view 121 --json number,title,state,milestone,labels,body`
+- `sed -n '1,180p' docs/CANONICAL_PROJECT_STATE.md`
+- `rg -n "no browser|external network|cloud|telemetry|provider connector|Settings|web" docs/security docs/architecture docs/product tests dashboard merlin | head -120`
+- `sed -n '1,220p' tests/dashboard-settings-policy-smoke.sh`
+- `sed -n '1,180p' tests/control-plane-strategy-smoke.sh`
+- `sed -n '1,170p' docs/product/PROVIDER_CONNECTOR_CAPABILITIES.md`
+- `sed -n '1,140p' docs/security/SECURITY_MODEL.md`
+- `bash -n tests/closclaw-design-smoke.sh`
+- `bash tests/closclaw-design-smoke.sh`
+- `bash tests/control-plane-strategy-smoke.sh`
+- `git diff --check`
+- `ruby -e 'require "yaml"; YAML.load_file(".github/workflows/ci.yml"); puts "workflow-yaml-ok"'`
+
+### Test Output Summary
+
+- `bash -n tests/closclaw-design-smoke.sh`: PASS.
+- `bash tests/closclaw-design-smoke.sh`: PASS; design is policy-gated and
+  no-default-network.
+- `bash tests/control-plane-strategy-smoke.sh`: PASS.
+- `git diff --check`: PASS.
+- Workflow YAML parse: PASS; `workflow-yaml-ok`.
+
+### Tests Skipped And Why
+
+- No live browser, Docker, Ollama, Qdrant, or network fetch tests were run
+  because #121 is design-only and must not add runtime web access yet.
+- No full installer retest was run because installer/package behavior did not
+  change.
+
+### Failures Found
+
+No command failure. The original risk remains product-scope risk: web
+comprehension is valuable but unsafe to implement before policy gate, redaction,
+audit, offline/degraded state, and no-default-network tests exist.
+
+### Failure Category
+
+- Roadmap/governance drift avoided.
+- No-cloud/default privacy protected.
+- Test design gap closed with a static smoke test.
+
+### Root Cause Or Current Hypothesis
+
+External-source features can be mistaken for ordinary provider setup. They are
+actually a separate network-capable connector class and need their own security
+contract.
+
+### Fix Applied
+
+- Added `docs/architecture/CLOSCLAW_WEB_COMPREHENSION.md`.
+- Added `tests/closclaw-design-smoke.sh`.
+- Added the smoke test to CI.
+- Linked the design doc from canonical state.
+
+### Regression Test Added
+
+`tests/closclaw-design-smoke.sh` verifies:
+
+- #121 remains design/future scoped,
+- external network is denied by default,
+- `external_network` is named as the required gate,
+- redaction and metadata-only audit are required,
+- 8765/8766 boundaries remain explicit,
+- default-enabled network, browser automation, silent memory writes, routing
+  confidence changes, cloud telemetry, and browser-side fetch controls are
+  forbidden.
+
+### Follow-Up Issues Created Or Recommended
+
+Use #121 to split future child issues:
+
+1. Status-only Wizard HQ copy for disabled/offline source reading.
+2. Backend policy contract and audit payload.
+3. Redaction test corpus and metadata-only logging.
+4. URL-only approved fetch prototype.
+5. Search-result fetch prototype behind the same policy gate.
+
+### Lesson Learned
+
+ClosClaw is a strong product direction, but only if it preserves Merlin's trust
+model. The correct first step is a security contract and smoke test, not a
+fetcher.
+
+### What Not To Repeat Next Time
+
+Do not add source-reading, web search, URL fetch, or "current info" behavior as
+a dashboard convenience. Any external source read belongs behind a backend
+policy gate and redaction/audit boundary.
+
+### Next Recommended Step
+
+Finish the current v3.1 Wizard HQ product shell work first. If #121 is pulled
+forward, implement only child issue 1 first: disabled/offline Wizard HQ copy with
+no network access.
+
+### Local Trusted Beta Impact
+
+Improved. The future external-source surface is now constrained before runtime
+code exists.
+
+### Public Beta Impact
+
+Improved. Public Beta claims must continue to avoid web comprehension until
+#121 child implementation issues are complete and tested.
