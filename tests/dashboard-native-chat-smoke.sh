@@ -94,6 +94,12 @@ grep -q "Local by default" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing local-by-default proof"
 grep -q "Memory writes require approval" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing approval-gated memory copy"
+grep -q 'id="merlin-chat-output" class="chat-output empty"' "$DASHBOARD_FILE" \
+  || fail "Merlin Chat should not show a duplicate pre-response status bubble between image and composer"
+grep -q ".chat-output.empty" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat missing hidden empty output state"
+grep -q "panel.classList.remove('empty')" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must reveal output only after Merlin renders a response"
 grep -q "Save latest chat to Room" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing Room transcript save surface"
 grep -q "requestRoomTranscriptApproval" "$DASHBOARD_FILE" \

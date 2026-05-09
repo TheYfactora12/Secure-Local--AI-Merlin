@@ -75,7 +75,11 @@ grep -q "settings-task-api" "$DASHBOARD_FILE" \
   || fail "dashboard missing live task API state slot"
 
 POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
-[[ "$POST_COUNT" == "1" ]] || fail "dashboard must have exactly one POST: Merlin Task API /task"
+[[ "$POST_COUNT" == "2" ]] || fail "dashboard must use only Task POST and shared policy-gated POST helper"
+grep -q "/approvals/room-transcript" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Room transcript approval path"
+grep -q "/rooms/transcripts" "$DASHBOARD_FILE" \
+  || fail "dashboard missing approved Room transcript save path"
 
 if grep -qiE '<input|type="password"|configureProvider|saveProvider|writeSettings|enableCloud|downloadModel|pullModel|runShell|restartService|startService|stopService|writeMemory|approveGate|denyGate|data-action="approve"|data-action="deny"' "$DASHBOARD_FILE"; then
   fail "settings must not expose unsafe browser controls"

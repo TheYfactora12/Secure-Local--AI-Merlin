@@ -58,6 +58,10 @@ if grep -qiE 'downloadModel|pullModel|ollama[[:space:]]+pull|/api/pull|addModel|
 fi
 
 POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
-[[ "$POST_COUNT" == "1" ]] || fail "dashboard must have exactly one POST: Merlin Task API /task"
+[[ "$POST_COUNT" == "2" ]] || fail "dashboard must use only Task POST and shared policy-gated POST helper"
+grep -q "/approvals/room-transcript" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Room transcript approval path"
+grep -q "/rooms/transcripts" "$DASHBOARD_FILE" \
+  || fail "dashboard missing approved Room transcript save path"
 
 echo "PASS: Wizard HQ model readiness UX is explicit and no-download"

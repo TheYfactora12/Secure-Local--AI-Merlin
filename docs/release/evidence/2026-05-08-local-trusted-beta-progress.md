@@ -6461,7 +6461,10 @@ Implemented:
 - default Room target `merlin-build` / `Merlin Build`,
 - UI copy that saved transcripts are local Markdown history, not approved
   memory,
-- Room manifest refresh after a save.
+- Room manifest refresh after a save,
+- duplicated local brain / Room context status moved into the side panel,
+- pre-response "Merlin standing by" bubble removed so the chat center starts
+  clean with Merlin image, suggestion options, and composer.
 
 Not implemented:
 
@@ -6478,6 +6481,9 @@ Not implemented:
 - `tests/dashboard-first-run-smoke.sh`
 - `tests/dashboard-tabs-smoke.sh`
 - `tests/dashboard-readiness-smoke.sh`
+- `tests/dashboard-rooms-smoke.sh`
+- `tests/dashboard-model-readiness-smoke.sh`
+- `tests/dashboard-settings-policy-smoke.sh`
 - `docs/product/DASHBOARD_UI_SPEC.md`
 - `docs/architecture/MERLIN_ROOMS.md`
 - `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
@@ -6493,11 +6499,17 @@ Task API backend behavior changed.
 - `bash tests/dashboard-first-run-smoke.sh`
 - `bash tests/dashboard-tabs-smoke.sh`
 - `bash tests/dashboard-readiness-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-model-readiness-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
 - `.venv-test/bin/python -m pytest tests/test_task_endpoint.py`
 - `git diff --check`
 - `curl -fsS --max-time 5 http://127.0.0.1:8888/ -o docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-room-save-ux-snapshot.html`
 - `open -a Safari 'http://127.0.0.1:8888/?room-save=20260509#chat'`
 - `screencapture -x docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-room-save-ux.png`
+- `curl -fsS --max-time 5 http://127.0.0.1:8888/ -o docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-clean-chat-center-snapshot.html`
+- `open -a Safari 'http://127.0.0.1:8888/?clean-center=20260509#chat'`
+- `screencapture -x docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-clean-chat-center.png`
 
 ### Test Output Summary
 
@@ -6507,12 +6519,17 @@ Task API backend behavior changed.
   remains safe and read-only for startup/setup surfaces.
 - `bash tests/dashboard-tabs-smoke.sh`: PASS after test contract update.
 - `bash tests/dashboard-readiness-smoke.sh`: PASS after test contract update.
+- `bash tests/dashboard-rooms-smoke.sh`: PASS after test contract update.
+- `bash tests/dashboard-model-readiness-smoke.sh`: PASS after test contract update.
+- `bash tests/dashboard-settings-policy-smoke.sh`: PASS after test contract update.
 - `.venv-test/bin/python -m pytest tests/test_task_endpoint.py`: PASS, 14 passed
   in 1.84 seconds on final run.
 - `git diff --check`: PASS.
 - Live dashboard HTTP snapshot: PASS.
 - Browser screenshot captured:
   `docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-room-save-ux.png`.
+- Clean-center browser screenshot captured:
+  `docs/release/evidence/assets/2026-05-08-wizard-hq/wizard-hq-clean-chat-center.png`.
 
 ### Tests Skipped And Why
 
@@ -6525,16 +6542,23 @@ smokes.
 
 ### Failures Found
 
-Two static smokes failed on the first run:
+Five static smokes failed across the local and CI validation pass:
 
 - `bash tests/dashboard-tabs-smoke.sh`
 - `bash tests/dashboard-readiness-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-model-readiness-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
 
 Both failed with:
 
 ```text
 FAIL: dashboard must have exactly one POST: Merlin Task API /task
 ```
+
+CI run `25603682306` failed in `Static smoke tests — profiles, memory,
+release safety` for the same stale dashboard smoke contract after commit
+`aaf8a42`.
 
 ### Failure Category
 
@@ -6573,6 +6597,10 @@ The tests still assert:
 
 PASS after test contract update.
 
+Follow-up UI retest also moved duplicated readiness/Room status into the side
+panel and removed the empty pre-response artifact between the starter options
+and composer.
+
 ### Regression Tests Added
 
 Static dashboard smokes now assert:
@@ -6583,6 +6611,8 @@ Static dashboard smokes now assert:
 - approved Room transcript endpoint is referenced,
 - Room save reports `memory not written`,
 - broader tab/readiness tests allow only the policy-gated Room save expansion.
+- Merlin Chat starts with an empty response area instead of a duplicate
+  pre-response status bubble between the image and composer.
 
 Existing backend tests continue to assert:
 
