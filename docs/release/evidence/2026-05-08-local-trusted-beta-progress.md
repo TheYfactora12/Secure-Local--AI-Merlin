@@ -3794,3 +3794,144 @@ or browser execution controls.
 
 Improved, but Public Beta still depends on full installer retest, richer
 onboarding validation, and remaining write-capable Settings flows.
+
+## #119 Startup And API Service Visibility
+
+### Date/Time
+
+2026-05-08T18:18:00-04:00
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`9ccffcf`
+
+### Target Issues
+
+- #119
+- #114
+- #106
+
+### Scope
+
+Add read-only Wizard HQ Startup & APIs visibility with clear service state,
+manual recovery guidance, rollback guidance, and explicit 8765/8766 boundaries.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-settings-policy-smoke.sh`
+- `tests/dashboard-tabs-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+No installer, package script, launchd plist, router, policy engine, task
+endpoint, memory manager, or service manager behavior changed.
+
+### Commands Run
+
+| Command | Result |
+| --- | --- |
+| `gh issue view 119 --json number,title,state,body,labels,milestone,comments` | PASS; confirmed #119 scope and acceptance criteria. |
+| `gh issue list --state open --milestone "v3.1 — Wizard HQ Product Shell" --limit 30 --json number,title,state,labels` | PASS; open queue remains #106, #114, #117, #119, #120. |
+| `rg -n "#119\|Startup & APIs\|startup\|API service\|service controls\|Wizard HQ\|v3.1\|active queue\|Task API\|Status API" ...` | PASS; plan check supports read-only visibility and no browser service execution. |
+| `bash tests/dashboard-settings-policy-smoke.sh` | PASS. |
+| `bash tests/dashboard-tabs-smoke.sh` | PASS. |
+| `bash tests/dashboard-first-run-smoke.sh` | PASS. |
+| `bash tests/merlin-task-api-smoke.sh` | PASS. |
+| `git diff --check` | PASS. |
+
+### Test Output Summary
+
+Wizard HQ Settings now shows Startup & APIs state slots for Status API 8765 and
+Task API 8766, manual recovery commands, rollback guidance, and an explicit
+boundary statement. Static tests verify no service start/stop/restart browser
+controls were added and that the dashboard still has exactly one POST path:
+Merlin Chat through `/task`.
+
+### Tests Skipped And Why
+
+No live restart test was run in this slice. #119 currently adds dashboard
+visibility/guidance only and does not change service manager behavior. Live
+service lifecycle hardening remains covered by existing task API smoke and the
+prior #116/#118 evidence.
+
+No full installer retest was run because installer/package/launchd behavior was
+not changed.
+
+### Failures Found
+
+No new test failure in this slice.
+
+### Failure Category
+
+- Documentation/governance drift noted: `docs/MASTER_PROMPT.md` still reflects
+  older v3.0 release-readiness queue language while canonical state now governs
+  v3.1 Wizard HQ work.
+
+### Root Cause Or Current Hypothesis
+
+The master prompt is lower priority than GitHub issue state and
+`docs/CANONICAL_PROJECT_STATE.md`; it needs a separate governance update to
+avoid stale prompts steering future work.
+
+### Fix Applied
+
+- Added a wider Startup & APIs Settings card.
+- Added live state slots for Status API 8765 and Task API 8766.
+- Added manual recovery commands:
+  - `bash scripts/merlin-status-api.sh start`
+  - `bash scripts/merlin-task-api.sh restart`
+  - `bash launchd/install-launchd.sh`
+  - `bash scripts/merlin-task-api.sh stop`
+- Added static smoke checks for API boundaries, recovery guidance, rollback
+  guidance, and absence of browser service controls.
+
+### Regression Tests Added
+
+- `tests/dashboard-settings-policy-smoke.sh` now verifies startup/API service
+  visibility, 8765/8766 boundary language, and no browser service controls.
+- `tests/dashboard-tabs-smoke.sh` now verifies the Task API restart CLI handoff.
+
+### Long-Term Platform Note
+
+The finished product must install and run on both macOS and Linux. Launchd is
+macOS-specific; scripts, Docker profiles, status surfaces, and service recovery
+language must remain portable or clearly label platform-specific steps. Future
+installer/readiness work should validate both macOS and Linux paths before
+public release claims.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended governance follow-up: align `docs/MASTER_PROMPT.md` with canonical
+v3.1 issue order so stale v3.0 queue text does not pull future sessions backward.
+
+### Lesson Learned
+
+Startup controls are high-risk product surface. Showing exact state, recovery,
+and rollback guidance gives the user confidence without turning the browser into
+a shell.
+
+### What Not To Repeat Next Time
+
+Do not add service control buttons until a backend policy gate, audit trail, and
+rollback design exist. Do not treat macOS launchd guidance as a Linux solution.
+
+### Next Recommended Step
+
+Commit this read-only #119 slice, update #119 with evidence, and keep actual
+backend-gated service controls deferred until they have policy/audit design.
+
+### Local Trusted Beta Impact
+
+Improved. Users can see what to do when 8765/8766 are warming or stale without
+unsafe browser execution.
+
+### Public Beta Impact
+
+Improved, but Public Beta still needs cross-platform installer/readiness
+validation on macOS and Linux.

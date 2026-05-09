@@ -113,7 +113,8 @@ for safe_command in \
   "bash scripts/backup.sh" \
   "bash scripts/upgrade.sh" \
   "bash pkg/scripts/uninstall.sh" \
-  "bash launchd/install-launchd.sh"; do
+  "bash launchd/install-launchd.sh" \
+  "bash scripts/merlin-task-api.sh restart"; do
   grep -q "${safe_command}" "$DASHBOARD_FILE" \
     || fail "dashboard missing safe CLI handoff: ${safe_command}"
 done

@@ -39,11 +39,31 @@ grep -q "Policy-Gated Settings" "$DASHBOARD_FILE" \
   || fail "dashboard missing policy-gated settings copy"
 grep -q "Actions remain locked unless a backend policy gate exists" "$DASHBOARD_FILE" \
   || fail "dashboard must explain settings remain locked"
+grep -q "Startup & APIs" "$DASHBOARD_FILE" \
+  || fail "dashboard missing startup/API settings panel"
+grep -q "Status API 8765" "$DASHBOARD_FILE" \
+  || fail "dashboard must show read-only status API boundary"
+grep -q "Task API 8766" "$DASHBOARD_FILE" \
+  || fail "dashboard must show task API boundary"
+grep -q "8765 is read-only status" "$DASHBOARD_FILE" \
+  || fail "dashboard must explain 8765 read-only boundary"
+grep -q "8766 is execution-aware and policy-gated" "$DASHBOARD_FILE" \
+  || fail "dashboard must explain 8766 task boundary"
+grep -q "bash scripts/merlin-status-api.sh start" "$DASHBOARD_FILE" \
+  || fail "dashboard missing status API recovery guidance"
+grep -q "bash scripts/merlin-task-api.sh restart" "$DASHBOARD_FILE" \
+  || fail "dashboard missing task API restart guidance"
+grep -q "bash scripts/merlin-task-api.sh stop" "$DASHBOARD_FILE" \
+  || fail "dashboard missing task API rollback guidance"
+grep -q "settings-status-api" "$DASHBOARD_FILE" \
+  || fail "dashboard missing live status API state slot"
+grep -q "settings-task-api" "$DASHBOARD_FILE" \
+  || fail "dashboard missing live task API state slot"
 
 POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
 [[ "$POST_COUNT" == "1" ]] || fail "dashboard must have exactly one POST: Merlin Task API /task"
 
-if grep -qiE '<input|type="password"|configureProvider|saveProvider|writeSettings|enableCloud|downloadModel|pullModel|runShell|writeMemory|approveGate|denyGate|data-action="approve"|data-action="deny"' "$DASHBOARD_FILE"; then
+if grep -qiE '<input|type="password"|configureProvider|saveProvider|writeSettings|enableCloud|downloadModel|pullModel|runShell|restartService|startService|stopService|writeMemory|approveGate|denyGate|data-action="approve"|data-action="deny"' "$DASHBOARD_FILE"; then
   fail "settings must not expose unsafe browser controls"
 fi
 
