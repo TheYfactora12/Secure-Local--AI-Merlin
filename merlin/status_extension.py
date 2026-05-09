@@ -8,9 +8,16 @@ from contextlib import redirect_stdout
 from typing import Any
 from urllib import error, request
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from merlin.config_loader import load_all_configs
+from merlin.memory_manager import MemoryManager
+from merlin.provider_connector_store import (
+    ProviderConnectorRecord,
+    disable_provider_connector,
+    upsert_provider_connector,
+)
 from merlin.provider_registry import build_provider_registry
 from merlin.router import STAFF_ROUTE_RULES
 from merlin.task_endpoint import TASK_TRACE_BUFFER, app
@@ -100,6 +107,17 @@ SETTINGS_ACTIONS: list[dict[str, Any]] = [
 ]
 
 
+class ProviderConnectorUpsertRequest(BaseModel):
+    provider_id: str
+    api_key: str
+    user_allowed: bool = False
+    approval_id: str | None = None
+
+
+class ProviderConnectorDisableRequest(BaseModel):
+    approval_id: str | None = None
+
+
 def _load_config_quietly():
     with redirect_stdout(io.StringIO()):
         return load_all_configs()
@@ -118,6 +136,38 @@ def _keywords_for_route(route_id: str) -> list[str]:
         if rule.route_id == route_id:
             keywords.extend(rule.keywords)
     return sorted(set(keywords))
+
+
+def _connector_public_payload(record: ProviderConnectorRecord) -> dict[str, Any]:
+    return {
+        "provider_id": record.provider_id,
+        "credential_present": record.credential_present,
+        "credential_fingerprint": record.credential_fingerprint,
+        "user_allowed": record.user_allowed,
+        "enabled": record.enabled,
+        "updated_at": record.updated_at,
+        "storage_mode": record.storage_mode,
+        "secret_persisted": record.secret_persisted,
+    }
+
+
+def _write_provider_connector_audit(action: str, record: ProviderConnectorRecord) -> str | None:
+    metadata = {
+        "action": action,
+        "provider_id": record.provider_id,
+        "credential_present": record.credential_present,
+        "credential_fingerprint": record.credential_fingerprint,
+        "user_allowed": record.user_allowed,
+        "enabled": record.enabled,
+        "storage_mode": record.storage_mode,
+        "secret_persisted": record.secret_persisted,
+        "approval_id": record.approval_id,
+        "updated_at": record.updated_at,
+    }
+    try:
+        return MemoryManager().write_audit_event("provider_connector", metadata)
+    except Exception:
+        return None
 
 
 @router.get("/routes")
@@ -354,12 +404,74 @@ def status_settings() -> dict[str, Any]:
     return {
         "mode": "policy_manifest",
         "settings_writes_enabled": False,
+        "provider_connector_writes": "backend_approval_only",
         "browser_actions_enabled": False,
         "cloud_default": False,
         "secrets_displayed": False,
         "model_downloads": "manual_only",
         "actions": actions,
         "total": len(actions),
+    }
+
+
+@router.post("/settings/provider-connectors")
+def upsert_provider_connector_status(request_body: ProviderConnectorUpsertRequest) -> dict[str, Any]:
+    approval_id = (request_body.approval_id or "").strip()
+    if not approval_id:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": "Provider connector setup requires explicit approval.",
+                "approval_gates": ["api_key_use", "secret_access", "cloud_model_call", "external_network"],
+            },
+        )
+
+    try:
+        record = upsert_provider_connector(
+            provider_id=request_body.provider_id.strip(),
+            secret_value=request_body.api_key,
+            user_allowed=request_body.user_allowed,
+            approval_id=approval_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    audit_id = _write_provider_connector_audit("upsert", record)
+    return {
+        "status": "stored_presence_only",
+        "audit_id": audit_id,
+        "cloud_default": False,
+        "external_provider_enabled": record.enabled,
+        "secret_returned": False,
+        "provider": _connector_public_payload(record),
+    }
+
+
+@router.post("/settings/provider-connectors/{provider_id}/disable")
+def disable_provider_connector_status(provider_id: str, request_body: ProviderConnectorDisableRequest) -> dict[str, Any]:
+    approval_id = (request_body.approval_id or "").strip()
+    if not approval_id:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": "Provider connector disable requires explicit approval.",
+                "approval_gates": ["api_key_use", "secret_access"],
+            },
+        )
+
+    try:
+        record = disable_provider_connector(provider_id=provider_id.strip(), approval_id=approval_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    audit_id = _write_provider_connector_audit("disable", record)
+    return {
+        "status": "disabled",
+        "audit_id": audit_id,
+        "cloud_default": False,
+        "external_provider_enabled": False,
+        "secret_returned": False,
+        "provider": _connector_public_payload(record),
     }
 
 

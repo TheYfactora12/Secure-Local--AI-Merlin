@@ -290,6 +290,7 @@ def test_status_settings_returns_policy_gated_manifest() -> None:
     assert response.status_code == 200
     assert body["mode"] == "policy_manifest"
     assert body["settings_writes_enabled"] is False
+    assert body["provider_connector_writes"] == "backend_approval_only"
     assert body["browser_actions_enabled"] is False
     assert body["cloud_default"] is False
     assert body["secrets_displayed"] is False
@@ -328,6 +329,115 @@ def test_status_settings_never_exposes_secret_values(monkeypatch) -> None:
 
     assert "openai-secret-value" not in response_text
     assert "anthropic-secret-value" not in response_text
+
+
+def test_provider_connector_write_requires_approval_id(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("MERLIN_PROVIDER_CONNECTOR_STORE", str(tmp_path / "connectors.json"))
+
+    response = client.post(
+        "/status/settings/provider-connectors",
+        json={"provider_id": "openai", "api_key": "test-provider-key", "user_allowed": True},
+    )
+
+    assert response.status_code == 403
+    detail = response.json()["detail"]
+    assert "api_key_use" in detail["approval_gates"]
+    assert "secret_access" in detail["approval_gates"]
+
+
+def test_provider_connector_write_returns_presence_only_status(tmp_path, monkeypatch) -> None:
+    store_path = tmp_path / "connectors.json"
+    secret_value = "test-provider-key-that-must-not-return"
+    monkeypatch.setenv("MERLIN_PROVIDER_CONNECTOR_STORE", str(store_path))
+    monkeypatch.setattr("merlin.status_extension._write_provider_connector_audit", lambda action, record: "audit-1")
+
+    response = client.post(
+        "/status/settings/provider-connectors",
+        json={
+            "provider_id": "openai",
+            "api_key": secret_value,
+            "user_allowed": True,
+            "approval_id": "approval-1",
+        },
+    )
+    body_text = response.text
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["status"] == "stored_presence_only"
+    assert body["cloud_default"] is False
+    assert body["secret_returned"] is False
+    assert body["provider"]["provider_id"] == "openai"
+    assert body["provider"]["credential_present"] is True
+    assert body["provider"]["user_allowed"] is True
+    assert body["provider"]["secret_persisted"] is False
+    assert secret_value not in body_text
+    assert secret_value not in store_path.read_text(encoding="utf-8")
+
+
+def test_status_providers_reflects_presence_only_connector_store(tmp_path, monkeypatch) -> None:
+    secret_value = "test-openrouter-key-that-must-not-return"
+    monkeypatch.setenv("MERLIN_PROVIDER_CONNECTOR_STORE", str(tmp_path / "connectors.json"))
+    monkeypatch.setattr("merlin.status_extension._write_provider_connector_audit", lambda action, record: "audit-2")
+
+    write_response = client.post(
+        "/status/settings/provider-connectors",
+        json={
+            "provider_id": "openrouter",
+            "api_key": secret_value,
+            "user_allowed": True,
+            "approval_id": "approval-2",
+        },
+    )
+    assert write_response.status_code == 200
+
+    response = client.get("/status/providers")
+    body_text = response.text
+    body = response.json()
+    providers = {provider["provider_id"]: provider for provider in body["providers"]}
+
+    assert body["cloud_enabled"] is False
+    assert body["external_providers_enabled"] is True
+    assert providers["openrouter"]["configured"] is True
+    assert providers["openrouter"]["api_key_present"] is True
+    assert providers["openrouter"]["credential_present"] is True
+    assert providers["openrouter"]["user_allowed"] is True
+    assert providers["openrouter"]["enabled"] is True
+    assert providers["openrouter"]["connection_state"] == "allowed_pending_cloud_gate"
+    assert providers["openrouter"]["credential_storage"] == "presence_marker_only"
+    assert providers["openrouter"]["secret_persisted"] is False
+    assert secret_value not in body_text
+
+
+def test_provider_connector_disable_keeps_secret_hidden(tmp_path, monkeypatch) -> None:
+    secret_value = "test-mistral-key-that-must-not-return"
+    monkeypatch.setenv("MERLIN_PROVIDER_CONNECTOR_STORE", str(tmp_path / "connectors.json"))
+    monkeypatch.setattr("merlin.status_extension._write_provider_connector_audit", lambda action, record: "audit-3")
+
+    write_response = client.post(
+        "/status/settings/provider-connectors",
+        json={
+            "provider_id": "mistral",
+            "api_key": secret_value,
+            "user_allowed": True,
+            "approval_id": "approval-3",
+        },
+    )
+    assert write_response.status_code == 200
+
+    response = client.post(
+        "/status/settings/provider-connectors/mistral/disable",
+        json={"approval_id": "approval-4"},
+    )
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["status"] == "disabled"
+    assert body["provider"]["credential_present"] is True
+    assert body["provider"]["user_allowed"] is False
+    assert body["provider"]["enabled"] is False
+    assert body["secret_returned"] is False
+    assert secret_value not in response.text
 
 
 def test_task_endpoint_allows_wizard_hq_cors_origin() -> None:

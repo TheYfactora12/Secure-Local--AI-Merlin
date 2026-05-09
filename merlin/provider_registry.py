@@ -16,6 +16,7 @@ import yaml
 from pydantic import BaseModel
 
 from merlin.config_loader import REPO_ROOT, MerlinConfig, load_all_configs
+from merlin.provider_connector_store import list_provider_connectors
 
 
 LITELLM_CONFIG_PATH = REPO_ROOT / "configs" / "litellm" / "config.yaml"
@@ -43,6 +44,8 @@ class ProviderStatus(BaseModel):
     status: str
     connection_state: str
     notes: list[str]
+    credential_storage: str = "none"
+    secret_persisted: bool = False
 
 
 class ProviderRegistry(BaseModel):
@@ -216,32 +219,39 @@ def _external_provider(provider: dict[str, Any], config: MerlinConfig) -> Provid
     provider_id = str(provider["provider_id"])
     env_keys = tuple(str(key) for key in provider["env_keys"])
     api_key_present = any(_env_present(key) for key in env_keys)
+    connector = list_provider_connectors().get(provider_id)
+    connector_present = bool(connector and connector.credential_present)
+    user_allowed = bool(connector and connector.user_allowed)
+    credential_present = api_key_present or connector_present
     return ProviderStatus(
         provider_id=provider_id,
         display_name=str(provider["display_name"]),
         api_family=str(provider["api_family"]),
         auth_scheme=str(provider["auth_scheme"]),
         provider_type="external_model_provider",
-        enabled=False,
-        configured=api_key_present,
+        enabled=user_allowed and credential_present,
+        configured=credential_present,
         local=False,
         default=False,
         requires_approval=config.models.defaults.require_approval_for_cloud,
         user_allow_required=True,
-        user_allowed=False,
+        user_allowed=user_allowed,
         api_key_required=True,
-        api_key_present=api_key_present,
+        api_key_present=credential_present,
         model_aliases=[],
         known_model_examples=list(provider["known_model_examples"]),
         capabilities=list(provider["capabilities"]),
-        setup_state="locked_until_policy_flow",
-        status="disabled_key_present" if api_key_present else "disabled",
-        connection_state="not_allowed",
+        setup_state="allowed_by_user" if user_allowed else "configured_disabled" if credential_present else "locked_until_policy_flow",
+        status="allowed_key_present" if user_allowed and credential_present else "disabled_key_present" if credential_present else "disabled",
+        connection_state="allowed_pending_cloud_gate" if user_allowed else "not_allowed",
         notes=[
             "External providers are not allowed by default.",
             "Using this provider requires user enablement and explicit online/cloud approval.",
             "Secret values are never returned by the provider registry.",
+            "The first setup slice stores presence metadata only; raw secrets are not persisted.",
         ],
+        credential_storage="presence_marker_only" if connector_present else "env_presence_only" if api_key_present else "none",
+        secret_persisted=False,
     )
 
 
@@ -256,10 +266,11 @@ def build_provider_registry() -> ProviderRegistry:
         _gateway_provider(litellm_aliases),
     ]
     providers.extend(_external_provider(provider, config) for provider in EXTERNAL_PROVIDER_CATALOG)
+    external_enabled = any(provider.user_allowed and provider.api_key_present for provider in providers if not provider.local)
     return ProviderRegistry(
         mode="local_only" if not cloud_enabled else "online_optional",
         local_first=config.models.defaults.local_first,
         cloud_enabled=cloud_enabled,
-        external_providers_enabled=False,
+        external_providers_enabled=external_enabled,
         providers=providers,
     )

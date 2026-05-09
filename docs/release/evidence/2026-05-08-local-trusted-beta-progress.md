@@ -4203,3 +4203,155 @@ code exists.
 
 Improved. Public Beta claims must continue to avoid web comprehension until
 #121 child implementation issues are complete and tested.
+
+## #117 Provider Connector Presence-Only Backend Slice
+
+### Date/Time
+
+2026-05-09, early session.
+
+### Starting Commit SHA
+
+`6c92d6a1e0ed6e7d6c29273e3bdb1e3188e98514`
+
+### Target Issues
+
+- #117
+- #114
+- #106
+- #95
+
+### Scope
+
+Added the smallest backend-only provider connector setup contract. This slice
+does not add Wizard HQ key-entry forms, does not call external providers, does
+not enable cloud routing, and does not persist raw API keys.
+
+### Files Changed
+
+- `.github/workflows/ci.yml`
+- `docs/product/PROVIDER_CONNECTOR_CAPABILITIES.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+- `merlin/provider_connector_store.py`
+- `merlin/provider_registry.py`
+- `merlin/status_extension.py`
+- `tests/provider-connector-policy-smoke.sh`
+- `tests/test_provider_connector_store.py`
+- `tests/test_status_extension.py`
+
+### Protected Files Touched
+
+- `.github/workflows/ci.yml`: added the new static smoke test to CI.
+- `merlin/status_extension.py`: added execution-aware backend setup routes under
+  the existing Task API status extension; 8765 read-only status API is unchanged.
+
+### Commands Run
+
+- `git status --short && git rev-parse HEAD`
+- `gh issue list --state open --limit 40 --json number,title,state,milestone,labels`
+- `sed -n '1,190p' docs/CANONICAL_PROJECT_STATE.md`
+- `sed -n '1,120p' docs/scrum/SPRINT_BOARD.md`
+- `gh issue view 114 --json number,title,state,milestone,labels,body`
+- `gh issue view 117 --json number,title,state,milestone,labels,body`
+- `sed -n '1,460p' merlin/status_extension.py`
+- `sed -n '1,340p' merlin/provider_registry.py`
+- `sed -n '1,280p' merlin/policy_engine.py`
+- `sed -n '1,320p' merlin/memory_manager.py`
+- `sed -n '1,260p' merlin/task_endpoint.py`
+- `rg -n "audit|write_audit|approval|secret_access|api_key_use|cloud_model_call|external_network" merlin tests configs docs | head -160`
+- `bash -n tests/provider-connector-policy-smoke.sh && bash tests/provider-connector-policy-smoke.sh`
+- `.venv-test/bin/python -m pytest tests/test_provider_connector_store.py tests/test_status_extension.py tests/test_task_endpoint.py -q`
+- `bash tests/dashboard-settings-policy-smoke.sh && bash tests/dashboard-tabs-smoke.sh`
+- `ruby -e 'require "yaml"; YAML.load_file(".github/workflows/ci.yml"); puts "workflow-yaml-ok"' && git diff --check`
+
+### Test Output Summary
+
+- `bash tests/provider-connector-policy-smoke.sh`: PASS; provider connector
+  setup is approval-gated and presence-only.
+- Python focused suite: PASS; `41 passed`.
+- `bash tests/dashboard-settings-policy-smoke.sh`: PASS.
+- `bash tests/dashboard-tabs-smoke.sh`: PASS.
+- Workflow YAML parse: PASS; `workflow-yaml-ok`.
+- `git diff --check`: PASS.
+
+### Tests Skipped And Why
+
+- No live external provider/API test was run because #117 must not call cloud
+  providers or use API keys in this slice.
+- No browser form/manual screenshot was captured because no Wizard HQ input
+  control was added yet.
+- No full installer retest was run because installer/package behavior did not
+  change.
+
+### Failures Found
+
+No command failure. A design risk was identified and contained: accepting API
+keys before a real vault could accidentally become raw secret persistence.
+
+### Failure Category
+
+- Secret/log redaction risk avoided.
+- No-cloud/default privacy protected.
+- CI/static smoke gap closed.
+
+### Root Cause Or Current Hypothesis
+
+Provider setup is useful UX, but raw provider credentials require a stronger
+vault/keychain design than this slice should introduce. The safest first step is
+presence-only metadata plus explicit approval and tests.
+
+### Fix Applied
+
+- Added `merlin/provider_connector_store.py` for presence-only connector
+  metadata.
+- Added backend routes on the execution-aware Task API:
+  - `POST /status/settings/provider-connectors`
+  - `POST /status/settings/provider-connectors/{provider_id}/disable`
+- Required `approval_id` for writes.
+- Returned only public presence/status fields.
+- Attempted metadata-only `provider_connector` audit events.
+- Updated provider registry to reflect configured/allowed state without
+  returning secrets.
+- Updated provider connector docs and added CI smoke coverage.
+
+### Regression Tests Added
+
+- `tests/test_provider_connector_store.py`
+- New provider-connector cases in `tests/test_status_extension.py`
+- `tests/provider-connector-policy-smoke.sh`
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended next #117 child slice: Wizard HQ provider setup UI that calls the
+backend route only after explicit user confirmation, with no raw value returned
+or rendered after submission.
+
+Recommended future issue before real provider calls: encrypted/OS-keychain
+secret vault plus explicit routing policy for external provider use.
+
+### Lesson Learned
+
+Connector setup and cloud usage are separate controls. A provider can be
+configured/allowed in Wizard HQ while cloud routing still remains disabled until
+a later policy slice explicitly enables model calls.
+
+### What Not To Repeat Next Time
+
+Do not treat environment key presence or provider setup as permission to route
+to cloud. Do not store raw keys in repo-local JSON. Do not add browser key forms
+without no-secret-render tests.
+
+### Next Recommended Step
+
+Commit this backend-only #117 slice, watch CI, then implement the Wizard HQ UI
+surface only if it can keep the same presence-only/no-cloud contract.
+
+### Local Trusted Beta Impact
+
+Improved. Merlin now has a tested backend contract for provider setup metadata
+without weakening local-first defaults.
+
+### Public Beta Impact
+
+Improved foundation. Public Beta still requires real secret vault/keychain
+design before external providers should be considered usable.
