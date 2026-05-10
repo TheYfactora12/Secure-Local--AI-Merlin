@@ -64,6 +64,33 @@ Merlin must become the user-owned AI chat, memory, project context, and action
 surface before future web comprehension, automation runtime, governance
 reporting, or public-release polish takes priority.
 
+## Product Focus Reset — May 2026
+
+The user's 2026-05-10 reset prompt is directionally correct on product focus:
+first-use simplicity, clean onboarding, non-technical language, local/private
+proof, and a "this just works" Mac experience matter more than roadmap breadth.
+
+Do not treat that reset prompt as a replacement for verified repo state when it
+conflicts with tested files, current issues, or this canonical document. Current
+repo truth:
+
+- Product-facing docs currently use **Merlin AI** as the public product name
+  while **Home AI Elite** remains repo, legacy package, and historical context.
+  Issue #131 owns any final brand reversal or rename cleanup.
+- Wizard HQ is becoming the primary product surface. Open WebUI remains a local
+  chat engine/option under Merlin, not the user-facing product identity.
+- OpenHands is optional and high-risk. In the current compose/env files it uses
+  host port `3003`; Perplexica backend uses host port `3001`.
+- MCP-style integrations are future/optional connector scope, not part of the
+  default v3.1 user value loop.
+- The next shippable value remains the #134 demo: open Wizard HQ, use Merlin
+  Chat, save useful context into a local Room, see where it lives, prove cloud
+  is off, reopen it, and keep approved memory separate.
+
+The reset therefore tightens priority; it does not authorize installer rewrites,
+default-service changes, public-release claims, or brand changes without an
+issue, tests, and evidence.
+
 ## Current Architecture Diagram
 
 This is current-state as of 2026-05-10.

@@ -1,12 +1,19 @@
 # Merlin AI — Product North Star
 
-**Version:** 1.2
+**Version:** 1.3
 **Date:** 2026-05-10
 **Status:** CANONICAL — supersedes all prior positioning docs
 **Change from v1.2:** Re-centered Merlin on the first-use local brain value loop:
 Chat -> Rooms -> approved memory -> storage visibility -> export/import. Visual
 polish, broad connectors, PC control, runtime agents, and governance-suite
 features wait until that loop is useful.
+
+**Reset interpretation:** The 2026-05-10 master reset reinforces the right
+pressure: non-technical Mac users, clean first run, no terminal knowledge,
+zero-cloud defaults, and the "this just works" bar. It does not override
+verified repo truth on product name, service ports, optional profiles, or
+release state. Brand reversal, installer defaults, or service-stack claims must
+go through issues and tests, not prompt text alone.
 
 ---
 

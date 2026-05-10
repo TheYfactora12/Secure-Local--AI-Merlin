@@ -10884,6 +10884,152 @@ Positive, but Public Beta remains blocked by full installer retest,
 restore-from-archive, memory review/delete, approve-for-context, and clean
 onboarding evidence.
 
+## 2026-05-10 - Master Reset Focus Reconciliation
+
+### Date/time
+
+2026-05-10T23:37:47Z
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`2ec144d` - `docs: refocus Merlin market wedge`
+
+### Target Issues
+
+- #122 Product Focus Cut.
+- #123 Offline local brain and user-owned context store.
+- #134 Product value checkpoint.
+- #131 Brand naming cleanup.
+- #95 Release-readiness evidence.
+
+### Scope
+
+Reconcile the user's Home AI Elite master reset prompt with verified repository
+truth so future sessions keep the simplicity mandate without copying stale
+runtime details into docs or code.
+
+### Files Changed
+
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/product/PRODUCT_NORTH_STAR.md`
+- `docs/MASTER_PROMPT.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+No installer, package, runtime API, policy, memory, router, dashboard, compose,
+or environment files were changed.
+
+### Commands Run
+
+- `git status --short && git rev-parse --short HEAD`
+- `rg -n "Product Focus Reset|Reset alignment|Home AI Elite|Merlin AI is the public product name|OpenHands|3003|3001|MCP|Product-facing docs" README.md docs/CANONICAL_PROJECT_STATE.md docs/product/PRODUCT_NORTH_STAR.md docs/MASTER_PROMPT.md docker-compose.yml .env.example`
+- `tail -n 180 docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+- `sed -n '1,120p' docs/CANONICAL_PROJECT_STATE.md`
+- `sed -n '1,120p' docs/product/PRODUCT_NORTH_STAR.md`
+- `bash tests/master-prompt-smoke.sh`
+- `bash tests/control-plane-strategy-smoke.sh`
+- `bash tests/codex-master-prompt-v2-smoke.sh`
+- `bash tests/release-readiness-readme-smoke.sh`
+- `bash tests/beta-readiness-evidence-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+Pre-edit inspection confirmed the reset prompt's product focus is valid, but
+several details conflict with current files:
+
+- current README says Merlin AI is the public product name while Home AI Elite
+  remains repo/legacy context,
+- current compose/env maps OpenHands to host port `3003`, not `3001`,
+- Perplexica backend uses host port `3001`,
+- Open WebUI is not the final branded product surface; Wizard HQ is,
+- MCP-style integrations are not part of the default current stack.
+
+Static checks passed:
+
+- master prompt/context smoke,
+- control-plane strategy smoke,
+- Codex master prompt v2 smoke,
+- release-readiness README smoke,
+- beta-readiness evidence smoke,
+- whitespace check.
+
+### Tests Skipped And Why
+
+Runtime, installer, dashboard browser, and API tests were not run because this
+change is docs-only and does not touch installer, dashboard, API, model, or
+service behavior.
+
+### Failures Found
+
+The reset prompt contained roadmap/governance drift risk: it would have
+reintroduced brand confusion and stale service/port assumptions if pasted into
+canonical docs as-is.
+
+### Failure Category
+
+- Roadmap/governance drift
+- Documentation mismatch
+
+### Root Cause Or Current Hypothesis
+
+The reset prompt captured the right customer-experience pressure but mixed older
+Home AI Elite stack language with newer Merlin AI/Wizard HQ repo state.
+
+### Fix Applied
+
+Added explicit reset interpretation to canonical state, product north star, and
+master prompt: keep the simplicity mandate, but resolve product name, service
+ports, optional profiles, and release claims through verified issues/tests.
+
+### Retest Result
+
+PASS. All static docs/governance checks listed above passed after the reset
+reconciliation edits.
+
+### Regression Test Added Or Reason Not Added
+
+No new test added yet. Existing docs smoke tests are expected to cover source of
+truth wording and release-readiness guardrails; add a focused smoke only if those
+checks miss this class of drift.
+
+### Follow-Up Issues Created Or Recommended
+
+Use existing #131 for final brand cleanup rather than creating a duplicate
+issue. No new issue recommended unless #131 does not explicitly decide whether
+the public product name remains Merlin AI or returns to Home AI Elite.
+
+### Lesson Learned
+
+A reset prompt can be valuable product pressure and still be technically stale.
+The repo should absorb the principle, not copy conflicting implementation facts.
+
+### What Not To Repeat Next Time
+
+Do not flip brand naming, service ports, or default stack claims from a prompt
+without checking README, compose/env files, canonical state, and GitHub issues.
+
+### Next Recommended Step
+
+Continue #134: make the Wizard HQ first-use loop obvious and useful before
+adding broad governance, automation, ClosClaw, voice, or public-release polish.
+
+### Local Trusted Beta Impact
+
+Positive. The project has a clearer guardrail for simplicity without
+destabilizing tested runtime behavior.
+
+### Public Beta Impact
+
+Positive for focus, but Public Beta remains blocked by full installer retest,
+clean onboarding evidence, final brand decision, memory review/delete, storage
+visibility, and export/import readiness.
+
 ## 2026-05-10 - Chat Session Context And Whole-Room Delete
 
 ### Date/time
