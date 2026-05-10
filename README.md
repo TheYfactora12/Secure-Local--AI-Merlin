@@ -1,18 +1,24 @@
-# 🧙 Merlin AI
+# Home AI Elite
 
-> **A secure local AI brain for projects. Runs on hardware you own, stores approved context where you choose, and governs powerful actions through explicit approvals.**
+> **Private AI at home in 30 minutes. No cloud account, no subscription, no terminal knowledge required for the finished product.**
 
-Merlin AI is a local-first AI control plane and project brain. It helps you run local models, route approved providers, manage memory, review evidence, and govern agents from one protected workspace.
+Home AI Elite is a local-first Mac product that installs a private AI stack on
+hardware you own. Merlin is the AI assistant inside it: the voice, chat, memory,
+routing, and safety layer that helps a non-technical user ask questions, save
+useful context into local Rooms, and see proof that cloud is off by default.
 
-Merlin protects the user's AI realm:
+The product is built for the privacy-conscious Mac owner who wants the power of
+ChatGPT-style assistance without sending personal conversations, work files, or
+family data to someone else's servers.
 
-- **Wizard HQ** is the command surface.
-- **The Watchtower** shows readiness, privacy, models, services, and safe next actions.
-- **The Vault** stores approved memory and project context.
-- **The Round Table** governs approvals, agent permissions, and revocation.
-- **Knights** are scoped agents assigned to projects.
-- **Excalibur** represents high-risk execution authority and stays sheathed until the user approves a scoped action.
-- **The Chronicle** records redacted evidence of what happened.
+Home AI Elite protects the user's private AI home:
+
+- **Wizard HQ** is the friendly app surface.
+- **Merlin** is the assistant the user talks to.
+- **Rooms** organize local chat history and project context.
+- **The Vault** stores approved memory only after the user agrees.
+- **The Watchtower** shows readiness, privacy, model, and service status.
+- **The Round Table** handles approvals for anything sensitive.
 
 The product is intentionally local-first: start with the lightweight core profile, keep cloud disabled by default, and enable heavier profiles such as search, automation, coding agents, and server operations only when the machine and the user are ready.
 
@@ -21,26 +27,25 @@ The product is intentionally local-first: start with the lightweight core profil
 
 ---
 
-## Brand and Repository Rename Status
+## Brand Direction
 
-Merlin AI is the public product name. This repository may still appear as
-`home-ai-elite` until the GitHub repository slug and compatibility paths are
-renamed safely.
+**Home AI Elite** is the product name. **Merlin** is the AI assistant inside the
+product.
 
-Do not assume every internal path, package name, launchd label, or Docker volume
-has been renamed yet. Product-facing language should say **Merlin AI**; legacy
-names remain only where needed for compatibility or historical archives.
+Some dashboard, installer, package, and documentation surfaces still say
+`Merlin AI` because an earlier brand direction favored that name. Issue #131 now
+tracks the cleanup path: keep runtime compatibility paths stable, but make the
+external promise clear and simple for non-technical users.
 
 See [`docs/product/MERLIN_MYTHOLOGY_BRAND_SYSTEM.md`](docs/product/MERLIN_MYTHOLOGY_BRAND_SYSTEM.md)
-for the mythology naming system that maps Merlin, the Realm, Round Table,
-Knights, Excalibur, Vault, Watchtower, Gatehouse, and Chronicle to real product
-functions.
+for the internal naming system. Myth names are only allowed when they map to
+real user-facing controls, not decoration.
 
 ---
 
 ## Release Readiness
 
-Merlin AI is currently being prepared for a controlled **Local Trusted Beta**.
+Home AI Elite is currently being prepared for a controlled **Local Trusted Beta**.
 It is not being claimed as Public Beta ready yet.
 
 - Installer/downloader Merlin branding is complete and covered by

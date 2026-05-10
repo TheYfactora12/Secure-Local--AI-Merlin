@@ -1,40 +1,42 @@
-# Merlin AI — Go-to-Market, Monetization & Exit Strategy
+# Home AI Elite — Go-to-Market, Monetization & Exit Strategy
 **Confidential | TheYfactora12 | Built 2026-05-06**
 
 ---
 
 ## The North Star (One Sentence)
 
-Merlin AI is a sovereign local-first personal intelligence system: you own the
-hardware, the Rooms, the approved memory, the model options, and the approval
-gates. Cloud providers stay off by default and are used only when explicitly
-configured.
+Home AI Elite gives non-technical Mac owners a private AI assistant at home:
+Merlin runs locally, remembers only what the user chooses to save, organizes
+work into local Rooms, and proves cloud is off by default.
+
+Brand rule: **Home AI Elite** is the product customers buy. **Merlin** is the
+assistant inside the product.
 
 ## The Beachhead Wedge
 
-Do not sell Merlin first as a broad governance suite, DLP platform, AI firewall,
-or automation OS. Those are expansion paths.
+Do not sell Home AI Elite first as a broad governance suite, DLP platform, AI
+firewall, or automation OS. Those are expansion paths.
 
 Sell the first product as:
 
-> A private local AI workspace for sensitive work that remembers only what you
-> choose to save, organizes it into local Rooms, and proves your data stayed
-> under your control.
+> Private AI at home in 30 minutes: no cloud account, no subscription, no
+> terminal knowledge, and no data leaving your hardware unless you choose it.
 
-This is the bridge between personal value and regulated-market value. A solo
-builder wants project continuity. A credit union, practice, school, or law firm
-wants the same continuity with a privacy proof.
+This is the bridge between consumer value and regulated-market value. A privacy
+convert wants a local AI that just works. A credit union, practice, school, or
+law firm wants the same ownership model with support, evidence, and audit.
 
 The first commercial demo should prove:
 
-1. Open Wizard HQ.
-2. Create or select a Room.
+1. Install/open Home AI Elite.
+2. See: "Your private AI is ready."
 3. Ask Merlin a local question.
-4. Save the useful chat to that Room.
-5. Show where the Room lives on disk.
-6. Show cloud is off by default.
-7. Reopen the saved Room session.
-8. Show approved memory remains separate and reviewable.
+4. Create or select a Room.
+5. Save the useful chat to that Room.
+6. Show where the Room lives on disk.
+7. Show cloud is off by default.
+8. Reopen the saved Room session.
+9. Show approved memory remains separate and reviewable.
 
 If that demo is not compelling, pricing, enterprise messaging, and acquisition
 positioning do not matter yet.
@@ -43,9 +45,12 @@ positioning do not matter yet.
 
 ## The Real Vision (What You Just Said)
 
-This is not a Siri replacement. This is not a cloud AI with a privacy checkbox.
+This is not a Siri replacement. This is not a developer bundle. This is not a
+cloud AI with a privacy checkbox.
 
 This can become:
+- A **home AI appliance** for privacy-conscious Mac owners leaving cloud AI and
+  smart speakers behind.
 - A **doctor's office** workspace for notes, procedures, and approved local context.
 - A **credit union** workspace for AI-assisted analysis without default cloud exposure.
 - A **school** workspace for student-support context that stays under district control.
@@ -54,7 +59,7 @@ This can become:
 - An **executive** workspace that becomes a private chief-of-staff memory over time.
 
 The local-first angle is the sharpest edge in the market right now. Every cloud
-AI story eventually hits the data-control objection. Merlin AI starts from
+AI story eventually hits the data-control objection. Home AI Elite starts from
 "your data stays on owned hardware by default," then earns more capability only
 through visible approval.
 
@@ -102,7 +107,8 @@ through visible approval.
 
 **6. Privacy-Conscious Individual**
 - Pain: Wants an AI companion that grows with them, remembers them, isn't selling their data
-- Your edge: Merlin AI is designed to be named, configured, owned, and carried forward by the user
+- Your edge: Home AI Elite is designed to be owned and carried forward by the
+  user; Merlin is the assistant they name, configure, and grow with
 - Entry price: $149 one-time (after signed installer ships)
 - Hook: "A friend, a companion, an assistant — that's actually yours"
 
@@ -113,12 +119,12 @@ through visible approval.
 **7. AI Companies Without a True Air-Gap Product**
 - Every major AI company — Microsoft, Google, Anthropic, OpenAI — has a "private" tier that still routes through their infrastructure
 - None of them have a true air-gap product that runs entirely on customer hardware
-- Merlin AI is aimed at that product gap
+- Home AI Elite is aimed at that product gap
 - This is your **acquisition target** positioning — not for sale yet, but built to be noticed
 
 **8. MSP/Reseller Channel**
 - IT managed service providers who support healthcare, legal, financial clients
-- They white-label Merlin AI, sell it to their clients, pay you a license fee
+- They white-label Home AI Elite, sell it to their clients, pay you a license fee
 - You never touch the client — pure wholesale revenue
 
 ---
@@ -259,7 +265,7 @@ Brand positioning: own the term **"air-gapped AI"** before anyone else does.
 
 ## The One-Line Pitch
 
-> "Merlin AI is private intelligence that runs on owned hardware by default, remembers only what you approve, and keeps local control visible — built for people and organizations where data sovereignty isn't optional."
+> "Home AI Elite is private AI at home or on owned hardware: Merlin remembers only what you approve, keeps cloud off by default, and makes local control visible."
 
 ---
 

@@ -1,12 +1,15 @@
-# Merlin AI — What It Is, What It Does, What's Coming
-**Home AI Elite | `TheYfactora12/home-ai-elite` | v1.0 Pre-Release**
+# Home AI Elite — What It Is, What It Does, What's Coming
+**Merlin assistant inside | `TheYfactora12/home-ai-elite` | v1.0 Pre-Release**
 *Built from live repo source — 2026-05-06*
 
 ---
 
 ## The One-Sentence Version
 
-Merlin AI is a **local-first AI workspace** you install on your own Mac or Linux machine that gives you Merlin Chat, local Rooms, approved memory, model routing, and Wizard HQ visibility — with zero required subscriptions and zero data leaving your hardware unless you explicitly say so.
+Home AI Elite is a **private local AI product** you install on your own Mac that
+gives you Merlin Chat, local Rooms, approved memory, model routing, and Wizard
+HQ visibility — with zero required subscriptions and zero data leaving your
+hardware unless you explicitly say so.
 
 ---
 
@@ -14,13 +17,18 @@ Merlin AI is a **local-first AI workspace** you install on your own Mac or Linux
 
 Every major AI tool — ChatGPT, Perplexity, Copilot, Zapier AI, Pinecone — runs on someone else's servers. Your prompts, your data, your context, your preferences are all sent to a cloud you don't control. You pay a monthly fee to rent intelligence you can never own.
 
-Merlin AI flips that. The AI runs on your hardware, uses your GPU (Apple Silicon supported natively), stores memory in your local database, and routes tasks through a policy engine you can read and audit. You own every bit of it.
+Home AI Elite flips that. The AI runs on your hardware, uses your GPU (Apple
+Silicon supported natively), stores memory in your local database, and routes
+tasks through a policy engine you can read and audit. You own every bit of it.
 
 ---
 
 ## What the Product Is Made Of
 
-Merlin AI is not one app. It is a **stack of purpose-built components** orchestrated by a single installer and unified under one control plane called **Merlin**.
+Home AI Elite is not one app pretending the stack does not exist. It is a
+purpose-built local AI stack orchestrated by a single installer and presented to
+the user through Wizard HQ. **Merlin** is the assistant and control layer inside
+the product.
 
 ### The Core Stack
 
@@ -166,7 +174,7 @@ Wizard HQ shows:
 
 ## What Hardware You Need
 
-Merlin AI is designed to run on **hardware you already own**. The entry point is an 8GB Mac.
+Home AI Elite is designed to run on **hardware you already own**. The entry point is an 8GB Mac.
 
 | Your RAM | Tier | What You Get |
 |---|---|---|

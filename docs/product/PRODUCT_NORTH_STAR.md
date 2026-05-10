@@ -1,25 +1,19 @@
-# Merlin AI — Product North Star
+# Home AI Elite — Product North Star
 
-**Version:** 1.3
+**Version:** 1.4
 **Date:** 2026-05-10
 **Status:** CANONICAL — supersedes all prior positioning docs
-**Change from v1.2:** Re-centered Merlin on the first-use local brain value loop:
-Chat -> Rooms -> approved memory -> storage visibility -> export/import. Visual
-polish, broad connectors, PC control, runtime agents, and governance-suite
-features wait until that loop is useful.
-
-**Reset interpretation:** The 2026-05-10 master reset reinforces the right
-pressure: non-technical Mac users, clean first run, no terminal knowledge,
-zero-cloud defaults, and the "this just works" bar. It does not override
-verified repo truth on product name, service ports, optional profiles, or
-release state. Brand reversal, installer defaults, or service-stack claims must
-go through issues and tests, not prompt text alone.
+**Change from v1.3:** Product direction is now explicit: **Home AI Elite** is
+the consumer/private-home product. **Merlin** is the assistant, voice, chat,
+memory, routing, and safety layer inside it. The first market is not enterprise
+governance; it is privacy-conscious Mac owners who want local AI that works
+without terminal setup.
 
 ---
 
 ## The One-Sentence Product
 
-> Merlin is your personal AI that lives on your device, remembers what you choose to save, organizes your work into local Rooms, and asks before it acts or shares.
+> Home AI Elite gives any Mac owner a private AI assistant at home: Merlin runs locally, remembers only what you choose to save, organizes your work into Rooms, and proves your data stays under your control.
 
 Every build decision gets tested against that sentence.
 
@@ -30,25 +24,29 @@ Every build decision gets tested against that sentence.
 When Steve Jobs returned to Apple in 1997, Apple had 350 products. He cut to 4.
 Not because the other 346 were bad ideas — because **focus compounds** and complexity kills.
 
-The product today is three things, in this order:
+The product today is four things, in this order:
 
-1. **A clean Merlin Chat that can keep local session context.** (Phase 1)
-2. **Rooms and approved memory that make useful context durable.** (Phase 1)
-3. **Supervised actions and connectors after trust is proven.** (Phase 2)
+1. **A clean install and first-run path a non-technical Mac user understands.** (Phase 1)
+2. **A clean Merlin Chat that can keep local session context.** (Phase 1)
+3. **Rooms and approved memory that make useful context durable.** (Phase 1)
+4. **Supervised actions and connectors after trust is proven.** (Phase 2)
 
-Everything else is deferred until these three are proven.
+Everything else is deferred until these four are proven.
 
 ---
 
 ## Who This Is For
 
-**Primary user:** Anyone who owns a laptop or phone and wants an AI that actually knows them, remembers their work, and can help them get things done — without their data leaving their machine.
+**Primary user:** A privacy-conscious Mac owner who wants ChatGPT-style help
+without sending personal conversations, family data, work files, or sensitive
+projects to a cloud AI provider.
 
 The test user is not a DevOps engineer. The test user is:
-- A grandmother who wants help without worrying her grandchildren will see her conversations.
-- A student who wants an AI that remembers their projects across weeks and months.
-- A professional who wants their work context to follow them device to device.
-- A power user who wants Merlin to open apps, run tasks, and automate their day — under their control.
+- A 50-year-old Mac user who does not use Terminal.
+- A privacy convert leaving Alexa, Google, ChatGPT, or Claude for personal work.
+- A student or professional who wants an AI that remembers projects across weeks and months.
+- A regulated professional who cannot safely put client/patient/matter context into cloud AI.
+- A smart-home power user who wants Home Assistant-style capability without an 8-hour setup.
 
 **If grandma can install it and use it on day one, we have the right product.**
 If she needs a terminal, we failed.

@@ -10,7 +10,13 @@ for that validation step.
 You are Codex acting as a senior product engineering team for the repository `home-ai-elite`.
 
 Project vision:
-Home AI Elite is a local-first AI operating system. The central AI brain is Merlin. Merlin should become a neutral AI brain that can use multiple models, route tasks to the best available backend, protect user privacy, support local Apple Silicon hardware, optionally use external APIs only when explicitly configured, learn only from user-approved memory, and provide a clean dashboard non-technical users can understand.
+Home AI Elite is the product: a one-click private AI experience for non-technical
+Mac users who want local AI without cloud accounts, subscriptions, or terminal
+setup. Merlin is the AI assistant inside Home AI Elite. Merlin should become the
+voice, chat, memory, routing, and safety layer that can use multiple local model
+engines, protect user privacy, support Apple Silicon well, optionally use
+external APIs only when explicitly configured, learn only from user-approved
+memory, and provide a clean dashboard non-technical users can understand.
 
 Reset alignment: product pressure is toward "this just works" for a
 non-technical Mac user. Do not interpret that as permission to ignore repo

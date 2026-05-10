@@ -11685,3 +11685,163 @@ Positive. Saved Room history is more understandable and actionable.
 Positive, but Public Beta remains blocked by full installer retest,
 restore-from-archive, memory review/delete, approve-for-context, and clean
 onboarding evidence.
+
+## 2026-05-10 - Home AI Elite Market Direction Reset
+
+### Date/time
+
+2026-05-10T23:45:29Z
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`8e815d9` - `docs: reconcile master reset focus`
+
+### Target Issues
+
+- #131 Brand direction cleanup.
+- #122 Product Focus Cut.
+- #123 Offline local brain and user-owned context store.
+- #134 Product value checkpoint.
+- #37 Public release onboarding and packaging hardening.
+- #95 Release-readiness evidence.
+
+### Scope
+
+Apply the market report direction at the product-strategy layer:
+
+- Home AI Elite is the outward product name for the consumer/private-home market.
+- Merlin is the assistant, voice, chat, memory, routing, and safety layer inside
+  Home AI Elite.
+- The first buyer is the privacy-conscious Mac owner who wants local AI that
+  works without cloud accounts, subscriptions, or terminal setup.
+
+No installer, package, dashboard, runtime path, Docker volume, launchd label, or
+service behavior was changed in this slice.
+
+### Files Changed
+
+- `README.md`
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/MASTER_PROMPT.md`
+- `docs/product/GTM_STRATEGY.md`
+- `docs/product/PRODUCT_GUIDE.md`
+- `docs/product/PRODUCT_NORTH_STAR.md`
+- `tests/release-readiness-readme-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+No protected installer, package, runtime API, policy, memory, router, compose,
+launchd, or dashboard files were touched.
+
+### Commands Run
+
+- `git status --short && git rev-parse --short HEAD && git branch --show-current`
+- `gh issue list --limit 80 --state open --json number,title,labels,milestone,state`
+- `gh issue view 131 --json number,title,body,state,labels,comments`
+- `rg -n "Merlin AI is the public product name|Product-facing language should say|Rename product/repo from Home AI Elite to Merlin AI|Merlin AI — Product North Star|# Merlin AI|Merlin AI is a" README.md docs/product docs/CANONICAL_PROJECT_STATE.md docs/MASTER_PROMPT.md docs/CODEX_MASTER_PROMPT_V2.md tests`
+- `gh issue edit 131 --title "Brand Direction: Home AI Elite product, Merlin assistant inside" --body ...`
+- `bash tests/release-readiness-readme-smoke.sh`
+- `bash tests/master-prompt-smoke.sh`
+- `bash tests/codex-master-prompt-v2-smoke.sh`
+- `bash tests/beta-readiness-evidence-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+PASS:
+
+- README release-readiness positioning smoke.
+- Master prompt/context smoke.
+- Codex master prompt v2 smoke.
+- Trusted local beta evidence smoke.
+- Whitespace check.
+
+### Tests Skipped And Why
+
+- Installer/package tests skipped because installer/package files were not
+  changed. Brand cleanup in installer/package remains a separate retest-triggering
+  follow-up.
+- Dashboard/browser/API tests skipped because dashboard/runtime files were not
+  changed.
+- Live Docker/Ollama/Qdrant tests skipped because this was a docs/issue
+  direction reset only.
+
+### Failures Found
+
+The issue board and docs were pointing in opposite brand directions:
+
+- #131 previously instructed a rename from Home AI Elite to Merlin AI.
+- The new market report makes Home AI Elite the stronger external consumer
+  product name and Merlin the assistant inside it.
+
+### Failure Category
+
+- Roadmap/governance drift
+- Documentation mismatch
+- Brand/product positioning drift
+
+### Root Cause Or Current Hypothesis
+
+The project briefly optimized for the strongest assistant identity, then the
+market work clarified that the sharper buyer wedge is the private-home product
+category: Home AI Elite. Without correcting #131, future sessions would keep
+following stale issue guidance.
+
+### Fix Applied
+
+- Updated README and canonical product docs to use Home AI Elite as outward
+  product name and Merlin as the assistant inside.
+- Re-scoped #131 in GitHub to track cleanup from the previous Merlin AI
+  public-brand direction.
+- Added README smoke assertions for Home AI Elite, Merlin-as-assistant, and the
+  30-minute private-home promise.
+
+### Retest Result
+
+PASS for all focused docs/governance checks listed above.
+
+### Regression Test Added Or Updated
+
+- `tests/release-readiness-readme-smoke.sh`
+
+### Follow-Up Issues Created Or Recommended
+
+No new issue created. Continue #131 for brand cleanup. Installer/package and
+dashboard branding should be changed only in a scoped follow-up that includes
+the installer retest trigger and screenshot evidence.
+
+### Lesson Learned
+
+The product name should describe the buyer's outcome, not only the assistant's
+persona. Home AI Elite says what the non-technical customer is buying; Merlin
+says who they talk to inside it.
+
+### What Not To Repeat Next Time
+
+Do not let assistant branding overtake product positioning. Also do not touch
+installer/package branding casually; that is a protected surface and requires a
+full retest.
+
+### Next Recommended Step
+
+Build the #134 first-use loop as the investor demo: install/open Home AI Elite,
+see "Your private AI is ready," ask Merlin a local question, save to a Room,
+show storage path, prove cloud is off, reopen the Room, and keep approved memory
+separate.
+
+### Local Trusted Beta Impact
+
+Positive. The repo now has a clearer market-facing product direction and a
+static smoke guard for the README promise.
+
+### Public Beta Impact
+
+Positive for strategy, but Public Beta remains blocked by brand cleanup across
+installer/dashboard, full installer retest, clean onboarding evidence, memory
+review/delete, storage visibility, export/import readiness, and 10-user
+validation.
