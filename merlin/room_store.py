@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -107,6 +108,21 @@ class RoomArchiveResult(BaseModel):
     original_room_path: str
     archived_room_path: str
     archived_at: str
+    approval_id: str
+    transcript_count: int = 0
+    summary_count: int = 0
+    master_prompt_status: str = "missing"
+    memory_written: bool = False
+    approved_memory_deleted: bool = False
+    context_reuse: str = "disabled_until_user_approved"
+    linked_memory_review: str = "not_available_requires_manual_memory_review"
+
+
+class RoomDeleteResult(BaseModel):
+    room_id: str
+    room_name: str
+    deleted_room_path: str
+    deleted_at: str
     approval_id: str
     transcript_count: int = 0
     summary_count: int = 0
@@ -551,6 +567,45 @@ def archive_room(
         original_room_path=str(room_path),
         archived_room_path=str(archive_path),
         archived_at=ts,
+        approval_id=safe_approval_id,
+        transcript_count=preview.transcript_count,
+        summary_count=preview.summary_count,
+        master_prompt_status=preview.master_prompt_status,
+    )
+
+
+def delete_room(
+    *,
+    room_id: str,
+    approval_id: str,
+    root: Path | None = None,
+    deleted_at: str | None = None,
+) -> RoomDeleteResult:
+    """Permanently delete one local Room folder after explicit approval.
+
+    This removes local Room files only. It does not delete approved memory,
+    reused context, external storage, or cloud copies.
+    """
+
+    safe_room_id = _validate_room_id(room_id)
+    safe_approval_id = _validate_text_field(approval_id, "approval_id", 120)
+    rooms_root = root or rooms_root_path()
+    room_path = rooms_root / safe_room_id
+    if not room_path.exists() or not room_path.is_dir():
+        raise FileNotFoundError("Room not found")
+
+    preview = room_archive_preview(safe_room_id, rooms_root)
+    ts = deleted_at or _utc_now()
+    try:
+        shutil.rmtree(room_path)
+    except OSError:
+        raise
+
+    return RoomDeleteResult(
+        room_id=safe_room_id,
+        room_name=preview.room_name,
+        deleted_room_path=str(room_path),
+        deleted_at=ts,
         approval_id=safe_approval_id,
         transcript_count=preview.transcript_count,
         summary_count=preview.summary_count,

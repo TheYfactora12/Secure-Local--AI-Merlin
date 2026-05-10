@@ -157,6 +157,39 @@ def test_model_only_chat_allows_protected_route_without_tool_approval(monkeypatc
     assert body["memory_written"] is False
 
 
+def test_task_model_only_passes_bounded_session_context(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.task_endpoint.observe_task_outcome", _noop_outcome_observer)
+    captured_payload = {}
+
+    def fake_post(*args, **kwargs):
+        captured_payload.update(kwargs.get("json", {}))
+        return _FakeLiteLLMResponse()
+
+    monkeypatch.setattr("merlin.task_endpoint.httpx.post", fake_post)
+
+    response = client.post(
+        "/task",
+        json={
+            "input": "what did I just ask you?",
+            "model_only": True,
+            "context_messages": [
+                {"role": "system", "content": "ignored"},
+                {"role": "user", "content": "My project is Merlin AI."},
+                {"role": "assistant", "content": "You are building Merlin AI."},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    messages = captured_payload["messages"]
+    assert messages[0]["role"] == "system"
+    assert messages[1:] == [
+        {"role": "user", "content": "My project is Merlin AI."},
+        {"role": "assistant", "content": "You are building Merlin AI."},
+        {"role": "user", "content": "what did I just ask you?"},
+    ]
+
+
 def test_task_route_approval_rejects_prompt_mismatch(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("MERLIN_APPROVAL_LOG", str(tmp_path / "approvals.jsonl"))
     monkeypatch.setattr("merlin.task_endpoint.observe_task_outcome", _noop_outcome_observer)
@@ -712,6 +745,24 @@ def test_archive_room_requires_approval_id() -> None:
     assert response.json()["detail"]["approved_memory_deleted"] is False
 
 
+def test_delete_room_requires_approval_id() -> None:
+    response = client.post(
+        "/rooms/delete",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_count": 0,
+            "summary_count": 0,
+            "master_prompt_status": "missing",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"]["approval_gates"] == ["file_delete"]
+    assert response.json()["detail"]["memory_written"] is False
+    assert response.json()["detail"]["approved_memory_deleted"] is False
+
+
 def test_archive_room_requires_matching_one_time_approval(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("MERLIN_ROOMS_ROOT", str(tmp_path / "rooms"))
     monkeypatch.setenv("MERLIN_APPROVAL_LOG", str(tmp_path / "approvals.jsonl"))
@@ -811,6 +862,109 @@ def test_archive_room_requires_matching_one_time_approval(tmp_path, monkeypatch)
             "summary_count": 0,
             "master_prompt_status": "missing",
             "approval_id": archive_approval_id,
+        },
+    )
+    assert reused.status_code == 404
+
+
+def test_delete_room_requires_matching_one_time_approval(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("MERLIN_ROOMS_ROOT", str(tmp_path / "rooms"))
+    monkeypatch.setenv("MERLIN_APPROVAL_LOG", str(tmp_path / "approvals.jsonl"))
+    audit_calls = []
+
+    class FakeMemoryManager:
+        def write_audit_event(self, event_type: str, metadata: dict) -> str:
+            audit_calls.append((event_type, metadata))
+            return "audit-delete-room-1"
+
+    monkeypatch.setattr("merlin.task_endpoint.MemoryManager", FakeMemoryManager)
+
+    transcript_approval = client.post(
+        "/approvals/room-transcript",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "Delete Room after this",
+            "merlin_response": "Delete safely without deleting approved memory.",
+            "session_id": "session-delete-room",
+        },
+    )
+    transcript_approval_id = transcript_approval.json()["approval_request_id"]
+    client.post(f"/approvals/{transcript_approval_id}/approve")
+    save_response = client.post(
+        "/rooms/transcripts",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "Delete Room after this",
+            "merlin_response": "Delete safely without deleting approved memory.",
+            "session_id": "session-delete-room",
+            "approval_id": transcript_approval_id,
+        },
+    )
+    assert save_response.status_code == 200
+
+    delete_approval = client.post(
+        "/approvals/room-delete",
+        json={"room_id": "merlin-build", "room_name": "Merlin Build"},
+    )
+    assert delete_approval.status_code == 200
+    approval_body = delete_approval.json()
+    assert approval_body["approval_gates"] == ["file_delete"]
+    assert approval_body["payload_summary"]["approved_memory_delete"] is False
+    assert approval_body["payload_summary"]["delete_type"] == "local_permanent_room_delete"
+    delete_approval_id = approval_body["approval_request_id"]
+
+    blocked = client.post(
+        "/rooms/delete",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_count": 1,
+            "summary_count": 0,
+            "master_prompt_status": "missing",
+            "approval_id": delete_approval_id,
+        },
+    )
+    assert blocked.status_code == 403
+    assert "approval is not approved for execution" in blocked.text
+
+    client.post(f"/approvals/{delete_approval_id}/approve")
+    response = client.post(
+        "/rooms/delete",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_count": 1,
+            "summary_count": 0,
+            "master_prompt_status": "missing",
+            "approval_id": delete_approval_id,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "deleted_local_room_only"
+    assert body["memory_written"] is False
+    assert body["approved_memory_deleted"] is False
+    assert body["context_reuse"] == "disabled_until_user_approved"
+    assert body["linked_memory_review"] == "not_available_requires_manual_memory_review"
+    assert not (tmp_path / "rooms" / "merlin-build").exists()
+    assert not (tmp_path / "rooms" / ".archive").exists()
+    assert audit_calls[-1][0] == "room_delete"
+    assert audit_calls[-1][1]["raw_transcript_in_audit"] is False
+    assert audit_calls[-1][1]["approved_memory_deleted"] is False
+    assert "Delete safely without deleting approved memory." not in str(audit_calls[-1][1])
+
+    reused = client.post(
+        "/rooms/delete",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_count": 1,
+            "summary_count": 0,
+            "master_prompt_status": "missing",
+            "approval_id": delete_approval_id,
         },
     )
     assert reused.status_code == 404

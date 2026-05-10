@@ -15,11 +15,12 @@ from typing import Any
 import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from merlin.approval_store import (
     ApprovalRecord,
     create_room_archive_approval,
+    create_room_delete_approval,
     create_room_master_prompt_approval,
     create_room_restore_approval,
     create_room_transcript_delete_approval,
@@ -29,6 +30,7 @@ from merlin.approval_store import (
     decide_approval,
     mark_approval_used,
     require_room_archive_approval,
+    require_room_delete_approval,
     require_room_master_prompt_approval,
     require_room_restore_approval,
     require_room_transcript_delete_approval,
@@ -43,6 +45,7 @@ from merlin.policy_engine import ApprovalRequiredError, requires_approval
 from merlin.room_store import (
     RoomArchiveResult,
     RoomCreateResult,
+    RoomDeleteResult,
     RoomMasterPromptDraftResult,
     RoomRestoreResult,
     RoomTranscriptDeleteResult,
@@ -52,6 +55,7 @@ from merlin.room_store import (
     count_room_transcripts,
     create_room,
     delete_room_transcript,
+    delete_room,
     generate_room_master_prompt_draft,
     list_archived_rooms,
     read_room_transcript,
@@ -66,6 +70,8 @@ logger = logging.getLogger(__name__)
 
 LITELLM_CHAT_COMPLETIONS_URL = "http://localhost:4000/v1/chat/completions"
 LITELLM_TIMEOUT_SECONDS = 90
+MAX_CONTEXT_MESSAGES = 8
+MAX_CONTEXT_MESSAGE_CHARS = 1200
 STACK_DIR = Path(__file__).resolve().parents[1]
 
 app = FastAPI(title="Merlin Task Endpoint")
@@ -78,11 +84,17 @@ app.add_middleware(
 TASK_TRACE_BUFFER: deque[dict[str, Any]] = deque(maxlen=50)
 
 
+class ChatContextMessage(BaseModel):
+    role: str
+    content: str
+
+
 class TaskRequest(BaseModel):
     input: str
     session_id: str | None = None
     approval_id: str | None = None
     model_only: bool = False
+    context_messages: list[ChatContextMessage] = Field(default_factory=list)
 
 
 class TaskResponse(BaseModel):
@@ -151,6 +163,11 @@ class RoomTranscriptDeleteApprovalRequest(BaseModel):
 
 
 class RoomArchiveApprovalRequest(BaseModel):
+    room_id: str
+    room_name: str | None = None
+
+
+class RoomDeleteApprovalRequest(BaseModel):
     room_id: str
     room_name: str | None = None
 
@@ -262,6 +279,31 @@ class RoomArchiveResponse(BaseModel):
     room_name: str
     archived_room_path: str
     archived_at: str
+    transcript_count: int
+    summary_count: int
+    master_prompt_status: str
+    linked_memory_review: str
+    memory_written: bool
+    approved_memory_deleted: bool
+    context_reuse: str
+    audit_id: str | None
+
+
+class RoomDeleteRequest(BaseModel):
+    room_id: str
+    room_name: str | None = None
+    transcript_count: int
+    summary_count: int
+    master_prompt_status: str
+    approval_id: str | None = None
+
+
+class RoomDeleteResponse(BaseModel):
+    status: str
+    room_id: str
+    room_name: str
+    deleted_room_path: str
+    deleted_at: str
     transcript_count: int
     summary_count: int
     master_prompt_status: str
@@ -407,13 +449,38 @@ def _route_or_block(user_input: str) -> RouteDecision:
     return decision
 
 
-def _call_litellm(system_prompt: str, user_input: str, model: str) -> str:
+def _bounded_context_messages(context_messages: list[ChatContextMessage]) -> list[dict[str, str]]:
+    bounded: list[dict[str, str]] = []
+    for message in context_messages[-MAX_CONTEXT_MESSAGES:]:
+        role = message.role.strip().lower()
+        if role not in {"user", "assistant"}:
+            continue
+        content = message.content.strip()
+        if not content:
+            continue
+        bounded.append(
+            {
+                "role": role,
+                "content": content[:MAX_CONTEXT_MESSAGE_CHARS],
+            }
+        )
+    return bounded
+
+
+def _call_litellm(
+    system_prompt: str,
+    user_input: str,
+    model: str,
+    context_messages: list[ChatContextMessage] | None = None,
+) -> str:
+    messages = [
+        {"role": "system", "content": system_prompt},
+        *_bounded_context_messages(context_messages or []),
+        {"role": "user", "content": user_input},
+    ]
     payload = {
         "model": model,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_input},
-        ],
+        "messages": messages,
         "stream": False,
     }
     response = httpx.post(
@@ -622,6 +689,36 @@ def _write_room_archive_audit(
         return None
 
 
+def _write_room_delete_audit(
+    result: RoomDeleteResult,
+    request: RoomDeleteRequest,
+) -> str | None:
+    metadata = {
+        "room_id": result.room_id,
+        "room_name": result.room_name,
+        "deleted_room_path": result.deleted_room_path,
+        "approval_id": result.approval_id,
+        "deleted_at": result.deleted_at,
+        "transcript_count": result.transcript_count,
+        "summary_count": result.summary_count,
+        "master_prompt_status": result.master_prompt_status,
+        "requested_transcript_count": request.transcript_count,
+        "requested_summary_count": request.summary_count,
+        "requested_master_prompt_status": request.master_prompt_status,
+        "memory_written": False,
+        "approved_memory_deleted": False,
+        "context_reuse": result.context_reuse,
+        "linked_memory_review": result.linked_memory_review,
+        "raw_transcript_in_audit": False,
+        "raw_master_prompt_in_audit": False,
+        "cloud_sync_default": False,
+    }
+    try:
+        return MemoryManager().write_audit_event("room_delete", metadata)
+    except Exception:
+        return None
+
+
 def _archived_room_by_id(archive_id: str):
     safe_archive_id = archive_id.strip()
     for record in list_archived_rooms():
@@ -735,7 +832,12 @@ def task(request: TaskRequest) -> TaskResponse:
     system_prompt = build_system_prompt(route)
 
     try:
-        response_text = _call_litellm(system_prompt, user_input, route.selected_model_alias)
+        response_text = _call_litellm(
+            system_prompt,
+            user_input,
+            route.selected_model_alias,
+            request.context_messages,
+        )
     except (httpx.ConnectError, httpx.TimeoutException, httpx.HTTPError, OSError):
         logger.warning("LiteLLM unavailable: input_hash=%s route_id=%s", input_hash, route.route_id)
         latency_ms = int((time.perf_counter() - started) * 1000)
@@ -1189,6 +1291,115 @@ def archive_room_endpoint(request: RoomArchiveRequest) -> RoomArchiveResponse:
         room_name=result.room_name,
         archived_room_path=result.archived_room_path,
         archived_at=result.archived_at,
+        transcript_count=result.transcript_count,
+        summary_count=result.summary_count,
+        master_prompt_status=result.master_prompt_status,
+        linked_memory_review=result.linked_memory_review,
+        memory_written=False,
+        approved_memory_deleted=False,
+        context_reuse=result.context_reuse,
+        audit_id=audit_id,
+    )
+
+
+@app.post("/approvals/room-delete", response_model=RoomTranscriptApprovalResponse)
+def create_room_delete_approval_endpoint(
+    request: RoomDeleteApprovalRequest,
+) -> RoomTranscriptApprovalResponse:
+    try:
+        preview = room_archive_preview(request.room_id)
+        record = create_room_delete_approval(
+            room_id=preview.room_id,
+            room_name=request.room_name or preview.room_name,
+            transcript_count=preview.transcript_count,
+            summary_count=preview.summary_count,
+            master_prompt_status=preview.master_prompt_status,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return _approval_response(record)
+
+
+@app.post("/rooms/delete", response_model=RoomDeleteResponse)
+def delete_room_endpoint(request: RoomDeleteRequest) -> RoomDeleteResponse:
+    approval_id = (request.approval_id or "").strip()
+    if not approval_id:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": "Deleting a whole Room requires explicit approval.",
+                "approval_gates": ["file_delete"],
+                "memory_written": False,
+                "approved_memory_deleted": False,
+                "context_reuse": "disabled_until_user_approved",
+                "linked_memory_review": "not_available_requires_manual_memory_review",
+            },
+        )
+
+    try:
+        preview = room_archive_preview(request.room_id)
+        if preview.transcript_count != int(request.transcript_count):
+            raise PermissionError("Room transcript count changed after delete approval was prepared")
+        if preview.summary_count != int(request.summary_count):
+            raise PermissionError("Room summary count changed after delete approval was prepared")
+        if preview.master_prompt_status != request.master_prompt_status:
+            raise PermissionError("Room Master Prompt status changed after delete approval was prepared")
+        require_room_delete_approval(
+            approval_id=approval_id,
+            room_id=preview.room_id,
+            room_name=request.room_name or preview.room_name,
+            transcript_count=preview.transcript_count,
+            summary_count=preview.summary_count,
+            master_prompt_status=preview.master_prompt_status,
+        )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": str(exc),
+                "approval_gates": ["file_delete"],
+                "memory_written": False,
+                "approved_memory_deleted": False,
+                "context_reuse": "disabled_until_user_approved",
+                "linked_memory_review": "not_available_requires_manual_memory_review",
+            },
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    try:
+        result = delete_room(
+            room_id=request.room_id,
+            approval_id=approval_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "Room could not be deleted locally.",
+                "error": exc.__class__.__name__,
+            },
+        ) from exc
+
+    audit_id = _write_room_delete_audit(result, request)
+    try:
+        mark_approval_used(approval_id)
+    except KeyError:
+        pass
+    return RoomDeleteResponse(
+        status="deleted_local_room_only",
+        room_id=result.room_id,
+        room_name=result.room_name,
+        deleted_room_path=result.deleted_room_path,
+        deleted_at=result.deleted_at,
         transcript_count=result.transcript_count,
         summary_count=result.summary_count,
         master_prompt_status=result.master_prompt_status,

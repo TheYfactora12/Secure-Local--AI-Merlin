@@ -79,10 +79,18 @@ grep -q "Archive Room" "$DASHBOARD_FILE" \
   || fail "Rooms table must expose one-time whole-Room archive action"
 grep -q "function prepareRoomArchive" "$DASHBOARD_FILE" \
   || fail "Rooms surface must prepare whole-Room archive approval"
+grep -q "function prepareRoomRemoval" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must prepare whole-Room delete approval"
 grep -q "function prepareRoomRestore" "$DASHBOARD_FILE" \
   || fail "Rooms surface must prepare whole-Room restore approval"
+grep -q "Whole Room delete approval" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must show whole-Room delete approval card"
 grep -q "Archived Room restore approval" "$DASHBOARD_FILE" \
   || fail "Rooms surface must show whole-Room restore approval card"
+grep -q "/approvals/room-delete" "$DASHBOARD_FILE" \
+  || fail "dashboard missing whole-Room delete approval path"
+grep -q "/rooms/delete" "$DASHBOARD_FILE" \
+  || fail "dashboard missing approved whole-Room delete path"
 grep -q "/approvals/room-restore" "$DASHBOARD_FILE" \
   || fail "dashboard missing whole-Room restore approval path"
 grep -q "/rooms/restore" "$DASHBOARD_FILE" \
@@ -93,6 +101,8 @@ grep -q "Approved memory is not deleted" "$DASHBOARD_FILE" \
   || fail "Rooms archive flow must warn that approved memory is not deleted"
 grep -q "No Room files were moved" "$DASHBOARD_FILE" \
   || fail "Rooms archive cancel path must fail closed"
+grep -q "No Room files were deleted" "$DASHBOARD_FILE" \
+  || fail "Rooms delete cancel path must fail closed"
 grep -q "Ask Merlin first. Save becomes available after a safe local response returns" "$DASHBOARD_FILE" \
   || fail "Rooms table save action must fail closed before Merlin responds"
 grep -q "selectTab('chat')" "$DASHBOARD_FILE" \
@@ -189,8 +199,11 @@ for required in \
   "POST http://localhost:8766/rooms/archive" \
   "POST http://localhost:8766/approvals/room-restore" \
   "POST http://localhost:8766/rooms/restore" \
+  "POST http://localhost:8766/approvals/room-delete" \
+  "POST http://localhost:8766/rooms/delete" \
   "local reversible archive" \
   "local reversible restore" \
+  "local permanent Room delete" \
   "approved memory is not deleted" \
   "deletes one saved transcript/session inside a Room" \
   "The approval is marked used after the local read" \
@@ -220,6 +233,10 @@ grep -q "/approvals/room-restore" "$DASHBOARD_FILE" \
   || fail "dashboard missing whole-Room restore approval path"
 grep -q "/rooms/restore" "$DASHBOARD_FILE" \
   || fail "dashboard missing approved whole-Room restore path"
+grep -q "/approvals/room-delete" "$DASHBOARD_FILE" \
+  || fail "dashboard missing whole-Room delete approval path"
+grep -q "/rooms/delete" "$DASHBOARD_FILE" \
+  || fail "dashboard missing approved whole-Room delete path"
 grep -q "Allow once to reopen saved chat" "$DASHBOARD_FILE" \
   || fail "Rooms surface must expose one-time saved chat reopen approval"
 grep -q "Delete this saved transcript" "$DASHBOARD_FILE" \

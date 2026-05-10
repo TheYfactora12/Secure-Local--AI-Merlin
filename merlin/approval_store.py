@@ -179,6 +179,32 @@ def room_archive_payload_hash(
     )
 
 
+def room_delete_payload_hash(
+    *,
+    room_id: str,
+    room_name: str | None,
+    transcript_count: int,
+    summary_count: int,
+    master_prompt_status: str,
+) -> str:
+    return stable_hash(
+        {
+            "action": "room_delete",
+            "version": 1,
+            "room_id": room_id.strip(),
+            "room_name": (room_name or "").strip(),
+            "transcript_count": int(transcript_count),
+            "summary_count": int(summary_count),
+            "master_prompt_status": master_prompt_status.strip(),
+            "delete_type": "local_permanent_room_delete",
+            "memory_write": False,
+            "approved_memory_delete": False,
+            "context_reuse": "disabled_until_user_approved",
+            "linked_memory_review": "not_available_requires_manual_memory_review",
+        }
+    )
+
+
 def room_restore_payload_hash(
     *,
     archive_id: str,
@@ -459,6 +485,49 @@ def create_room_archive_approval(
     return record
 
 
+def create_room_delete_approval(
+    *,
+    room_id: str,
+    room_name: str | None,
+    transcript_count: int,
+    summary_count: int,
+    master_prompt_status: str,
+    path: Path | None = None,
+) -> ApprovalRecord:
+    payload_hash = room_delete_payload_hash(
+        room_id=room_id,
+        room_name=room_name,
+        transcript_count=transcript_count,
+        summary_count=summary_count,
+        master_prompt_status=master_prompt_status,
+    )
+    record = ApprovalRecord(
+        approval_request_id=f"approval_room_delete_{uuid.uuid4().hex[:12]}",
+        timestamp=now_iso(),
+        status="required_pending",
+        action="room_delete",
+        approval_gates=["file_delete"],
+        payload_hash=payload_hash,
+        payload_summary={
+            "room_id": room_id.strip(),
+            "room_name": (room_name or "").strip(),
+            "transcript_count": int(transcript_count),
+            "summary_count": int(summary_count),
+            "master_prompt_status": master_prompt_status.strip(),
+            "raw_content_in_approval": False,
+            "memory_write": False,
+            "approved_memory_delete": False,
+            "context_reuse": "disabled_until_user_approved",
+            "linked_memory_review": "not_available_requires_manual_memory_review",
+            "delete_type": "local_permanent_room_delete",
+        },
+        side_effects="local_room_delete_after_approval",
+        tool_execution="local_file_delete_after_approval",
+    )
+    _append_record(record, path)
+    return record
+
+
 def create_room_restore_approval(
     *,
     archive_id: str,
@@ -680,6 +749,35 @@ def require_room_archive_approval(
     )
     if current.payload_hash != expected:
         raise PermissionError("approval payload hash does not match Room archive payload")
+    return current
+
+
+def require_room_delete_approval(
+    *,
+    approval_id: str,
+    room_id: str,
+    room_name: str | None,
+    transcript_count: int,
+    summary_count: int,
+    master_prompt_status: str,
+    path: Path | None = None,
+) -> ApprovalRecord:
+    current = latest_approval(approval_id, path)
+    if current is None:
+        raise PermissionError("approval id not found")
+    if current.status != "approved" or not current.execution_allowed:
+        raise PermissionError("approval is not approved for execution")
+    if current.action != "room_delete":
+        raise PermissionError("approval action does not match Room delete")
+    expected = room_delete_payload_hash(
+        room_id=room_id,
+        room_name=room_name,
+        transcript_count=transcript_count,
+        summary_count=summary_count,
+        master_prompt_status=master_prompt_status,
+    )
+    if current.payload_hash != expected:
+        raise PermissionError("approval payload hash does not match Room delete payload")
     return current
 
 

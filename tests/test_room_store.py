@@ -3,6 +3,7 @@ from __future__ import annotations
 from merlin.room_store import (
     archive_room,
     create_room,
+    delete_room,
     delete_room_transcript,
     generate_room_master_prompt_draft,
     list_archived_rooms,
@@ -316,6 +317,41 @@ def test_archive_room_moves_room_to_local_archive_without_memory(tmp_path) -> No
     assert archived_path.is_dir()
     assert (archived_path / "transcripts" / f"{saved.transcript_id}.md").exists()
     assert "approved_memory_deleted: false" in (archived_path / "archive.md").read_text(encoding="utf-8")
+
+
+def test_delete_room_removes_local_room_folder_without_memory_delete(tmp_path) -> None:
+    saved = save_room_transcript(
+        room_id="merlin-build",
+        room_name="Merlin Build",
+        user_input="Delete this project room",
+        merlin_response="Delete only the local Room files.",
+        session_id="session-delete",
+        approval_id="approval-save",
+        root=tmp_path,
+        created_at="2026-05-10T13:00:00+00:00",
+    )
+    prompt_dir = tmp_path / "merlin-build" / "master-prompts"
+    prompt_dir.mkdir(exist_ok=True)
+    (prompt_dir / "master-prompt.md").write_text("draft prompt", encoding="utf-8")
+
+    result = delete_room(
+        room_id="merlin-build",
+        approval_id="approval-delete-room",
+        root=tmp_path,
+        deleted_at="2026-05-10T14:30:00+00:00",
+    )
+
+    assert result.room_id == "merlin-build"
+    assert result.room_name == "Merlin Build"
+    assert result.transcript_count == 1
+    assert result.master_prompt_status == "draft"
+    assert result.memory_written is False
+    assert result.approved_memory_deleted is False
+    assert result.context_reuse == "disabled_until_user_approved"
+    assert result.linked_memory_review == "not_available_requires_manual_memory_review"
+    assert not (tmp_path / "merlin-build").exists()
+    assert not (tmp_path / "merlin-build" / "transcripts" / f"{saved.transcript_id}.md").exists()
+    assert not (tmp_path / ".archive").exists()
 
 
 def test_restore_archived_room_moves_room_back_without_context_reuse(tmp_path) -> None:

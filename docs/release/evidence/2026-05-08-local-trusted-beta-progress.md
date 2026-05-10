@@ -10884,6 +10884,198 @@ Positive, but Public Beta remains blocked by full installer retest,
 restore-from-archive, memory review/delete, approve-for-context, and clean
 onboarding evidence.
 
+## 2026-05-10 - Chat Session Context And Whole-Room Delete
+
+### Date/time
+
+2026-05-10T23:03:56Z
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`28e545609394b4ec3032fd6ffc3b1c6bdafa084b`
+
+### Ending Commit SHA
+
+Uncommitted working tree at evidence capture time.
+
+### Target Issues
+
+- #135 Merlin Rooms for local chat history and scoped context.
+- #106 Wizard HQ Product Shell.
+- #95 release-readiness evidence.
+
+### Scope
+
+Fix active Merlin Chat continuity so the local model sees recent in-session
+turns without writing memory, and add an approval-gated whole-Room delete path
+for local Room folders.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `merlin/approval_store.py`
+- `merlin/room_store.py`
+- `merlin/task_endpoint.py`
+- `tests/dashboard-native-chat-smoke.sh`
+- `tests/dashboard-rooms-smoke.sh`
+- `tests/test_room_store.py`
+- `tests/test_task_endpoint.py`
+- `docs/release/evidence/assets/2026-05-10-chat-context-room-delete-qa/*`
+- release evidence note
+
+### Protected Files Touched
+
+- `merlin/task_endpoint.py`
+
+Reason: the Task API owns policy-gated chat, Room save/delete/archive/restore,
+and the boundary between model-only conversation and execution-aware routes.
+No installer, package, uninstall, router, policy engine, or memory manager files
+were changed.
+
+### Commands Run
+
+- `python3 -m py_compile merlin/task_endpoint.py`
+- `python3 -m py_compile merlin/room_store.py merlin/approval_store.py merlin/task_endpoint.py`
+- `.venv-test/bin/python -m pytest tests/test_task_endpoint.py::test_task_model_only_passes_bounded_session_context tests/test_task_endpoint.py::test_model_only_chat_allows_protected_route_without_tool_approval`
+- `.venv-test/bin/python -m pytest tests/test_room_store.py::test_delete_room_removes_local_room_folder_without_memory_delete tests/test_task_endpoint.py::test_delete_room_requires_approval_id tests/test_task_endpoint.py::test_delete_room_requires_matching_one_time_approval`
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/merlin-task-api-smoke.sh`
+- `bash tests/dashboard-browser-qa-smoke.sh`
+- `.venv-test/bin/python scripts/dashboard-browser-qa.py --output-dir docs/release/evidence/assets/2026-05-10-chat-context-room-delete-qa`
+- `git diff --check`
+- `bash scripts/merlin-task-api.sh restart`
+- `bash scripts/merlin-task-api.sh status`
+- `curl -sS --max-time 45 -H 'Content-Type: application/json' -d '{"input":"write a python function","model_only":true,"context_messages":[{"role":"user","content":"my favorite color is teal"},{"role":"assistant","content":"I will remember that within this chat only."}]}' http://127.0.0.1:8766/task`
+- `curl -sS --max-time 20 -H 'Content-Type: application/json' -d '{"room_id":"merlin-build","room_name":"Merlin Build"}' http://127.0.0.1:8766/approvals/room-delete`
+- `curl -sS --max-time 20 -H 'Content-Type: application/json' -d '{"room_id":"merlin-build","room_name":"Merlin Build","transcript_count":0,"summary_count":0,"master_prompt_status":"missing"}' http://127.0.0.1:8766/rooms/delete`
+
+### Test Output Summary
+
+- Python compile checks: PASS.
+- Focused chat session context tests: PASS, 2 passed.
+- Focused Room delete tests: PASS, 3 passed.
+- Full Room/Task pytest suite: PASS, 51 passed.
+- Dashboard native chat smoke: PASS.
+- Dashboard Rooms smoke: PASS.
+- Task API lifecycle smoke: PASS.
+- Browser QA harness smoke: PASS.
+- Browser QA live screenshot run: PASS; evidence written to
+  `docs/release/evidence/assets/2026-05-10-chat-context-room-delete-qa/`.
+- Whitespace check: PASS.
+- Live model-only curl after stable Task API start: PASS; coding-style prompt
+  returned a local model answer and used prior in-session context (`teal`)
+  without writing memory.
+- Live `/rooms/delete` without approval: PASS fail-closed with `file_delete`.
+- Live `/approvals/room-delete`: PASS redacted metadata approval created.
+
+### Tests Skipped And Why
+
+Full clean installer retest was not run. This slice changes Wizard HQ and Task
+API behavior, so full installer retest remains required before Local Trusted
+Beta signoff.
+
+### Failures Found
+
+1. User review showed active Merlin Chat did not remember prior messages within
+   the same browser session.
+2. Immediate live `curl` after Task API restart failed with connection refused,
+   even though the manager had printed `status: started`.
+3. User review showed there was transcript delete and archive/restore, but no
+   actual whole-Room delete function.
+
+### Failure Category
+
+- Wizard HQ/dashboard.
+- Task API 8766.
+- UX/readiness confusion.
+- Test design gap.
+- Room lifecycle gap.
+
+### Root Cause Or Current Hypothesis
+
+The dashboard stored `currentChatTranscript` for display and Room saves, but it
+only sent the latest prompt to `/task`. The Task API restart manager can report
+started after a health check, but immediate parallel probes may still race the
+listener during restart. Whole-Room delete had intentionally been deferred while
+archive/restore matured, leaving the UI unable to remove an unwanted Room
+folder.
+
+### Fix Applied
+
+- Added bounded `context_messages` to `TaskRequest`.
+- Added bounded user/assistant context injection into LiteLLM payloads.
+- Added `currentChatContextMessages()` in Wizard HQ and passed recent session
+  context to `/task` for model-only chat.
+- Added regression coverage that invalid roles are ignored and prior turns are
+  sent before the latest user prompt.
+- Added `RoomDeleteResult`, local Room folder deletion, redacted
+  `room_delete` approval hash, approval creation/validation, Task API approval
+  and execution endpoints, and audit metadata.
+- Added Wizard HQ one-time Room delete approval card, cancel path, and Rooms
+  table action.
+- Updated Rooms architecture docs and dashboard smokes.
+
+### Retest Result
+
+PASS after fixes. The Task API restart race was worked around by verifying
+stable `status: running` before live curls. The lifecycle remains a release
+readiness watch item.
+
+### Regression Test Added Or Updated
+
+- `tests/test_task_endpoint.py`
+- `tests/test_room_store.py`
+- `tests/dashboard-native-chat-smoke.sh`
+- `tests/dashboard-rooms-smoke.sh`
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended #135 child issue:
+
+**Title:** `v3.1 Rooms: improve Task API restart readiness and add Room detail view`
+
+Scope: make `scripts/merlin-task-api.sh restart` wait until the listener remains
+healthy for multiple probes; add a dedicated Room detail page for many
+transcripts, summaries, draft master prompts, delete/archive/restore, and future
+approved context reuse.
+
+### Lesson Learned
+
+Display state is not model context. Merlin needs a temporary local session
+context path for ordinary conversation, and a separate explicit Room save path
+for durable project memory. Room deletion must be different from archive and
+must say exactly what it deletes.
+
+### What Not To Repeat Next Time
+
+Do not assume an in-browser transcript is automatically included in model calls.
+Do not mark a service restart stable from a single health check when the user is
+about to test the browser. Do not use archive as a substitute for delete.
+
+### Next Recommended Step
+
+Evaluate the user's cleaner mock chat through the Steve Jobs/UI engineer/end
+user lens, then apply only minimal UI reductions that improve first-use clarity.
+
+### Local Trusted Beta Impact
+
+Positive. Active chat now has temporary continuity, Room deletion is explicit
+and approval-gated, and local-first/no-memory-write boundaries remain visible.
+Local Trusted Beta signoff still requires full installer retest.
+
+### Public Beta Impact
+
+Positive, but Public Beta remains blocked by full clean installer evidence,
+Room detail polish, approved context reuse, memory review/delete, onboarding
+screenshots, and clean-machine validation.
+
 ## 2026-05-10 - Room Restore, Chat Model-Only Path, And Room Create Guard
 
 ### Date/time

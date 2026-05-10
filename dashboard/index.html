@@ -2455,6 +2455,7 @@ let pendingRoomRead = null;
 let pendingTranscriptRemoval = null;
 let pendingRoomArchive = null;
 let pendingRoomRestore = null;
+let pendingRoomRemoval = null;
 let pendingSimilarRoomName = null;
 let pendingSimilarRoomMatch = null;
 let currentChatTranscript = [];
@@ -2922,6 +2923,46 @@ async function prepareRoomArchive(roomId, roomName, transcriptCount, summaryCoun
   }
 }
 
+async function prepareRoomRemoval(roomId, roomName, transcriptCount, summaryCount, masterPromptStatus) {
+  selectActiveRoom(roomId, roomName, true);
+  pendingRoomRemoval = null;
+  renderChatOutput({
+    state: 'pending',
+    title: 'delete Room',
+    body: `Prepare a one-time delete approval for ${safe(roomName, roomId)}. Merlin will permanently remove the local Room folder after approval. Approved memory is not deleted.`,
+    mode: selectedChatMode,
+  });
+  try {
+    const data = await postJson(`${TASK_API}/approvals/room-delete`, {
+      room_id: roomId,
+      room_name: roomName,
+    });
+    const summary = data.payload_summary || {};
+    pendingRoomRemoval = {
+      roomId,
+      roomName,
+      transcriptCount: Number(summary.transcript_count ?? transcriptCount ?? 0),
+      summaryCount: Number(summary.summary_count ?? summaryCount ?? 0),
+      masterPromptStatus: safe(summary.master_prompt_status || masterPromptStatus || 'missing', 'missing'),
+      linkedMemoryReview: safe(summary.linked_memory_review || 'not_available_requires_manual_memory_review'),
+      approvalId: data.approval_request_id,
+    };
+    renderChatOutput({
+      state: 'pending',
+      title: 'delete approval prepared',
+      body: `Allow once to permanently delete ${safe(roomName, roomId)} from local Rooms. This removes Room files only; approved memory is not deleted.`,
+      mode: selectedChatMode,
+    });
+  } catch (error) {
+    renderChatOutput({
+      state: 'degraded',
+      title: 'delete unavailable',
+      body: `Merlin could not prepare the Room delete approval. Detail: ${safe(error && error.message, 'unknown error')}`,
+      mode: selectedChatMode,
+    });
+  }
+}
+
 async function prepareRoomRestore(archiveId, roomId, roomName, transcriptCount, summaryCount, masterPromptStatus) {
   pendingRoomRestore = null;
   selectTab('chat');
@@ -3070,6 +3111,13 @@ function savedTranscriptEntries(userText, merlinText, roomName) {
     reopened: true,
     title: 'saved Room chat',
   }));
+}
+
+function currentChatContextMessages() {
+  return currentChatTranscript.slice(-4).flatMap(exchange => ([
+    { role: 'user', content: String(exchange.userInput || '').slice(0, 1200) },
+    { role: 'assistant', content: String(exchange.merlinResponse || '').slice(0, 1200) },
+  ])).filter(message => message.content.trim());
 }
 
 function updateLastMerlinExchangeFromTranscript(sessionId) {
@@ -3485,6 +3533,22 @@ function roomRestoreApprovalCardHtml() {
   `;
 }
 
+function roomRemovalApprovalCardHtml() {
+  if (!pendingRoomRemoval) return '';
+  return `
+    <div class="approval-card" aria-label="Whole Room delete approval">
+      <strong>Delete this Room?</strong>
+      <p>Merlin will permanently delete this local Room folder. It will not delete approved memory, write memory, approve context reuse, or call a cloud service.</p>
+      <div class="approval-actions">
+        <button type="button" onclick="allowRoomRemoval()">Allow once</button>
+        <button class="locked" type="button" onclick="openPermanentApprovalSettings('whole Room delete')">Don't ask again</button>
+        <button class="secondary" type="button" onclick="cancelRoomRemoval()">Cancel</button>
+      </div>
+      <p>Room: ${escapeHtml(pendingRoomRemoval.roomName)} · transcripts: ${escapeHtml(pendingRoomRemoval.transcriptCount)} · summaries: ${escapeHtml(pendingRoomRemoval.summaryCount)} · master prompt: ${escapeHtml(pendingRoomRemoval.masterPromptStatus)} · linked memory review: ${escapeHtml(pendingRoomRemoval.linkedMemoryReview)}</p>
+    </div>
+  `;
+}
+
 function roomApprovalUnavailableCopy(error) {
   const message = safe(error && error.message, 'unknown error');
   if (message === 'Not Found' || message.includes('returned 404')) {
@@ -3512,6 +3576,7 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
   const showTranscriptRemovalApproval = state === 'pending' && Boolean(pendingTranscriptRemoval);
   const showRoomArchiveApproval = state === 'pending' && Boolean(pendingRoomArchive);
   const showRoomRestoreApproval = state === 'pending' && Boolean(pendingRoomRestore);
+  const showRoomRemovalApproval = state === 'pending' && Boolean(pendingRoomRemoval);
   const showRoomSave = allowRoomSave
     && state === 'approved'
     && !degraded
@@ -3558,6 +3623,7 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
         ${showTranscriptRemovalApproval ? transcriptRemovalApprovalCardHtml() : ''}
         ${showRoomArchiveApproval ? roomArchiveApprovalCardHtml() : ''}
         ${showRoomRestoreApproval ? roomRestoreApprovalCardHtml() : ''}
+        ${showRoomRemovalApproval ? roomRemovalApprovalCardHtml() : ''}
       </div>
     </div>
   ` : '';
@@ -3836,6 +3902,52 @@ async function allowRoomRestore() {
   }
 }
 
+async function allowRoomRemoval() {
+  if (!pendingRoomRemoval) return;
+  const request = pendingRoomRemoval;
+  renderChatOutput({
+    state: 'pending',
+    title: 'deleting Room',
+    body: 'Merlin is deleting the approved local Room folder. Approved memory is not deleted.',
+    mode: selectedChatMode,
+  });
+  try {
+    await postJson(`${TASK_API}/approvals/${encodeURIComponent(request.approvalId)}/approve`, {});
+    const data = await postJson(`${TASK_API}/rooms/delete`, {
+      room_id: request.roomId,
+      room_name: request.roomName,
+      transcript_count: request.transcriptCount,
+      summary_count: request.summaryCount,
+      master_prompt_status: request.masterPromptStatus,
+      approval_id: request.approvalId,
+    });
+    pendingRoomRemoval = null;
+    currentChatSavedRoomId = null;
+    currentChatSavedTranscriptTitle = null;
+    currentChatSavedExchangeCount = 0;
+    if (selectedRoomId === request.roomId) {
+      selectedRoomId = DEFAULT_ROOM_ID;
+      selectedRoomName = DEFAULT_ROOM_NAME;
+    }
+    renderChatOutput({
+      state: 'pending',
+      title: 'Room deleted',
+      body: `Deleted ${safe(data.room_name, request.roomName)} locally. Approved memory was not deleted, and Room context reuse remains disabled.`,
+      mode: selectedChatMode,
+    });
+    await loadRooms();
+    await loadMemory();
+  } catch (error) {
+    pendingRoomRemoval = null;
+    renderChatOutput({
+      state: 'degraded',
+      title: 'delete failed',
+      body: `Merlin could not delete the Room. Detail: ${safe(error && error.message, 'unknown error')}`,
+      mode: selectedChatMode,
+    });
+  }
+}
+
 async function cancelRoomRestore() {
   if (!pendingRoomRestore) return;
   const approvalId = pendingRoomRestore.approvalId;
@@ -3850,6 +3962,23 @@ async function cancelRoomRestore() {
     await postJson(`${TASK_API}/approvals/${encodeURIComponent(approvalId)}/deny`, {});
   } catch (_) {
     // The UI has already failed closed by clearing the pending restore approval.
+  }
+}
+
+async function cancelRoomRemoval() {
+  if (!pendingRoomRemoval) return;
+  const approvalId = pendingRoomRemoval.approvalId;
+  pendingRoomRemoval = null;
+  renderChatOutput({
+    state: 'pending',
+    title: 'Room delete canceled',
+    body: 'No Room files were deleted. Approved memory was not touched.',
+    mode: selectedChatMode,
+  });
+  try {
+    await postJson(`${TASK_API}/approvals/${encodeURIComponent(approvalId)}/deny`, {});
+  } catch (_) {
+    // The UI has already failed closed by clearing the pending delete approval.
   }
 }
 
@@ -3998,7 +4127,11 @@ async function submitMerlinChat(event) {
     const response = await fetch(`${TASK_API}/task`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ input: userInput, model_only: true }),
+      body: JSON.stringify({
+        input: userInput,
+        model_only: true,
+        context_messages: currentChatContextMessages(),
+      }),
       signal: AbortSignal.timeout(TASK_REQUEST_TIMEOUT_MS),
     });
     const data = await response.json().catch(() => ({}));
@@ -4240,6 +4373,7 @@ function roomReviewTableHtml(data) {
             <button class="room-table-action ${canSave ? '' : 'secondary'}" type="button" onclick="saveCurrentChatToRoom(${jsArg(roomId)}, ${jsArg(roomName)})">${canSave ? 'Save current chat' : 'Save after Merlin responds'}</button>
             ${transcriptAction}
             <button class="room-table-action secondary" type="button" onclick="prepareRoomArchive(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(transcriptCount)}, ${jsArg(summaryCount)}, ${jsArg(masterPromptStatus)})">Archive Room</button>
+            <button class="room-table-action secondary" type="button" onclick="prepareRoomRemoval(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(transcriptCount)}, ${jsArg(summaryCount)}, ${jsArg(masterPromptStatus)})">Delete Room</button>
           </div>
         </td>
       </tr>

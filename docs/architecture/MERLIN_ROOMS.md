@@ -175,10 +175,11 @@ The Room Review Table is metadata-only. It may let the user open a Room in
 Merlin Chat, start the existing one-time save approval for the latest safe
 Merlin response, reopen the latest saved transcript through the one-time read
 approval, delete one saved transcript through the one-time delete approval, or
-archive a whole Room through the one-time archive approval. It must not show raw
-transcript bodies, approve Room context reuse, hard-delete a whole Room, or
-bypass the Task API approval lifecycle. Whole-Room archive is a local reversible
-archive; approved memory is not deleted.
+archive/restore/delete a whole Room through separate one-time approvals. It
+must not show raw transcript bodies, approve Room context reuse, bypass the Task
+API approval lifecycle, or imply approved memory was deleted. Whole-Room archive
+is a local reversible archive; whole-Room delete is a local permanent Room
+delete for the Room folder only; approved memory is not deleted.
 
 The Room creation surface should stay one or two clicks from the right outcome:
 name the Room, then either create it or pick the suggested existing Room if the
@@ -257,7 +258,7 @@ transcript save target before the approval flow.
 It does not save degraded/blocked responses, does not index the Room for future
 context, does not approve Room Master Prompts for context reuse, does not persist
 reference policy, and does not write approved memory.
-It also does not hard-delete or rename Rooms from chat yet.
+It also does not rename Rooms from chat yet.
 
 Current implementation exposes an approval-gated whole-Room archive path:
 
@@ -286,6 +287,22 @@ one-time approval. This is a local reversible restore. It does not read raw
 transcripts, restore approved memory, write memory, approve Room context reuse,
 or call a model. The approval is marked used after the local restore, so Merlin
 asks again next time.
+
+Current implementation also exposes a separate approval-gated whole-Room delete
+path:
+
+```text
+POST http://localhost:8766/approvals/room-delete
+POST http://localhost:8766/rooms/delete
+```
+
+This permanently deletes the selected local Room folder after a one-time
+approval. This is a local permanent Room delete, not a reversible archive. The
+approval payload includes metadata only: Room id/name, transcript count, summary
+count, Room Master Prompt status, and linked-memory review state. It does not
+read raw transcripts, delete approved memory, write memory, approve Room context
+reuse, or call a model. The approval is marked used after the local delete, so
+Merlin asks again next time.
 
 The `approval_id` must come from the Task API approval lifecycle:
 

@@ -151,6 +151,10 @@ grep -q "chat-active" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must collapse the hero after chat starts"
 grep -q "currentChatTranscript" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must keep the active session transcript in browser state"
+grep -q "context_messages: currentChatContextMessages()" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must pass bounded in-session context to the Task API"
+grep -q "function currentChatContextMessages" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat missing bounded session context builder"
 grep -q "formatTranscriptSide" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must save the full in-session thread to Room transcripts"
 grep -q "savedTranscriptEntries" "$DASHBOARD_FILE" \
