@@ -1,9 +1,8 @@
-"""Read-only Merlin Rooms manifest helpers.
+"""Merlin Rooms manifest and local transcript helpers.
 
-Rooms are local chat/project context containers. This first #135 runtime slice
-does not write transcripts, indexes, or memory. It only discovers a configured
-Rooms root and any existing Room folders with a `room.md` metadata file so
-Wizard HQ can show honest state before save-to-Room support exists.
+Rooms are local chat/project context containers. Transcript and Room Master
+Prompt writes are explicit local file operations; neither path writes approved
+memory or enables Room context retrieval.
 """
 
 from __future__ import annotations
@@ -30,6 +29,7 @@ class RoomRecord(BaseModel):
     transcript_count: int = 0
     transcripts: list["RoomTranscriptRecord"] = Field(default_factory=list)
     summary_count: int = 0
+    master_prompt: "RoomMasterPromptRecord | None" = None
     reference_policy: str = "no_room_context"
     memory_extraction: str = "requires_approval"
 
@@ -53,6 +53,29 @@ class RoomTranscriptSaveResult(BaseModel):
     bytes_written: int
     memory_extraction: str = "not_performed_requires_separate_approval"
     approved_memory_written: bool = False
+
+
+class RoomMasterPromptRecord(BaseModel):
+    status: str = "missing"
+    path: str | None = None
+    size_bytes: int = 0
+    modified_at: str | None = None
+    source_transcript_count: int = 0
+    approved_for_context: bool = False
+    raw_content_loaded: bool = False
+
+
+class RoomMasterPromptDraftResult(BaseModel):
+    room_id: str
+    room_name: str
+    status: str
+    master_prompt_path: str
+    generated_at: str
+    source_transcript_count: int
+    approval_id: str
+    bytes_written: int
+    approved_for_context: bool = False
+    memory_written: bool = False
 
 
 def brain_root_path() -> Path:
@@ -95,6 +118,27 @@ def _file_modified_at(path: Path) -> str | None:
         return datetime.fromtimestamp(path.stat().st_mtime, UTC).isoformat()
     except OSError:
         return None
+
+
+def master_prompt_path(room_path: Path) -> Path:
+    return room_path / "master-prompts" / "master-prompt.md"
+
+
+def room_master_prompt_record(room_path: Path) -> RoomMasterPromptRecord:
+    prompt_path = master_prompt_path(room_path)
+    if not prompt_path.exists() or not prompt_path.is_file():
+        return RoomMasterPromptRecord(status="missing")
+    try:
+        size_bytes = prompt_path.stat().st_size
+    except OSError:
+        size_bytes = 0
+    return RoomMasterPromptRecord(
+        status="draft",
+        path=str(prompt_path),
+        size_bytes=size_bytes,
+        modified_at=_file_modified_at(prompt_path),
+        source_transcript_count=_count_markdown_files(room_path / "transcripts"),
+    )
 
 
 def list_room_transcripts(room_path: Path, limit: int = 5) -> list[RoomTranscriptRecord]:
@@ -165,6 +209,7 @@ def list_rooms(root: Path | None = None) -> list[RoomRecord]:
                 transcript_count=_count_markdown_files(child / "transcripts"),
                 transcripts=list_room_transcripts(child),
                 summary_count=_count_markdown_files(child / "summaries"),
+                master_prompt=room_master_prompt_record(child),
             )
         )
     return rooms
@@ -175,6 +220,12 @@ def _validate_room_id(room_id: str) -> str:
     if not _safe_room_id(normalized):
         raise ValueError("room_id must be a safe slug: letters, numbers, dot, underscore, or dash")
     return normalized
+
+
+def count_room_transcripts(room_id: str, root: Path | None = None) -> int:
+    safe_room_id = _validate_room_id(room_id)
+    rooms_root = root or rooms_root_path()
+    return _count_markdown_files(rooms_root / safe_room_id / "transcripts")
 
 
 def _validate_text_field(value: str, field_name: str, max_length: int) -> str:
@@ -281,6 +332,148 @@ def save_room_transcript(
     )
 
 
+def _read_text_limited(path: Path, max_chars: int = 6000) -> str:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+    return text[:max_chars]
+
+
+def _strip_frontmatter(text: str) -> str:
+    if not text.startswith("---"):
+        return text.strip()
+    parts = text.split("---", 2)
+    if len(parts) == 3:
+        return parts[2].strip()
+    return text.strip()
+
+
+def _extract_section(text: str, heading: str) -> str:
+    marker = f"## {heading}"
+    if marker not in text:
+        return ""
+    after = text.split(marker, 1)[1]
+    for next_heading in ("\n## ", "\n# "):
+        if next_heading in after:
+            after = after.split(next_heading, 1)[0]
+    return after.strip()
+
+
+def _compact_line(text: str, max_chars: int = 420) -> str:
+    compact = " ".join(text.split())
+    if len(compact) <= max_chars:
+        return compact
+    return compact[: max_chars - 1].rstrip() + "..."
+
+
+def generate_room_master_prompt_draft(
+    *,
+    room_id: str,
+    room_name: str | None,
+    approval_id: str,
+    root: Path | None = None,
+    generated_at: str | None = None,
+    transcript_limit: int = 8,
+) -> RoomMasterPromptDraftResult:
+    """Generate a local Room Master Prompt draft from saved transcripts.
+
+    This is deterministic local file synthesis. It does not call a model, does
+    not approve context reuse, and does not write global approved memory.
+    """
+
+    safe_room_id = _validate_room_id(room_id)
+    safe_room_name = _validate_text_field(room_name or safe_room_id.replace("-", " ").title(), "room_name", 120)
+    safe_approval_id = _validate_text_field(approval_id, "approval_id", 120)
+    ts = generated_at or _utc_now()
+
+    rooms_root = root or rooms_root_path()
+    room_path = rooms_root / safe_room_id
+    transcripts = list_room_transcripts(room_path, limit=transcript_limit)
+    if not transcripts:
+        raise ValueError("Room Master Prompt requires at least one saved transcript")
+
+    transcript_blocks: list[str] = []
+    for record in reversed(transcripts):
+        transcript_text = _strip_frontmatter(_read_text_limited(Path(record.path)))
+        user_text = _compact_line(_extract_section(transcript_text, "User") or transcript_text)
+        merlin_text = _compact_line(_extract_section(transcript_text, "Merlin"))
+        transcript_blocks.append(
+            "\n".join(
+                [
+                    f"### Transcript: {record.transcript_id}",
+                    "",
+                    f"- User intent: {user_text or 'not available'}",
+                    f"- Merlin response signal: {merlin_text or 'not available'}",
+                ]
+            )
+        )
+
+    prompt_path = master_prompt_path(room_path)
+    tmp_path = prompt_path.with_suffix(".tmp")
+    content = "\n".join(
+        [
+            "---",
+            f"room_id: {safe_room_id}",
+            f"name: {safe_room_name}",
+            "status: draft",
+            f"generated_at: {ts}",
+            f"approval_id: {safe_approval_id}",
+            f"source_transcript_count: {len(transcripts)}",
+            "approved_for_context: false",
+            "memory_written: false",
+            "context_reuse: disabled_until_user_approved",
+            "---",
+            "",
+            "# Room Master Prompt Draft",
+            "",
+            "## Purpose",
+            "",
+            f"This prompt condenses the local `{safe_room_name}` Room into scoped context for Merlin. It is a draft and must be reviewed before reuse.",
+            "",
+            "## Operating Boundary",
+            "",
+            "- Use this Room context only when the user selects this Room.",
+            "- Do not share this context with other Rooms unless the user explicitly enables sharing.",
+            "- Do not treat this draft as approved memory.",
+            "- Do not infer secrets or private facts that are not present in the Room.",
+            "",
+            "## Current Room Signals",
+            "",
+            *transcript_blocks,
+            "",
+            "## Review Checklist",
+            "",
+            "- Remove anything that should not be reused.",
+            "- Add durable goals, preferences, terminology, and decisions only after user review.",
+            "- Approve context reuse separately from transcript storage.",
+            "",
+        ]
+    )
+
+    try:
+        prompt_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path.write_text(content, encoding="utf-8")
+        tmp_path.replace(prompt_path)
+    except OSError:
+        try:
+            tmp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise
+
+    return RoomMasterPromptDraftResult(
+        room_id=safe_room_id,
+        room_name=safe_room_name,
+        status="draft",
+        master_prompt_path=str(prompt_path),
+        generated_at=ts,
+        source_transcript_count=len(transcripts),
+        approval_id=safe_approval_id,
+        bytes_written=len(content.encode("utf-8")),
+    )
+
+
 def room_manifest() -> dict[str, Any]:
     brain_root = brain_root_path()
     rooms_root = rooms_root_path()
@@ -306,6 +499,9 @@ def room_manifest() -> dict[str, Any]:
         "browser_file_controls_enabled": False,
         "browser_save_controls_enabled": False,
         "save_to_room_policy": "backend_approval_required",
+        "master_prompt_enabled": False,
+        "master_prompt_draft_api_enabled": True,
+        "master_prompt_policy": "draft_requires_backend_approval_context_reuse_disabled",
         "tracked_issue": "#135",
         "rooms": [room.model_dump() for room in rooms],
         "total": len(rooms),

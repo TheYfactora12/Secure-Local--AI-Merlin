@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-from merlin.room_store import list_room_transcripts, list_rooms, room_manifest, save_room_transcript
+from merlin.room_store import (
+    generate_room_master_prompt_draft,
+    list_room_transcripts,
+    list_rooms,
+    room_manifest,
+    save_room_transcript,
+)
 
 
 def test_room_manifest_defaults_to_read_only_no_context(monkeypatch, tmp_path) -> None:
@@ -18,6 +24,9 @@ def test_room_manifest_defaults_to_read_only_no_context(monkeypatch, tmp_path) -
     assert manifest["save_to_room_enabled"] is False
     assert manifest["save_to_room_api_enabled"] is True
     assert manifest["save_to_room_policy"] == "backend_approval_required"
+    assert manifest["master_prompt_enabled"] is False
+    assert manifest["master_prompt_draft_api_enabled"] is True
+    assert manifest["master_prompt_policy"] == "draft_requires_backend_approval_context_reuse_disabled"
     assert manifest["memory_extraction_enabled"] is False
     assert manifest["cloud_sync_default"] is False
     assert manifest["browser_file_controls_enabled"] is False
@@ -46,6 +55,9 @@ def test_list_rooms_discovers_metadata_without_reading_transcripts(tmp_path) -> 
     assert record.transcripts[0].transcript_id == "2026-05-09"
     assert record.transcripts[0].raw_content_loaded is False
     assert record.summary_count == 1
+    assert record.master_prompt is not None
+    assert record.master_prompt.status == "missing"
+    assert record.master_prompt.raw_content_loaded is False
     assert record.reference_policy == "no_room_context"
     assert record.memory_extraction == "requires_approval"
     assert "raw chat stays local" not in record.model_dump_json()
@@ -150,3 +162,57 @@ def test_save_room_transcript_requires_approval_id(tmp_path) -> None:
         assert "approval_id must not be empty" in str(exc)
     else:
         raise AssertionError("approval_id must be required")
+
+
+def test_generate_room_master_prompt_draft_requires_transcript(tmp_path) -> None:
+    try:
+        generate_room_master_prompt_draft(
+            room_id="merlin-build",
+            room_name="Merlin Build",
+            approval_id="approval-1",
+            root=tmp_path,
+        )
+    except ValueError as exc:
+        assert "requires at least one saved transcript" in str(exc)
+    else:
+        raise AssertionError("Room Master Prompt draft must require saved transcripts")
+
+
+def test_generate_room_master_prompt_draft_writes_local_draft_without_memory(tmp_path) -> None:
+    save_room_transcript(
+        room_id="merlin-build",
+        room_name="Merlin Build",
+        user_input="We need an Apple-like local AI chat.",
+        merlin_response="Focus on Rooms, local context, and approval-gated memory.",
+        session_id="session-1",
+        approval_id="approval-transcript-1",
+        root=tmp_path,
+        created_at="2026-05-09T12:00:00+00:00",
+    )
+
+    result = generate_room_master_prompt_draft(
+        room_id="merlin-build",
+        room_name="Merlin Build",
+        approval_id="approval-master-1",
+        root=tmp_path,
+        generated_at="2026-05-09T13:00:00+00:00",
+    )
+    prompt_path = tmp_path / "merlin-build" / "master-prompts" / "master-prompt.md"
+    prompt_text = prompt_path.read_text(encoding="utf-8")
+    records = list_rooms(tmp_path)
+
+    assert result.status == "draft"
+    assert result.master_prompt_path == str(prompt_path)
+    assert result.source_transcript_count == 1
+    assert result.memory_written is False
+    assert result.approved_for_context is False
+    assert "status: draft" in prompt_text
+    assert "approved_for_context: false" in prompt_text
+    assert "memory_written: false" in prompt_text
+    assert "context_reuse: disabled_until_user_approved" in prompt_text
+    assert "Use this Room context only when the user selects this Room." in prompt_text
+    assert "We need an Apple-like local AI chat." in prompt_text
+    assert records[0].master_prompt is not None
+    assert records[0].master_prompt.status == "draft"
+    assert records[0].master_prompt.raw_content_loaded is False
+    assert "We need an Apple-like local AI chat." not in records[0].model_dump_json()

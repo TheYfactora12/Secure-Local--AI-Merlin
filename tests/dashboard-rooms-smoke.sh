@@ -26,6 +26,8 @@ grep -q "rooms-manifest-panel" "$DASHBOARD_FILE" \
   || fail "dashboard missing Rooms manifest panel"
 grep -q "Saving the latest chat uses the backend approval lifecycle and writes local Markdown only" "$DASHBOARD_FILE" \
   || fail "Rooms manifest must describe approval-gated local save behavior"
+grep -q "Room Master Prompt drafts require a separate backend approval and are not approved context" "$DASHBOARD_FILE" \
+  || fail "Rooms manifest must describe approval-gated Room Master Prompt drafts"
 grep -q "Save latest chat to Room" "$DASHBOARD_FILE" \
   || fail "Rooms surface must expose latest-chat Room save surface"
 grep -q "Prepare Room save" "$DASHBOARD_FILE" \
@@ -87,6 +89,8 @@ grep -q "Save current chat" "$DASHBOARD_FILE" \
   || fail "Rooms page must show save-to-Room state"
 grep -q "backend approval required" "$DASHBOARD_FILE" \
   || fail "Rooms save flow must require backend approval"
+grep -q "draft approval required" "$DASHBOARD_FILE" \
+  || fail "Rooms page must show Room Master Prompt draft approval state"
 grep -q "Latest transcripts" "$DASHBOARD_FILE" \
   || fail "Rooms surface must show read-only transcript metadata"
 grep -q "raw hidden" "$DASHBOARD_FILE" \
@@ -99,7 +103,11 @@ grep -q "must show linked memory" "$DASHBOARD_FILE" \
 for required in \
   "A saved transcript does not become approved memory automatically" \
   "Room Master Prompt" \
-  "does **not** generate Room Master Prompts yet" \
+  "POST http://localhost:8766/approvals/room-master-prompt" \
+  "POST http://localhost:8766/rooms/master-prompt-drafts" \
+  "approved_for_context: false" \
+  "context_reuse: disabled_until_user_approved" \
+  "This is a local draft only" \
   "Prompt-Based Room Management" \
   "Show an approval card in Merlin Chat asking, \"Are you sure?\"" \
   "Delete this Room" \

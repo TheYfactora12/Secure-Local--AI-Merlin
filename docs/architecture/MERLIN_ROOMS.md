@@ -149,6 +149,7 @@ Install-time setup creates the default local folder layout:
   room.md
   transcripts/
   summaries/
+  master-prompts/
   index/
 ```
 
@@ -175,15 +176,16 @@ The manifest reports:
 - save-to-Room locked state,
 - backend save-to-Room approval requirement,
 - memory extraction locked state,
-- Room Master Prompt generation not active yet,
+- Room Master Prompt draft state,
+- Room Master Prompt draft approval requirement,
 - cloud sync default off,
 - browser file controls disabled.
 
 Discovery requires a safe Room folder name and a `room.md` metadata file. The
-endpoint may return transcript ids, file paths, byte counts, and modified
-timestamps for already-saved local transcripts. It does not read or return raw
-transcript content, create folders, write transcripts, index content, or extract
-memory.
+endpoint may return transcript ids, file paths, byte counts, modified
+timestamps for already-saved local transcripts, and Room Master Prompt draft
+metadata. It does not read or return raw transcript content, raw Room Master
+Prompt content, index content, extract memory, or approve context reuse.
 
 Current implementation also exposes an approval-gated write path:
 
@@ -209,8 +211,8 @@ reference policy. It only makes the selected Room visible as the explicit
 transcript save target before the approval flow.
 
 It does not save degraded/blocked responses, does not index the Room for future
-context, does not generate Room Master Prompts, does not persist reference
-policy, and does not write approved memory.
+context, does not approve Room Master Prompts for context reuse, does not persist
+reference policy, and does not write approved memory.
 It also does not delete, rename, or archive Rooms from chat yet.
 
 The `approval_id` must come from the Task API approval lifecycle:
@@ -225,6 +227,37 @@ The approval request stores a redacted payload hash and Room/session metadata.
 It does not store raw user input or raw Merlin response text. The transcript
 save endpoint re-computes the payload hash and rejects approvals that are still
 pending, denied, missing, or bound to different transcript content.
+
+Current implementation also exposes a separate approval-gated Room Master Prompt
+draft path:
+
+```text
+POST http://localhost:8766/approvals/room-master-prompt
+POST http://localhost:8766/rooms/master-prompt-drafts
+```
+
+The approval endpoint counts the current saved transcripts for the Room and
+creates a redacted approval record with `file_write`. It does not include raw
+transcript text. The draft endpoint requires an approved matching approval id,
+verifies that the source transcript count did not change after approval
+preparation, and writes:
+
+```text
+~/Merlin/brain/rooms/<room-id>/master-prompts/master-prompt.md
+```
+
+The draft file is local Markdown with frontmatter:
+
+```yaml
+status: draft
+approved_for_context: false
+memory_written: false
+context_reuse: disabled_until_user_approved
+```
+
+This is a local draft only. It is not approved memory, it is not automatically
+used as Room context, and it is not shared across Rooms. A future review screen
+must let the user edit/approve it before Merlin may use it as scoped context.
 
 ## Runtime Work To Split
 

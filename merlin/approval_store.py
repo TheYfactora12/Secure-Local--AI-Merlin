@@ -72,6 +72,25 @@ def room_transcript_payload_hash(
     )
 
 
+def room_master_prompt_payload_hash(
+    *,
+    room_id: str,
+    room_name: str | None,
+    source_transcript_count: int,
+) -> str:
+    return stable_hash(
+        {
+            "action": "room_master_prompt_draft",
+            "version": 1,
+            "room_id": room_id.strip(),
+            "room_name": (room_name or "").strip(),
+            "source_transcript_count": int(source_transcript_count),
+            "memory_write": False,
+            "context_reuse": "disabled_until_user_approved",
+        }
+    )
+
+
 def _append_record(record: ApprovalRecord, path: Path | None = None) -> None:
     approval_log = path or approval_log_path()
     approval_log.parent.mkdir(parents=True, exist_ok=True)
@@ -139,6 +158,38 @@ def create_room_transcript_approval(
     return record
 
 
+def create_room_master_prompt_approval(
+    *,
+    room_id: str,
+    room_name: str | None,
+    source_transcript_count: int,
+    path: Path | None = None,
+) -> ApprovalRecord:
+    payload_hash = room_master_prompt_payload_hash(
+        room_id=room_id,
+        room_name=room_name,
+        source_transcript_count=source_transcript_count,
+    )
+    record = ApprovalRecord(
+        approval_request_id=f"approval_room_master_prompt_{uuid.uuid4().hex[:12]}",
+        timestamp=now_iso(),
+        status="required_pending",
+        action="room_master_prompt_draft",
+        approval_gates=["file_write"],
+        payload_hash=payload_hash,
+        payload_summary={
+            "room_id": room_id.strip(),
+            "room_name": (room_name or "").strip(),
+            "source_transcript_count": int(source_transcript_count),
+            "raw_content_in_approval": False,
+            "memory_write": False,
+            "context_reuse": "disabled_until_user_approved",
+        },
+    )
+    _append_record(record, path)
+    return record
+
+
 def decide_approval(approval_id: str, status: str, path: Path | None = None) -> ApprovalRecord:
     if status not in {"approved", "denied"}:
         raise ValueError("approval decision must be approved or denied")
@@ -187,4 +238,29 @@ def require_room_transcript_approval(
     )
     if current.payload_hash != expected:
         raise PermissionError("approval payload hash does not match transcript payload")
+    return current
+
+
+def require_room_master_prompt_approval(
+    *,
+    approval_id: str,
+    room_id: str,
+    room_name: str | None,
+    source_transcript_count: int,
+    path: Path | None = None,
+) -> ApprovalRecord:
+    current = latest_approval(approval_id, path)
+    if current is None:
+        raise PermissionError("approval id not found")
+    if current.status != "approved" or not current.execution_allowed:
+        raise PermissionError("approval is not approved for execution")
+    if current.action != "room_master_prompt_draft":
+        raise PermissionError("approval action does not match Room Master Prompt draft")
+    expected = room_master_prompt_payload_hash(
+        room_id=room_id,
+        room_name=room_name,
+        source_transcript_count=source_transcript_count,
+    )
+    if current.payload_hash != expected:
+        raise PermissionError("approval payload hash does not match Room Master Prompt payload")
     return current

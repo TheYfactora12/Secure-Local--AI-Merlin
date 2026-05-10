@@ -19,15 +19,23 @@ from pydantic import BaseModel
 
 from merlin.approval_store import (
     ApprovalRecord,
+    create_room_master_prompt_approval,
     create_room_transcript_approval,
     decide_approval,
+    require_room_master_prompt_approval,
     require_room_transcript_approval,
 )
 from merlin.memory_manager import MemoryManager
 from merlin.outcome_observer import observe_task_outcome
 from merlin.persona_injector import build_system_prompt
 from merlin.policy_engine import ApprovalRequiredError, requires_approval
-from merlin.room_store import RoomTranscriptSaveResult, save_room_transcript
+from merlin.room_store import (
+    RoomMasterPromptDraftResult,
+    RoomTranscriptSaveResult,
+    count_room_transcripts,
+    generate_room_master_prompt_draft,
+    save_room_transcript,
+)
 from merlin.router import RouteDecision, route_task
 
 
@@ -96,6 +104,30 @@ class RoomTranscriptApprovalResponse(BaseModel):
     execution_allowed: bool
     payload_hash: str
     payload_summary: dict[str, Any]
+
+
+class RoomMasterPromptApprovalRequest(BaseModel):
+    room_id: str
+    room_name: str | None = None
+
+
+class RoomMasterPromptDraftRequest(BaseModel):
+    room_id: str
+    room_name: str | None = None
+    source_transcript_count: int
+    approval_id: str | None = None
+
+
+class RoomMasterPromptDraftResponse(BaseModel):
+    status: str
+    room_id: str
+    room_name: str
+    master_prompt_path: str
+    audit_id: str | None
+    source_transcript_count: int
+    memory_written: bool
+    approved_for_context: bool
+    context_reuse: str
 
 
 class ApprovalDecisionResponse(BaseModel):
@@ -275,6 +307,32 @@ def _write_room_transcript_audit(result: RoomTranscriptSaveResult, request: Room
         return None
 
 
+def _write_room_master_prompt_audit(
+    result: RoomMasterPromptDraftResult,
+    request: RoomMasterPromptDraftRequest,
+) -> str | None:
+    metadata = {
+        "room_id": result.room_id,
+        "room_name": result.room_name,
+        "master_prompt_path": result.master_prompt_path,
+        "approval_id": result.approval_id,
+        "generated_at": result.generated_at,
+        "source_transcript_count": result.source_transcript_count,
+        "requested_source_transcript_count": request.source_transcript_count,
+        "bytes_written": result.bytes_written,
+        "approved_for_context": result.approved_for_context,
+        "memory_written": result.memory_written,
+        "context_reuse": "disabled_until_user_approved",
+        "raw_prompt_in_audit": False,
+        "raw_transcript_in_audit": False,
+        "cloud_sync_default": False,
+    }
+    try:
+        return MemoryManager().write_audit_event("room_master_prompt_draft", metadata)
+    except Exception:
+        return None
+
+
 @app.post("/task", response_model=TaskResponse)
 def task(request: TaskRequest) -> TaskResponse:
     started = time.perf_counter()
@@ -450,6 +508,95 @@ def create_room_transcript_approval_endpoint(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return _approval_response(record)
+
+
+@app.post("/approvals/room-master-prompt", response_model=RoomTranscriptApprovalResponse)
+def create_room_master_prompt_approval_endpoint(
+    request: RoomMasterPromptApprovalRequest,
+) -> RoomTranscriptApprovalResponse:
+    try:
+        source_transcript_count = count_room_transcripts(request.room_id)
+        if source_transcript_count < 1:
+            raise ValueError("Room Master Prompt requires at least one saved transcript")
+        record = create_room_master_prompt_approval(
+            room_id=request.room_id,
+            room_name=request.room_name,
+            source_transcript_count=source_transcript_count,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return _approval_response(record)
+
+
+@app.post("/rooms/master-prompt-drafts", response_model=RoomMasterPromptDraftResponse)
+def generate_room_master_prompt_draft_endpoint(
+    request: RoomMasterPromptDraftRequest,
+) -> RoomMasterPromptDraftResponse:
+    approval_id = (request.approval_id or "").strip()
+    if not approval_id:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": "Generating a Room Master Prompt draft requires explicit approval.",
+                "approval_gates": ["file_write"],
+                "context_reuse": "disabled_until_user_approved",
+                "memory_written": False,
+            },
+        )
+
+    try:
+        current_count = count_room_transcripts(request.room_id)
+        if current_count != int(request.source_transcript_count):
+            raise PermissionError("source transcript count changed after approval was prepared")
+        require_room_master_prompt_approval(
+            approval_id=approval_id,
+            room_id=request.room_id,
+            room_name=request.room_name,
+            source_transcript_count=request.source_transcript_count,
+        )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": str(exc),
+                "approval_gates": ["file_write"],
+                "context_reuse": "disabled_until_user_approved",
+                "memory_written": False,
+            },
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    try:
+        result = generate_room_master_prompt_draft(
+            room_id=request.room_id,
+            room_name=request.room_name,
+            approval_id=approval_id,
+            transcript_limit=request.source_transcript_count,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "Room Master Prompt draft could not be written locally.",
+                "error": exc.__class__.__name__,
+            },
+        ) from exc
+
+    audit_id = _write_room_master_prompt_audit(result, request)
+    return RoomMasterPromptDraftResponse(
+        status="draft_saved_local_only",
+        room_id=result.room_id,
+        room_name=result.room_name,
+        master_prompt_path=result.master_prompt_path,
+        audit_id=audit_id,
+        source_transcript_count=result.source_transcript_count,
+        memory_written=False,
+        approved_for_context=False,
+        context_reuse="disabled_until_user_approved",
+    )
 
 
 @app.post("/approvals/{approval_id}/approve", response_model=ApprovalDecisionResponse)

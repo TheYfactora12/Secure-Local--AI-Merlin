@@ -7907,3 +7907,168 @@ preserving no-context defaults.
 ### Public Beta Impact
 
 Positive, but still needs live visual/browser evidence.
+
+---
+
+## 2026-05-10 00:18 EDT - #135 Room Master Prompt Draft Foundation
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`56ea31a688cc800492d5b246447c96e03256f8f7`
+
+### Ending Commit SHA
+
+Pending commit at time of note.
+
+### Target Issues
+
+- #135 Merlin Rooms
+- #123 Offline local brain and user-owned context store support path
+- #31/#32 memory approval/delete safety boundaries, not directly implemented
+
+### Scope
+
+Add the first local-only Room Master Prompt draft path. This lets Merlin prepare
+a Room-scoped prompt from saved local transcripts after a backend approval. The
+draft is not approved memory, not context-enabled, not shared across Rooms, and
+not generated from browser-side file controls.
+
+### Files Changed
+
+- `merlin/approval_store.py`
+- `merlin/room_store.py`
+- `merlin/task_endpoint.py`
+- `dashboard/index.html`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `tests/dashboard-rooms-smoke.sh`
+- `tests/test_room_store.py`
+- `tests/test_task_endpoint.py`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `merlin/task_endpoint.py` - touched to add policy-gated Room Master Prompt
+  endpoints on 8766 only.
+
+No installer files, uninstall files, policy files, memory manager write paths,
+or 8765 read-only status API behavior were changed.
+
+### Commands Run
+
+```bash
+.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py
+.venv-test/bin/python -m pytest tests/test_status_extension.py tests/test_room_store.py tests/test_task_endpoint.py
+bash tests/dashboard-rooms-smoke.sh
+bash tests/dashboard-native-chat-smoke.sh
+bash tests/dashboard-tabs-smoke.sh
+bash tests/dashboard-merlin-status-smoke.sh
+bash tests/merlin-brain-layout-smoke.sh
+git diff --check
+```
+
+### Test Output Summary
+
+- `tests/test_room_store.py tests/test_task_endpoint.py` - 27 passed.
+- `tests/test_status_extension.py tests/test_room_store.py tests/test_task_endpoint.py` - 57 passed.
+- `bash tests/dashboard-rooms-smoke.sh` - PASS.
+- `bash tests/dashboard-native-chat-smoke.sh` - PASS.
+- `bash tests/dashboard-tabs-smoke.sh` - PASS.
+- `bash tests/dashboard-merlin-status-smoke.sh` - PASS.
+- `bash tests/merlin-brain-layout-smoke.sh` - PASS.
+- `git diff --check` - PASS.
+
+### Tests Skipped And Why
+
+- Full installer retest: still required before Local Trusted Beta signoff
+  because earlier work changed `install.sh`, but this slice did not change
+  installer/package behavior.
+- Live browser click-through: not run in this backend/doc/status slice. Needed
+  before UX signoff on the Room Master Prompt review UI.
+- Live Ollama/LiteLLM/Qdrant checks: not required; Room Master Prompt draft
+  generation is deterministic local file synthesis and does not call a model.
+
+### Failures Found
+
+No command failures in this slice.
+
+### Failure Category
+
+No new command failure. The underlying user-reported product gap remains:
+saved Room transcripts need a clear path toward reusable scoped context without
+silent memory writes.
+
+### Root Cause Or Current Hypothesis
+
+Rooms could save transcript history, but there was no approved intermediate
+artifact that could later become scoped context. Jumping directly from transcript
+save to memory/context would violate the no-silent-memory-write rule.
+
+### Fix Applied
+
+- Added Room Master Prompt approval hashing and approval creation.
+- Added Room Master Prompt draft approval enforcement.
+- Added deterministic local draft generation under
+  `master-prompts/master-prompt.md`.
+- Added 8766 endpoints:
+  - `POST /approvals/room-master-prompt`
+  - `POST /rooms/master-prompt-drafts`
+- Added dashboard read-only status for Room Master Prompt draft state.
+- Updated Rooms architecture doc to distinguish transcript storage, draft prompt
+  generation, approved memory, and future context reuse.
+
+### Retest Result
+
+PASS for all commands listed above.
+
+### Regression Tests Added Or Updated
+
+- `tests/test_room_store.py` verifies draft generation requires transcripts,
+  writes local Markdown, stays `approved_for_context: false`, and does not leak
+  raw content in manifest records.
+- `tests/test_task_endpoint.py` verifies approval is required, pending approvals
+  fail closed, approved drafts write local files, audit metadata excludes raw
+  content, and context reuse remains disabled.
+- `tests/dashboard-rooms-smoke.sh` verifies visible Room Master Prompt draft
+  state and approval-gated copy.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended under #135:
+
+- Add Wizard HQ review UI for `master-prompts/master-prompt.md`.
+- Add approval-gated "approve for Room context" flow after review/edit.
+- Add prompt-based Room delete/archive intent with an approval card and linked
+  memory/master-prompt warning.
+- Add browser automation for Room save -> Master Prompt draft -> review screen.
+
+### Lesson Learned
+
+Room transcripts should not become context directly. The safer bridge is:
+transcript history -> local draft prompt -> user review/edit -> separate context
+approval.
+
+### What Not To Repeat Next Time
+
+Do not make saved chat history reusable context by implication. Do not expose raw
+Room content in approval payloads, status manifests, or audit metadata.
+
+### Next Recommended Step
+
+Build the Wizard HQ Room Master Prompt review surface: show draft metadata,
+open/review local draft safely, and keep "approve for context" locked until a
+separate backend policy gate exists.
+
+### Local Trusted Beta Impact
+
+Positive. Merlin now has a clearer, auditable path from local chat history to a
+future scoped Room brain without silent memory writes.
+
+### Public Beta Impact
+
+Positive, but public beta still needs full installer retest, live browser
+evidence, and the Room Master Prompt review/approval UX before making context
+reuse claims.

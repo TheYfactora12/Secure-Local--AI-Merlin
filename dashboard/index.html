@@ -1647,7 +1647,7 @@ button.mode-pill:hover {
       </article>
       <article class="surface-card wide">
         <h3>Rooms Manifest</h3>
-        <p>Merlin reads existing local Room metadata from the Task API. Saving the latest chat uses the backend approval lifecycle and writes local Markdown only.</p>
+        <p>Merlin reads existing local Room metadata from the Task API. Saving the latest chat uses the backend approval lifecycle and writes local Markdown only. Room Master Prompt drafts require a separate backend approval and are not approved context.</p>
         <div id="rooms-manifest-panel" class="status-list">
           <div class="status-pill"><strong>Rooms manifest</strong><span>checking</span></div>
           <div class="status-pill"><strong>Save to Room</strong><span class="locked">locked until Task API write gate</span></div>
@@ -1688,6 +1688,7 @@ button.mode-pill:hover {
         <div class="status-list">
           <div class="status-pill"><strong>Save current chat</strong><span class="locked">approval required</span></div>
           <div class="status-pill"><strong>Memory extraction</strong><span class="locked">separate approval</span></div>
+          <div class="status-pill"><strong>Room Master Prompt</strong><span class="locked">draft approval required</span></div>
           <div class="status-pill"><strong>Delete Room</strong><span class="locked">must show linked memory</span></div>
         </div>
       </article>
@@ -2754,11 +2755,16 @@ async function loadRooms() {
           <span>${escapeHtml(transcript.size_bytes || 0)} bytes · raw hidden</span>
         </div>
       `).join('');
+      const masterPrompt = room.master_prompt || {};
       return `
         <button class="mini-control ${active ? 'active' : ''}" type="button" onclick="openRoomInChat(${jsArg(roomId)}, ${jsArg(roomName)})" aria-pressed="${active ? 'true' : 'false'}">
           <strong>${escapeHtml(roomName)}</strong>
-          <span>Open in Chat · ${escapeHtml(room.reference_policy || 'no_room_context')} · transcripts: ${escapeHtml(room.transcript_count || 0)} · memory: ${escapeHtml(room.memory_extraction || 'requires_approval')}</span>
+          <span>Open in Chat · ${escapeHtml(room.reference_policy || 'no_room_context')} · transcripts: ${escapeHtml(room.transcript_count || 0)} · memory: ${escapeHtml(room.memory_extraction || 'requires_approval')} · master prompt: ${escapeHtml(masterPrompt.status || 'missing')}</span>
         </button>
+        <div class="status-pill">
+          <strong>Room Master Prompt</strong>
+          <span>${escapeHtml(masterPrompt.status || 'missing')} · context reuse disabled until approved · raw hidden</span>
+        </div>
         ${transcripts ? `<div class="readonly-note"><strong>Latest transcripts</strong>${transcripts}</div>` : ''}
       `;
     }).join('');
@@ -2768,6 +2774,7 @@ async function loadRooms() {
       <div class="status-pill"><strong>Active Room</strong><span>${data.active_room ? escapeHtml(data.active_room) : 'not selected'}</span></div>
       <div class="status-pill"><strong>Reference policy</strong><span>${escapeHtml(data.reference_policy || 'no_room_context')}</span></div>
       <div class="status-pill"><strong>Save to Room</strong><span class="locked">${data.save_to_room_api_enabled ? 'backend approval required' : 'locked until Task API write gate'}</span></div>
+      <div class="status-pill"><strong>Room Master Prompt</strong><span class="locked">${data.master_prompt_draft_api_enabled ? 'draft approval required' : 'locked'}</span></div>
       <div class="status-pill"><strong>Memory extraction</strong><span class="locked">${data.memory_extraction_enabled ? 'enabled' : 'requires approve/edit/deny'}</span></div>
       <div class="readonly-note"><strong>Room launcher</strong><p>Select a Room to jump back to Merlin Chat. The Room tag scopes transcript saves to that Room; future context retrieval remains Room-only unless explicit sharing is enabled.</p>${roomRows || '<div class="status-pill"><strong>Existing Rooms</strong><span>none discovered</span></div>'}</div>
     `;
