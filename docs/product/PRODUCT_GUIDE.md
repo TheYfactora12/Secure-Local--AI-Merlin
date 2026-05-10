@@ -6,7 +6,7 @@
 
 ## The One-Sentence Version
 
-Merlin AI is a **local-first AI operating system** you install on your own Mac or Linux machine that gives you your own private AI brain, model router, memory vault, and command center — with zero required subscriptions and zero data leaving your hardware unless you explicitly say so.
+Merlin AI is a **local-first AI workspace** you install on your own Mac or Linux machine that gives you Merlin Chat, local Rooms, approved memory, model routing, and Wizard HQ visibility — with zero required subscriptions and zero data leaving your hardware unless you explicitly say so.
 
 ---
 
@@ -42,11 +42,12 @@ Merlin AI is not one app. It is a **stack of purpose-built components** orchestr
 
 Merlin is the AI control plane that sits above all these services. It is not a chatbot. It is the decision layer that decides **which model runs, which staff mode activates, whether an action needs approval, and what gets written to memory**.
 
-The commercial direction is to evolve Merlin into a private AI control plane
-for owned AI infrastructure: Wizard HQ as the primary product shell, Chat as the
-user entry point, Brains as model and provider options, Memory as an approved
-vault, Agents as supervised workers, Security as policy/audit visibility, and
-System as honest local readiness.
+The commercial direction is to first make Merlin a private AI workspace for
+sensitive work: Wizard HQ as the primary product shell, Chat as the user entry
+point, Rooms as local project/history containers, Brains as model and provider
+options, Memory as an approved vault, Security as policy/audit visibility, and
+System as honest local readiness. After this loop is useful, Merlin can evolve
+into a broader private AI control plane for owned AI infrastructure.
 Future milestones add AI asset inventory, identity/trust graph, access reviews,
 monitoring signals, DLP-style gates, governance evidence, and only later a
 Merlin-native workflow runtime. See
@@ -132,7 +133,19 @@ Perplexica + SearXNG give you AI-powered search with no tracking. Your queries s
 
 OpenHands, when enabled via the `coding` profile, can read your codebase, write files, and run terminal commands. It uses Docker socket access, which is why it's gated behind explicit profile selection and approval. It's the most powerful — and most dangerous — capability in the stack.
 
-### 8. Show You Everything in Wizard HQ
+### 8. Save Local Chat History Into Rooms
+
+Wizard HQ Merlin Chat now keeps bounded session context for the current chat
+and can save useful chat sessions to local Rooms under `~/Merlin/brain/rooms`
+after explicit approval. Saved Room transcripts can be reopened or deleted with
+one-time approvals. Whole Rooms can be archived, restored, or deleted through
+separate approval-gated paths.
+
+Room transcripts are local Markdown history. They are not approved memory, not
+automatically reused as model context across Rooms, and not synced to cloud by
+default.
+
+### 9. Show You Everything in Wizard HQ
 
 Wizard HQ at `localhost:8888` is the Merlin product hub. Today it opens the
 current local chat bridge at `localhost:3000`, while Merlin owns routing,

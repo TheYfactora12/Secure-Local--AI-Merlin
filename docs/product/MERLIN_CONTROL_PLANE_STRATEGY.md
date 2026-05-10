@@ -8,10 +8,33 @@ current repository state. It is not a claim that all future controls exist
 today. Current-state behavior remains governed by
 `docs/CANONICAL_PROJECT_STATE.md`.
 
+## Market Wedge
+
+Merlin's market value is not "an enterprise AI governance suite" on day one.
+That is too broad for the current product and too easy for buyers to dismiss as
+unfinished.
+
+The near-term wedge is narrower and stronger:
+
+> Merlin is a private local AI memory workspace for sensitive work: chat,
+> Rooms, approved memory, visible storage, and proof that cloud is off by
+> default.
+
+This wedge matters because buyers already understand the pain:
+
+- normal chat apps lose project continuity,
+- cloud AI is risky for sensitive work,
+- local model tools feel technical and fragmented,
+- users cannot easily see where memory lives or what the AI remembered,
+- regulated users need evidence before they trust AI with real data.
+
+The product earns the right to become a control plane only after the local
+brain loop is useful.
+
 ## Direction
 
-Merlin AI should evolve from a local-first AI stack into a private AI control
-plane:
+Merlin AI should evolve from a local-first AI memory workspace into a private AI
+control plane:
 
 - a Merlin-native Wizard HQ front door,
 - Merlin Chat as the default conversation surface,
@@ -27,13 +50,12 @@ plane:
 - governance evidence and reports,
 - optional native automation runtime after workflows prove the shape.
 
-The strongest wedge is not "another chatbot" and not "a pile of AI tools." The
-wedge is a private AI that remembers the user's work in local Rooms, lets the
-user choose what becomes durable memory, and makes local models, optional cloud
-providers, agents, and automation visible and governable from one command
-center. Cloud providers remain optional connectors, never defaults. In roadmap
-terms, cloud providers are optional future/connector scope, not the core
-product loop.
+The strongest wedge is not "another chatbot," not "a pile of AI tools," and not
+"AI firewall" before the controls exist. The wedge is a private AI that
+remembers the user's work in local Rooms, lets the user choose what becomes
+durable memory, and proves local/private execution in normal language. Cloud
+connectors remain optional, never defaults. In roadmap terms, cloud providers
+are optional future/connector scope, not the core product loop.
 
 ## Validated Market Signals
 
@@ -69,19 +91,25 @@ Reference URLs:
 Current Merlin has the foundation for this direction:
 
 - protected installer, uninstall, upgrade, and local package paths,
-- Wizard HQ static dashboard with Merlin-native tab shell,
+- Wizard HQ dashboard with Merlin-native tab shell and Merlin Chat,
 - local Ollama, LiteLLM, Open WebUI, Qdrant, optional n8n, optional OpenHands,
 - read-only status API on port 8765,
 - execution-aware task API on port 8766,
 - Merlin Staff Core routing, policy gates, persona injection, and memory manager,
+- bounded in-session Merlin Chat context,
+- local Rooms under `~/Merlin/brain/rooms`,
+- approval-gated local transcript save/reopen/delete,
+- approval-gated whole-Room archive/restore/delete,
+- approval-gated Room Master Prompt drafts,
 - approval-gated memory writes and audit trails,
 - local JSONL observability plus optional local Langfuse profile,
 - failure-learning evidence process and trusted local beta evidence pack.
 
 Current Merlin does not yet provide:
 
-- durable Merlin-native chat history,
-- Rooms/project context containers,
+- approved Room context reuse in model answers,
+- Room Master Prompt review/edit in Wizard HQ,
+- memory review/delete controls in Wizard HQ,
 - export/import brain,
 - production DLP blocking,
 - automatic AI asset discovery,
@@ -191,10 +219,13 @@ evidence sprint:
 
 For v3.1, the first sprint remains product-shell work, not enterprise security:
 
-- close the first-run status persistence gap,
+- make Merlin Chat feel like the primary product, not a status dashboard,
+- finish Room Master Prompt review/edit,
+- add the separate approve-for-context gate,
+- add memory review/delete controls,
+- show brain/context storage location read-only,
 - validate Wizard HQ visually in a browser,
-- design Merlin Rooms, local chat history, and save-to-Room memory boundaries,
-- make Brains show model/provider status honestly,
+- make Brains show model/provider status honestly without raw model complexity,
 - keep Open WebUI as a brain option rather than Merlin's identity,
 - avoid browser execution controls until policy-gated APIs are ready.
 

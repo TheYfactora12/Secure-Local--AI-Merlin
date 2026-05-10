@@ -1,17 +1,18 @@
 # Merlin AI — Product North Star
 
-**Version:** 1.1
+**Version:** 1.2
 **Date:** 2026-05-10
 **Status:** CANONICAL — supersedes all prior positioning docs
-**Change from v1.1:** Aligned active sprint with live v3.1 execution: Rooms,
-Room Master Prompt review, approved memory review/delete, and storage-location
-clarity come before PC control, broad connectors, or runtime agents.
+**Change from v1.2:** Re-centered Merlin on the first-use local brain value loop:
+Chat -> Rooms -> approved memory -> storage visibility -> export/import. Visual
+polish, broad connectors, PC control, runtime agents, and governance-suite
+features wait until that loop is useful.
 
 ---
 
 ## The One-Sentence Product
 
-> Merlin is your personal AI that lives on your device, never forgets what you tell it, works on any computer or phone, does tasks and runs your apps for you — and never shares your data without permission.
+> Merlin is your personal AI that lives on your device, remembers what you choose to save, organizes your work into local Rooms, and asks before it acts or shares.
 
 Every build decision gets tested against that sentence.
 
@@ -24,9 +25,9 @@ Not because the other 346 were bad ideas — because **focus compounds** and com
 
 The product today is three things, in this order:
 
-1. **An AI that remembers your life and never forgets.** (Phase 1)
-2. **An AI that can do things on your computer and in your apps.** (Phase 2)
-3. **An AI that travels with you across every device you own.** (Phase 2–3)
+1. **A clean Merlin Chat that can keep local session context.** (Phase 1)
+2. **Rooms and approved memory that make useful context durable.** (Phase 1)
+3. **Supervised actions and connectors after trust is proven.** (Phase 2)
 
 Everything else is deferred until these three are proven.
 
@@ -57,7 +58,7 @@ If she needs a terminal, we failed.
 - If a service is slow, Merlin says "warming up" — it does not show a broken screen.
 
 ### Promise 2 — It Never Forgets (Unless You Tell It To)
-- Everything you tell Merlin goes into your personal context store.
+- Everything you choose to save or approve goes into your personal context store.
 - Your context is stored as readable `.md` files and a fast local vector index.
 - Merlin can always search it, summarize it, and reference it.
 - You choose where it lives: local folder, external drive, USB flash drive, synced folder.
@@ -344,7 +345,6 @@ These are real ideas. They go into `docs/product/FUTURE_IDEAS.md`.
 - #31, #32 — Memory approval + delete (Promise 2 foundation)
 - #123 — Offline brain + context store (the product's heart)
 - #106 — Wizard HQ product shell (Promise 1 front door)
-- #114, #117, #119 — Settings and security controls (Promise 3)
 - #95 — Product audit (gate for any public beta)
 
 **Current v3.1 product-core order:**
@@ -354,12 +354,20 @@ These are real ideas. They go into `docs/product/FUTURE_IDEAS.md`.
 - #130 — Brain/context storage location UI, read-only first.
 - #123, #134 — Prove the local brain value demo before expanding scope.
 
+**Support only when they unblock the core loop:**
+- #114, #117, #119 — Settings, provider setup, and startup controls.
+- #129 — Fast/Smart model UI, only to hide model complexity from normal users.
+
 **Already tracked, after product proof improves:**
 - #124, #125 — Export/Import Brain.
 - #126 — Connector permission model + Settings UI.
 - #127 — PC task execution first actions.
 - #128 — Agent definition + storage format.
-- #129 — Offline model selection ("Fast" / "Smart") UI.
+
+**Polish, not soul:**
+- #136, #137, #138 — Merlin orb animation and voice reactivity. Defer until
+  the #134 value demo works end-to-end. #138 requires explicit local audio
+  consent and privacy review.
 
 **Parallel track — never blocks product:**
 - #81, #82, #83, #84 — Patent anchors

@@ -11076,6 +11076,169 @@ Positive, but Public Beta remains blocked by full clean installer evidence,
 Room detail polish, approved context reuse, memory review/delete, onboarding
 screenshots, and clean-machine validation.
 
+## 2026-05-10 - Product Soul And Market Wedge Cleanup
+
+### Date/time
+
+2026-05-10T23:29:22Z
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`032f8f4789e83b5c47f5718730133f6fcd49a19a`
+
+### Ending Commit SHA
+
+Uncommitted working tree at evidence capture time.
+
+### Target Issues
+
+- #122 Product Focus Cut.
+- #123 Offline Local Brain + User-Owned Context Store.
+- #134 Product Value Checkpoint.
+- #135 Merlin Rooms.
+- #95 release-readiness evidence.
+
+### Scope
+
+Stop feature expansion and realign product/market docs around the core value
+loop: Merlin Chat, local Rooms, approved memory, visible storage, and local/cloud
+proof. Defer orb/voice polish, broad connectors, enterprise governance, native
+automation, and Developer ID signing until the value loop is compelling.
+
+### Files Changed
+
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/MASTER_PROMPT.md`
+- `docs/product/PRODUCT_NORTH_STAR.md`
+- `docs/product/MERLIN_CONTROL_PLANE_STRATEGY.md`
+- `docs/product/GTM_STRATEGY.md`
+- `docs/product/PRODUCT_GUIDE.md`
+- release evidence note
+
+### Protected Files Touched
+
+No installer, package, runtime API, policy, memory, router, dashboard, or model
+files were touched.
+
+### Commands Run
+
+- `git status --short`
+- `git log --oneline -12`
+- `gh issue list --repo TheYfactora12/home-ai-elite --state open --limit 40 --json number,title,labels,milestone,state,url`
+- `gh issue view 135 --repo TheYfactora12/home-ai-elite --json number,title,state,labels,milestone,body,url`
+- `gh issue view 123 --repo TheYfactora12/home-ai-elite --json number,title,state,labels,milestone,body,url`
+- `gh issue view 134 --repo TheYfactora12/home-ai-elite --json number,title,state,labels,milestone,body,url`
+- `bash tests/master-prompt-smoke.sh`
+- `bash tests/control-plane-strategy-smoke.sh`
+- `bash tests/codex-master-prompt-v2-smoke.sh`
+- `bash tests/release-readiness-readme-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- GitHub issue audit: PASS; confirmed #122/#123/#134/#135 are still the product
+  focus path and #136-#138 are open polish issues without milestones.
+- Master prompt smoke: PASS.
+- Codex master prompt v2 smoke: PASS.
+- README release-readiness smoke: PASS.
+- Control-plane strategy smoke: initially failed on expected cloud-provider
+  wording, then PASS after restoring the drift-guard phrase.
+- Whitespace check: PASS.
+
+### Tests Skipped And Why
+
+Runtime, dashboard browser, installer, package, and API tests were skipped
+because this was docs/governance cleanup only.
+
+### Failures Found
+
+1. Market positioning had drifted into too many simultaneous markets: personal
+   companion, regulated local AI, enterprise governance, automation, and visual
+   personality.
+2. `docs/CANONICAL_PROJECT_STATE.md` was stale after whole-Room delete shipped.
+3. `docs/product/MERLIN_CONTROL_PLANE_STRATEGY.md` still described some current
+   gaps as missing even after Rooms/chat history advanced.
+4. `tests/control-plane-strategy-smoke.sh` failed because a required
+   `cloud providers` phrase was split across wording changes.
+
+### Failure Category
+
+- Roadmap/governance drift.
+- Documentation mismatch.
+- Test design gap caught by static smoke.
+
+### Root Cause Or Current Hypothesis
+
+The product expanded faster than the market wedge. New features were being
+tracked correctly in issues, but the commercial story mixed future outcomes with
+current proof. That made the product feel less valuable because the first-use
+demo was no longer the center.
+
+### Fix Applied
+
+- Re-centered North Star language on: Chat -> Rooms -> approved memory -> storage
+  visibility -> export/import.
+- Changed the near-term market wedge to "private local AI workspace for
+  sensitive work" before "enterprise control plane."
+- Updated GTM demo to the first commercial proof loop: open Wizard HQ, select a
+  Room, ask Merlin, save useful chat, show disk location, prove cloud is off,
+  reopen the saved session, and keep approved memory separate.
+- Updated Product Guide current capability language for Rooms and chat history.
+- Updated canonical state for bounded in-session context and approval-gated
+  whole-Room delete.
+- Marked #136-#138 orb/voice issues as polish that must not interrupt #134.
+
+### Retest Result
+
+PASS after wording correction. Static docs/governance smokes passed.
+
+### Regression Test Added Or Updated
+
+No tests changed. Existing docs smokes caught and protected the strategy wording.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended issue comment/update on #122 or #134:
+
+**Title:** `Focus gate: first commercial demo must prove local Room memory before polish`
+
+Acceptance: no new orb/voice/provider/automation work moves ahead of Room
+review/edit, approve-for-context, memory review/delete, and storage visibility
+unless it directly improves the #134 demo.
+
+### Lesson Learned
+
+Market value does not come from the biggest roadmap. It comes from a demo a
+buyer understands in two minutes. Merlin's first marketable wedge is local
+context ownership for sensitive work, not enterprise governance language.
+
+### What Not To Repeat Next Time
+
+Do not let future-state strategy become current-state product copy. Do not
+prioritize visual personality over the first-use proof demo. Do not mix three
+buyer personas in the primary pitch.
+
+### Next Recommended Step
+
+Build the Room Master Prompt review/edit surface, then the separate
+approve-for-context gate. After that, memory review/delete and storage location
+visibility complete the first marketable value loop.
+
+### Local Trusted Beta Impact
+
+Positive. The repo now points toward a smaller, testable Local Trusted Beta
+story instead of a broad product fantasy.
+
+### Public Beta Impact
+
+Positive, but Public Beta remains blocked by the same evidence gates: full clean
+installer retest, onboarding screenshots, Room context approval, memory
+review/delete, storage visibility, and clean-machine validation.
+
 ## 2026-05-10 - Room Restore, Chat Model-Only Path, And Room Create Guard
 
 ### Date/time

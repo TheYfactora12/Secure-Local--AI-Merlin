@@ -126,15 +126,16 @@ flowchart LR
    Merlin, see local/private proof, and review/delete/export what was stored.
 2. #135: Merlin Rooms for local chat history and scoped context. Current slices
    created the default Room layout, named local Room creation, session Room
-   launcher, user-initiated approval-gated transcript saves, one-time
-   transcript reopen/delete approvals, safe transcript metadata titles,
-   approval-gated Room Master Prompt drafts, and a metadata-only Room review
-   table, approval-gated local Room archive, and approval-gated local Room
-   restore. Wizard HQ now warns on obvious duplicate/similar Room names before
-   creating a separate Room. Whole-Room cleanup remains archive/restore only;
-   it does not hard-delete Rooms or approved memory. Next slices should add
-   backend-backed topic similarity using transcript summaries and a separate
-   approve-for-context gate before any Room content is reused.
+   launcher, bounded in-session chat context, user-initiated approval-gated
+   transcript saves, one-time transcript reopen/delete approvals, safe
+   transcript metadata titles, approval-gated Room Master Prompt drafts, a
+   metadata-only Room review table, approval-gated local Room archive/restore,
+   and approval-gated whole-Room delete. Wizard HQ now warns on obvious
+   duplicate/similar Room names before creating a separate Room. Whole-Room
+   delete removes local Room files only; it does not delete approved memory,
+   approve context reuse, or call cloud services. Next slices should add Room
+   Master Prompt review/edit and a separate approve-for-context gate before any
+   Room content is reused.
 3. #106: Wizard HQ Product Shell parent; keep Chat, Brains, Memory, Agents,
    Security, System, and Settings aligned before deeper governance features.
 4. #31/#32/#120: memory approval, review, and delete paths. These are required
@@ -157,6 +158,12 @@ flowchart LR
    installer, Wizard HQ, and release evidence are otherwise product-complete.
 13. #92: Native Automation Runtime in v3.x after release readiness work and
    control-plane product milestones.
+
+Visual orb issues #136 through #138 are polish only. They must not interrupt
+the product-value loop unless the current Merlin Chat surface is already passing
+#134's first-use proof demo. If implemented, #136 CSS idle breathing is the only
+near-term candidate; #137 canvas plasma and #138 microphone amplitude require
+separate privacy and performance gates.
 
 Patent/IP issues #81 through #84 are cross-cutting governance work. They should
 not add novel claim language to public docs unless the inventor explicitly

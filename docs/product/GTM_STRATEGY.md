@@ -5,7 +5,39 @@
 
 ## The North Star (One Sentence)
 
-Merlin AI is a sovereign local-first personal intelligence system: you own the hardware, the memory, the model options, and the approval gates. Cloud providers stay off by default and are used only when explicitly configured.
+Merlin AI is a sovereign local-first personal intelligence system: you own the
+hardware, the Rooms, the approved memory, the model options, and the approval
+gates. Cloud providers stay off by default and are used only when explicitly
+configured.
+
+## The Beachhead Wedge
+
+Do not sell Merlin first as a broad governance suite, DLP platform, AI firewall,
+or automation OS. Those are expansion paths.
+
+Sell the first product as:
+
+> A private local AI workspace for sensitive work that remembers only what you
+> choose to save, organizes it into local Rooms, and proves your data stayed
+> under your control.
+
+This is the bridge between personal value and regulated-market value. A solo
+builder wants project continuity. A credit union, practice, school, or law firm
+wants the same continuity with a privacy proof.
+
+The first commercial demo should prove:
+
+1. Open Wizard HQ.
+2. Create or select a Room.
+3. Ask Merlin a local question.
+4. Save the useful chat to that Room.
+5. Show where the Room lives on disk.
+6. Show cloud is off by default.
+7. Reopen the saved Room session.
+8. Show approved memory remains separate and reviewable.
+
+If that demo is not compelling, pricing, enterprise messaging, and acquisition
+positioning do not matter yet.
 
 ---
 
@@ -13,16 +45,18 @@ Merlin AI is a sovereign local-first personal intelligence system: you own the h
 
 This is not a Siri replacement. This is not a cloud AI with a privacy checkbox.
 
-This is:
-- A **doctor's office** that can collect, store, and query patient data without it ever touching a cloud
-- A **credit union** that can run AI on member financial data without FFIEC, GLBA, or SOC 2 exposure
-- A **school** that can build a student support assistant without FERPA violations
-- A **bank** that can give its CIO a secure AI analyst with no data leaving the building
-- An **individual** who wants a companion that remembers them, grows with them, and stays theirs
-- An **executive** with a virtual chief of staff that is secure, private, and learns their workflow
-- A **company** that wants to build and own their own internal AI data set — air-gapped, sovereign, theirs
+This can become:
+- A **doctor's office** workspace for notes, procedures, and approved local context.
+- A **credit union** workspace for AI-assisted analysis without default cloud exposure.
+- A **school** workspace for student-support context that stays under district control.
+- A **law firm** workspace for matter history and drafting without sending case context to random cloud tools.
+- An **individual** workspace for projects, decisions, preferences, and memories they own.
+- An **executive** workspace that becomes a private chief-of-staff memory over time.
 
-The local-first angle is the sharpest edge in the market right now. Every enterprise AI story ends with "but your data goes to someone else's infrastructure." Merlin AI starts from "your data stays on owned hardware by default." That is a different product category entirely.
+The local-first angle is the sharpest edge in the market right now. Every cloud
+AI story eventually hits the data-control objection. Merlin AI starts from
+"your data stays on owned hardware by default," then earns more capability only
+through visible approval.
 
 ---
 
