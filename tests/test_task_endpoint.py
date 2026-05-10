@@ -3,7 +3,7 @@ from __future__ import annotations
 import httpx
 from fastapi.testclient import TestClient
 
-from merlin.persona_injector import PI_WARMTH_BLOCK, build_system_prompt
+from merlin.persona_injector import IDENTITY_AND_LANGUAGE_BLOCK, PI_WARMTH_BLOCK, build_system_prompt
 from merlin.router import route_task
 from merlin.task_endpoint import app
 
@@ -114,6 +114,34 @@ def test_post_task_when_litellm_unreachable_returns_degraded_response(monkeypatc
 def test_system_prompt_contains_persona_name_merlin() -> None:
     prompt = build_system_prompt(route_task("explain how RAG works"))
     assert "Name: Merlin" in prompt
+
+
+def test_system_prompt_prevents_model_identity_and_language_drift() -> None:
+    prompt = build_system_prompt(route_task("explain how RAG works"))
+
+    assert IDENTITY_AND_LANGUAGE_BLOCK in prompt
+    assert "You are Merlin AI" in prompt
+    assert "Never identify as Qwen" in prompt
+    assert "Respond in clear English unless the user explicitly asks for another language." in prompt
+
+
+def test_task_endpoint_sends_merlin_identity_guard_to_litellm(monkeypatch) -> None:
+    captured = {}
+
+    def fake_post(*args, **kwargs):
+        captured.update(kwargs)
+        return _FakeLiteLLMResponse()
+
+    monkeypatch.setattr("merlin.task_endpoint.observe_task_outcome", _noop_outcome_observer)
+    monkeypatch.setattr("merlin.task_endpoint.httpx.post", fake_post)
+
+    response = client.post("/task", json={"input": "who are you?"})
+
+    assert response.status_code == 200
+    system_message = captured["json"]["messages"][0]["content"]
+    assert "You are Merlin AI" in system_message
+    assert "Never identify as Qwen" in system_message
+    assert "Respond in clear English unless the user explicitly asks for another language." in system_message
 
 
 def test_system_prompt_contains_guardian_ethos_commitment_text() -> None:

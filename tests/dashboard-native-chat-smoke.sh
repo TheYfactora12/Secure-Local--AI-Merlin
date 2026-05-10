@@ -86,8 +86,11 @@ grep -q 'fetch(`${TASK_API}/task`' "$DASHBOARD_FILE" \
   || fail "Merlin Chat must call only Merlin Task API /task"
 grep -q "method: 'POST'" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing Task API POST"
-grep -q "selected_model_alias" "$DASHBOARD_FILE" \
-  || fail "Merlin Chat must display selected model alias"
+grep -q "Merlin local route" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must label the route as Merlin, not the underlying model engine"
+if grep -q 'Brain:.*selected_model_alias\\|Brain:.*modelLabel' "$DASHBOARD_FILE"; then
+  fail "Merlin Chat must not expose raw model aliases as the user-facing brain identity"
+fi
 grep -q "staff_mode" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must display staff mode"
 grep -q "approval required" "$DASHBOARD_FILE" \

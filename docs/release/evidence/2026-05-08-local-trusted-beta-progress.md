@@ -8362,3 +8362,152 @@ core instead of stale release/signing queues.
 ### Public Beta Impact
 
 Positive for discipline, but no public beta readiness claim changes.
+
+---
+
+## 2026-05-10 - Merlin Identity And English-Default Chat Guard
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`f7dd957f050c90b6a283ad561563ccadc91d9b7a`
+
+### Ending Commit SHA
+
+Pending commit at time of note.
+
+### Target Issues
+
+- #106 Wizard HQ Product Shell
+- #123 Offline local brain and user-owned context store
+- #129 Fast/Smart model selection UI
+- #134 Product Value Checkpoint
+
+### Scope
+
+Fix user-reported chat identity/language confusion where the underlying local
+engine surfaced as Qwen and the response included Chinese text. Merlin may use
+Qwen or other local models underneath, but the product identity must remain
+Merlin and responses should default to English unless the user asks otherwise.
+
+### Files Changed
+
+- `merlin/persona_injector.py`
+- `dashboard/index.html`
+- `tests/test_task_endpoint.py`
+- `tests/dashboard-native-chat-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `merlin/persona_injector.py` - prompt contract only.
+- `dashboard/index.html` - user-facing chat metadata only.
+
+No installer, policy gate, memory write, secret, cloud, or service-control
+behavior changed.
+
+### Commands Run
+
+```bash
+.venv-test/bin/python -m pytest tests/test_task_endpoint.py
+bash tests/dashboard-native-chat-smoke.sh
+.venv-test/bin/python -m pytest tests/test_task_endpoint.py tests/test_status_extension.py
+bash tests/dashboard-first-run-smoke.sh
+bash tests/dashboard-model-readiness-smoke.sh
+bash tests/dashboard-tabs-smoke.sh
+git diff --check
+```
+
+### Test Output Summary
+
+- `tests/test_task_endpoint.py` - 19 passed.
+- `tests/test_task_endpoint.py tests/test_status_extension.py` - 49 passed.
+- `bash tests/dashboard-native-chat-smoke.sh` - PASS.
+- `bash tests/dashboard-first-run-smoke.sh` - PASS.
+- `bash tests/dashboard-model-readiness-smoke.sh` - PASS.
+- `bash tests/dashboard-tabs-smoke.sh` - PASS.
+- `git diff --check` - PASS.
+
+### Tests Skipped And Why
+
+- Live model output test: not run yet. This should be validated in the browser
+  after restarting Task API/LiteLLM if the old prompt was already loaded.
+- Full installer retest: not triggered by this slice because installer/package
+  behavior did not change.
+
+### Failures Found
+
+User-reported product failure: chat surfaced Chinese text and/or identified the
+assistant as Qwen instead of Merlin.
+
+### Failure Category
+
+- Wizard HQ/dashboard
+- UX/readiness confusion
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+The system prompt identified Merlin but did not explicitly tell the local model
+not to identify as the underlying engine or to default to English. Wizard HQ also
+displayed raw selected model aliases as a chat metadata chip labeled `Brain`,
+which made the product feel like Qwen rather than Merlin.
+
+### Fix Applied
+
+- Added `IDENTITY_AND_LANGUAGE_BLOCK` to every Merlin system prompt:
+  - Merlin is the assistant identity.
+  - Do not identify as Qwen/Llama/Mistral/DeepSeek/provider engines.
+  - Explain engines as replaceable underneath Merlin.
+  - Respond in English unless the user asks for another language.
+- Updated Wizard HQ chat metadata to show `Merlin local route` instead of raw
+  model aliases as the user-facing brain identity.
+
+### Retest Result
+
+PASS for all commands listed above.
+
+### Regression Test Added Or Updated
+
+- `tests/test_task_endpoint.py` verifies the identity/language block exists and
+  is sent to LiteLLM in the system message.
+- `tests/dashboard-native-chat-smoke.sh` verifies Wizard HQ labels the route as
+  Merlin rather than exposing raw model aliases as the brain identity.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended under #106/#129:
+
+- Add a live browser QA script that asks "who are you?" and verifies the visible
+  answer identifies as Merlin in English.
+- Add a user-facing Brains explanation that engine names are technical details,
+  while Merlin is the assistant identity.
+
+### Lesson Learned
+
+Local model names are implementation details. If they surface in chat identity,
+the product feels like a model launcher instead of Merlin.
+
+### What Not To Repeat Next Time
+
+Do not label raw model aliases as the user-facing brain in chat. Do not assume a
+local model will preserve product identity without an explicit prompt contract.
+
+### Next Recommended Step
+
+Restart the Task API if it is running, then live-test Wizard HQ with:
+
+- "Who are you?"
+- "What model are you using?"
+- "Answer in English: what is Merlin?"
+
+### Local Trusted Beta Impact
+
+Positive. This directly improves first-use trust and product identity.
+
+### Public Beta Impact
+
+Positive, but still needs live browser evidence before signoff.
