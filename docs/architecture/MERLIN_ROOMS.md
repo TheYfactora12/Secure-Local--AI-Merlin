@@ -174,11 +174,11 @@ memory extraction remain locked.
 The Room Review Table is metadata-only. It may let the user open a Room in
 Merlin Chat, start the existing one-time save approval for the latest safe
 Merlin response, reopen the latest saved transcript through the one-time read
-approval, or delete one saved transcript through the one-time delete approval.
-It must not show raw transcript bodies, approve Room context reuse, delete a
-whole Room, or bypass the Task API approval lifecycle. Whole-Room archive/delete
-remains locked until linked approved memory and Room Master Prompt artifacts can
-be reviewed before removal.
+approval, delete one saved transcript through the one-time delete approval, or
+archive a whole Room through the one-time archive approval. It must not show raw
+transcript bodies, approve Room context reuse, hard-delete a whole Room, or
+bypass the Task API approval lifecycle. Whole-Room archive is a local reversible
+archive; approved memory is not deleted.
 
 The Room creation surface should stay one or two clicks from the right outcome:
 name the Room, then either create it or pick the suggested existing Room if the
@@ -257,7 +257,22 @@ transcript save target before the approval flow.
 It does not save degraded/blocked responses, does not index the Room for future
 context, does not approve Room Master Prompts for context reuse, does not persist
 reference policy, and does not write approved memory.
-It also does not delete, rename, or archive Rooms from chat yet.
+It also does not hard-delete or rename Rooms from chat yet.
+
+Current implementation exposes an approval-gated whole-Room archive path:
+
+```text
+POST http://localhost:8766/approvals/room-archive
+POST http://localhost:8766/rooms/archive
+```
+
+This moves the Room folder to a local `.archive/` folder after a one-time
+approval. This is a local reversible archive, not a hard delete. The approval
+payload includes metadata only: Room id/name, transcript count, summary count,
+Room Master Prompt status, and linked-memory review state. It does not read raw
+transcripts, delete approved memory, write memory, approve Room context reuse,
+or call a model. The approval is marked used after the local archive, so Merlin
+asks again next time.
 
 The `approval_id` must come from the Task API approval lifecycle:
 

@@ -10573,3 +10573,171 @@ desktop/mobile browser evidence for the guard.
 Positive, but Public Beta remains blocked by full installer retest, final
 memory review/delete, whole-Room archive/delete, and clean-machine onboarding
 evidence.
+
+## 2026-05-10 - Whole-Room Archive Approval
+
+### Date/Time
+
+2026-05-10 11:20 EDT
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`8f566f4`
+
+### Target Issues
+
+- #135 Merlin Rooms for local chat history and scoped context.
+- #106 Wizard HQ Product Shell.
+- #95 release-readiness evidence.
+
+### Scope
+
+Implement approval-gated whole-Room archive as a reversible local move. This is
+not hard delete, does not delete approved memory, does not approve context
+reuse, and does not read raw transcript content into status or audit records.
+
+### Files Changed
+
+- `merlin/room_store.py`
+- `merlin/approval_store.py`
+- `merlin/task_endpoint.py`
+- `dashboard/index.html`
+- `tests/test_room_store.py`
+- `tests/test_task_endpoint.py`
+- `tests/dashboard-rooms-smoke.sh`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/release/evidence/assets/2026-05-10-wizard-hq-room-archive-qa/*`
+- release evidence note
+
+### Protected Files Touched
+
+Runtime policy-adjacent files were touched deliberately:
+
+- `merlin/approval_store.py`
+- `merlin/task_endpoint.py`
+- `merlin/room_store.py`
+
+No installer behavior, cloud default, telemetry, browser shell execution,
+automatic model download, or 8765 read-only status behavior changed.
+
+### Commands Run
+
+- `gh issue list --state open --limit 40 --json number,title,state,milestone,labels`
+- `python3 -m py_compile merlin/room_store.py merlin/approval_store.py merlin/task_endpoint.py`
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py`
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py tests/test_router.py tests/test_status_extension.py`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-browser-qa-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `git diff --check`
+- `.venv-test/bin/python scripts/dashboard-browser-qa.py --output-dir docs/release/evidence/assets/2026-05-10-wizard-hq-room-archive-qa`
+- `bash tests/installer-branding-smoke.sh`
+- `bash tests/pkg-readiness-smoke.sh`
+- `bash tests/uninstall-smoke.sh`
+- `bash -n install.sh`
+- `bash install.sh --help`
+
+### Test Output Summary
+
+- Python compile: PASS.
+- Focused Room/Task tests: PASS, 44 tests passed.
+- Broader Python suite: PASS, 113 tests passed.
+- Rooms static smoke: PASS after doc wording fix.
+- Browser QA static smoke: PASS.
+- Native Chat and first-run dashboard smokes: PASS.
+- Live browser QA: PASS; screenshots written to
+  `docs/release/evidence/assets/2026-05-10-wizard-hq-room-archive-qa/`.
+- Installer branding, package readiness, uninstall, `install.sh` syntax, and
+  installer help: PASS.
+
+### Tests Skipped And Why
+
+Full clean installer retest was not run. This slice changes Wizard HQ and
+runtime Task API behavior, so a full installer retest remains required before
+Local Trusted Beta signoff.
+
+### Failures Found
+
+1. `bash tests/dashboard-rooms-smoke.sh` initially failed because the Rooms doc
+   said "local reversible archive" split by punctuation instead of the exact
+   static smoke phrase.
+2. Screenshot review shows the static/offline Rooms page remains low-contrast
+   when the Task API is unavailable.
+
+### Failure Category
+
+- Documentation mismatch.
+- UX/readiness polish gap.
+
+### Root Cause Or Current Hypothesis
+
+The test expected exact contract language for archive semantics, while the doc
+used equivalent but non-matching wording. The low-contrast screenshot is an
+existing visual-state issue in the offline/static browser QA path.
+
+### Fix Applied
+
+- Added exact Rooms architecture language: "local reversible archive, not a hard
+  delete."
+- Added `POST /approvals/room-archive` and `POST /rooms/archive`.
+- Added approval payload hashing for Room archive metadata.
+- Added one-time archive approval validation and used-approval behavior.
+- Added local Room archive helper that moves the Room to `.archive/`.
+- Added Wizard HQ archive approval card with Allow once / Don't ask again /
+  Cancel.
+- Added regression tests for store archive behavior, API approval behavior,
+  audit redaction, approval reuse protection, and dashboard static coverage.
+
+### Retest Result
+
+PASS after doc wording fix for static smokes, Python regressions, live browser
+QA, and installer/package/uninstall guard smokes.
+
+### Regression Test Added Or Updated
+
+- `tests/test_room_store.py`
+- `tests/test_task_endpoint.py`
+- `tests/dashboard-rooms-smoke.sh`
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended #135 child issue:
+
+**Title:** `v3.1 Rooms: restore archived Room and improve offline Rooms contrast`
+
+Scope: add restore-from-archive as the pair to archive, keep approvals
+one-time, and improve the degraded/offline Rooms visual state so browser QA
+screenshots remain readable when Task API is warming.
+
+### Lesson Learned
+
+Archive is safer than hard delete for Local Trusted Beta. It satisfies user
+cleanup needs while preserving rollback and avoiding accidental approved-memory
+loss.
+
+### What Not To Repeat Next Time
+
+Do not build destructive whole-Room deletion before archive/restore, linked
+memory visibility, and memory review/delete are mature.
+
+### Next Recommended Step
+
+Add restore-from-archive and then move into approve-for-context only after Room
+cleanup and memory review/delete are settled.
+
+### Local Trusted Beta Impact
+
+Positive. Users can now clean up Rooms through an explicit one-time approval
+without hard deletion or hidden memory changes.
+
+### Public Beta Impact
+
+Positive, but Public Beta remains blocked by full installer retest, restore
+from archive, memory review/delete, approve-for-context, and clean-machine
+onboarding evidence.

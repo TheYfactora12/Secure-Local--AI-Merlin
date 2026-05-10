@@ -2427,6 +2427,7 @@ let pendingRoomApproval = null;
 let pendingTaskRouteApproval = null;
 let pendingRoomRead = null;
 let pendingTranscriptRemoval = null;
+let pendingRoomArchive = null;
 let pendingSimilarRoomName = null;
 let pendingSimilarRoomMatch = null;
 let currentChatTranscript = [];
@@ -2835,6 +2836,46 @@ async function prepareSavedTranscriptRemoval(roomId, roomName, transcriptId) {
       state: 'degraded',
       title: 'delete unavailable',
       body: `Merlin could not prepare the transcript delete approval. Detail: ${safe(error && error.message, 'unknown error')}`,
+      mode: selectedChatMode,
+    });
+  }
+}
+
+async function prepareRoomArchive(roomId, roomName, transcriptCount, summaryCount, masterPromptStatus) {
+  selectActiveRoom(roomId, roomName, true);
+  pendingRoomArchive = null;
+  renderChatOutput({
+    state: 'pending',
+    title: 'archive Room',
+    body: `Prepare a one-time archive approval for ${safe(roomName, roomId)}. Merlin will move the whole Room into a local archive folder after approval. Approved memory is not deleted.`,
+    mode: selectedChatMode,
+  });
+  try {
+    const data = await postJson(`${TASK_API}/approvals/room-archive`, {
+      room_id: roomId,
+      room_name: roomName,
+    });
+    const summary = data.payload_summary || {};
+    pendingRoomArchive = {
+      roomId,
+      roomName,
+      transcriptCount: Number(summary.transcript_count ?? transcriptCount ?? 0),
+      summaryCount: Number(summary.summary_count ?? summaryCount ?? 0),
+      masterPromptStatus: safe(summary.master_prompt_status || masterPromptStatus || 'missing', 'missing'),
+      linkedMemoryReview: safe(summary.linked_memory_review || 'not_available_requires_manual_memory_review'),
+      approvalId: data.approval_request_id,
+    };
+    renderChatOutput({
+      state: 'pending',
+      title: 'archive approval prepared',
+      body: `Allow once to archive ${safe(roomName, roomId)}. Transcript files and Room Master Prompt drafts move to local archive. Approved memory is not deleted and Room context reuse stays disabled.`,
+      mode: selectedChatMode,
+    });
+  } catch (error) {
+    renderChatOutput({
+      state: 'degraded',
+      title: 'archive unavailable',
+      body: `Merlin could not prepare the Room archive approval. Detail: ${safe(error && error.message, 'unknown error')}`,
       mode: selectedChatMode,
     });
   }
@@ -3309,6 +3350,22 @@ function transcriptRemovalApprovalCardHtml() {
   `;
 }
 
+function roomArchiveApprovalCardHtml() {
+  if (!pendingRoomArchive) return '';
+  return `
+    <div class="approval-card" aria-label="Whole Room archive approval">
+      <strong>Archive this Room?</strong>
+      <p>Merlin will move this Room to a local archive folder. It will not delete approved memory, write memory, approve context reuse, or call a cloud service.</p>
+      <div class="approval-actions">
+        <button type="button" onclick="allowRoomArchive()">Allow once</button>
+        <button class="locked" type="button" onclick="openPermanentApprovalSettings('whole Room archive')">Don't ask again</button>
+        <button class="secondary" type="button" onclick="cancelRoomArchive()">Cancel</button>
+      </div>
+      <p>Room: ${escapeHtml(pendingRoomArchive.roomName)} · transcripts: ${escapeHtml(pendingRoomArchive.transcriptCount)} · summaries: ${escapeHtml(pendingRoomArchive.summaryCount)} · master prompt: ${escapeHtml(pendingRoomArchive.masterPromptStatus)} · linked memory review: ${escapeHtml(pendingRoomArchive.linkedMemoryReview)}</p>
+    </div>
+  `;
+}
+
 function roomApprovalUnavailableCopy(error) {
   const message = safe(error && error.message, 'unknown error');
   if (message === 'Not Found' || message.includes('returned 404')) {
@@ -3334,6 +3391,7 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
   const isBlocked = state === 'blocked';
   const showRoomReadApproval = state === 'pending' && Boolean(pendingRoomRead);
   const showTranscriptRemovalApproval = state === 'pending' && Boolean(pendingTranscriptRemoval);
+  const showRoomArchiveApproval = state === 'pending' && Boolean(pendingRoomArchive);
   const showRoomSave = allowRoomSave && state === 'approved' && !degraded;
   const routeLabel = routeData.route_id || 'unavailable';
   const staffLabel = routeData.staff_mode || null;
@@ -3375,6 +3433,7 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
         ${isBlocked ? approvalCardHtml(routeData, gateText) : ''}
         ${showRoomReadApproval ? roomReadApprovalCardHtml() : ''}
         ${showTranscriptRemovalApproval ? transcriptRemovalApprovalCardHtml() : ''}
+        ${showRoomArchiveApproval ? roomArchiveApprovalCardHtml() : ''}
       </div>
     </div>
   ` : '';
@@ -3558,6 +3617,68 @@ async function cancelSavedTranscriptRemoval() {
     await postJson(`${TASK_API}/approvals/${encodeURIComponent(approvalId)}/deny`, {});
   } catch (_) {
     // The UI has already failed closed by clearing the pending delete approval.
+  }
+}
+
+async function allowRoomArchive() {
+  if (!pendingRoomArchive) return;
+  const request = pendingRoomArchive;
+  renderChatOutput({
+    state: 'pending',
+    title: 'archiving Room',
+    body: 'Merlin is moving the approved Room into the local archive. Approved memory is not deleted.',
+    mode: selectedChatMode,
+  });
+  try {
+    await postJson(`${TASK_API}/approvals/${encodeURIComponent(request.approvalId)}/approve`, {});
+    const data = await postJson(`${TASK_API}/rooms/archive`, {
+      room_id: request.roomId,
+      room_name: request.roomName,
+      transcript_count: request.transcriptCount,
+      summary_count: request.summaryCount,
+      master_prompt_status: request.masterPromptStatus,
+      approval_id: request.approvalId,
+    });
+    pendingRoomArchive = null;
+    currentChatSavedRoomId = null;
+    currentChatSavedTranscriptTitle = null;
+    if (selectedRoomId === request.roomId) {
+      selectedRoomId = DEFAULT_ROOM_ID;
+      selectedRoomName = DEFAULT_ROOM_NAME;
+    }
+    renderChatOutput({
+      state: 'pending',
+      title: 'Room archived',
+      body: `Archived ${safe(data.room_name, request.roomName)} locally. Approved memory was not deleted, and Room context reuse remains disabled.`,
+      mode: selectedChatMode,
+    });
+    await loadRooms();
+    await loadMemory();
+  } catch (error) {
+    pendingRoomArchive = null;
+    renderChatOutput({
+      state: 'degraded',
+      title: 'archive failed',
+      body: `Merlin could not archive the Room. Detail: ${safe(error && error.message, 'unknown error')}`,
+      mode: selectedChatMode,
+    });
+  }
+}
+
+async function cancelRoomArchive() {
+  if (!pendingRoomArchive) return;
+  const approvalId = pendingRoomArchive.approvalId;
+  pendingRoomArchive = null;
+  renderChatOutput({
+    state: 'pending',
+    title: 'Room archive canceled',
+    body: 'No Room files were moved. Approved memory was not touched.',
+    mode: selectedChatMode,
+  });
+  try {
+    await postJson(`${TASK_API}/approvals/${encodeURIComponent(approvalId)}/deny`, {});
+  } catch (_) {
+    // The UI has already failed closed by clearing the pending archive approval.
   }
 }
 
@@ -3888,10 +4009,13 @@ function roomReviewTableHtml(data) {
     const active = roomId === selectedRoomId;
     const transcripts = room.transcripts || [];
     const latestTranscript = transcripts[0] || {};
-    const latestTitle = latestTranscript.title || latestTranscript.transcript_id || 'No saved transcripts';
-    const latestId = latestTranscript.transcript_id || '';
-    const masterPrompt = room.master_prompt || {};
-    const canSave = Boolean(lastMerlinExchange);
+      const latestTitle = latestTranscript.title || latestTranscript.transcript_id || 'No saved transcripts';
+      const latestId = latestTranscript.transcript_id || '';
+      const masterPrompt = room.master_prompt || {};
+      const transcriptCount = Number(room.transcript_count || 0);
+      const summaryCount = Number(room.summary_count || 0);
+      const masterPromptStatus = safe(masterPrompt.status || 'missing', 'missing');
+      const canSave = Boolean(lastMerlinExchange);
     const transcriptAction = latestId
       ? `<button class="room-table-action secondary" type="button" onclick="openSavedRoomChat(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(latestId)})">Reopen latest</button>
          <button class="room-table-action secondary" type="button" onclick="prepareSavedTranscriptRemoval(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(latestId)})">Delete latest transcript</button>`
@@ -3900,14 +4024,14 @@ function roomReviewTableHtml(data) {
       <tr class="${active ? 'active-room-row' : ''}">
         <td><strong>${escapeHtml(roomName)}</strong><span class="chip ${active ? 'good' : 'neutral'}">${active ? 'active' : 'available'}</span></td>
         <td><code>${escapeHtml(room.path || data.rooms_root || '~/Merlin/brain/rooms')}</code><br><span>${escapeHtml(room.reference_policy || 'no_room_context')}</span></td>
-        <td><strong>${escapeHtml(room.transcript_count || 0)} saved</strong><span>${escapeHtml(latestTitle)} · raw hidden</span></td>
-        <td><strong>${escapeHtml(masterPrompt.status || 'missing')}</strong><span>context reuse disabled until approved</span></td>
+        <td><strong>${escapeHtml(transcriptCount)} saved</strong><span>${escapeHtml(latestTitle)} · raw hidden</span></td>
+        <td><strong>${escapeHtml(masterPromptStatus)}</strong><span>context reuse disabled until approved</span></td>
         <td>
           <div class="room-action-row">
             <button class="room-table-action" type="button" onclick="openRoomInChat(${jsArg(roomId)}, ${jsArg(roomName)})">Open in Chat</button>
             <button class="room-table-action ${canSave ? '' : 'secondary'}" type="button" onclick="saveCurrentChatToRoom(${jsArg(roomId)}, ${jsArg(roomName)})">${canSave ? 'Save current chat' : 'Save after Merlin responds'}</button>
             ${transcriptAction}
-            <span class="room-table-action locked">Room archive/delete remains locked until linked-memory review exists</span>
+            <button class="room-table-action secondary" type="button" onclick="prepareRoomArchive(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(transcriptCount)}, ${jsArg(summaryCount)}, ${jsArg(masterPromptStatus)})">Archive Room</button>
           </div>
         </td>
       </tr>

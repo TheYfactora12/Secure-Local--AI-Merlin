@@ -90,6 +90,33 @@ class RoomTranscriptDeleteResult(BaseModel):
     context_reuse: str = "disabled_until_user_approved"
 
 
+class RoomArchivePreview(BaseModel):
+    room_id: str
+    room_name: str
+    room_path: str
+    transcript_count: int = 0
+    summary_count: int = 0
+    master_prompt_status: str = "missing"
+    linked_memory_review: str = "not_available_requires_manual_memory_review"
+    raw_content_loaded: bool = False
+
+
+class RoomArchiveResult(BaseModel):
+    room_id: str
+    room_name: str
+    original_room_path: str
+    archived_room_path: str
+    archived_at: str
+    approval_id: str
+    transcript_count: int = 0
+    summary_count: int = 0
+    master_prompt_status: str = "missing"
+    memory_written: bool = False
+    approved_memory_deleted: bool = False
+    context_reuse: str = "disabled_until_user_approved"
+    linked_memory_review: str = "not_available_requires_manual_memory_review"
+
+
 class RoomMasterPromptRecord(BaseModel):
     status: str = "missing"
     path: str | None = None
@@ -362,6 +389,94 @@ def count_room_transcripts(room_id: str, root: Path | None = None) -> int:
     safe_room_id = _validate_room_id(room_id)
     rooms_root = root or rooms_root_path()
     return _count_markdown_files(rooms_root / safe_room_id / "transcripts")
+
+
+def room_archive_preview(room_id: str, root: Path | None = None) -> RoomArchivePreview:
+    """Return metadata needed before approving whole-Room archive.
+
+    This intentionally loads metadata only. It does not read raw transcripts,
+    approved memory, or Room Master Prompt content.
+    """
+
+    safe_room_id = _validate_room_id(room_id)
+    rooms_root = root or rooms_root_path()
+    room_path = rooms_root / safe_room_id
+    metadata_file = room_path / "room.md"
+    if not room_path.exists() or not room_path.is_dir() or not metadata_file.exists():
+        raise FileNotFoundError("Room not found")
+    master_prompt = room_master_prompt_record(room_path)
+    return RoomArchivePreview(
+        room_id=safe_room_id,
+        room_name=_room_name_from_metadata(metadata_file, safe_room_id.replace("-", " ").title()),
+        room_path=str(room_path),
+        transcript_count=_count_markdown_files(room_path / "transcripts"),
+        summary_count=_count_markdown_files(room_path / "summaries"),
+        master_prompt_status=master_prompt.status,
+    )
+
+
+def archive_room(
+    *,
+    room_id: str,
+    approval_id: str,
+    root: Path | None = None,
+    archived_at: str | None = None,
+) -> RoomArchiveResult:
+    """Archive a whole Room after explicit approval.
+
+    Archive is a reversible local move, not hard deletion. It does not delete
+    approved memory and does not approve or reuse Room context.
+    """
+
+    safe_room_id = _validate_room_id(room_id)
+    safe_approval_id = _validate_text_field(approval_id, "approval_id", 120)
+    rooms_root = root or rooms_root_path()
+    room_path = rooms_root / safe_room_id
+    if not room_path.exists() or not room_path.is_dir():
+        raise FileNotFoundError("Room not found")
+    preview = room_archive_preview(safe_room_id, root=rooms_root)
+    ts = archived_at or _utc_now()
+    archive_root = rooms_root / ".archive"
+    archive_root.mkdir(parents=True, exist_ok=True)
+    archive_id = f"{safe_room_id}-{_timestamp_slug(ts)}"
+    archive_path = archive_root / archive_id
+    index = 2
+    while archive_path.exists():
+        archive_path = archive_root / f"{archive_id}-{index}"
+        index += 1
+    archive_note = "\n".join(
+        [
+            f"room_id: {safe_room_id}",
+            f"name: {_markdown_value(preview.room_name)}",
+            f"archived_at: {ts}",
+            f"approval_id: {safe_approval_id}",
+            f"original_room_path: {room_path}",
+            "archive_type: local_reversible_archive",
+            "memory_written: false",
+            "approved_memory_deleted: false",
+            "context_reuse: disabled_until_user_approved",
+            "linked_memory_review: not_available_requires_manual_memory_review",
+            "",
+        ]
+    )
+
+    try:
+        room_path.rename(archive_path)
+        (archive_path / "archive.md").write_text(archive_note, encoding="utf-8")
+    except OSError:
+        raise
+
+    return RoomArchiveResult(
+        room_id=safe_room_id,
+        room_name=preview.room_name,
+        original_room_path=str(room_path),
+        archived_room_path=str(archive_path),
+        archived_at=ts,
+        approval_id=safe_approval_id,
+        transcript_count=preview.transcript_count,
+        summary_count=preview.summary_count,
+        master_prompt_status=preview.master_prompt_status,
+    )
 
 
 def read_room_transcript(
@@ -723,6 +838,8 @@ def room_manifest() -> dict[str, Any]:
         "master_prompt_enabled": False,
         "master_prompt_draft_api_enabled": True,
         "master_prompt_policy": "draft_requires_backend_approval_context_reuse_disabled",
+        "room_archive_api_enabled": True,
+        "room_archive_policy": "backend_approval_required_local_archive_only",
         "tracked_issue": "#135",
         "rooms": [room.model_dump() for room in rooms],
         "total": len(rooms),

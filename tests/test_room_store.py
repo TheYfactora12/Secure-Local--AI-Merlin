@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from merlin.room_store import (
+    archive_room,
     create_room,
     delete_room_transcript,
     generate_room_master_prompt_draft,
     list_room_transcripts,
     list_rooms,
     read_room_transcript,
+    room_archive_preview,
     room_manifest,
     save_room_transcript,
 )
@@ -52,6 +54,8 @@ def test_room_manifest_defaults_to_read_only_no_context(monkeypatch, tmp_path) -
     assert manifest["master_prompt_enabled"] is False
     assert manifest["master_prompt_draft_api_enabled"] is True
     assert manifest["master_prompt_policy"] == "draft_requires_backend_approval_context_reuse_disabled"
+    assert manifest["room_archive_api_enabled"] is True
+    assert manifest["room_archive_policy"] == "backend_approval_required_local_archive_only"
     assert manifest["memory_extraction_enabled"] is False
     assert manifest["cloud_sync_default"] is False
     assert manifest["browser_file_controls_enabled"] is False
@@ -270,6 +274,46 @@ def test_delete_room_transcript_removes_one_saved_session_only(tmp_path) -> None
     assert (tmp_path / "merlin-build" / "transcripts" / f"{first.transcript_id}.md").exists()
     assert not (tmp_path / "merlin-build" / "transcripts" / f"{second.transcript_id}.md").exists()
     assert (tmp_path / "merlin-build" / "room.md").exists()
+
+
+def test_archive_room_moves_room_to_local_archive_without_memory(tmp_path) -> None:
+    saved = save_room_transcript(
+        room_id="merlin-build",
+        room_name="Merlin Build",
+        user_input="Archive this project room",
+        merlin_response="Use a reversible local archive.",
+        session_id="session-archive",
+        approval_id="approval-save",
+        root=tmp_path,
+        created_at="2026-05-10T13:00:00+00:00",
+    )
+    prompt_dir = tmp_path / "merlin-build" / "master-prompts"
+    prompt_dir.mkdir(exist_ok=True)
+    (prompt_dir / "master-prompt.md").write_text("draft prompt", encoding="utf-8")
+
+    preview = room_archive_preview("merlin-build", root=tmp_path)
+    result = archive_room(
+        room_id="merlin-build",
+        approval_id="approval-archive",
+        root=tmp_path,
+        archived_at="2026-05-10T14:00:00+00:00",
+    )
+
+    assert preview.transcript_count == 1
+    assert preview.master_prompt_status == "draft"
+    assert result.room_id == "merlin-build"
+    assert result.room_name == "Merlin Build"
+    assert result.transcript_count == 1
+    assert result.master_prompt_status == "draft"
+    assert result.memory_written is False
+    assert result.approved_memory_deleted is False
+    assert result.context_reuse == "disabled_until_user_approved"
+    assert result.linked_memory_review == "not_available_requires_manual_memory_review"
+    assert not (tmp_path / "merlin-build").exists()
+    archived_path = tmp_path / ".archive" / "merlin-build-2026-05-10-140000z"
+    assert archived_path.is_dir()
+    assert (archived_path / "transcripts" / f"{saved.transcript_id}.md").exists()
+    assert "approved_memory_deleted: false" in (archived_path / "archive.md").read_text(encoding="utf-8")
 
 
 def test_generate_room_master_prompt_draft_requires_transcript(tmp_path) -> None:

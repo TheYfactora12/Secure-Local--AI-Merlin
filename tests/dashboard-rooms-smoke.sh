@@ -71,8 +71,16 @@ grep -q "Reopen latest" "$DASHBOARD_FILE" \
   || fail "Rooms table must expose latest transcript reopen action"
 grep -q "Delete latest transcript" "$DASHBOARD_FILE" \
   || fail "Rooms table must expose latest transcript delete action"
-grep -q "whole-Room archive/delete locked until linked-memory review exists" "$DASHBOARD_FILE" \
-  || fail "Rooms table must keep whole-Room archive/delete locked"
+grep -q "Archive Room" "$DASHBOARD_FILE" \
+  || fail "Rooms table must expose one-time whole-Room archive action"
+grep -q "function prepareRoomArchive" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must prepare whole-Room archive approval"
+grep -q "Whole Room archive approval" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must show whole-Room archive approval card"
+grep -q "Approved memory is not deleted" "$DASHBOARD_FILE" \
+  || fail "Rooms archive flow must warn that approved memory is not deleted"
+grep -q "No Room files were moved" "$DASHBOARD_FILE" \
+  || fail "Rooms archive cancel path must fail closed"
 grep -q "Ask Merlin first. Save becomes available after a safe local response returns" "$DASHBOARD_FILE" \
   || fail "Rooms table save action must fail closed before Merlin responds"
 grep -q "selectTab('chat')" "$DASHBOARD_FILE" \
@@ -153,6 +161,10 @@ for required in \
   "POST http://localhost:8766/rooms/transcripts/read" \
   "POST http://localhost:8766/approvals/room-transcript-delete" \
   "POST http://localhost:8766/rooms/transcripts/delete" \
+  "POST http://localhost:8766/approvals/room-archive" \
+  "POST http://localhost:8766/rooms/archive" \
+  "local reversible archive" \
+  "approved memory is not deleted" \
   "deletes one saved transcript/session inside a Room" \
   "The approval is marked used after the local read" \
   "rejects approvals that are still"; do
@@ -173,6 +185,10 @@ grep -q "/approvals/room-transcript-delete" "$DASHBOARD_FILE" \
   || fail "dashboard missing Room transcript delete approval path"
 grep -q "/rooms/transcripts/delete" "$DASHBOARD_FILE" \
   || fail "dashboard missing approved Room transcript delete path"
+grep -q "/approvals/room-archive" "$DASHBOARD_FILE" \
+  || fail "dashboard missing whole-Room archive approval path"
+grep -q "/rooms/archive" "$DASHBOARD_FILE" \
+  || fail "dashboard missing approved whole-Room archive path"
 grep -q "Allow once to reopen saved chat" "$DASHBOARD_FILE" \
   || fail "Rooms surface must expose one-time saved chat reopen approval"
 grep -q "Delete this saved transcript" "$DASHBOARD_FILE" \
