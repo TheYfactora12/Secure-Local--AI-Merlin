@@ -154,6 +154,8 @@ Wizard HQ should show:
 - active Room,
 - Room storage path,
 - Room reference policy,
+- a Room Review Table with Room metadata, local path, transcript count, latest
+  transcript action, Room Master Prompt status, and safe actions,
 - save-to-Room state,
 - memory extraction state,
 - delete/export status.
@@ -162,6 +164,15 @@ Discovery remains read-only. The current dashboard may request an approved save
 for the latest completed Merlin exchange only through the Task API approval
 lifecycle. Arbitrary browser filesystem controls, folder picking, indexing, and
 memory extraction remain locked.
+
+The Room Review Table is metadata-only. It may let the user open a Room in
+Merlin Chat, start the existing one-time save approval for the latest safe
+Merlin response, reopen the latest saved transcript through the one-time read
+approval, or delete one saved transcript through the one-time delete approval.
+It must not show raw transcript bodies, approve Room context reuse, delete a
+whole Room, or bypass the Task API approval lifecycle. Whole-Room archive/delete
+remains locked until linked approved memory and Room Master Prompt artifacts can
+be reviewed before removal.
 
 Install-time setup creates the default local folder layout:
 

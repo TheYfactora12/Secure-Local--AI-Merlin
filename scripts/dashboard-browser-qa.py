@@ -150,12 +150,19 @@ def run_viewport(
         raise AssertionError("Search chip did not toggle on")
 
     page.screenshot(path=str(output / f"{name}-typed.png"), full_page=True)
+
+    page.locator('[data-tab-target="rooms"]').click()
+    require_visible(page, "text=Room Review Table", "Rooms review table heading")
+    require_visible(page, "#rooms-review-table", "Rooms review table")
+    require_visible(page, "text=Room archive/delete remains locked", "whole-Room archive/delete lock")
+    page.screenshot(path=str(output / f"{name}-rooms.png"), full_page=True)
+
     context.close()
     return {
         "viewport": name,
         "width": width,
         "height": height,
-        "screenshots": [f"{name}-empty.png", f"{name}-typed.png"],
+        "screenshots": [f"{name}-empty.png", f"{name}-typed.png", f"{name}-rooms.png"],
     }
 
 

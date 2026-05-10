@@ -1011,6 +1011,67 @@ button.mode-pill:hover {
 .mini-control.locked {
   border-color: rgba(243, 201, 105, 0.18);
 }
+.rooms-review-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+.rooms-review-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.rooms-review-table th,
+.rooms-review-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  vertical-align: top;
+  text-align: left;
+}
+.rooms-review-table th {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.025);
+}
+.rooms-review-table td {
+  color: var(--muted);
+}
+.rooms-review-table strong {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+}
+.rooms-review-table code {
+  color: var(--dim);
+  font-size: 11px;
+}
+.room-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.room-table-action {
+  border: 1px solid rgba(103, 232, 249, 0.28);
+  border-radius: 9999px;
+  padding: 6px 9px;
+  background: rgba(103, 232, 249, 0.07);
+  color: var(--cyan);
+  font-size: 11px;
+  cursor: pointer;
+}
+.room-table-action.secondary {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+}
+.room-table-action.locked {
+  border-color: rgba(243, 201, 105, 0.22);
+  color: var(--gold);
+  cursor: default;
+}
 .mode-choice-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1941,6 +2002,20 @@ button.mode-pill:hover {
           <div class="status-pill"><strong>Save to Room</strong><span class="locked">locked until Task API write gate</span></div>
         </div>
       </article>
+      <article class="surface-card wide">
+        <h3>Room Review Table</h3>
+        <p>Review local Room metadata in one place. This table shows safe metadata only: no raw transcript body, no approved memory reuse, and no whole-Room delete until the archive/delete approval design exists. Room archive/delete remains locked until linked-memory review exists.</p>
+        <div id="rooms-review-table" class="rooms-review-wrap" aria-label="Room review table">
+          <table class="rooms-review-table">
+            <thead>
+              <tr><th>Room</th><th>Storage</th><th>Transcripts</th><th>Master Prompt</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="5">Checking local Rooms...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
       <article class="surface-card">
         <h3>Room Storage</h3>
         <p>Room files will live where the user chooses. A synced folder is treated as a local filesystem path, not cloud inference.</p>
@@ -2469,6 +2544,17 @@ function selectActiveRoom(roomId, roomName, openChat = false) {
 
 function openRoomInChat(roomId, roomName) {
   selectActiveRoom(roomId, roomName, true);
+}
+
+function saveCurrentChatToRoom(roomId, roomName) {
+  selectActiveRoom(roomId, roomName, true);
+  if (!lastMerlinExchange) {
+    roomSaveStatus = 'Ask Merlin first. Save becomes available after a safe local response returns.';
+    roomSaveState = 'warn';
+    updateRoomSavePanel();
+    return;
+  }
+  window.setTimeout(() => requestRoomTranscriptApproval(), 0);
 }
 
 async function createRoomFromField(fieldId) {
@@ -3614,8 +3700,52 @@ async function loadProviders() {
   }
 }
 
+function roomReviewTableHtml(data) {
+  const rooms = (data && data.rooms) || [];
+  const roomReviewRows = rooms.map(room => {
+    const roomId = safe(room.room_id, DEFAULT_ROOM_ID);
+    const roomName = safe(room.name || room.room_id, roomId);
+    const active = roomId === selectedRoomId;
+    const transcripts = room.transcripts || [];
+    const latestTranscript = transcripts[0] || {};
+    const latestTitle = latestTranscript.title || latestTranscript.transcript_id || 'No saved transcripts';
+    const latestId = latestTranscript.transcript_id || '';
+    const masterPrompt = room.master_prompt || {};
+    const canSave = Boolean(lastMerlinExchange);
+    const transcriptAction = latestId
+      ? `<button class="room-table-action secondary" type="button" onclick="openSavedRoomChat(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(latestId)})">Reopen latest</button>
+         <button class="room-table-action secondary" type="button" onclick="prepareSavedTranscriptRemoval(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(latestId)})">Delete latest transcript</button>`
+      : '<span class="chip neutral">no saved chat yet</span>';
+    return `
+      <tr class="${active ? 'active-room-row' : ''}">
+        <td><strong>${escapeHtml(roomName)}</strong><span class="chip ${active ? 'good' : 'neutral'}">${active ? 'active' : 'available'}</span></td>
+        <td><code>${escapeHtml(room.path || data.rooms_root || '~/Merlin/brain/rooms')}</code><br><span>${escapeHtml(room.reference_policy || 'no_room_context')}</span></td>
+        <td><strong>${escapeHtml(room.transcript_count || 0)} saved</strong><span>${escapeHtml(latestTitle)} · raw hidden</span></td>
+        <td><strong>${escapeHtml(masterPrompt.status || 'missing')}</strong><span>context reuse disabled until approved</span></td>
+        <td>
+          <div class="room-action-row">
+            <button class="room-table-action" type="button" onclick="openRoomInChat(${jsArg(roomId)}, ${jsArg(roomName)})">Open in Chat</button>
+            <button class="room-table-action ${canSave ? '' : 'secondary'}" type="button" onclick="saveCurrentChatToRoom(${jsArg(roomId)}, ${jsArg(roomName)})">${canSave ? 'Save current chat' : 'Save after Merlin responds'}</button>
+            ${transcriptAction}
+            <span class="room-table-action locked">Room archive/delete remains locked until linked-memory review exists</span>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  return `
+    <table class="rooms-review-table">
+      <thead>
+        <tr><th>Room</th><th>Storage</th><th>Transcripts</th><th>Master Prompt</th><th>Actions</th></tr>
+      </thead>
+      <tbody>${roomReviewRows || '<tr><td colspan="5">No local Rooms discovered. Create a Room by name to start filing chats.</td></tr>'}</tbody>
+    </table>
+  `;
+}
+
 async function loadRooms() {
   const panel = document.getElementById('rooms-manifest-panel');
+  const reviewPanel = document.getElementById('rooms-review-table');
   try {
     const data = await getJson(`${TASK_API}/status/rooms`);
     readinessState.rooms = data;
@@ -3624,8 +3754,11 @@ async function loadRooms() {
       selectedRoomName = DEFAULT_ROOM_NAME;
     }
     renderRoomPicker();
-    if (!panel) return;
     const rooms = data.rooms || [];
+    if (reviewPanel) {
+      reviewPanel.innerHTML = roomReviewTableHtml(data);
+    }
+    if (!panel) return;
     const roomRows = rooms.map(room => {
       const roomId = safe(room.room_id, DEFAULT_ROOM_ID);
       const roomName = safe(room.name || room.room_id, roomId);
@@ -3668,6 +3801,16 @@ async function loadRooms() {
   } catch (_) {
     readinessState.rooms = null;
     renderRoomPicker();
+    if (reviewPanel) {
+      reviewPanel.innerHTML = `
+        <table class="rooms-review-table">
+          <thead>
+            <tr><th>Room</th><th>Storage</th><th>Transcripts</th><th>Master Prompt</th><th>Actions</th></tr>
+          </thead>
+          <tbody><tr><td colspan="5">Rooms review table warming. Task API status is unavailable.</td></tr></tbody>
+        </table>
+      `;
+    }
     if (panel) {
       panel.innerHTML = '<div class="status-pill"><strong>Rooms manifest</strong><span>warming</span></div><div class="status-pill"><strong>Save to Room</strong><span class="locked">backend approval required</span></div>';
     }

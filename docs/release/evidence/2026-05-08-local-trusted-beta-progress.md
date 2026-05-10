@@ -10270,3 +10270,151 @@ desktop/mobile evidence without a human manually driving every check.
 
 Positive, but public beta remains blocked until browser QA evidence is actually
 generated and the full installer retest is complete.
+
+## 2026-05-10 - Rooms Review Table And Browser QA Expansion
+
+### Date/Time
+
+2026-05-10 10:22 EDT
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`9c4bde49c5b173e10ee270ec9df17a6d10e1f7fe`
+
+### Target Issues
+
+- #106 Wizard HQ Product Shell.
+- #135 Merlin Rooms for local chat history and scoped context.
+- #95 release-readiness evidence.
+
+### Scope
+
+Add a metadata-only Room Review Table to Wizard HQ so users can see Rooms,
+storage, transcript counts, Room Master Prompt status, and safe Room actions in
+one place. Expand the optional browser QA harness to capture the Rooms page on
+desktop and mobile.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `scripts/dashboard-browser-qa.py`
+- `tests/dashboard-browser-qa-smoke.sh`
+- `tests/dashboard-rooms-smoke.sh`
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `docs/release/evidence/assets/2026-05-10-wizard-hq-room-table-qa/*`
+- release evidence note
+
+### Protected Files Touched
+
+None. No installer behavior, cloud default, telemetry, Task API policy,
+memory-write policy, model download behavior, or 8765/8766 boundary changed.
+
+### Commands Run
+
+- `git diff --check`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-browser-qa-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py tests/test_router.py tests/test_status_extension.py`
+- `.venv-test/bin/python scripts/dashboard-browser-qa.py --output-dir docs/release/evidence/assets/2026-05-10-wizard-hq-room-table-qa`
+
+### Test Output Summary
+
+- `git diff --check`: PASS.
+- Rooms static smoke: PASS.
+- Browser QA static smoke: PASS.
+- Native Merlin Chat smoke: PASS.
+- Chat first-run smoke: PASS.
+- Python regression suite: PASS, 110 tests passed.
+- Live browser QA: PASS, desktop/mobile Chat and Rooms screenshots written to
+  `docs/release/evidence/assets/2026-05-10-wizard-hq-room-table-qa/`.
+
+### Tests Skipped And Why
+
+No relevant static or unit tests were skipped. Full installer retest was not run
+because this slice changed Wizard HQ UI and documentation only; the installer
+retest remains required after the Wizard HQ Rooms changes settle.
+
+### Failures Found
+
+No new failing tests in this slice. Browser screenshot review found the Rooms
+surface is functional but still visually dense and low-contrast when Task API is
+warming.
+
+### Failure Category
+
+- UX/readiness polish gap.
+- Release evidence gap reduced by screenshot capture.
+
+### Root Cause Or Current Hypothesis
+
+Rooms is now real enough to need a user-facing management surface. The previous
+Rooms manifest was technically correct but did not give a single place to open a
+Room, save the current chat, reopen a saved transcript, or start transcript
+deletion.
+
+### Fix Applied
+
+- Added a metadata-only `Room Review Table` in Wizard HQ.
+- Added safe actions for `Open in Chat`, `Save current chat`, `Reopen latest`,
+  and `Delete latest transcript`.
+- Kept whole-Room archive/delete locked until linked-memory review exists.
+- Made table save fail closed before Merlin returns a safe response.
+- Added static smoke coverage for the table and actions.
+- Expanded browser QA to click the Rooms tab and capture `*-rooms.png`
+  screenshots.
+- Updated canonical state and Rooms architecture docs.
+
+### Retest Result
+
+PASS for static smokes, Python regressions, and live browser screenshot QA.
+
+### Regression Test Added Or Updated
+
+- `tests/dashboard-rooms-smoke.sh`
+- `tests/dashboard-browser-qa-smoke.sh`
+- `scripts/dashboard-browser-qa.py`
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended #135 child issue:
+
+**Title:** `v3.1 Rooms: add duplicate Room suggestions and whole-Room archive/delete review`
+
+Scope: detect similar Room names/topics before creating new Rooms, add
+whole-Room archive/delete as a separate approval-gated flow, show linked
+approved memory and Room Master Prompt artifacts before removal, and keep
+deletion fail-closed if the linked-memory review cannot load.
+
+### Lesson Learned
+
+The Room feature needs a table/list management surface before more context
+intelligence is added. Users should not have to infer where transcripts live or
+which Room they are filing into from the chat composer alone.
+
+### What Not To Repeat Next Time
+
+Do not add more Room intelligence before the user can inspect, reopen, and
+remove saved Room artifacts from one clear place.
+
+### Next Recommended Step
+
+Polish the live Rooms table visual density and add the duplicate/similar Room
+suggestion flow before implementing any approve-for-context reuse.
+
+### Local Trusted Beta Impact
+
+Positive. Rooms are easier to validate and explain, and the project now has
+browser screenshot evidence covering the Rooms page.
+
+### Public Beta Impact
+
+Positive, but Public Beta remains blocked by full installer retest, broader
+first-run evidence on a clean machine, whole-Room archive/delete design, memory
+review/delete completion, and final packaging evidence.

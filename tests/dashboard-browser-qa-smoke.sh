@@ -30,6 +30,12 @@ grep -q "Ask Merlin button should be active after typing" "$QA_SCRIPT" \
   || fail "browser QA must validate composer send state"
 grep -q "Search chip did not toggle on" "$QA_SCRIPT" \
   || fail "browser QA must validate interactive chip state"
+grep -q "Room Review Table" "$QA_SCRIPT" \
+  || fail "browser QA must validate Rooms review table"
+grep -q "Room archive/delete remains locked" "$QA_SCRIPT" \
+  || fail "browser QA must validate whole-Room archive/delete lock"
+grep -q "rooms.png" "$QA_SCRIPT" \
+  || fail "browser QA must capture Rooms viewport screenshots"
 grep -q "cloud_calls_expected.*False" "$QA_SCRIPT" \
   || fail "browser QA summary must preserve no-cloud expectation"
 grep -q "browser_shell_execution.*False" "$QA_SCRIPT" \

@@ -24,6 +24,14 @@ grep -q "function loadRooms" "$DASHBOARD_FILE" \
   || fail "dashboard missing Rooms manifest loader"
 grep -q "rooms-manifest-panel" "$DASHBOARD_FILE" \
   || fail "dashboard missing Rooms manifest panel"
+grep -q "Room Review Table" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Room review table"
+grep -q "rooms-review-table" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Room review table container"
+grep -q "function roomReviewTableHtml" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Room review table renderer"
+grep -q "function saveCurrentChatToRoom" "$DASHBOARD_FILE" \
+  || fail "dashboard missing user-initiated Room table save action"
 grep -q "Saving the latest chat uses the backend approval lifecycle and writes local Markdown only" "$DASHBOARD_FILE" \
   || fail "Rooms manifest must describe approval-gated local save behavior"
 grep -q "Room Master Prompt drafts require a separate backend approval and are not approved context" "$DASHBOARD_FILE" \
@@ -59,6 +67,14 @@ grep -q "function openRoomInChat" "$DASHBOARD_FILE" \
   || fail "Rooms tab must let users jump back into Chat with a Room selected"
 grep -q "Open in Chat" "$DASHBOARD_FILE" \
   || fail "Rooms list must expose Room launcher actions"
+grep -q "Reopen latest" "$DASHBOARD_FILE" \
+  || fail "Rooms table must expose latest transcript reopen action"
+grep -q "Delete latest transcript" "$DASHBOARD_FILE" \
+  || fail "Rooms table must expose latest transcript delete action"
+grep -q "Room archive/delete remains locked until linked-memory review exists" "$DASHBOARD_FILE" \
+  || fail "Rooms table must keep whole-Room archive/delete locked"
+grep -q "Ask Merlin first. Save becomes available after a safe local response returns" "$DASHBOARD_FILE" \
+  || fail "Rooms table save action must fail closed before Merlin responds"
 grep -q "selectTab('chat')" "$DASHBOARD_FILE" \
   || fail "Room launcher must return the user to Merlin Chat"
 grep -q "active this session" "$DASHBOARD_FILE" \
