@@ -4,6 +4,7 @@ from merlin.room_store import (
     generate_room_master_prompt_draft,
     list_room_transcripts,
     list_rooms,
+    read_room_transcript,
     room_manifest,
     save_room_transcript,
 )
@@ -162,6 +163,47 @@ def test_save_room_transcript_requires_approval_id(tmp_path) -> None:
         assert "approval_id must not be empty" in str(exc)
     else:
         raise AssertionError("approval_id must be required")
+
+
+def test_read_room_transcript_returns_selected_local_chat_without_memory(tmp_path) -> None:
+    saved = save_room_transcript(
+        room_id="merlin-build",
+        room_name="Merlin Build",
+        user_input="What should the chat do?",
+        merlin_response="Reopen saved Room chats only after approval.",
+        session_id="session-1",
+        approval_id="approval-1",
+        root=tmp_path,
+        created_at="2026-05-09T12:00:00+00:00",
+    )
+
+    result = read_room_transcript(
+        room_id="merlin-build",
+        transcript_id=saved.transcript_id,
+        root=tmp_path,
+    )
+
+    assert result.room_id == "merlin-build"
+    assert result.room_name == "Merlin Build"
+    assert result.transcript_id == saved.transcript_id
+    assert result.user_input == "What should the chat do?"
+    assert result.merlin_response == "Reopen saved Room chats only after approval."
+    assert result.raw_content_loaded is True
+    assert result.memory_written is False
+    assert result.context_reuse == "disabled_until_user_approved"
+
+
+def test_read_room_transcript_rejects_unsafe_transcript_id(tmp_path) -> None:
+    try:
+        read_room_transcript(
+            room_id="merlin-build",
+            transcript_id="../bad",
+            root=tmp_path,
+        )
+    except ValueError as exc:
+        assert "room_id must be a safe slug" in str(exc)
+    else:
+        raise AssertionError("unsafe transcript ids must be rejected")
 
 
 def test_generate_room_master_prompt_draft_requires_transcript(tmp_path) -> None:

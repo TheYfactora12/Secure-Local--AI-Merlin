@@ -202,7 +202,7 @@ Wizard HQ currently uses this path only for:
 
 - the latest completed Merlin response,
 - the selected active Room in browser UI state, defaulting to `merlin-build`,
-- explicit "Prepare Room save" then "Allow local save" clicks,
+- explicit "Prepare Room save" then "Allow once" clicks,
 - local transcript history only.
 
 Active Room selection is session-local in Wizard HQ. It is not persisted to
@@ -226,7 +226,24 @@ POST http://localhost:8766/approvals/{approval_id}/deny
 The approval request stores a redacted payload hash and Room/session metadata.
 It does not store raw user input or raw Merlin response text. The transcript
 save endpoint re-computes the payload hash and rejects approvals that are still
-pending, denied, missing, or bound to different transcript content.
+pending, denied, missing, already used, or bound to different transcript
+content.
+
+Current implementation also exposes an approval-gated local read path for
+reopening saved chats:
+
+```text
+POST http://localhost:8766/approvals/room-transcript-read
+POST http://localhost:8766/rooms/transcripts/read
+```
+
+This path requires a redacted `file_read` approval for the selected Room and
+transcript id. Wizard HQ uses it when the user selects a saved Room transcript
+from Room History and then clicks `Allow once`. The read endpoint returns only
+the selected transcript's User and Merlin sections to the chat view. It does not
+write memory, approve context reuse, index Room content, or share context across
+Rooms. The approval is marked used after the local read, so Merlin asks again
+next time.
 
 Current implementation also exposes a separate approval-gated Room Master Prompt
 draft path:

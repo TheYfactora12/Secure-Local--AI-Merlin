@@ -68,8 +68,16 @@ grep -q "Room History" "$DASHBOARD_FILE" \
   || fail "dashboard missing Room history side panel"
 grep -q "openSavedRoomChat" "$DASHBOARD_FILE" \
   || fail "dashboard missing saved Room chat launcher"
-grep -q "Reopening raw transcript content requires a future policy-gated local read" "$DASHBOARD_FILE" \
-  || fail "dashboard must not pretend raw transcript reopen is implemented"
+grep -q "Reopening raw transcript content requires one-time local read approval" "$DASHBOARD_FILE" \
+  || fail "dashboard must require one-time approval for saved transcript reopen"
+grep -q "/approvals/room-transcript-read" "$DASHBOARD_FILE" \
+  || fail "dashboard missing saved transcript read approval endpoint"
+grep -q "/rooms/transcripts/read" "$DASHBOARD_FILE" \
+  || fail "dashboard missing approved saved transcript read endpoint"
+grep -q "function allowRoomTranscriptRead" "$DASHBOARD_FILE" \
+  || fail "dashboard missing allow-once saved transcript read handler"
+grep -q "will not write memory, approve context reuse, or share it across Rooms" "$DASHBOARD_FILE" \
+  || fail "dashboard must explain saved transcript read boundaries"
 grep -q "front-composer-wrap" "$DASHBOARD_FILE" \
   || fail "dashboard missing premium composer wrapper"
 grep -q "composer-tools" "$DASHBOARD_FILE" \

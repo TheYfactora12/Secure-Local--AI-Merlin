@@ -20,9 +20,12 @@ from pydantic import BaseModel
 from merlin.approval_store import (
     ApprovalRecord,
     create_room_master_prompt_approval,
+    create_room_transcript_read_approval,
     create_room_transcript_approval,
     decide_approval,
+    mark_approval_used,
     require_room_master_prompt_approval,
+    require_room_transcript_read_approval,
     require_room_transcript_approval,
 )
 from merlin.memory_manager import MemoryManager
@@ -31,9 +34,11 @@ from merlin.persona_injector import build_system_prompt
 from merlin.policy_engine import ApprovalRequiredError, requires_approval
 from merlin.room_store import (
     RoomMasterPromptDraftResult,
+    RoomTranscriptReadResult,
     RoomTranscriptSaveResult,
     count_room_transcripts,
     generate_room_master_prompt_draft,
+    read_room_transcript,
     save_room_transcript,
 )
 from merlin.router import RouteDecision, route_task
@@ -96,6 +101,12 @@ class RoomTranscriptApprovalRequest(BaseModel):
     session_id: str
 
 
+class RoomTranscriptReadApprovalRequest(BaseModel):
+    room_id: str
+    room_name: str | None = None
+    transcript_id: str
+
+
 class RoomTranscriptApprovalResponse(BaseModel):
     approval_request_id: str
     status: str
@@ -128,6 +139,26 @@ class RoomMasterPromptDraftResponse(BaseModel):
     memory_written: bool
     approved_for_context: bool
     context_reuse: str
+
+
+class RoomTranscriptReadRequest(BaseModel):
+    room_id: str
+    room_name: str | None = None
+    transcript_id: str
+    approval_id: str | None = None
+
+
+class RoomTranscriptReadResponse(BaseModel):
+    status: str
+    room_id: str
+    room_name: str
+    transcript_id: str
+    user_input: str
+    merlin_response: str
+    memory_written: bool
+    context_reuse: str
+    raw_content_loaded: bool
+    audit_id: str | None
 
 
 class ApprovalDecisionResponse(BaseModel):
@@ -333,6 +364,29 @@ def _write_room_master_prompt_audit(
         return None
 
 
+def _write_room_transcript_read_audit(
+    result: RoomTranscriptReadResult,
+    request: RoomTranscriptReadRequest,
+) -> str | None:
+    metadata = {
+        "room_id": result.room_id,
+        "room_name": result.room_name,
+        "transcript_id": result.transcript_id,
+        "transcript_path": result.transcript_path,
+        "approval_id": request.approval_id,
+        "size_bytes": result.size_bytes,
+        "modified_at": result.modified_at,
+        "memory_written": False,
+        "context_reuse": result.context_reuse,
+        "raw_transcript_in_audit": False,
+        "cloud_sync_default": False,
+    }
+    try:
+        return MemoryManager().write_audit_event("room_transcript_read", metadata)
+    except Exception:
+        return None
+
+
 @app.post("/task", response_model=TaskResponse)
 def task(request: TaskRequest) -> TaskResponse:
     started = time.perf_counter()
@@ -482,6 +536,10 @@ def save_room_transcript_endpoint(request: RoomTranscriptSaveRequest) -> RoomTra
         ) from exc
 
     audit_id = _write_room_transcript_audit(result, request)
+    try:
+        mark_approval_used(approval_id)
+    except KeyError:
+        pass
     return RoomTranscriptSaveResponse(
         status="saved_local_transcript_only",
         room_id=result.room_id,
@@ -508,6 +566,90 @@ def create_room_transcript_approval_endpoint(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return _approval_response(record)
+
+
+@app.post("/approvals/room-transcript-read", response_model=RoomTranscriptApprovalResponse)
+def create_room_transcript_read_approval_endpoint(
+    request: RoomTranscriptReadApprovalRequest,
+) -> RoomTranscriptApprovalResponse:
+    try:
+        record = create_room_transcript_read_approval(
+            room_id=request.room_id,
+            room_name=request.room_name,
+            transcript_id=request.transcript_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return _approval_response(record)
+
+
+@app.post("/rooms/transcripts/read", response_model=RoomTranscriptReadResponse)
+def read_room_transcript_endpoint(request: RoomTranscriptReadRequest) -> RoomTranscriptReadResponse:
+    approval_id = (request.approval_id or "").strip()
+    if not approval_id:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": "Reading a saved Room transcript requires explicit approval.",
+                "approval_gates": ["file_read"],
+                "memory_written": False,
+                "context_reuse": "disabled_until_user_approved",
+            },
+        )
+
+    try:
+        require_room_transcript_read_approval(
+            approval_id=approval_id,
+            room_id=request.room_id,
+            room_name=request.room_name,
+            transcript_id=request.transcript_id,
+        )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": str(exc),
+                "approval_gates": ["file_read"],
+                "memory_written": False,
+                "context_reuse": "disabled_until_user_approved",
+            },
+        ) from exc
+
+    try:
+        result = read_room_transcript(
+            room_id=request.room_id,
+            transcript_id=request.transcript_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "Room transcript could not be read locally.",
+                "error": exc.__class__.__name__,
+            },
+        ) from exc
+
+    audit_id = _write_room_transcript_read_audit(result, request)
+    try:
+        mark_approval_used(approval_id)
+    except KeyError:
+        pass
+    return RoomTranscriptReadResponse(
+        status="read_local_transcript_only",
+        room_id=result.room_id,
+        room_name=result.room_name,
+        transcript_id=result.transcript_id,
+        user_input=result.user_input,
+        merlin_response=result.merlin_response,
+        memory_written=False,
+        context_reuse=result.context_reuse,
+        raw_content_loaded=True,
+        audit_id=audit_id,
+    )
 
 
 @app.post("/approvals/room-master-prompt", response_model=RoomTranscriptApprovalResponse)
@@ -586,6 +728,10 @@ def generate_room_master_prompt_draft_endpoint(
         ) from exc
 
     audit_id = _write_room_master_prompt_audit(result, request)
+    try:
+        mark_approval_used(approval_id)
+    except KeyError:
+        pass
     return RoomMasterPromptDraftResponse(
         status="draft_saved_local_only",
         room_id=result.room_id,

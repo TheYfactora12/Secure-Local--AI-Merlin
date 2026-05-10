@@ -8801,3 +8801,155 @@ default and permanent allow is not silently enabled.
 Positive, but public beta still needs browser click-through evidence and a
 designed permanent approval settings model before offering always-allow
 behavior.
+
+## 2026-05-10 - Policy-Gated Saved Room Reopen
+
+### Date/Time
+
+2026-05-10 08:35 EDT
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`3256773923c25318c17c87a254e5a7e256c46112`
+
+### Target Issues
+
+- #135 Rooms and local transcript flow.
+- #31/#32 approval-gated memory/review principles.
+- #106 Wizard HQ product shell.
+
+### Scope
+
+Add a narrow approval-gated saved transcript reopen path. Selecting a saved
+Room transcript now prepares a one-time local file-read approval, and `Allow
+once` reopens that transcript in Merlin Chat without writing memory or enabling
+Room context reuse.
+
+### Files Changed
+
+- `merlin/approval_store.py`
+- `merlin/room_store.py`
+- `merlin/task_endpoint.py`
+- `dashboard/index.html`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `tests/test_room_store.py`
+- `tests/test_task_endpoint.py`
+- `tests/dashboard-native-chat-smoke.sh`
+- `tests/dashboard-rooms-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `merlin/task_endpoint.py`: touched to add policy-gated read endpoints only.
+- No installer, cloud, telemetry, model download, or browser execution behavior
+  changed.
+
+### Commands Run
+
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py tests/test_status_extension.py`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-security-center-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-model-readiness-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `bash tests/dashboard-merlin-status-smoke.sh`
+- `bash tests/dashboard-readiness-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- Python tests: 63 passed.
+- Native chat smoke: PASS.
+- Rooms smoke: PASS.
+- Security center smoke: PASS.
+- First-run smoke: PASS.
+- Model readiness smoke: PASS.
+- Tabs smoke: PASS.
+- Merlin status smoke: PASS.
+- Readiness smoke: PASS.
+- Settings policy smoke: PASS.
+- Diff whitespace check: PASS.
+
+### Tests Skipped And Why
+
+- Live browser click-through is deferred until after the local server is running
+  cleanly. Static dashboard smokes and backend unit tests cover the policy
+  contract for this slice.
+
+### Failures Found
+
+One command/read failure during inspection:
+
+```text
+sed: merlin/rooms.py: No such file or directory
+```
+
+### Failure Category
+
+- Documentation mismatch
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+I looked for `merlin/rooms.py` from memory, but the actual module is
+`merlin/room_store.py`. This was an operator context mistake, not a repo
+runtime defect.
+
+### Fix Applied
+
+- Continued against the correct `merlin/room_store.py` module.
+- Recorded the mismatch here so future sessions search `room_store.py` first.
+
+### Retest Result
+
+PASS for all commands listed above.
+
+### Regression Test Added Or Updated
+
+- `tests/test_room_store.py` verifies selected transcript read rejects unsafe
+  transcript ids and returns User/Merlin sections without memory/context reuse.
+- `tests/test_task_endpoint.py` verifies transcript read requires a matching
+  file-read approval, raw content is absent from approval/audit metadata, and
+  the same approval cannot be reused.
+- `tests/dashboard-native-chat-smoke.sh` verifies the saved transcript reopen
+  UI uses the approval-gated endpoints.
+- `tests/dashboard-rooms-smoke.sh` verifies the Rooms doc and dashboard expose
+  the one-time saved chat reopen boundary.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended: add browser automation that saves a Room transcript, clicks Room
+History, approves the one-time local read, and confirms the reopened transcript
+appears in chat.
+
+### Lesson Learned
+
+Room reopen is a file-read permission, not a status manifest feature. Raw
+transcript content should only cross into the browser after a Task API approval
+that is scoped to the selected Room and transcript id.
+
+### What Not To Repeat Next Time
+
+Do not load raw transcript content through `/status/rooms`. Do not use stale
+module names when the repo already has `merlin/room_store.py`.
+
+### Next Recommended Step
+
+Run the broader dashboard/release smoke set, then commit if checks remain
+green. After that, add browser click-through evidence for save -> reopen.
+
+### Local Trusted Beta Impact
+
+Positive. Saved Room chats can now be reopened in the product flow with a
+visible one-time approval boundary.
+
+### Public Beta Impact
+
+Positive, but public beta still needs browser evidence, visual polish review,
+and installer retest evidence after dashboard behavior changes.

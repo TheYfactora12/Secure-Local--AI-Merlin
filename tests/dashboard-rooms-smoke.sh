@@ -122,6 +122,9 @@ for required in \
   "POST http://localhost:8766/rooms/transcripts" \
   "This endpoint requires \`approval_id\`" \
   "POST http://localhost:8766/approvals/room-transcript" \
+  "POST http://localhost:8766/approvals/room-transcript-read" \
+  "POST http://localhost:8766/rooms/transcripts/read" \
+  "The approval is marked used after the local read" \
   "rejects approvals that are still"; do
   grep -Fq "$required" "$ROOMS_DOC" || fail "Rooms doc missing: $required"
 done
@@ -132,6 +135,14 @@ grep -q "/approvals/room-transcript" "$DASHBOARD_FILE" \
   || fail "dashboard missing Room transcript approval path"
 grep -q "/rooms/transcripts" "$DASHBOARD_FILE" \
   || fail "dashboard missing approved Room transcript save path"
+grep -q "/approvals/room-transcript-read" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Room transcript read approval path"
+grep -q "/rooms/transcripts/read" "$DASHBOARD_FILE" \
+  || fail "dashboard missing approved Room transcript read path"
+grep -q "Allow once to reopen saved chat" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must expose one-time saved chat reopen approval"
+grep -q "No local transcript was read, no memory was written" "$DASHBOARD_FILE" \
+  || fail "Rooms read cancel path must fail closed"
 
 if grep -qiE '<input|type="password"|writeRoom|deleteRoom|writeMemory|approveGate|denyGate|runShell|downloadModel|pullModel|data-action="approve"|data-action="deny"' "$DASHBOARD_FILE"; then
   fail "Rooms surface must not expose unsafe browser controls"

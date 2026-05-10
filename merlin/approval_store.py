@@ -91,6 +91,25 @@ def room_master_prompt_payload_hash(
     )
 
 
+def room_transcript_read_payload_hash(
+    *,
+    room_id: str,
+    room_name: str | None,
+    transcript_id: str,
+) -> str:
+    return stable_hash(
+        {
+            "action": "room_transcript_read",
+            "version": 1,
+            "room_id": room_id.strip(),
+            "room_name": (room_name or "").strip(),
+            "transcript_id": transcript_id.strip(),
+            "memory_write": False,
+            "context_reuse": "disabled_until_user_approved",
+        }
+    )
+
+
 def _append_record(record: ApprovalRecord, path: Path | None = None) -> None:
     approval_log = path or approval_log_path()
     approval_log.parent.mkdir(parents=True, exist_ok=True)
@@ -190,6 +209,40 @@ def create_room_master_prompt_approval(
     return record
 
 
+def create_room_transcript_read_approval(
+    *,
+    room_id: str,
+    room_name: str | None,
+    transcript_id: str,
+    path: Path | None = None,
+) -> ApprovalRecord:
+    payload_hash = room_transcript_read_payload_hash(
+        room_id=room_id,
+        room_name=room_name,
+        transcript_id=transcript_id,
+    )
+    record = ApprovalRecord(
+        approval_request_id=f"approval_room_transcript_read_{uuid.uuid4().hex[:12]}",
+        timestamp=now_iso(),
+        status="required_pending",
+        action="room_transcript_read",
+        approval_gates=["file_read"],
+        payload_hash=payload_hash,
+        payload_summary={
+            "room_id": room_id.strip(),
+            "room_name": (room_name or "").strip(),
+            "transcript_id": transcript_id.strip(),
+            "raw_content_in_approval": False,
+            "memory_write": False,
+            "context_reuse": "disabled_until_user_approved",
+        },
+        side_effects="none",
+        tool_execution="local_file_read_after_approval",
+    )
+    _append_record(record, path)
+    return record
+
+
 def decide_approval(approval_id: str, status: str, path: Path | None = None) -> ApprovalRecord:
     if status not in {"approved", "denied"}:
         raise ValueError("approval decision must be approved or denied")
@@ -210,6 +263,26 @@ def decide_approval(approval_id: str, status: str, path: Path | None = None) -> 
     )
     _append_record(decided, path)
     return decided
+
+
+def mark_approval_used(approval_id: str, path: Path | None = None) -> ApprovalRecord:
+    current = latest_approval(approval_id, path)
+    if current is None:
+        raise KeyError("approval id not found")
+    if current.status != "approved":
+        return current
+    used = current.model_copy(
+        update={
+            "timestamp": now_iso(),
+            "status": "used",
+            "execution_allowed": False,
+            "decision_recorded": True,
+            "decision_record_type": "approval_used",
+            "side_effects": current.side_effects,
+        }
+    )
+    _append_record(used, path)
+    return used
 
 
 def require_room_transcript_approval(
@@ -238,6 +311,31 @@ def require_room_transcript_approval(
     )
     if current.payload_hash != expected:
         raise PermissionError("approval payload hash does not match transcript payload")
+    return current
+
+
+def require_room_transcript_read_approval(
+    *,
+    approval_id: str,
+    room_id: str,
+    room_name: str | None,
+    transcript_id: str,
+    path: Path | None = None,
+) -> ApprovalRecord:
+    current = latest_approval(approval_id, path)
+    if current is None:
+        raise PermissionError("approval id not found")
+    if current.status != "approved" or not current.execution_allowed:
+        raise PermissionError("approval is not approved for execution")
+    if current.action != "room_transcript_read":
+        raise PermissionError("approval action does not match room transcript read")
+    expected = room_transcript_read_payload_hash(
+        room_id=room_id,
+        room_name=room_name,
+        transcript_id=transcript_id,
+    )
+    if current.payload_hash != expected:
+        raise PermissionError("approval payload hash does not match transcript read payload")
     return current
 
 

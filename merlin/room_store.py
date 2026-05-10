@@ -55,6 +55,20 @@ class RoomTranscriptSaveResult(BaseModel):
     approved_memory_written: bool = False
 
 
+class RoomTranscriptReadResult(BaseModel):
+    room_id: str
+    room_name: str
+    transcript_id: str
+    transcript_path: str
+    user_input: str
+    merlin_response: str
+    size_bytes: int
+    modified_at: str | None = None
+    raw_content_loaded: bool = True
+    memory_written: bool = False
+    context_reuse: str = "disabled_until_user_approved"
+
+
 class RoomMasterPromptRecord(BaseModel):
     status: str = "missing"
     path: str | None = None
@@ -226,6 +240,52 @@ def count_room_transcripts(room_id: str, root: Path | None = None) -> int:
     safe_room_id = _validate_room_id(room_id)
     rooms_root = root or rooms_root_path()
     return _count_markdown_files(rooms_root / safe_room_id / "transcripts")
+
+
+def read_room_transcript(
+    *,
+    room_id: str,
+    transcript_id: str,
+    root: Path | None = None,
+    max_chars: int = 24000,
+) -> RoomTranscriptReadResult:
+    """Read one saved transcript after the caller has required approval.
+
+    This is a local file read for chat reopening only. It does not approve the
+    transcript as reusable context and does not write memory.
+    """
+
+    safe_room_id = _validate_room_id(room_id)
+    safe_transcript_id = _validate_room_id(transcript_id)
+    rooms_root = root or rooms_root_path()
+    room_path = rooms_root / safe_room_id
+    transcript_path = room_path / "transcripts" / f"{safe_transcript_id}.md"
+    if not transcript_path.exists() or not transcript_path.is_file():
+        raise FileNotFoundError("Room transcript not found")
+
+    try:
+        size_bytes = transcript_path.stat().st_size
+    except OSError:
+        size_bytes = 0
+    raw_text = _read_text_limited(transcript_path, max_chars=max_chars)
+    if not raw_text.strip():
+        raise ValueError("Room transcript is empty or unreadable")
+    transcript_text = _strip_frontmatter(raw_text)
+    user_text = _extract_section(transcript_text, "User")
+    merlin_text = _extract_section(transcript_text, "Merlin")
+    if not user_text or not merlin_text:
+        raise ValueError("Room transcript is missing User or Merlin sections")
+
+    return RoomTranscriptReadResult(
+        room_id=safe_room_id,
+        room_name=_room_name_from_metadata(room_path / "room.md", safe_room_id.replace("-", " ").title()),
+        transcript_id=safe_transcript_id,
+        transcript_path=str(transcript_path),
+        user_input=user_text,
+        merlin_response=merlin_text,
+        size_bytes=size_bytes,
+        modified_at=_file_modified_at(transcript_path),
+    )
 
 
 def _validate_text_field(value: str, field_name: str, max_length: int) -> str:

@@ -238,6 +238,19 @@ def test_save_room_transcript_writes_local_file_without_memory(tmp_path, monkeyp
     assert audit_calls[0][1]["raw_transcript_in_audit"] is False
     assert "What are we building?" not in str(audit_calls[0][1])
     assert "Merlin Rooms." not in str(audit_calls[0][1])
+    reused_response = client.post(
+        "/rooms/transcripts",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "What are we building?",
+            "merlin_response": "Merlin Rooms.",
+            "session_id": "session-1",
+            "approval_id": approval_id,
+        },
+    )
+    assert reused_response.status_code == 403
+    assert "approval is not approved for execution" in reused_response.text
 
 
 def test_save_room_transcript_rejects_unapproved_or_mismatched_approval(tmp_path, monkeypatch) -> None:
@@ -316,6 +329,118 @@ def test_save_room_transcript_rejects_unsafe_room_id(tmp_path, monkeypatch) -> N
     )
 
     assert response.status_code == 400
+
+
+def test_read_room_transcript_requires_approval_id() -> None:
+    response = client.post(
+        "/rooms/transcripts/read",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_id": "2026-05-09",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"]["approval_gates"] == ["file_read"]
+    assert response.json()["detail"]["memory_written"] is False
+
+
+def test_read_room_transcript_requires_matching_one_time_approval(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("MERLIN_ROOMS_ROOT", str(tmp_path / "rooms"))
+    monkeypatch.setenv("MERLIN_APPROVAL_LOG", str(tmp_path / "approvals.jsonl"))
+    audit_calls = []
+
+    class FakeMemoryManager:
+        def write_audit_event(self, event_type: str, metadata: dict) -> str:
+            audit_calls.append((event_type, metadata))
+            return "audit-read-1"
+
+    monkeypatch.setattr("merlin.task_endpoint.MemoryManager", FakeMemoryManager)
+
+    transcript_approval = client.post(
+        "/approvals/room-transcript",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "What are we building?",
+            "merlin_response": "A local Room reopen flow.",
+            "session_id": "session-1",
+        },
+    )
+    transcript_approval_id = transcript_approval.json()["approval_request_id"]
+    client.post(f"/approvals/{transcript_approval_id}/approve")
+    save_response = client.post(
+        "/rooms/transcripts",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "What are we building?",
+            "merlin_response": "A local Room reopen flow.",
+            "session_id": "session-1",
+            "approval_id": transcript_approval_id,
+        },
+    )
+    transcript_id = save_response.json()["transcript_id"]
+
+    read_without_read_approval = client.post(
+        "/rooms/transcripts/read",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_id": transcript_id,
+            "approval_id": transcript_approval_id,
+        },
+    )
+    assert read_without_read_approval.status_code == 403
+    assert "approval is not approved for execution" in read_without_read_approval.text
+
+    approval_response = client.post(
+        "/approvals/room-transcript-read",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_id": transcript_id,
+        },
+    )
+    approval_id = approval_response.json()["approval_request_id"]
+    assert approval_response.json()["approval_gates"] == ["file_read"]
+    assert approval_response.json()["payload_summary"]["raw_content_in_approval"] is False
+    client.post(f"/approvals/{approval_id}/approve")
+
+    response = client.post(
+        "/rooms/transcripts/read",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_id": transcript_id,
+            "approval_id": approval_id,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "read_local_transcript_only"
+    assert body["user_input"] == "What are we building?"
+    assert body["merlin_response"] == "A local Room reopen flow."
+    assert body["memory_written"] is False
+    assert body["context_reuse"] == "disabled_until_user_approved"
+    assert body["raw_content_loaded"] is True
+    assert audit_calls[-1][0] == "room_transcript_read"
+    assert audit_calls[-1][1]["raw_transcript_in_audit"] is False
+    assert "A local Room reopen flow." not in str(audit_calls[-1][1])
+
+    reused_response = client.post(
+        "/rooms/transcripts/read",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_id": transcript_id,
+            "approval_id": approval_id,
+        },
+    )
+    assert reused_response.status_code == 403
+    assert "approval is not approved for execution" in reused_response.text
 
 
 def test_room_master_prompt_approval_requires_saved_transcript(tmp_path, monkeypatch) -> None:

@@ -2003,6 +2003,7 @@ let selectedRoomId = DEFAULT_ROOM_ID;
 let selectedRoomName = DEFAULT_ROOM_NAME;
 let lastMerlinExchange = null;
 let pendingRoomApproval = null;
+let pendingRoomRead = null;
 let roomSaveStatus = 'Save becomes available after Merlin returns a response.';
 let roomSaveState = 'neutral';
 const CHAT_ROOM_PROMPT_LIMIT = 6;
@@ -2189,14 +2190,41 @@ function openRoomInChat(roomId, roomName) {
   selectActiveRoom(roomId, roomName, true);
 }
 
-function openSavedRoomChat(roomId, roomName, transcriptId) {
+async function openSavedRoomChat(roomId, roomName, transcriptId) {
   selectActiveRoom(roomId, roomName, true);
+  pendingRoomRead = null;
   renderChatOutput({
-    state: 'approved',
+    state: 'pending',
     title: 'saved chat selected',
-    body: `Selected saved chat ${safe(transcriptId, 'transcript')} in ${safe(roomName, roomId)}. Raw transcript reopening requires a policy-gated local read step; new questions now target this Room for transcript saves.`,
+    body: `Selected saved chat ${safe(transcriptId, 'transcript')} in ${safe(roomName, roomId)}. Prepare a one-time local read approval to reopen it in Merlin Chat. This will not write memory or enable Room context reuse.`,
     mode: selectedChatMode,
   });
+  try {
+    const data = await postJson(`${TASK_API}/approvals/room-transcript-read`, {
+      room_id: roomId,
+      room_name: roomName,
+      transcript_id: transcriptId,
+    });
+    pendingRoomRead = {
+      roomId,
+      roomName,
+      transcriptId,
+      approvalId: data.approval_request_id,
+    };
+    renderChatOutput({
+      state: 'pending',
+      title: 'one-time approval prepared',
+      body: `Allow once to reopen ${safe(transcriptId, 'transcript')} from ${safe(roomName, roomId)}. The transcript remains local history and is not approved memory.`,
+      mode: selectedChatMode,
+    });
+  } catch (error) {
+    renderChatOutput({
+      state: 'degraded',
+      title: 'Room reopen unavailable',
+      body: `Merlin could not prepare the local read approval. Detail: ${safe(error && error.message, 'unknown error')}`,
+      mode: selectedChatMode,
+    });
+  }
 }
 
 function updateRoomSaveMeter() {
@@ -2261,7 +2289,7 @@ function renderRoomHistory() {
   panel.innerHTML = `
     <button class="front-session active" type="button" onclick="selectActiveRoom(${jsArg(selectedRoomId)}, ${jsArg(selectedRoomName)}, true)">Current local chat · ${escapeHtml(selectedRoomName)}</button>
     ${roomBlocks || '<div class="front-session">Saved Room chats appear after approval</div>'}
-    <div class="front-session">Reopening raw transcript content requires a future policy-gated local read.</div>
+    <div class="front-session">Reopening raw transcript content requires one-time local read approval.</div>
   `;
 }
 
@@ -2349,6 +2377,7 @@ function clearMerlinChat() {
   }
   lastMerlinExchange = null;
   pendingRoomApproval = null;
+  pendingRoomRead = null;
   roomSaveStatus = 'Save becomes available after Merlin returns a response.';
   roomSaveState = 'neutral';
   promptsSinceRoomSave = 0;
@@ -2439,6 +2468,21 @@ function approvalCardHtml(routeData, gateText) {
   `;
 }
 
+function roomReadApprovalCardHtml() {
+  if (!pendingRoomRead) return '';
+  return `
+    <div class="approval-card" aria-label="Saved Room chat read approval">
+      <strong>Allow once to reopen saved chat?</strong>
+      <p>Merlin will read this one local transcript into the chat view. It will not write memory, approve context reuse, or share it across Rooms.</p>
+      <div class="approval-actions">
+        <button type="button" onclick="allowRoomTranscriptRead()">Allow once</button>
+        <button class="secondary" type="button" onclick="cancelRoomTranscriptRead()">Cancel</button>
+      </div>
+      <p>Room: ${escapeHtml(pendingRoomRead.roomName)} · Transcript: ${escapeHtml(pendingRoomRead.transcriptId)} · approval asks again next time.</p>
+    </div>
+  `;
+}
+
 function roomApprovalUnavailableCopy(error) {
   const message = safe(error && error.message, 'unknown error');
   if (message === 'Not Found' || message.includes('returned 404')) {
@@ -2447,7 +2491,7 @@ function roomApprovalUnavailableCopy(error) {
   return `Room approval unavailable: ${message}`;
 }
 
-function renderChatOutput({ state, title, body, route, gates, degraded, userInput, mode }) {
+function renderChatOutput({ state, title, body, route, gates, degraded, userInput, mode, allowRoomSave = true }) {
   const panel = document.getElementById('merlin-chat-output');
   if (!panel) return;
   panel.classList.remove('empty');
@@ -2458,7 +2502,8 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
   const gateText = (gates || routeData.approval_gates || []).join(', ') || 'none';
   const modeLabel = safe(mode || selectedChatMode, 'smart');
   const isBlocked = state === 'blocked';
-  const showRoomSave = state === 'approved' && !degraded;
+  const showRoomReadApproval = state === 'pending' && Boolean(pendingRoomRead);
+  const showRoomSave = allowRoomSave && state === 'approved' && !degraded;
   const routeLabel = routeData.route_id || 'unavailable';
   const staffLabel = routeData.staff_mode || null;
   const routeEngineAvailable = Boolean(routeData.selected_model_alias);
@@ -2498,6 +2543,7 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
             ${sourceLine}
           </div>
           ${isBlocked ? approvalCardHtml(routeData, gateText) : ''}
+          ${showRoomReadApproval ? roomReadApprovalCardHtml() : ''}
         </div>
       </div>
     </div>
@@ -2557,6 +2603,66 @@ async function allowRoomTranscriptSave() {
     roomSaveState = 'bad';
   }
   updateRoomSavePanel();
+}
+
+async function allowRoomTranscriptRead() {
+  if (!pendingRoomRead) return;
+  const request = pendingRoomRead;
+  renderChatOutput({
+    state: 'pending',
+    title: 'reopening saved chat',
+    body: 'Merlin is reading the approved local transcript into this chat view.',
+    mode: selectedChatMode,
+  });
+  try {
+    await postJson(`${TASK_API}/approvals/${encodeURIComponent(request.approvalId)}/approve`, {});
+    const data = await postJson(`${TASK_API}/rooms/transcripts/read`, {
+      room_id: request.roomId,
+      room_name: request.roomName,
+      transcript_id: request.transcriptId,
+      approval_id: request.approvalId,
+    });
+    pendingRoomRead = null;
+    lastMerlinExchange = null;
+    pendingRoomApproval = null;
+    roomSaveStatus = 'Reopened local Room transcript. Memory not written.';
+    roomSaveState = 'neutral';
+    renderChatOutput({
+      state: 'approved',
+      title: 'saved chat reopened',
+      body: data.merlin_response || 'Saved Merlin response loaded from local Room transcript.',
+      userInput: data.user_input || null,
+      mode: selectedChatMode,
+      allowRoomSave: false,
+    });
+    await loadRooms();
+    await loadMemory();
+  } catch (error) {
+    pendingRoomRead = null;
+    renderChatOutput({
+      state: 'degraded',
+      title: 'Room reopen failed',
+      body: `Merlin could not reopen the saved local transcript. Detail: ${safe(error && error.message, 'unknown error')}`,
+      mode: selectedChatMode,
+    });
+  }
+}
+
+async function cancelRoomTranscriptRead() {
+  if (!pendingRoomRead) return;
+  const approvalId = pendingRoomRead.approvalId;
+  pendingRoomRead = null;
+  renderChatOutput({
+    state: 'pending',
+    title: 'saved chat reopen canceled',
+    body: 'No local transcript was read, no memory was written, and Room context remains disabled.',
+    mode: selectedChatMode,
+  });
+  try {
+    await postJson(`${TASK_API}/approvals/${encodeURIComponent(approvalId)}/deny`, {});
+  } catch (_) {
+    // The UI has already failed closed by clearing the pending read approval.
+  }
 }
 
 async function cancelRoomTranscriptSave() {
@@ -2670,6 +2776,7 @@ async function submitMerlinChat(event) {
   const modeAtSubmit = selectedChatMode;
   lastMerlinExchange = null;
   pendingRoomApproval = null;
+  pendingRoomRead = null;
   roomSaveStatus = 'Waiting for Merlin response before Room save is available.';
   roomSaveState = 'neutral';
   renderChatOutput({
