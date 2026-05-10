@@ -7608,3 +7608,177 @@ policy gate visible without making the chat feel like an engineering console.
 
 Positive, with remaining need for live browser evidence and a future backend
 approval-id flow before true inline route approvals are advertised.
+
+---
+
+## 2026-05-09 23:51 EDT - Default Room Folder And Room Prompt Contract
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`98a09386353cc0c119f36d735651d6fd56d079f3`
+
+### Ending Commit SHA If Changed
+
+Recorded in the session closeout and `git log`. The commit cannot embed its own
+final SHA without changing that SHA.
+
+### Target Issue(s)
+
+#135 Merlin Rooms, #106 Wizard HQ Product Shell, #95 release-readiness evidence.
+
+### Scope
+
+Initialize the local Merlin brain/Rooms folder layout during install, fix the
+current local machine so Wizard HQ can see the default Room, and document the
+future Room Master Prompt plus prompt-based Room deletion contract.
+
+### Files Changed
+
+- `.github/workflows/ci.yml`
+- `dashboard/index.html`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+- `install.sh`
+- `scripts/init-merlin-brain.sh`
+- `tests/dashboard-rooms-smoke.sh`
+- `tests/installer-merlin-api-policy-smoke.sh`
+- `tests/merlin-brain-layout-smoke.sh`
+
+### Protected Files Touched
+
+- `install.sh` was touched narrowly to call a local folder initializer.
+
+No package scripts, uninstall behavior, model-pull defaults, cloud defaults,
+runtime policy gates, memory manager, router, or patent files were changed.
+
+### Commands Run
+
+- `curl -i --max-time 5 http://localhost:8766/status/routes`
+- `curl -i --max-time 5 -X POST http://localhost:8766/approvals/room-transcript ...`
+- `lsof -nP -iTCP:8766 -sTCP:LISTEN`
+- `bash scripts/merlin-task-api.sh restart`
+- `curl -i --max-time 5 -X POST http://127.0.0.1:8766/approvals/room-transcript ...`
+- `curl -i --max-time 5 http://127.0.0.1:8766/status/rooms`
+- `bash scripts/init-merlin-brain.sh`
+- `curl -fsS --max-time 5 http://127.0.0.1:8766/status/rooms`
+- `bash tests/merlin-brain-layout-smoke.sh`
+- `bash tests/installer-merlin-api-policy-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/pkg-readiness-smoke.sh`
+- `bash -n install.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- Initial `POST /approvals/room-transcript` returned HTTP 404 from the live Task
+  API process.
+- `bash scripts/merlin-task-api.sh restart` started the current Task API.
+- Retest `POST /approvals/room-transcript` returned HTTP 200 with
+  `approval_request_id`.
+- Initial `/status/rooms` showed `rooms_root_exists:false`.
+- After `bash scripts/init-merlin-brain.sh`, `/status/rooms` showed
+  `rooms_root_exists:true`, one `merlin-build` Room, and transcript count `0`.
+- `bash tests/merlin-brain-layout-smoke.sh` - PASS.
+- `bash tests/installer-merlin-api-policy-smoke.sh` - PASS.
+- `bash tests/dashboard-rooms-smoke.sh` - PASS.
+- `bash tests/pkg-readiness-smoke.sh` - PASS.
+- `bash -n install.sh` - PASS.
+- `bash tests/dashboard-native-chat-smoke.sh` - PASS.
+- `git diff --check` - PASS.
+
+### Tests Skipped And Why
+
+- Full installer retest: not run in this pass. It is triggered before Local
+  Trusted Beta signoff because `install.sh` changed.
+- Live browser click-through: not run in this pass. Backend endpoints were
+  validated with curl, and dashboard static smokes passed.
+
+### Failures Found
+
+1. Live Task API returned `404 Not Found` for
+   `POST /approvals/room-transcript`.
+2. Live Rooms manifest reported `rooms_root_exists:false` before folder
+   initialization.
+
+### Failure Category
+
+- Wizard HQ/dashboard
+- Task API 8766 stale process
+- Installer flow
+- UX/readiness confusion
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+The Task API process on port `8766` was stale and did not include the current
+Room approval endpoint. Separately, the installer did not create the default
+local Merlin brain/Rooms folder layout, leaving the dashboard with no concrete
+default Room until the first save.
+
+### Fix Applied
+
+- Restarted the local Task API with `bash scripts/merlin-task-api.sh restart`.
+- Added `scripts/init-merlin-brain.sh`.
+- Called the initializer from `install.sh` after environment setup.
+- Added a static/functional brain layout smoke test and wired it into CI.
+- Improved dashboard stale-backend copy for Room approval 404s.
+- Documented Room Master Prompt generation and prompt-based Room deletion as
+  future approval-gated contracts.
+
+### Retest Result
+
+PASS. The live Rooms manifest now reports:
+
+- `rooms_root_exists:true`
+- `rooms_root:/Users/kevinmedeiros/Merlin/brain/rooms`
+- default Room `merlin-build`
+
+### Regression Test Added Or Reason Not Added
+
+Added `tests/merlin-brain-layout-smoke.sh` to verify:
+
+- default brain root creation,
+- default Room folder creation,
+- transcript/summary/master-prompt/agent/index folders,
+- `room.md` local-only metadata,
+- no approved memory or transcript content is created by initialization.
+
+Updated `tests/dashboard-rooms-smoke.sh` and
+`tests/installer-merlin-api-policy-smoke.sh`.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended focused follow-ups under #135:
+
+- Implement Room Master Prompt generation/review flow.
+- Implement prompt-based Room delete intent with an `Are you sure?` approval
+  card.
+- Add live browser automation for Room save and Room management once local
+  stack testing is stable.
+
+### Lesson Learned
+
+If Wizard HQ exposes a default Room, install must create the matching local
+filesystem target. Otherwise the product appears to promise a Room that does not
+exist yet.
+
+### What Not To Repeat Next Time
+
+Do not ship UI affordances that depend on a local data root without ensuring the
+installer or first-run setup creates that root. Do not interpret a 404 from a
+known endpoint as a user error before checking for a stale backend process.
+
+### Local Trusted Beta Impact
+
+Positive, but a full installer retest is now required because `install.sh`
+changed.
+
+### Public Beta Impact
+
+Positive, but public beta remains blocked until full installer retest and live
+browser evidence are captured.

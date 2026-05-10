@@ -33,5 +33,9 @@ grep -q 'command -v wizard' "$INSTALLER" \
   || fail "installer should avoid printing unavailable wizard commands"
 grep -q '\${CLI_PATH} status' "$INSTALLER" \
   || fail "installer should print direct CLI path fallback when wizard symlink is unavailable"
+grep -q 'scripts/init-merlin-brain.sh' "$INSTALLER" \
+  || fail "installer should initialize local Merlin brain folders"
+grep -q 'no approved memory writes' "$INSTALLER" \
+  || fail "installer brain layout step must document that it does not write approved memory"
 
 echo "PASS: installer Merlin API startup policy is explicit"

@@ -21,6 +21,8 @@ still requires explicit approval.
 | Room | A user-visible local workspace for a project/topic/person/purpose. |
 | Transcript | The saved chat history for a Room. It is local history, not approved memory. |
 | Summary | A human-readable synopsis generated from a transcript. It is not memory until approved. |
+| Room Master Prompt | A highly engineered, user-reviewable prompt distilled from Room transcripts, summaries, goals, decisions, preferences, and approved context. It can be tapped into later as scoped context for Merlin or a future Room agent. |
+| Room Agent | A future scoped assistant/persona backed by a Room Master Prompt and governed by the Room reference policy. |
 | Index | A rebuildable local search cache over Room files. It is not the source of truth. |
 | Approved memory | User-approved facts/preferences/context that Merlin may reuse across future sessions. |
 
@@ -28,13 +30,19 @@ still requires explicit approval.
 
 1. Chat history may be saved to a Room only through an explicit user flow.
 2. A saved transcript does not become approved memory automatically.
-3. Memory extraction follows propose -> stage -> approve/edit/deny -> write.
-4. Room reference policy must be visible before Merlin uses Room context.
-5. Room storage path must be visible.
-6. Cloud/synced folders are treated as user-selected filesystem paths, not cloud
+3. Room Master Prompt generation is separate from transcript save and must be
+   visible, reviewable, and replaceable.
+4. Memory extraction follows propose -> stage -> approve/edit/deny -> write.
+5. Room reference policy must be visible before Merlin uses Room context.
+6. Room storage path must be visible.
+7. Cloud/synced folders are treated as user-selected filesystem paths, not cloud
    inference.
-7. Merlin must not silently index arbitrary folders.
-8. Deleting a Room must show whether approved memories were derived from it.
+8. Merlin must not silently index arbitrary folders.
+9. Deleting a Room must show whether approved memories or Room Master Prompts
+   were derived from it.
+10. Prompt-based Room deletion may exist only as an approval-gated intent flow:
+    Merlin can identify the Room by name, but deletion requires explicit review
+    and confirmation before any local files are removed.
 
 ## Reference Policies
 
@@ -59,6 +67,8 @@ Future source-of-truth files should be human-readable Markdown:
         2026-05-09.md
       summaries/
         2026-05-09-summary.md
+      master-prompt.md
+      agent.md
       room.md
   memories/
   preferences.md
@@ -67,6 +77,54 @@ Future source-of-truth files should be human-readable Markdown:
 
 The Markdown files are the durable user-owned record. Any vector index is a
 local cache that can be rebuilt.
+
+## Room Master Prompt Pipeline
+
+The long-term Room value loop is:
+
+1. Save selected Merlin Chat transcript to a local Room.
+2. Condense one or more transcripts into a Room summary.
+3. Distill summaries, durable decisions, project goals, terminology,
+   preferences, and approved context into `master-prompt.md`.
+4. Let the user review, edit, accept, or reject the Room Master Prompt.
+5. When the user chooses that Room as context, Merlin may attach the Room Master
+   Prompt as scoped context before asking the local model.
+6. Future Room Agents may use `agent.md` as their scoped behavior contract, but
+   execution remains policy-gated.
+
+This pipeline is intentionally not the same as approved memory. A Room Master
+Prompt is scoped to that Room and can be disabled, edited, replaced, or deleted
+without changing global Merlin memory.
+
+Current implementation does **not** generate Room Master Prompts yet. It only
+creates the folder structure needed for that future workflow and saves approved
+transcripts as local Markdown.
+
+## Prompt-Based Room Management
+
+Long term, users should be able to ask Merlin natural-language Room commands:
+
+```text
+Delete the Merlin Build room.
+Archive the old FFIEC room.
+Rename Client A notes to Client A Risk Review.
+```
+
+Merlin may parse that request into a Room management intent, but it must not
+perform destructive changes directly from chat. The required flow is:
+
+1. Resolve the requested Room by exact name or safe slug.
+2. Show the Room path, transcript count, summary count, Room Master Prompt
+   status, and any linked approved memory references.
+3. If more than one Room matches, ask the user to choose one.
+4. Stage a policy-gated approval request.
+5. Show an approval card in Merlin Chat asking, "Are you sure?"
+6. Require an explicit button click such as `Delete this Room` or `Cancel`.
+7. Move the Room to a local archive/trash path first when possible.
+8. Record a Chronicle/audit entry with no raw transcript content.
+
+Deletion by prompt is therefore a convenience layer over a visible,
+approval-gated backend operation. It is not autonomous cleanup.
 
 ## Wizard HQ Surface
 
@@ -83,6 +141,20 @@ Discovery remains read-only. The current dashboard may request an approved save
 for the latest completed Merlin exchange only through the Task API approval
 lifecycle. Arbitrary browser filesystem controls, folder picking, indexing, and
 memory extraction remain locked.
+
+Install-time setup creates the default local folder layout:
+
+```text
+~/Merlin/brain/rooms/merlin-build/
+  room.md
+  transcripts/
+  summaries/
+  index/
+```
+
+The initializer is idempotent and local-only. It creates folders and Room
+metadata so Wizard HQ has a real default save target, but it does not save chat
+transcripts, extract memory, index content, pull models, or enable cloud.
 
 ## Current Runtime Slice
 
@@ -103,6 +175,7 @@ The manifest reports:
 - save-to-Room locked state,
 - backend save-to-Room approval requirement,
 - memory extraction locked state,
+- Room Master Prompt generation not active yet,
 - cloud sync default off,
 - browser file controls disabled.
 
@@ -136,7 +209,9 @@ reference policy. It only makes the selected Room visible as the explicit
 transcript save target before the approval flow.
 
 It does not save degraded/blocked responses, does not index the Room for future
-context, does not persist reference policy, and does not write approved memory.
+context, does not generate Room Master Prompts, does not persist reference
+policy, and does not write approved memory.
+It also does not delete, rename, or archive Rooms from chat yet.
 
 The `approval_id` must come from the Task API approval lifecycle:
 
@@ -159,7 +234,10 @@ Before writable Room support ships, split #135 into implementation issues:
 2. Room picker and reference policy persistence.
 3. Local index rebuild from Room Markdown files.
 4. Memory proposal flow from transcript/summary.
-5. Delete/archive Room with linked-memory warning.
+5. Room Master Prompt generation and review flow.
+6. Room Agent prompt contract for scoped context.
+7. Prompt-based Room management intent parser.
+8. Delete/archive Room with linked-memory and master-prompt warning.
 
 ## Out Of Scope
 

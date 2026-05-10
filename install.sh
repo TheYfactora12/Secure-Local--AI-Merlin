@@ -631,6 +631,16 @@ else
   warn "scripts/generate-certs.sh not found — nginx HTTPS proxy may not start"
 fi
 
+# 3f: Create the user-owned Merlin brain/Rooms folder layout.
+# This is local filesystem setup only: no indexing, no approved memory writes,
+# no model downloads, and no cloud behavior.
+if [[ -f "scripts/init-merlin-brain.sh" ]]; then
+  HOME="${HOME}" bash scripts/init-merlin-brain.sh >> "$LOGFILE" 2>&1
+  log "Local Merlin brain folders ready at ${MERLIN_BRAIN_ROOT:-${HOME}/Merlin/brain}"
+else
+  warn "scripts/init-merlin-brain.sh not found — Rooms folder will be created on first approved save"
+fi
+
 log_to_file "[PASS] STEP 3: Environment & secrets configured"
 
 # ── STEP 4: Pull Ollama Models (RAM-Aware) ────────────────────────────

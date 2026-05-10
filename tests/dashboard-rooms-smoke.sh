@@ -40,6 +40,8 @@ grep -q 'data-room-save-stage="approval-prepared"' "$DASHBOARD_FILE" \
   || fail "Rooms save flow must expose an allow/cancel stage after backend approval"
 grep -q "Ask Merlin and wait for a safe local response before Room save is available" "$DASHBOARD_FILE" \
   || fail "Rooms save waiting stage must explain why save is unavailable"
+grep -q "Room approval endpoint is unavailable. Restart Merlin Task API" "$DASHBOARD_FILE" \
+  || fail "Rooms save flow must explain stale Task API 404s"
 if grep -qE 'requestRoomTranscriptApproval\(\)" \$\{canRequest|allowRoomTranscriptSave\(\)" \$\{canAllow|cancelRoomTranscriptSave\(\)" \$\{canAllow' "$DASHBOARD_FILE"; then
   fail "Rooms save flow must not render unavailable actions as disabled buttons"
 fi
@@ -86,6 +88,12 @@ grep -q "must show linked memory" "$DASHBOARD_FILE" \
 
 for required in \
   "A saved transcript does not become approved memory automatically" \
+  "Room Master Prompt" \
+  "does **not** generate Room Master Prompts yet" \
+  "Prompt-Based Room Management" \
+  "Show an approval card in Merlin Chat asking, \"Are you sure?\"" \
+  "Delete this Room" \
+  "Deletion by prompt is therefore a convenience layer over a visible" \
   "Default policy is **No Room context**" \
   "Cloud/synced folders are treated as user-selected filesystem paths" \
   "Browser-side filesystem writes" \

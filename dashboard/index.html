@@ -2253,6 +2253,14 @@ function approvalCardHtml(routeData, gateText) {
   `;
 }
 
+function roomApprovalUnavailableCopy(error) {
+  const message = safe(error && error.message, 'unknown error');
+  if (message === 'Not Found' || message.includes('returned 404')) {
+    return 'Room approval endpoint is unavailable. Restart Merlin Task API so the latest Room save backend is running.';
+  }
+  return `Room approval unavailable: ${message}`;
+}
+
 function renderChatOutput({ state, title, body, route, gates, degraded, userInput, mode }) {
   const panel = document.getElementById('merlin-chat-output');
   if (!panel) return;
@@ -2329,7 +2337,7 @@ async function requestRoomTranscriptApproval() {
     roomSaveStatus = 'Approval prepared. Allow local save to write Markdown.';
     roomSaveState = 'warn';
   } catch (error) {
-    roomSaveStatus = `Room approval unavailable: ${safe(error && error.message, 'unknown error')}`;
+    roomSaveStatus = roomApprovalUnavailableCopy(error);
     roomSaveState = 'bad';
   }
   updateRoomSavePanel();
