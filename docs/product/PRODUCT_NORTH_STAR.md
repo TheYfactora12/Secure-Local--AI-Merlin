@@ -4,10 +4,10 @@
 **Date:** 2026-05-10
 **Status:** CANONICAL — supersedes all prior positioning docs
 **Change from v1.3:** Product direction is now explicit: **Home AI Elite** is
-the consumer/private-home product. **Merlin** is the assistant, voice, chat,
-memory, routing, and safety layer inside it. The first market is not enterprise
-governance; it is privacy-conscious Mac owners who want local AI that works
-without terminal setup.
+the consumer/private-home product. **Merlin** is the visible assistant face and
+the internal voice, chat, memory, routing, and safety layer inside it. The first
+market is not enterprise governance; it is privacy-conscious Mac owners who want
+local AI that works without terminal setup.
 
 ---
 

@@ -3,9 +3,10 @@
 > **Private AI at home in 30 minutes. No cloud account, no subscription, no terminal knowledge required for the finished product.**
 
 Home AI Elite is a local-first Mac product that installs a private AI stack on
-hardware you own. Merlin is the AI assistant inside it: the voice, chat, memory,
-routing, and safety layer that helps a non-technical user ask questions, save
-useful context into local Rooms, and see proof that cloud is off by default.
+hardware you own. Merlin is both the visible face and the internal brain of that
+product: the voice, chat, memory, routing, and safety layer that helps a
+non-technical user ask questions, save useful context into local Rooms, and see
+proof that cloud is off by default.
 
 The product is built for the privacy-conscious Mac owner who wants the power of
 ChatGPT-style assistance without sending personal conversations, work files, or
@@ -29,8 +30,8 @@ The product is intentionally local-first: start with the lightweight core profil
 
 ## Brand Direction
 
-**Home AI Elite** is the product name. **Merlin** is the AI assistant inside the
-product.
+**Home AI Elite** is the product name. **Merlin** is the assistant face and
+internal brain inside the product.
 
 Some dashboard, installer, package, and documentation surfaces still say
 `Merlin AI` because an earlier brand direction favored that name. Issue #131 now

@@ -14,8 +14,10 @@ grep -q "Local Trusted Beta" "$README" \
   || fail "README must state Local Trusted Beta positioning"
 grep -q "Home AI Elite" "$README" \
   || fail "README must show Home AI Elite as product name"
-grep -q "Merlin is the AI assistant inside" "$README" \
-  || fail "README must explain Merlin is the assistant inside Home AI Elite"
+grep -q "Merlin.*assistant face" "$README" \
+  || fail "README must explain Merlin is the assistant face inside Home AI Elite"
+grep -q "internal brain inside the product" "$README" \
+  || fail "README must explain Merlin is the assistant face and internal brain inside Home AI Elite"
 grep -q "Private AI at home in 30 minutes" "$README" \
   || fail "README must lead with the non-technical private home AI promise"
 grep -q "not being claimed as Public Beta ready" "$README" \

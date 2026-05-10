@@ -11845,3 +11845,127 @@ Positive for strategy, but Public Beta remains blocked by brand cleanup across
 installer/dashboard, full installer retest, clean onboarding evidence, memory
 review/delete, storage visibility, export/import readiness, and 10-user
 validation.
+
+## 2026-05-10 - Merlin Face And Brain Wording
+
+### Date/time
+
+2026-05-10T23:55:32Z
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`8302f25` - `docs: reset Home AI Elite market direction`
+
+### Target Issues
+
+- #131 Brand direction cleanup.
+- #122 Product Focus Cut.
+- #134 Product value checkpoint.
+
+### Scope
+
+Clarify that Merlin is not hidden plumbing. Home AI Elite remains the product
+name, while Merlin is both the visible assistant face and the internal brain,
+routing, memory, and safety layer inside the product.
+
+### Files Changed
+
+- `README.md`
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/product/GTM_STRATEGY.md`
+- `docs/product/PRODUCT_NORTH_STAR.md`
+- `tests/release-readiness-readme-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+No installer, package, runtime API, policy, memory, router, compose, launchd, or
+dashboard files were touched.
+
+### Commands Run
+
+- `git status --short && git rev-parse --short HEAD`
+- `rg -n "Merlin is the AI assistant inside|Merlin is the assistant|Brand Direction|Home AI Elite is the product" README.md docs/CANONICAL_PROJECT_STATE.md docs/product/PRODUCT_NORTH_STAR.md docs/product/GTM_STRATEGY.md`
+- `bash tests/release-readiness-readme-smoke.sh`
+- `bash tests/master-prompt-smoke.sh`
+- `bash tests/beta-readiness-evidence-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+Final retest passed:
+
+- README release-readiness positioning smoke.
+- Master prompt/context smoke.
+- Trusted local beta evidence smoke.
+- Whitespace check.
+
+### Tests Skipped And Why
+
+Installer, package, dashboard, browser, API, and live service tests were skipped
+because this slice only changed docs and one static README smoke.
+
+### Failures Found
+
+`bash tests/release-readiness-readme-smoke.sh` initially failed after the wording
+change because the smoke still looked for the old exact phrase: "Merlin is the
+AI assistant inside."
+
+### Failure Category
+
+- Test design gap
+- Documentation mismatch
+
+### Root Cause Or Current Hypothesis
+
+The test asserted an exact old phrase instead of the durable product meaning.
+The improved README wording wrapped "assistant face" and "internal brain" across
+lines, which exposed the brittle grep.
+
+### Fix Applied
+
+Updated `tests/release-readiness-readme-smoke.sh` to assert the new durable
+meaning: Merlin is the assistant face and internal brain inside Home AI Elite.
+
+### Retest Result
+
+PASS after updating the smoke.
+
+### Regression Test Added Or Updated
+
+- `tests/release-readiness-readme-smoke.sh`
+
+### Follow-Up Issues Created Or Recommended
+
+No new issue. Continue #131 for broader brand cleanup across protected installer
+and dashboard surfaces in a separate retest-triggering slice.
+
+### Lesson Learned
+
+Brand guardrails should test stable meaning, not brittle exact wording that
+breaks when product copy improves.
+
+### What Not To Repeat Next Time
+
+Do not overfit smoke tests to one exact marketing sentence when the underlying
+product rule is what matters.
+
+### Next Recommended Step
+
+Continue #134 first-use demo work with Merlin as the visible assistant face
+inside Home AI Elite.
+
+### Local Trusted Beta Impact
+
+Positive. The brand architecture is clearer and the smoke now guards the right
+meaning.
+
+### Public Beta Impact
+
+No direct release impact. Public Beta still requires installer/dashboard brand
+cleanup, full installer retest, onboarding evidence, memory review/delete,
+storage visibility, export/import readiness, and 10-user validation.

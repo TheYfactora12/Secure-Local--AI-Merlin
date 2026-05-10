@@ -10,7 +10,7 @@ Merlin runs locally, remembers only what the user chooses to save, organizes
 work into local Rooms, and proves cloud is off by default.
 
 Brand rule: **Home AI Elite** is the product customers buy. **Merlin** is the
-assistant inside the product.
+visible assistant face and internal brain inside the product.
 
 ## The Beachhead Wedge
 

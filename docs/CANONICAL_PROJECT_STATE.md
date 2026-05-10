@@ -22,8 +22,8 @@ open a GitHub issue. Do not follow stale phase prompts.
 
 ## Current Product Reality
 
-Home AI Elite has a working local-first foundation. Merlin is the assistant,
-brain, and safety layer inside the product:
+Home AI Elite has a working local-first foundation. Merlin is the visible
+assistant face, internal brain, and safety layer inside the product:
 
 - protected installer and uninstall/upgrade paths,
 - local Ollama, LiteLLM, Open WebUI, Qdrant, optional n8n, and Merlin APIs,
@@ -76,8 +76,8 @@ This reset now makes a product-level brand decision:
 
 - **Home AI Elite** is the outward product name for the consumer/private-home
   market.
-- **Merlin** is the AI assistant, voice, chat, memory, routing, and safety layer
-  inside Home AI Elite.
+- **Merlin** is the visible assistant face plus the voice, chat, memory,
+  routing, and safety layer inside Home AI Elite.
 - Issue #131 owns the cleanup from the previous Merlin AI public-name direction.
   Do not rename runtime paths, volumes, package identifiers, or launchd labels
   casually; preserve compatibility until tests prove the migration.
