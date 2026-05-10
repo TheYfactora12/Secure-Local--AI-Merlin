@@ -139,6 +139,14 @@ grep -q "function setMerlinPrompt" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing safe prompt-fill helper"
 grep -q "message-thread" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing message thread layout"
+grep -q "currentChatTranscript" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must keep the active session transcript in browser state"
+grep -q "formatTranscriptSide" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must save the full in-session thread to Room transcripts"
+grep -q "savedTranscriptEntries" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must reconstruct saved Room sessions into chat rows"
+grep -q "Saved Room chat loaded into this session" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must restore saved Room transcript into the active chat session"
 grep -q "source-line" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing local/source proof line"
 grep -q "Local by default" "$DASHBOARD_FILE" \

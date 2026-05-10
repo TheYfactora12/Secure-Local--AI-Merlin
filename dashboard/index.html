@@ -2004,6 +2004,7 @@ let selectedRoomName = DEFAULT_ROOM_NAME;
 let lastMerlinExchange = null;
 let pendingRoomApproval = null;
 let pendingRoomRead = null;
+let currentChatTranscript = [];
 let roomSaveStatus = 'Save becomes available after Merlin returns a response.';
 let roomSaveState = 'neutral';
 const CHAT_ROOM_PROMPT_LIMIT = 6;
@@ -2264,6 +2265,72 @@ function updateChatRouteDetail(routeData = null, mode = selectedChatMode) {
   `;
 }
 
+function transcriptRowsHtml(entries = currentChatTranscript) {
+  return entries.map(exchange => `
+    <div class="message-row user">
+      <div class="message-bubble">
+        <div class="body">${escapeHtml(exchange.userInput)}</div>
+      </div>
+      <div class="message-avatar user" aria-hidden="true">You</div>
+    </div>
+    <div class="message-row">
+      <div class="message-avatar ai" aria-hidden="true">M</div>
+      <div class="message-bubble">
+        <div class="meta">
+          <span class="chip good">${escapeHtml(exchange.title || 'Merlin response')}</span>
+          ${exchange.reopened ? '<span class="chip info">reopened from Room</span>' : ''}
+        </div>
+        <div class="body">${escapeHtml(exchange.merlinResponse)}</div>
+        <div class="source-line">
+          <span class="chip good">Local by default</span>
+          <span class="chip neutral">Room: ${escapeHtml(exchange.roomName || selectedRoomName)}</span>
+          ${exchange.routeId ? `<span class="chip info">Route: ${escapeHtml(exchange.routeId)}</span>` : ''}
+          ${exchange.staffMode ? `<span class="chip neutral">Staff: ${escapeHtml(exchange.staffMode)}</span>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function formatTranscriptSide(fieldName) {
+  const key = fieldName === 'merlin' ? 'merlinResponse' : 'userInput';
+  return currentChatTranscript.map((exchange, index) => (
+    `Exchange ${index + 1}\n${exchange[key]}`
+  )).join('\n\n---\n\n');
+}
+
+function savedTranscriptEntries(userText, merlinText, roomName) {
+  const splitSide = text => String(text || '')
+    .split(/\n\n---\n\n/g)
+    .map(part => part.replace(/^Exchange\s+\d+\n/i, '').trim())
+    .filter(Boolean);
+  const userParts = splitSide(userText);
+  const merlinParts = splitSide(merlinText);
+  const count = Math.max(userParts.length, merlinParts.length);
+  if (!count) return [];
+  return Array.from({ length: count }, (_, index) => ({
+    userInput: userParts[index] || '[missing user text]',
+    merlinResponse: merlinParts[index] || '[missing Merlin response]',
+    roomName,
+    reopened: true,
+    title: 'saved Room chat',
+  }));
+}
+
+function updateLastMerlinExchangeFromTranscript(sessionId) {
+  if (!currentChatTranscript.length) {
+    lastMerlinExchange = null;
+    return;
+  }
+  lastMerlinExchange = {
+    roomId: selectedRoomId,
+    roomName: selectedRoomName,
+    userInput: formatTranscriptSide('user'),
+    merlinResponse: formatTranscriptSide('merlin'),
+    sessionId,
+  };
+}
+
 function renderRoomHistory() {
   const panel = document.getElementById('chat-room-history');
   if (!panel) return;
@@ -2378,6 +2445,7 @@ function clearMerlinChat() {
   lastMerlinExchange = null;
   pendingRoomApproval = null;
   pendingRoomRead = null;
+  currentChatTranscript = [];
   roomSaveStatus = 'Save becomes available after Merlin returns a response.';
   roomSaveState = 'neutral';
   promptsSinceRoomSave = 0;
@@ -2495,6 +2563,8 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
   const panel = document.getElementById('merlin-chat-output');
   if (!panel) return;
   panel.classList.remove('empty');
+  const savedThreadRows = transcriptRowsHtml();
+  const showStatusRow = state !== 'approved' || !currentChatTranscript.length || Boolean(pendingRoomRead);
   const chipClass = state === 'approved'
     ? 'good'
     : (state === 'pending' ? 'info' : (state === 'blocked' || state === 'degraded' ? 'warn' : 'bad'));
@@ -2520,7 +2590,7 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
       ${routeEngineAvailable ? '<span class="chip neutral">Merlin local route</span>' : ''}
       ${staffLabel ? `<span class="chip neutral">Staff: ${escapeHtml(staffLabel)}</span>` : ''}
     `;
-  const userRow = userInput ? `
+  const userRow = showStatusRow && userInput ? `
     <div class="message-row user">
       <div class="message-bubble">
         <div class="body">${escapeHtml(userInput)}</div>
@@ -2528,24 +2598,28 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
       <div class="message-avatar user" aria-hidden="true">You</div>
     </div>
   ` : '';
+  const statusRow = showStatusRow ? `
+    ${userRow}
+    <div class="message-row">
+      <div class="message-avatar ai" aria-hidden="true">M</div>
+      <div class="message-bubble">
+        <div class="meta">
+          <span class="chip ${chipClass}">${escapeHtml(title)}</span>
+          ${degraded ? '<span class="chip warn">degraded</span>' : ''}
+        </div>
+        <div class="body">${escapeHtml(body)}</div>
+        <div class="source-line">
+          ${sourceLine}
+        </div>
+        ${isBlocked ? approvalCardHtml(routeData, gateText) : ''}
+        ${showRoomReadApproval ? roomReadApprovalCardHtml() : ''}
+      </div>
+    </div>
+  ` : '';
   panel.innerHTML = `
     <div class="message-thread">
-      ${userRow}
-      <div class="message-row">
-        <div class="message-avatar ai" aria-hidden="true">M</div>
-        <div class="message-bubble">
-          <div class="meta">
-            <span class="chip ${chipClass}">${escapeHtml(title)}</span>
-            ${degraded ? '<span class="chip warn">degraded</span>' : ''}
-          </div>
-          <div class="body">${escapeHtml(body)}</div>
-          <div class="source-line">
-            ${sourceLine}
-          </div>
-          ${isBlocked ? approvalCardHtml(routeData, gateText) : ''}
-          ${showRoomReadApproval ? roomReadApprovalCardHtml() : ''}
-        </div>
-      </div>
+      ${savedThreadRows}
+      ${statusRow}
     </div>
     ${showRoomSave ? roomSavePanelHtml() : ''}
   `;
@@ -2593,7 +2667,7 @@ async function allowRoomTranscriptSave() {
     pendingRoomApproval = null;
     roomSaveStatus = `Saved locally: ${safe(data.transcript_id, 'transcript')} · memory not written`;
     roomSaveState = 'good';
-    lastMerlinExchange = null;
+    updateLastMerlinExchangeFromTranscript(data.transcript_id || lastMerlinExchange.sessionId);
     promptsSinceRoomSave = 0;
     updateRoomSaveMeter();
     await loadRooms();
@@ -2623,15 +2697,17 @@ async function allowRoomTranscriptRead() {
       approval_id: request.approvalId,
     });
     pendingRoomRead = null;
-    lastMerlinExchange = null;
+    currentChatTranscript = savedTranscriptEntries(data.user_input, data.merlin_response, data.room_name || request.roomName);
+    updateLastMerlinExchangeFromTranscript(`reopened-${data.transcript_id || request.transcriptId}`);
     pendingRoomApproval = null;
     roomSaveStatus = 'Reopened local Room transcript. Memory not written.';
     roomSaveState = 'neutral';
+    promptsSinceRoomSave = currentChatTranscript.length;
+    updateRoomSaveMeter();
     renderChatOutput({
       state: 'approved',
       title: 'saved chat reopened',
-      body: data.merlin_response || 'Saved Merlin response loaded from local Room transcript.',
-      userInput: data.user_input || null,
+      body: 'Saved Room chat loaded into this session.',
       mode: selectedChatMode,
       allowRoomSave: false,
     });
@@ -2819,13 +2895,15 @@ async function submitMerlinChat(event) {
     const merlinResponse = data.degraded ? modelReadinessCopy() : safe(data.response, 'Merlin returned no response text.');
     if (data.approved && !data.degraded) {
       promptsSinceRoomSave += 1;
-      lastMerlinExchange = {
-        roomId: selectedRoomId,
-        roomName: selectedRoomName,
+      currentChatTranscript.push({
         userInput,
         merlinResponse,
-        sessionId: data.session_id,
-      };
+        roomName: selectedRoomName,
+        routeId: data.route && data.route.route_id,
+        staffMode: data.route && data.route.staff_mode,
+        title: 'Merlin response',
+      });
+      updateLastMerlinExchangeFromTranscript(data.session_id);
       roomSaveStatus = promptsSinceRoomSave >= CHAT_ROOM_PROMPT_LIMIT
         ? 'Room save recommended now. Save this thread before continuing.'
         : 'Latest response can be saved to the local Room.';

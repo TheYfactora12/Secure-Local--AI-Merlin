@@ -8953,3 +8953,125 @@ visible one-time approval boundary.
 
 Positive, but public beta still needs browser evidence, visual polish review,
 and installer retest evidence after dashboard behavior changes.
+
+## 2026-05-10 - In-Session Room Transcript Continuity
+
+### Date/Time
+
+2026-05-10 08:49 EDT
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`748bbb06690aa25d955b5857481835b24fc6de72`
+
+### Target Issues
+
+- #135 Rooms and local transcript flow.
+- #106 Wizard HQ product shell.
+- #134 product value checkpoint.
+
+### Scope
+
+Keep the active Merlin Chat transcript visible for the whole browser session and
+save the full in-session thread to a Room transcript instead of only the latest
+single exchange. Reopened Room transcripts now reconstruct saved exchanges into
+chat rows.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-native-chat-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None. This is dashboard browser state/rendering and static smoke coverage only.
+The working Room save backend contract was preserved.
+
+### Commands Run
+
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py tests/test_status_extension.py`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-security-center-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- Python tests: 63 passed.
+- Native chat smoke: PASS.
+- Rooms smoke: PASS.
+- Security center smoke: PASS.
+- Diff whitespace check: PASS.
+
+### Tests Skipped And Why
+
+Live browser click-through remains the next validation item. This slice adds
+static coverage for transcript continuity and preserves backend tests.
+
+### Failures Found
+
+No new command failure.
+
+### Failure Category
+
+No new failure.
+
+### Root Cause Or Current Hypothesis
+
+The save button worked, but the chat UI treated each response as a replaceable
+card instead of a persistent session transcript. That made Room History feel
+like metadata instead of a recoverable conversation.
+
+### Fix Applied
+
+- Added in-session `currentChatTranscript` browser state.
+- Rendered the whole active transcript in Merlin Chat until New Conversation.
+- Saved the full in-session thread into the existing Room transcript save path.
+- Reconstructed saved Room transcript content back into chat rows after the
+  one-time read approval.
+- Kept saved Room transcripts separate from approved memory and context reuse.
+
+### Retest Result
+
+PASS for all commands listed above.
+
+### Regression Test Added Or Updated
+
+- `tests/dashboard-native-chat-smoke.sh` now requires active transcript state,
+  full-thread Room save formatting, saved transcript reconstruction, and the
+  restored-session copy.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended: run browser automation for multi-turn chat -> save Room -> reopen
+Room transcript -> verify the same multi-turn thread appears in chat.
+
+### Lesson Learned
+
+A working save button is not enough. Users expect the chat session to behave
+like a real conversation thread and expect Room History to recover that thread.
+
+### What Not To Repeat Next Time
+
+Do not collapse chat into a single latest-response card after the first message.
+Do not treat saved Room History as metadata only when the product promise is
+local conversation continuity.
+
+### Next Recommended Step
+
+Run browser click-through evidence for the complete Room lifecycle.
+
+### Local Trusted Beta Impact
+
+Positive. Merlin Chat now behaves closer to the expected Apple-like chat
+experience while keeping Room save/read approval boundaries intact.
+
+### Public Beta Impact
+
+Positive, but public beta still needs visual browser evidence and installer
+retest after dashboard behavior changes.
