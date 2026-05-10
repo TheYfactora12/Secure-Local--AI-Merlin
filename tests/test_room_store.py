@@ -5,11 +5,13 @@ from merlin.room_store import (
     create_room,
     delete_room_transcript,
     generate_room_master_prompt_draft,
+    list_archived_rooms,
     list_room_transcripts,
     list_rooms,
     read_room_transcript,
     room_archive_preview,
     room_manifest,
+    restore_archived_room,
     save_room_transcript,
 )
 
@@ -314,6 +316,49 @@ def test_archive_room_moves_room_to_local_archive_without_memory(tmp_path) -> No
     assert archived_path.is_dir()
     assert (archived_path / "transcripts" / f"{saved.transcript_id}.md").exists()
     assert "approved_memory_deleted: false" in (archived_path / "archive.md").read_text(encoding="utf-8")
+
+
+def test_restore_archived_room_moves_room_back_without_context_reuse(tmp_path) -> None:
+    saved = save_room_transcript(
+        room_id="merlin-build",
+        room_name="Merlin Build",
+        user_input="Restore this project room later",
+        merlin_response="Use a reversible local archive and restore path.",
+        session_id="session-restore",
+        approval_id="approval-save",
+        root=tmp_path,
+        created_at="2026-05-10T13:00:00+00:00",
+    )
+    archive_result = archive_room(
+        room_id="merlin-build",
+        approval_id="approval-archive",
+        root=tmp_path,
+        archived_at="2026-05-10T14:00:00+00:00",
+    )
+
+    archived = list_archived_rooms(tmp_path)
+    assert len(archived) == 1
+    assert archived[0].archive_id == "merlin-build-2026-05-10-140000z"
+    assert archived[0].raw_content_loaded is False
+
+    result = restore_archived_room(
+        archive_id=archive_result.archived_room_path.split("/")[-1],
+        approval_id="approval-restore",
+        root=tmp_path,
+        restored_at="2026-05-10T15:00:00+00:00",
+    )
+
+    restored_path = tmp_path / "merlin-build"
+    assert result.room_id == "merlin-build"
+    assert result.room_name == "Merlin Build"
+    assert result.memory_written is False
+    assert result.approved_memory_restored is False
+    assert result.context_reuse == "disabled_until_user_approved"
+    assert restored_path.is_dir()
+    assert (restored_path / "transcripts" / f"{saved.transcript_id}.md").exists()
+    assert (restored_path / "restore.md").is_file()
+    assert "approved_memory_restored: false" in (restored_path / "restore.md").read_text(encoding="utf-8")
+    assert not list_archived_rooms(tmp_path)
 
 
 def test_generate_room_master_prompt_draft_requires_transcript(tmp_path) -> None:

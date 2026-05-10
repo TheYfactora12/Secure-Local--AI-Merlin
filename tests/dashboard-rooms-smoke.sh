@@ -79,6 +79,14 @@ grep -q "Archive Room" "$DASHBOARD_FILE" \
   || fail "Rooms table must expose one-time whole-Room archive action"
 grep -q "function prepareRoomArchive" "$DASHBOARD_FILE" \
   || fail "Rooms surface must prepare whole-Room archive approval"
+grep -q "function prepareRoomRestore" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must prepare whole-Room restore approval"
+grep -q "Archived Room restore approval" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must show whole-Room restore approval card"
+grep -q "/approvals/room-restore" "$DASHBOARD_FILE" \
+  || fail "dashboard missing whole-Room restore approval path"
+grep -q "/rooms/restore" "$DASHBOARD_FILE" \
+  || fail "dashboard missing approved whole-Room restore path"
 grep -q "Whole Room archive approval" "$DASHBOARD_FILE" \
   || fail "Rooms surface must show whole-Room archive approval card"
 grep -q "Approved memory is not deleted" "$DASHBOARD_FILE" \
@@ -99,6 +107,8 @@ grep -q "function createRoomFromField" "$DASHBOARD_FILE" \
   || fail "Rooms surface must expose local Room creation"
 grep -q "New Room name" "$DASHBOARD_FILE" \
   || fail "Rooms surface must let users name a Room before creating it"
+grep -q "chat-room-similarity-panel" "$DASHBOARD_FILE" \
+  || fail "chat sidebar must expose visible similar Room guard panel"
 grep -q "Similarity guard planned" "$DASHBOARD_FILE" \
   || fail "Rooms surface must track future duplicate/similar Room guard"
 grep -q "function similarRoomForName" "$DASHBOARD_FILE" \
@@ -177,7 +187,10 @@ for required in \
   "POST http://localhost:8766/rooms/transcripts/delete" \
   "POST http://localhost:8766/approvals/room-archive" \
   "POST http://localhost:8766/rooms/archive" \
+  "POST http://localhost:8766/approvals/room-restore" \
+  "POST http://localhost:8766/rooms/restore" \
   "local reversible archive" \
+  "local reversible restore" \
   "approved memory is not deleted" \
   "deletes one saved transcript/session inside a Room" \
   "The approval is marked used after the local read" \
@@ -203,6 +216,10 @@ grep -q "/approvals/room-archive" "$DASHBOARD_FILE" \
   || fail "dashboard missing whole-Room archive approval path"
 grep -q "/rooms/archive" "$DASHBOARD_FILE" \
   || fail "dashboard missing approved whole-Room archive path"
+grep -q "/approvals/room-restore" "$DASHBOARD_FILE" \
+  || fail "dashboard missing whole-Room restore approval path"
+grep -q "/rooms/restore" "$DASHBOARD_FILE" \
+  || fail "dashboard missing approved whole-Room restore path"
 grep -q "Allow once to reopen saved chat" "$DASHBOARD_FILE" \
   || fail "Rooms surface must expose one-time saved chat reopen approval"
 grep -q "Delete this saved transcript" "$DASHBOARD_FILE" \

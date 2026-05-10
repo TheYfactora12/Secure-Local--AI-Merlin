@@ -134,6 +134,29 @@ def test_task_route_approval_allows_one_local_model_call_without_raw_prompt(tmp_
     assert "not approved" in reused_response.json()["detail"]["message"]
 
 
+def test_model_only_chat_allows_protected_route_without_tool_approval(monkeypatch) -> None:
+    monkeypatch.setattr("merlin.task_endpoint.observe_task_outcome", _noop_outcome_observer)
+    monkeypatch.setattr("merlin.task_endpoint.httpx.post", lambda *args, **kwargs: _FakeLiteLLMResponse())
+
+    response = client.post("/task", json={"input": "write a python function", "model_only": True})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["response"] == "Merlin response"
+    assert body["route"]["route_id"] == "code"
+    assert body["route"]["requires_approval"] is True
+    assert body["route"]["approval_gates"] == [
+        "service_start",
+        "file_read",
+        "file_write",
+        "shell_command",
+        "git_operation",
+        "openhands_task",
+    ]
+    assert body["approved"] is True
+    assert body["memory_written"] is False
+
+
 def test_task_route_approval_rejects_prompt_mismatch(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("MERLIN_APPROVAL_LOG", str(tmp_path / "approvals.jsonl"))
     monkeypatch.setattr("merlin.task_endpoint.observe_task_outcome", _noop_outcome_observer)
@@ -788,6 +811,145 @@ def test_archive_room_requires_matching_one_time_approval(tmp_path, monkeypatch)
             "summary_count": 0,
             "master_prompt_status": "missing",
             "approval_id": archive_approval_id,
+        },
+    )
+    assert reused.status_code == 404
+
+
+def test_restore_room_requires_matching_one_time_approval(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("MERLIN_ROOMS_ROOT", str(tmp_path / "rooms"))
+    monkeypatch.setenv("MERLIN_APPROVAL_LOG", str(tmp_path / "approvals.jsonl"))
+    audit_calls = []
+
+    class FakeMemoryManager:
+        def write_audit_event(self, event_type: str, metadata: dict) -> str:
+            audit_calls.append((event_type, metadata))
+            return "audit-restore-1"
+
+    monkeypatch.setattr("merlin.task_endpoint.MemoryManager", FakeMemoryManager)
+
+    transcript_approval = client.post(
+        "/approvals/room-transcript",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "Restore Room after this",
+            "merlin_response": "Restore safely without approving context reuse.",
+            "session_id": "session-restore",
+        },
+    )
+    transcript_approval_id = transcript_approval.json()["approval_request_id"]
+    client.post(f"/approvals/{transcript_approval_id}/approve")
+    assert client.post(
+        "/rooms/transcripts",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "Restore Room after this",
+            "merlin_response": "Restore safely without approving context reuse.",
+            "session_id": "session-restore",
+            "approval_id": transcript_approval_id,
+        },
+    ).status_code == 200
+
+    archive_approval = client.post(
+        "/approvals/room-archive",
+        json={"room_id": "merlin-build", "room_name": "Merlin Build"},
+    )
+    archive_approval_id = archive_approval.json()["approval_request_id"]
+    client.post(f"/approvals/{archive_approval_id}/approve")
+    archive_response = client.post(
+        "/rooms/archive",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_count": 1,
+            "summary_count": 0,
+            "master_prompt_status": "missing",
+            "approval_id": archive_approval_id,
+        },
+    )
+    assert archive_response.status_code == 200
+    archive_id = archive_response.json()["archived_room_path"].split("/")[-1]
+
+    restore_without_approval = client.post(
+        "/rooms/restore",
+        json={
+            "archive_id": archive_id,
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_count": 1,
+            "summary_count": 0,
+            "master_prompt_status": "missing",
+        },
+    )
+    assert restore_without_approval.status_code == 403
+    assert restore_without_approval.json()["detail"]["approval_gates"] == ["file_restore"]
+    assert restore_without_approval.json()["detail"]["memory_written"] is False
+
+    restore_approval = client.post(
+        "/approvals/room-restore",
+        json={"archive_id": archive_id},
+    )
+    assert restore_approval.status_code == 200
+    approval_body = restore_approval.json()
+    assert approval_body["approval_gates"] == ["file_restore"]
+    assert approval_body["payload_summary"]["raw_content_in_approval"] is False
+    assert approval_body["payload_summary"]["approved_memory_restore"] is False
+    restore_approval_id = approval_body["approval_request_id"]
+
+    blocked = client.post(
+        "/rooms/restore",
+        json={
+            "archive_id": archive_id,
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_count": 1,
+            "summary_count": 0,
+            "master_prompt_status": "missing",
+            "approval_id": restore_approval_id,
+        },
+    )
+    assert blocked.status_code == 403
+    assert "approval is not approved for execution" in blocked.text
+
+    client.post(f"/approvals/{restore_approval_id}/approve")
+    response = client.post(
+        "/rooms/restore",
+        json={
+            "archive_id": archive_id,
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_count": 1,
+            "summary_count": 0,
+            "master_prompt_status": "missing",
+            "approval_id": restore_approval_id,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "restored_local_room_only"
+    assert body["memory_written"] is False
+    assert body["approved_memory_restored"] is False
+    assert body["context_reuse"] == "disabled_until_user_approved"
+    assert (tmp_path / "rooms" / "merlin-build").is_dir()
+    assert not (tmp_path / "rooms" / ".archive" / archive_id).exists()
+    assert audit_calls[-1][0] == "room_restore"
+    assert audit_calls[-1][1]["raw_transcript_in_audit"] is False
+    assert audit_calls[-1][1]["approved_memory_restored"] is False
+    assert "Restore safely without approving context reuse." not in str(audit_calls[-1][1])
+
+    reused = client.post(
+        "/rooms/restore",
+        json={
+            "archive_id": archive_id,
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_count": 1,
+            "summary_count": 0,
+            "master_prompt_status": "missing",
+            "approval_id": restore_approval_id,
         },
     )
     assert reused.status_code == 404

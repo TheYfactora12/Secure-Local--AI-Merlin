@@ -179,6 +179,33 @@ def room_archive_payload_hash(
     )
 
 
+def room_restore_payload_hash(
+    *,
+    archive_id: str,
+    room_id: str,
+    room_name: str | None,
+    transcript_count: int,
+    summary_count: int,
+    master_prompt_status: str,
+) -> str:
+    return stable_hash(
+        {
+            "action": "room_restore",
+            "version": 1,
+            "archive_id": archive_id.strip(),
+            "room_id": room_id.strip(),
+            "room_name": (room_name or "").strip(),
+            "transcript_count": int(transcript_count),
+            "summary_count": int(summary_count),
+            "master_prompt_status": master_prompt_status.strip(),
+            "restore_type": "local_reversible_restore",
+            "memory_write": False,
+            "approved_memory_restore": False,
+            "context_reuse": "disabled_until_user_approved",
+        }
+    )
+
+
 def _append_record(record: ApprovalRecord, path: Path | None = None) -> None:
     approval_log = path or approval_log_path()
     approval_log.parent.mkdir(parents=True, exist_ok=True)
@@ -432,6 +459,51 @@ def create_room_archive_approval(
     return record
 
 
+def create_room_restore_approval(
+    *,
+    archive_id: str,
+    room_id: str,
+    room_name: str | None,
+    transcript_count: int,
+    summary_count: int,
+    master_prompt_status: str,
+    path: Path | None = None,
+) -> ApprovalRecord:
+    payload_hash = room_restore_payload_hash(
+        archive_id=archive_id,
+        room_id=room_id,
+        room_name=room_name,
+        transcript_count=transcript_count,
+        summary_count=summary_count,
+        master_prompt_status=master_prompt_status,
+    )
+    record = ApprovalRecord(
+        approval_request_id=f"approval_room_restore_{uuid.uuid4().hex[:12]}",
+        timestamp=now_iso(),
+        status="required_pending",
+        action="room_restore",
+        approval_gates=["file_restore"],
+        payload_hash=payload_hash,
+        payload_summary={
+            "archive_id": archive_id.strip(),
+            "room_id": room_id.strip(),
+            "room_name": (room_name or "").strip(),
+            "transcript_count": int(transcript_count),
+            "summary_count": int(summary_count),
+            "master_prompt_status": master_prompt_status.strip(),
+            "raw_content_in_approval": False,
+            "memory_write": False,
+            "approved_memory_restore": False,
+            "context_reuse": "disabled_until_user_approved",
+            "restore_type": "local_reversible_restore",
+        },
+        side_effects="local_room_restore_after_approval",
+        tool_execution="local_file_restore_after_approval",
+    )
+    _append_record(record, path)
+    return record
+
+
 def decide_approval(approval_id: str, status: str, path: Path | None = None) -> ApprovalRecord:
     if status not in {"approved", "denied"}:
         raise ValueError("approval decision must be approved or denied")
@@ -608,6 +680,37 @@ def require_room_archive_approval(
     )
     if current.payload_hash != expected:
         raise PermissionError("approval payload hash does not match Room archive payload")
+    return current
+
+
+def require_room_restore_approval(
+    *,
+    approval_id: str,
+    archive_id: str,
+    room_id: str,
+    room_name: str | None,
+    transcript_count: int,
+    summary_count: int,
+    master_prompt_status: str,
+    path: Path | None = None,
+) -> ApprovalRecord:
+    current = latest_approval(approval_id, path)
+    if current is None:
+        raise PermissionError("approval id not found")
+    if current.status != "approved" or not current.execution_allowed:
+        raise PermissionError("approval is not approved for execution")
+    if current.action != "room_restore":
+        raise PermissionError("approval action does not match Room restore")
+    expected = room_restore_payload_hash(
+        archive_id=archive_id,
+        room_id=room_id,
+        room_name=room_name,
+        transcript_count=transcript_count,
+        summary_count=summary_count,
+        master_prompt_status=master_prompt_status,
+    )
+    if current.payload_hash != expected:
+        raise PermissionError("approval payload hash does not match Room restore payload")
     return current
 
 

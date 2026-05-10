@@ -21,6 +21,7 @@ from merlin.approval_store import (
     ApprovalRecord,
     create_room_archive_approval,
     create_room_master_prompt_approval,
+    create_room_restore_approval,
     create_room_transcript_delete_approval,
     create_room_transcript_read_approval,
     create_room_transcript_approval,
@@ -29,6 +30,7 @@ from merlin.approval_store import (
     mark_approval_used,
     require_room_archive_approval,
     require_room_master_prompt_approval,
+    require_room_restore_approval,
     require_room_transcript_delete_approval,
     require_room_transcript_read_approval,
     require_room_transcript_approval,
@@ -42,6 +44,7 @@ from merlin.room_store import (
     RoomArchiveResult,
     RoomCreateResult,
     RoomMasterPromptDraftResult,
+    RoomRestoreResult,
     RoomTranscriptDeleteResult,
     RoomTranscriptReadResult,
     RoomTranscriptSaveResult,
@@ -50,8 +53,10 @@ from merlin.room_store import (
     create_room,
     delete_room_transcript,
     generate_room_master_prompt_draft,
+    list_archived_rooms,
     read_room_transcript,
     room_archive_preview,
+    restore_archived_room,
     save_room_transcript,
 )
 from merlin.router import RouteDecision, route_task
@@ -77,6 +82,7 @@ class TaskRequest(BaseModel):
     input: str
     session_id: str | None = None
     approval_id: str | None = None
+    model_only: bool = False
 
 
 class TaskResponse(BaseModel):
@@ -147,6 +153,10 @@ class RoomTranscriptDeleteApprovalRequest(BaseModel):
 class RoomArchiveApprovalRequest(BaseModel):
     room_id: str
     room_name: str | None = None
+
+
+class RoomRestoreApprovalRequest(BaseModel):
+    archive_id: str
 
 
 class RoomTranscriptApprovalResponse(BaseModel):
@@ -258,6 +268,32 @@ class RoomArchiveResponse(BaseModel):
     linked_memory_review: str
     memory_written: bool
     approved_memory_deleted: bool
+    context_reuse: str
+    audit_id: str | None
+
+
+class RoomRestoreRequest(BaseModel):
+    archive_id: str
+    room_id: str
+    room_name: str | None = None
+    transcript_count: int
+    summary_count: int
+    master_prompt_status: str
+    approval_id: str | None = None
+
+
+class RoomRestoreResponse(BaseModel):
+    status: str
+    archive_id: str
+    room_id: str
+    room_name: str
+    restored_room_path: str
+    restored_at: str
+    transcript_count: int
+    summary_count: int
+    master_prompt_status: str
+    memory_written: bool
+    approved_memory_restored: bool
     context_reuse: str
     audit_id: str | None
 
@@ -586,6 +622,44 @@ def _write_room_archive_audit(
         return None
 
 
+def _archived_room_by_id(archive_id: str):
+    safe_archive_id = archive_id.strip()
+    for record in list_archived_rooms():
+        if record.archive_id == safe_archive_id:
+            return record
+    raise FileNotFoundError("Archived Room not found")
+
+
+def _write_room_restore_audit(
+    result: RoomRestoreResult,
+    request: RoomRestoreRequest,
+) -> str | None:
+    metadata = {
+        "archive_id": result.archive_id,
+        "room_id": result.room_id,
+        "room_name": result.room_name,
+        "restored_room_path": result.restored_room_path,
+        "approval_id": result.approval_id,
+        "restored_at": result.restored_at,
+        "transcript_count": result.transcript_count,
+        "summary_count": result.summary_count,
+        "master_prompt_status": result.master_prompt_status,
+        "requested_transcript_count": request.transcript_count,
+        "requested_summary_count": request.summary_count,
+        "requested_master_prompt_status": request.master_prompt_status,
+        "memory_written": False,
+        "approved_memory_restored": False,
+        "context_reuse": result.context_reuse,
+        "raw_transcript_in_audit": False,
+        "raw_master_prompt_in_audit": False,
+        "cloud_sync_default": False,
+    }
+    try:
+        return MemoryManager().write_audit_event("room_restore", metadata)
+    except Exception:
+        return None
+
+
 @app.post("/task", response_model=TaskResponse)
 def task(request: TaskRequest) -> TaskResponse:
     started = time.perf_counter()
@@ -597,7 +671,7 @@ def task(request: TaskRequest) -> TaskResponse:
     route = route_task(user_input)
     route_approved_by_id = False
     approval_id = (request.approval_id or "").strip()
-    if route.requires_approval:
+    if route.requires_approval and not request.model_only:
         if approval_id:
             try:
                 require_task_route_approval(
@@ -1121,6 +1195,119 @@ def archive_room_endpoint(request: RoomArchiveRequest) -> RoomArchiveResponse:
         linked_memory_review=result.linked_memory_review,
         memory_written=False,
         approved_memory_deleted=False,
+        context_reuse=result.context_reuse,
+        audit_id=audit_id,
+    )
+
+
+@app.post("/approvals/room-restore", response_model=RoomTranscriptApprovalResponse)
+def create_room_restore_approval_endpoint(
+    request: RoomRestoreApprovalRequest,
+) -> RoomTranscriptApprovalResponse:
+    try:
+        archived = _archived_room_by_id(request.archive_id)
+        record = create_room_restore_approval(
+            archive_id=archived.archive_id,
+            room_id=archived.room_id,
+            room_name=archived.room_name,
+            transcript_count=archived.transcript_count,
+            summary_count=archived.summary_count,
+            master_prompt_status=archived.master_prompt_status,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return _approval_response(record)
+
+
+@app.post("/rooms/restore", response_model=RoomRestoreResponse)
+def restore_room_endpoint(request: RoomRestoreRequest) -> RoomRestoreResponse:
+    approval_id = (request.approval_id or "").strip()
+    if not approval_id:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": "Restoring an archived Room requires explicit approval.",
+                "approval_gates": ["file_restore"],
+                "memory_written": False,
+                "approved_memory_restored": False,
+                "context_reuse": "disabled_until_user_approved",
+            },
+        )
+
+    try:
+        archived = _archived_room_by_id(request.archive_id)
+        if archived.room_id != request.room_id:
+            raise PermissionError("Archived Room id changed after restore approval was prepared")
+        if archived.transcript_count != int(request.transcript_count):
+            raise PermissionError("Archived Room transcript count changed after restore approval was prepared")
+        if archived.summary_count != int(request.summary_count):
+            raise PermissionError("Archived Room summary count changed after restore approval was prepared")
+        if archived.master_prompt_status != request.master_prompt_status:
+            raise PermissionError("Archived Room Master Prompt status changed after restore approval was prepared")
+        require_room_restore_approval(
+            approval_id=approval_id,
+            archive_id=archived.archive_id,
+            room_id=archived.room_id,
+            room_name=request.room_name or archived.room_name,
+            transcript_count=archived.transcript_count,
+            summary_count=archived.summary_count,
+            master_prompt_status=archived.master_prompt_status,
+        )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": str(exc),
+                "approval_gates": ["file_restore"],
+                "memory_written": False,
+                "approved_memory_restored": False,
+                "context_reuse": "disabled_until_user_approved",
+            },
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    try:
+        result = restore_archived_room(
+            archive_id=request.archive_id,
+            approval_id=approval_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except FileExistsError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "Room could not be restored locally.",
+                "error": exc.__class__.__name__,
+            },
+        ) from exc
+
+    audit_id = _write_room_restore_audit(result, request)
+    try:
+        mark_approval_used(approval_id)
+    except KeyError:
+        pass
+    return RoomRestoreResponse(
+        status="restored_local_room_only",
+        archive_id=result.archive_id,
+        room_id=result.room_id,
+        room_name=result.room_name,
+        restored_room_path=result.restored_room_path,
+        restored_at=result.restored_at,
+        transcript_count=result.transcript_count,
+        summary_count=result.summary_count,
+        master_prompt_status=result.master_prompt_status,
+        memory_written=False,
+        approved_memory_restored=False,
         context_reuse=result.context_reuse,
         audit_id=audit_id,
     )

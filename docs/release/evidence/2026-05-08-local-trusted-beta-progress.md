@@ -10884,6 +10884,184 @@ Positive, but Public Beta remains blocked by full installer retest,
 restore-from-archive, memory review/delete, approve-for-context, and clean
 onboarding evidence.
 
+## 2026-05-10 - Room Restore, Chat Model-Only Path, And Room Create Guard
+
+### Date/time
+
+2026-05-10T23:00:02Z
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`b1e1554e02b953534c04f9145564af1f4e05913a`
+
+### Target Issues
+
+- #135 Merlin Rooms for local chat history and scoped context.
+- #106 Wizard HQ Product Shell.
+- #95 release-readiness evidence.
+
+### Scope
+
+Finish the approval-gated restore pair for Room archive, reduce noisy approval
+prompts for normal Merlin Chat by using a model-only chat path, and fix the
+chat-sidebar Room creation guard so similar-Room choices are visible from the
+place where the user starts creation.
+
+### Files Changed
+
+- `merlin/room_store.py`
+- `merlin/approval_store.py`
+- `merlin/task_endpoint.py`
+- `dashboard/index.html`
+- `scripts/dashboard-browser-qa.py`
+- `tests/test_room_store.py`
+- `tests/test_task_endpoint.py`
+- `tests/dashboard-rooms-smoke.sh`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/release/evidence/assets/2026-05-10-wizard-hq-room-restore-qa/*`
+- release evidence note
+
+### Protected Files Touched
+
+Runtime policy-adjacent files were touched deliberately:
+
+- `merlin/approval_store.py`
+- `merlin/task_endpoint.py`
+- `merlin/room_store.py`
+
+No installer behavior, cloud default, telemetry, automatic model download, or
+8765 read-only status behavior changed.
+
+### Commands Run
+
+- `python3 -m py_compile merlin/room_store.py merlin/approval_store.py merlin/task_endpoint.py`
+- `.venv-test/bin/python -m pytest tests/test_task_endpoint.py::test_model_only_chat_allows_protected_route_without_tool_approval tests/test_task_endpoint.py::test_post_task_route_requiring_approval_returns_403_with_gates`
+- `.venv-test/bin/python -m pytest tests/test_task_endpoint.py::test_create_room_endpoint_writes_local_metadata_without_memory tests/test_task_endpoint.py::test_delete_room_transcript_requires_approval_id tests/test_task_endpoint.py::test_delete_room_transcript_requires_matching_one_time_approval tests/test_room_store.py::test_create_room_writes_local_metadata_without_context_reuse tests/test_room_store.py::test_delete_room_transcript_removes_one_saved_session_only`
+- `.venv-test/bin/python -m pytest tests/test_room_store.py::test_restore_archived_room_moves_room_back_without_context_reuse tests/test_task_endpoint.py::test_restore_room_requires_matching_one_time_approval tests/test_task_endpoint.py::test_model_only_chat_allows_protected_route_without_tool_approval`
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-browser-qa-smoke.sh`
+- `git diff --check`
+- `.venv-test/bin/python scripts/dashboard-browser-qa.py --output-dir docs/release/evidence/assets/2026-05-10-wizard-hq-room-restore-qa`
+
+### Test Output Summary
+
+- Python compile: PASS.
+- Model-only chat and existing approval-required route tests: PASS, 2 passed.
+- Room create/delete focused tests: PASS, 5 passed.
+- Restore focused retest after fix: PASS, 3 passed.
+- Full focused Room/Task Python suite: PASS, 47 passed.
+- Dashboard Rooms static smoke: PASS.
+- Browser QA harness static smoke: PASS.
+- Whitespace check: PASS.
+- Live browser QA: PASS after harness fix; screenshots written to
+  `docs/release/evidence/assets/2026-05-10-wizard-hq-room-restore-qa/`.
+
+### Tests Skipped And Why
+
+Full clean installer retest was not run. This slice changes Wizard HQ and Task
+API behavior, so full installer retest remains required before Local Trusted
+Beta signoff.
+
+### Failures Found
+
+1. A stale pytest selector referenced a non-existent create-Room test name.
+2. Restore tests failed because archived Room metadata was read from
+   `original_room_id`, but the archive note writes `room_id`.
+3. Browser QA failed after adding a second similar-Room guard surface because
+   the harness checked only the first matching text node, which could be hidden
+   behind the inactive Chat tab.
+4. User review showed regular coding/security chat was over-blocked by tool
+   approval gates.
+5. User review showed Room creation from the chat sidebar could appear stuck
+   because the similar-Room guard rendered on the Rooms page only.
+
+### Failure Category
+
+- Test design gap.
+- UX/readiness confusion.
+- Dashboard/Rooms workflow gap.
+- Approval-gate product friction.
+
+### Root Cause Or Current Hypothesis
+
+The restore path was partially implemented and lacked tests when interrupted.
+The dashboard had two Room creation entry points but only one visible duplicate
+guard panel. The Task API used route approval gates for model-only chat, which
+protected future tools but blocked ordinary conversation.
+
+### Fix Applied
+
+- Added archived Room metadata listing.
+- Added approval-gated `POST /approvals/room-restore` and
+  `POST /rooms/restore`.
+- Added local restore helper that moves archived Rooms back to the Rooms root.
+- Added restore audit metadata with no raw transcript or master prompt content.
+- Added Wizard HQ restore approval card and archived-Room restore action.
+- Added `model_only` to `/task`; Wizard HQ Chat now uses model-only mode for
+  normal chat so protected routes can answer without enabling files, shell,
+  tools, memory writes, or cloud calls.
+- Kept the existing non-model-only `/task` behavior approval-gated for protected
+  routes.
+- Added a visible similar-Room guard panel to the Chat sidebar.
+- Fixed browser QA visible-text matching to accept any visible match.
+
+### Retest Result
+
+PASS after targeted fixes. The restore metadata bug and browser QA hidden-match
+bug both have regression coverage.
+
+### Regression Test Added Or Updated
+
+- `tests/test_room_store.py`
+- `tests/test_task_endpoint.py`
+- `tests/dashboard-rooms-smoke.sh`
+- `scripts/dashboard-browser-qa.py`
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended #135 child issue:
+
+**Title:** `v3.1 Rooms: approve Room context reuse and build Room detail view`
+
+Scope: add an explicit approve-for-context gate, a Room detail view for many
+saved sessions, and backend-backed similarity suggestions using summaries.
+
+### Lesson Learned
+
+Approval gates must distinguish talking from acting. Merlin should answer a
+coding/security question through a local model without approval, but any actual
+file read/write, shell command, service start, OpenHands task, memory write, or
+cloud call must remain approval-gated.
+
+### What Not To Repeat Next Time
+
+Do not leave partial backend code without tests. Do not render a blocking user
+choice on a different tab than the action that triggered it. Do not let hidden
+duplicate text in inactive tabs break browser evidence checks.
+
+### Next Recommended Step
+
+Run/refresh the local Task API and browser manually, then validate: create Room
+from Chat, save a transcript, delete a transcript with Allow once, archive a
+Room, restore it, and ask a coding question without the approval wall.
+
+### Local Trusted Beta Impact
+
+Positive. Rooms now have archive/restore, Room creation is less confusing, and
+normal chat is less blocked while action safety remains intact.
+
+### Public Beta Impact
+
+Positive, but Public Beta remains blocked by full installer retest,
+approve-for-context, memory review/delete, broader onboarding evidence, and
+clean-machine validation.
+
 ## 2026-05-10 - Room Saved Session List
 
 ### Date/time

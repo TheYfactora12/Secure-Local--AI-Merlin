@@ -107,9 +107,15 @@ def evidence_dir(value: str | None) -> Path:
 
 
 def require_visible(page: Any, selector: str, label: str) -> None:
-    item = page.locator(selector).first
-    if not item.is_visible(timeout=5000):
-        raise AssertionError(f"Missing visible UI element: {label} ({selector})")
+    deadline = time.time() + 5
+    locator = page.locator(selector)
+    while time.time() < deadline:
+        count = locator.count()
+        for index in range(count):
+            if locator.nth(index).is_visible(timeout=250):
+                return
+        time.sleep(0.1)
+    raise AssertionError(f"Missing visible UI element: {label} ({selector})")
 
 
 def run_viewport(

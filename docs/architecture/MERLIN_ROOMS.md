@@ -274,6 +274,19 @@ transcripts, delete approved memory, write memory, approve Room context reuse,
 or call a model. The approval is marked used after the local archive, so Merlin
 asks again next time.
 
+Current implementation also exposes the matching approval-gated restore path:
+
+```text
+POST http://localhost:8766/approvals/room-restore
+POST http://localhost:8766/rooms/restore
+```
+
+This moves an archived Room folder back into the local Rooms root after a
+one-time approval. This is a local reversible restore. It does not read raw
+transcripts, restore approved memory, write memory, approve Room context reuse,
+or call a model. The approval is marked used after the local restore, so Merlin
+asks again next time.
+
 The `approval_id` must come from the Task API approval lifecycle:
 
 ```text

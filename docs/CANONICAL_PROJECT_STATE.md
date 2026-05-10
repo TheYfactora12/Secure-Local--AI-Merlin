@@ -129,12 +129,12 @@ flowchart LR
    launcher, user-initiated approval-gated transcript saves, one-time
    transcript reopen/delete approvals, safe transcript metadata titles,
    approval-gated Room Master Prompt drafts, and a metadata-only Room review
-   table. Wizard HQ now warns on obvious duplicate/similar Room names before
-   creating a separate Room. Current whole-Room cleanup is approval-gated local
-   archive only; it does not hard-delete Rooms or approved memory. Next slices
-   should add backend-backed topic similarity using transcript summaries, restore
-   from archive, and a separate approve-for-context gate before any Room content
-   is reused.
+   table, approval-gated local Room archive, and approval-gated local Room
+   restore. Wizard HQ now warns on obvious duplicate/similar Room names before
+   creating a separate Room. Whole-Room cleanup remains archive/restore only;
+   it does not hard-delete Rooms or approved memory. Next slices should add
+   backend-backed topic similarity using transcript summaries and a separate
+   approve-for-context gate before any Room content is reused.
 3. #106: Wizard HQ Product Shell parent; keep Chat, Brains, Memory, Agents,
    Security, System, and Settings aligned before deeper governance features.
 4. #31/#32/#120: memory approval, review, and delete paths. These are required

@@ -117,6 +117,33 @@ class RoomArchiveResult(BaseModel):
     linked_memory_review: str = "not_available_requires_manual_memory_review"
 
 
+class ArchivedRoomRecord(BaseModel):
+    archive_id: str
+    room_id: str
+    room_name: str
+    archived_room_path: str
+    transcript_count: int = 0
+    summary_count: int = 0
+    master_prompt_status: str = "missing"
+    linked_memory_review: str = "not_available_requires_manual_memory_review"
+    raw_content_loaded: bool = False
+
+
+class RoomRestoreResult(BaseModel):
+    archive_id: str
+    room_id: str
+    room_name: str
+    restored_room_path: str
+    restored_at: str
+    approval_id: str
+    transcript_count: int = 0
+    summary_count: int = 0
+    master_prompt_status: str = "missing"
+    memory_written: bool = False
+    approved_memory_restored: bool = False
+    context_reuse: str = "disabled_until_user_approved"
+
+
 class RoomMasterPromptRecord(BaseModel):
     status: str = "missing"
     path: str | None = None
@@ -346,6 +373,58 @@ def _room_name_from_metadata(metadata_file: Path, fallback: str) -> str:
     return fallback
 
 
+def _archive_note_value(archive_path: Path, key: str, fallback: str = "") -> str:
+    note = archive_path / "archive.md"
+    try:
+        lines = note.read_text(encoding="utf-8").splitlines()[:80]
+    except OSError:
+        return fallback
+    prefix = f"{key}:"
+    for line in lines:
+        if line.lower().startswith(prefix.lower()):
+            value = line.split(":", 1)[1].strip()
+            return value or fallback
+    return fallback
+
+
+def _archived_room_record(archive_path: Path) -> ArchivedRoomRecord | None:
+    if not archive_path.is_dir() or not _safe_room_id(archive_path.name):
+        return None
+    metadata_file = archive_path / "room.md"
+    if not metadata_file.exists() or not metadata_file.is_file():
+        return None
+    room_id = _archive_note_value(archive_path, "room_id", archive_path.name)
+    if not _safe_room_id(room_id):
+        return None
+    master_prompt = room_master_prompt_record(archive_path)
+    return ArchivedRoomRecord(
+        archive_id=archive_path.name,
+        room_id=room_id,
+        room_name=_room_name_from_metadata(metadata_file, room_id.replace("-", " ").title()),
+        archived_room_path=str(archive_path),
+        transcript_count=_count_markdown_files(archive_path / "transcripts"),
+        summary_count=_count_markdown_files(archive_path / "summaries"),
+        master_prompt_status=master_prompt.status,
+    )
+
+
+def list_archived_rooms(root: Path | None = None) -> list[ArchivedRoomRecord]:
+    rooms_root = root or rooms_root_path()
+    archive_root = rooms_root / ".archive"
+    if not archive_root.exists() or not archive_root.is_dir():
+        return []
+    try:
+        children = sorted(archive_root.iterdir(), key=lambda item: item.name.lower(), reverse=True)
+    except OSError:
+        return []
+    records: list[ArchivedRoomRecord] = []
+    for child in children:
+        record = _archived_room_record(child)
+        if record is not None:
+            records.append(record)
+    return records
+
+
 def list_rooms(root: Path | None = None) -> list[RoomRecord]:
     rooms_root = root or rooms_root_path()
     if not rooms_root.exists() or not rooms_root.is_dir():
@@ -476,6 +555,69 @@ def archive_room(
         transcript_count=preview.transcript_count,
         summary_count=preview.summary_count,
         master_prompt_status=preview.master_prompt_status,
+    )
+
+
+def restore_archived_room(
+    *,
+    archive_id: str,
+    approval_id: str,
+    root: Path | None = None,
+    restored_at: str | None = None,
+) -> RoomRestoreResult:
+    """Restore an archived Room with explicit approval.
+
+    Restore is a local reversible move back into the Rooms root. It does not
+    approve Room context reuse, write memory, or restore/delete approved memory.
+    """
+    safe_archive_id = _validate_room_id(archive_id)
+    safe_approval_id = approval_id.strip()
+    if not safe_approval_id:
+        raise ValueError("approval_id is required to restore an archived Room")
+    rooms_root = root or rooms_root_path()
+    archive_path = rooms_root / ".archive" / safe_archive_id
+    record = _archived_room_record(archive_path)
+    if record is None:
+        raise FileNotFoundError("Archived Room not found")
+    restore_path = rooms_root / record.room_id
+    if restore_path.exists():
+        raise FileExistsError("A Room with this id already exists; archive restore would overwrite it")
+    ts = restored_at or _utc_now()
+    restore_note = "\n".join(
+        [
+            "---",
+            f"archive_id: {safe_archive_id}",
+            f"room_id: {record.room_id}",
+            f"room_name: {record.room_name}",
+            f"restored_at: {ts}",
+            f"approval_id: {safe_approval_id}",
+            "restore_type: local_reversible_restore",
+            "memory_written: false",
+            "approved_memory_restored: false",
+            "context_reuse: disabled_until_user_approved",
+            "---",
+            "",
+            "# Room Restore",
+            "",
+            "This Room was restored from the local archive. Context reuse still requires separate approval.",
+            "",
+        ]
+    )
+    try:
+        archive_path.rename(restore_path)
+        (restore_path / "restore.md").write_text(restore_note, encoding="utf-8")
+    except OSError:
+        raise
+    return RoomRestoreResult(
+        archive_id=safe_archive_id,
+        room_id=record.room_id,
+        room_name=record.room_name,
+        restored_room_path=str(restore_path),
+        restored_at=ts,
+        approval_id=safe_approval_id,
+        transcript_count=record.transcript_count,
+        summary_count=record.summary_count,
+        master_prompt_status=record.master_prompt_status,
     )
 
 
@@ -814,6 +956,7 @@ def room_manifest() -> dict[str, Any]:
     brain_root = brain_root_path()
     rooms_root = rooms_root_path()
     rooms = list_rooms(rooms_root)
+    archived_rooms = list_archived_rooms(rooms_root)
     return {
         "mode": "read_only_rooms_manifest",
         "brain_root": str(brain_root),
@@ -840,7 +983,11 @@ def room_manifest() -> dict[str, Any]:
         "master_prompt_policy": "draft_requires_backend_approval_context_reuse_disabled",
         "room_archive_api_enabled": True,
         "room_archive_policy": "backend_approval_required_local_archive_only",
+        "room_restore_api_enabled": True,
+        "room_restore_policy": "backend_approval_required_local_restore_only",
         "tracked_issue": "#135",
         "rooms": [room.model_dump() for room in rooms],
+        "archived_rooms": [room.model_dump() for room in archived_rooms],
+        "archived_total": len(archived_rooms),
         "total": len(rooms),
     }
