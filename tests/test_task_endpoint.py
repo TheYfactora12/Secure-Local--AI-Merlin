@@ -443,6 +443,143 @@ def test_read_room_transcript_requires_matching_one_time_approval(tmp_path, monk
     assert "approval is not approved for execution" in reused_response.text
 
 
+def test_delete_room_transcript_requires_approval_id() -> None:
+    response = client.post(
+        "/rooms/transcripts/delete",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_id": "2026-05-09",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"]["approval_gates"] == ["file_delete"]
+    assert response.json()["detail"]["memory_written"] is False
+
+
+def test_delete_room_transcript_requires_matching_one_time_approval(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("MERLIN_ROOMS_ROOT", str(tmp_path / "rooms"))
+    monkeypatch.setenv("MERLIN_APPROVAL_LOG", str(tmp_path / "approvals.jsonl"))
+    audit_calls = []
+
+    class FakeMemoryManager:
+        def write_audit_event(self, event_type: str, metadata: dict) -> str:
+            audit_calls.append((event_type, metadata))
+            return "audit-delete-1"
+
+    monkeypatch.setattr("merlin.task_endpoint.MemoryManager", FakeMemoryManager)
+
+    first_approval = client.post(
+        "/approvals/room-transcript",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "Keep first transcript",
+            "merlin_response": "First saved transcript.",
+            "session_id": "session-1",
+        },
+    )
+    first_approval_id = first_approval.json()["approval_request_id"]
+    client.post(f"/approvals/{first_approval_id}/approve")
+    first_save = client.post(
+        "/rooms/transcripts",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "Keep first transcript",
+            "merlin_response": "First saved transcript.",
+            "session_id": "session-1",
+            "approval_id": first_approval_id,
+        },
+    )
+    first_transcript_id = first_save.json()["transcript_id"]
+
+    second_approval = client.post(
+        "/approvals/room-transcript",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "Delete second transcript",
+            "merlin_response": "Second saved transcript.",
+            "session_id": "session-2",
+        },
+    )
+    second_approval_id = second_approval.json()["approval_request_id"]
+    client.post(f"/approvals/{second_approval_id}/approve")
+    second_save = client.post(
+        "/rooms/transcripts",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "user_input": "Delete second transcript",
+            "merlin_response": "Second saved transcript.",
+            "session_id": "session-2",
+            "approval_id": second_approval_id,
+        },
+    )
+    second_transcript_id = second_save.json()["transcript_id"]
+
+    delete_without_delete_approval = client.post(
+        "/rooms/transcripts/delete",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_id": second_transcript_id,
+            "approval_id": second_approval_id,
+        },
+    )
+    assert delete_without_delete_approval.status_code == 403
+    assert "approval is not approved for execution" in delete_without_delete_approval.text
+
+    delete_approval = client.post(
+        "/approvals/room-transcript-delete",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_id": second_transcript_id,
+        },
+    )
+    delete_approval_id = delete_approval.json()["approval_request_id"]
+    assert delete_approval.json()["approval_gates"] == ["file_delete"]
+    assert delete_approval.json()["payload_summary"]["raw_content_in_approval"] is False
+    client.post(f"/approvals/{delete_approval_id}/approve")
+
+    response = client.post(
+        "/rooms/transcripts/delete",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_id": second_transcript_id,
+            "approval_id": delete_approval_id,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "deleted_local_transcript_only"
+    assert body["transcript_id"] == second_transcript_id
+    assert body["memory_written"] is False
+    assert body["context_reuse"] == "disabled_until_user_approved"
+    assert audit_calls[-1][0] == "room_transcript_delete"
+    assert audit_calls[-1][1]["raw_transcript_in_audit"] is False
+    assert "Second saved transcript." not in str(audit_calls[-1][1])
+    assert (tmp_path / "rooms" / "merlin-build" / "transcripts" / f"{first_transcript_id}.md").exists()
+    assert not (tmp_path / "rooms" / "merlin-build" / "transcripts" / f"{second_transcript_id}.md").exists()
+
+    reused_response = client.post(
+        "/rooms/transcripts/delete",
+        json={
+            "room_id": "merlin-build",
+            "room_name": "Merlin Build",
+            "transcript_id": first_transcript_id,
+            "approval_id": delete_approval_id,
+        },
+    )
+    assert reused_response.status_code == 403
+    assert "approval is not approved for execution" in reused_response.text
+
+
 def test_room_master_prompt_approval_requires_saved_transcript(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("MERLIN_ROOMS_ROOT", str(tmp_path / "rooms"))
     monkeypatch.setenv("MERLIN_APPROVAL_LOG", str(tmp_path / "approvals.jsonl"))

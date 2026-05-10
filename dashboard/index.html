@@ -435,6 +435,26 @@ textarea {
   color: var(--text);
   background: rgba(255, 255, 255, 0.04);
 }
+.front-session-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px;
+  align-items: center;
+}
+.front-session-remove {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+  min-height: 30px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+.front-session-remove:hover {
+  border-color: rgba(245, 158, 11, 0.35);
+  color: var(--amber);
+}
 .room-history-group {
   display: grid;
   gap: 4px;
@@ -2004,6 +2024,7 @@ let selectedRoomName = DEFAULT_ROOM_NAME;
 let lastMerlinExchange = null;
 let pendingRoomApproval = null;
 let pendingRoomRead = null;
+let pendingTranscriptRemoval = null;
 let currentChatTranscript = [];
 let roomSaveStatus = 'Save becomes available after Merlin returns a response.';
 let roomSaveState = 'neutral';
@@ -2228,6 +2249,43 @@ async function openSavedRoomChat(roomId, roomName, transcriptId) {
   }
 }
 
+async function prepareSavedTranscriptRemoval(roomId, roomName, transcriptId) {
+  selectActiveRoom(roomId, roomName, true);
+  pendingTranscriptRemoval = null;
+  renderChatOutput({
+    state: 'pending',
+    title: 'delete saved transcript',
+    body: `Prepare a one-time delete approval for ${safe(transcriptId, 'transcript')} in ${safe(roomName, roomId)}. This removes one saved session only; it does not delete the Room.`,
+    mode: selectedChatMode,
+  });
+  try {
+    const data = await postJson(`${TASK_API}/approvals/room-transcript-delete`, {
+      room_id: roomId,
+      room_name: roomName,
+      transcript_id: transcriptId,
+    });
+    pendingTranscriptRemoval = {
+      roomId,
+      roomName,
+      transcriptId,
+      approvalId: data.approval_request_id,
+    };
+    renderChatOutput({
+      state: 'pending',
+      title: 'delete approval prepared',
+      body: `Allow once to delete saved transcript ${safe(transcriptId, 'transcript')}. Other saved sessions in ${safe(roomName, roomId)} stay in the Room.`,
+      mode: selectedChatMode,
+    });
+  } catch (error) {
+    renderChatOutput({
+      state: 'degraded',
+      title: 'delete unavailable',
+      body: `Merlin could not prepare the transcript delete approval. Detail: ${safe(error && error.message, 'unknown error')}`,
+      mode: selectedChatMode,
+    });
+  }
+}
+
 function updateRoomSaveMeter() {
   const panel = document.getElementById('chat-room-save-meter');
   if (!panel) return;
@@ -2342,9 +2400,12 @@ function renderRoomHistory() {
     const roomName = safe(room.name || room.room_id, roomId);
     const transcripts = (room.transcripts || []).slice(0, 5);
     const transcriptRows = transcripts.map(transcript => `
-      <button class="front-session" type="button" onclick="openSavedRoomChat(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(transcript.transcript_id || 'transcript')})">
-        ${escapeHtml(transcript.transcript_id || 'transcript')} · raw hidden
-      </button>
+      <div class="front-session-row">
+        <button class="front-session" type="button" onclick="openSavedRoomChat(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(transcript.transcript_id || 'transcript')})">
+          ${escapeHtml(transcript.transcript_id || 'transcript')} · raw hidden
+        </button>
+        <button class="front-session-remove" type="button" onclick="prepareSavedTranscriptRemoval(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(transcript.transcript_id || 'transcript')})" aria-label="Delete saved transcript ${escapeHtml(transcript.transcript_id || 'transcript')}">Delete</button>
+      </div>
     `).join('');
     return `
       <details class="room-history-group" ${roomId === selectedRoomId ? 'open' : ''}>
@@ -2445,6 +2506,7 @@ function clearMerlinChat() {
   lastMerlinExchange = null;
   pendingRoomApproval = null;
   pendingRoomRead = null;
+  pendingTranscriptRemoval = null;
   currentChatTranscript = [];
   roomSaveStatus = 'Save becomes available after Merlin returns a response.';
   roomSaveState = 'neutral';
@@ -2551,6 +2613,21 @@ function roomReadApprovalCardHtml() {
   `;
 }
 
+function transcriptRemovalApprovalCardHtml() {
+  if (!pendingTranscriptRemoval) return '';
+  return `
+    <div class="approval-card" aria-label="Saved Room transcript delete approval">
+      <strong>Delete this saved transcript?</strong>
+      <p>Merlin will delete this one local transcript file. The Room, other transcripts, and approved memory are not deleted.</p>
+      <div class="approval-actions">
+        <button type="button" onclick="allowSavedTranscriptRemoval()">Allow once</button>
+        <button class="secondary" type="button" onclick="cancelSavedTranscriptRemoval()">Cancel</button>
+      </div>
+      <p>Room: ${escapeHtml(pendingTranscriptRemoval.roomName)} · Transcript: ${escapeHtml(pendingTranscriptRemoval.transcriptId)} · approval asks again next time.</p>
+    </div>
+  `;
+}
+
 function roomApprovalUnavailableCopy(error) {
   const message = safe(error && error.message, 'unknown error');
   if (message === 'Not Found' || message.includes('returned 404')) {
@@ -2573,6 +2650,7 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
   const modeLabel = safe(mode || selectedChatMode, 'smart');
   const isBlocked = state === 'blocked';
   const showRoomReadApproval = state === 'pending' && Boolean(pendingRoomRead);
+  const showTranscriptRemovalApproval = state === 'pending' && Boolean(pendingTranscriptRemoval);
   const showRoomSave = allowRoomSave && state === 'approved' && !degraded;
   const routeLabel = routeData.route_id || 'unavailable';
   const staffLabel = routeData.staff_mode || null;
@@ -2613,6 +2691,7 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
         </div>
         ${isBlocked ? approvalCardHtml(routeData, gateText) : ''}
         ${showRoomReadApproval ? roomReadApprovalCardHtml() : ''}
+        ${showTranscriptRemovalApproval ? transcriptRemovalApprovalCardHtml() : ''}
       </div>
     </div>
   ` : '';
@@ -2738,6 +2817,60 @@ async function cancelRoomTranscriptRead() {
     await postJson(`${TASK_API}/approvals/${encodeURIComponent(approvalId)}/deny`, {});
   } catch (_) {
     // The UI has already failed closed by clearing the pending read approval.
+  }
+}
+
+async function allowSavedTranscriptRemoval() {
+  if (!pendingTranscriptRemoval) return;
+  const request = pendingTranscriptRemoval;
+  renderChatOutput({
+    state: 'pending',
+    title: 'deleting saved transcript',
+    body: 'Merlin is deleting the approved local transcript. Other saved sessions remain in the Room.',
+    mode: selectedChatMode,
+  });
+  try {
+    await postJson(`${TASK_API}/approvals/${encodeURIComponent(request.approvalId)}/approve`, {});
+    const data = await postJson(`${TASK_API}/rooms/transcripts/delete`, {
+      room_id: request.roomId,
+      room_name: request.roomName,
+      transcript_id: request.transcriptId,
+      approval_id: request.approvalId,
+    });
+    pendingTranscriptRemoval = null;
+    renderChatOutput({
+      state: 'pending',
+      title: 'saved transcript deleted',
+      body: `Deleted ${safe(data.transcript_id, request.transcriptId)} from ${safe(data.room_name, request.roomName)}. The Room remains available.`,
+      mode: selectedChatMode,
+    });
+    await loadRooms();
+    await loadMemory();
+  } catch (error) {
+    pendingTranscriptRemoval = null;
+    renderChatOutput({
+      state: 'degraded',
+      title: 'delete failed',
+      body: `Merlin could not delete the saved transcript. Detail: ${safe(error && error.message, 'unknown error')}`,
+      mode: selectedChatMode,
+    });
+  }
+}
+
+async function cancelSavedTranscriptRemoval() {
+  if (!pendingTranscriptRemoval) return;
+  const approvalId = pendingTranscriptRemoval.approvalId;
+  pendingTranscriptRemoval = null;
+  renderChatOutput({
+    state: 'pending',
+    title: 'delete canceled',
+    body: 'No saved transcript was deleted.',
+    mode: selectedChatMode,
+  });
+  try {
+    await postJson(`${TASK_API}/approvals/${encodeURIComponent(approvalId)}/deny`, {});
+  } catch (_) {
+    // The UI has already failed closed by clearing the pending delete approval.
   }
 }
 

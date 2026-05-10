@@ -9075,3 +9075,146 @@ experience while keeping Room save/read approval boundaries intact.
 
 Positive, but public beta still needs visual browser evidence and installer
 retest after dashboard behavior changes.
+
+## 2026-05-10 - Policy-Gated Saved Transcript Delete
+
+### Date/Time
+
+2026-05-10 08:58 EDT
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`ef33583`
+
+### Target Issues
+
+- #135 Rooms and local transcript flow.
+- #106 Wizard HQ product shell.
+- #31/#32 approval-gated memory/review/delete principles.
+
+### Scope
+
+Add transcript-level delete for saved Room sessions. This deletes one saved
+transcript inside a Room after a one-time `file_delete` approval. It does not
+delete the Room itself, other transcripts, approved memory, or Room Master
+Prompt drafts.
+
+### Files Changed
+
+- `merlin/approval_store.py`
+- `merlin/room_store.py`
+- `merlin/task_endpoint.py`
+- `dashboard/index.html`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `tests/test_room_store.py`
+- `tests/test_task_endpoint.py`
+- `tests/dashboard-native-chat-smoke.sh`
+- `tests/dashboard-rooms-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `merlin/task_endpoint.py`: touched to add policy-gated transcript delete only.
+- No installer, cloud, telemetry, model download, or browser shell execution
+  behavior changed.
+
+### Commands Run
+
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py tests/test_status_extension.py`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-security-center-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-model-readiness-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- Python tests: 66 passed.
+- Native chat smoke: PASS.
+- Rooms smoke: PASS.
+- Security center smoke: PASS.
+- First-run smoke: PASS.
+- Model readiness smoke: PASS.
+- Tabs smoke: PASS.
+- Diff whitespace check: PASS.
+
+### Tests Skipped And Why
+
+Live browser click-through remains pending. Static smoke and backend tests cover
+approval boundaries, one-time approval behavior, and transcript-vs-Room delete
+copy.
+
+### Failures Found
+
+No new command failure.
+
+### Failure Category
+
+No new failure.
+
+### Root Cause Or Current Hypothesis
+
+Users need both transcript/session delete and whole-Room delete. Transcript
+delete is the safer first slice because it affects one saved session only.
+Whole-Room delete needs stronger warnings for all transcripts, master prompt
+drafts, and future linked memory.
+
+### Fix Applied
+
+- Added redacted `room_transcript_delete` approval records with `file_delete`.
+- Added `POST /approvals/room-transcript-delete`.
+- Added `POST /rooms/transcripts/delete`.
+- Added local transcript delete helper that removes one `.md` transcript file.
+- Added Room History delete button and `Allow once` approval card.
+- Kept Room folder, other transcripts, memory, and master prompts intact.
+
+### Retest Result
+
+PASS for all commands listed above.
+
+### Regression Test Added Or Updated
+
+- `tests/test_room_store.py` verifies deleting one transcript preserves the Room
+  and other saved sessions.
+- `tests/test_task_endpoint.py` verifies delete requires matching one-time
+  approval, does not leak raw transcript content into audit metadata, and cannot
+  reuse the approval.
+- Dashboard smokes verify delete UI, endpoints, and fail-closed cancel copy.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended next issue: policy-gated whole-Room delete/archive with explicit
+warnings for transcript count, master prompt drafts, future linked memory, and a
+strong confirmation phrase.
+
+### Lesson Learned
+
+A Room is a project space containing multiple saved sessions. Delete UX must
+match that model: deleting a transcript is normal cleanup; deleting a Room is a
+larger destructive action and should not share the same button or copy.
+
+### What Not To Repeat Next Time
+
+Do not conflate transcript delete with Room delete. Do not add broad destructive
+Room operations before warning and linked-memory semantics are designed.
+
+### Next Recommended Step
+
+Run browser click-through for save -> reopen -> delete transcript, then design
+whole-Room archive/delete as a separate gated flow.
+
+### Local Trusted Beta Impact
+
+Positive. Users can clean up saved Room sessions without deleting the project
+Room.
+
+### Public Beta Impact
+
+Positive, but public beta still needs browser evidence and whole-Room deletion
+must be designed separately before exposing project-space removal.

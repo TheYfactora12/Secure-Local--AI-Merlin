@@ -245,6 +245,18 @@ write memory, approve context reuse, index Room content, or share context across
 Rooms. The approval is marked used after the local read, so Merlin asks again
 next time.
 
+Current implementation also exposes an approval-gated transcript delete path:
+
+```text
+POST http://localhost:8766/approvals/room-transcript-delete
+POST http://localhost:8766/rooms/transcripts/delete
+```
+
+This path deletes one saved transcript/session inside a Room after a redacted
+`file_delete` approval. It does not delete the Room folder, other transcripts,
+Room Master Prompt drafts, approved memory, or any future linked context. The
+approval is marked used after the local delete, so Merlin asks again next time.
+
 Current implementation also exposes a separate approval-gated Room Master Prompt
 draft path:
 

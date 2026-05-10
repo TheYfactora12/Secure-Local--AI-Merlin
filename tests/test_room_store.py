@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from merlin.room_store import (
+    delete_room_transcript,
     generate_room_master_prompt_draft,
     list_room_transcripts,
     list_rooms,
@@ -204,6 +205,45 @@ def test_read_room_transcript_rejects_unsafe_transcript_id(tmp_path) -> None:
         assert "room_id must be a safe slug" in str(exc)
     else:
         raise AssertionError("unsafe transcript ids must be rejected")
+
+
+def test_delete_room_transcript_removes_one_saved_session_only(tmp_path) -> None:
+    first = save_room_transcript(
+        room_id="merlin-build",
+        room_name="Merlin Build",
+        user_input="First session",
+        merlin_response="Keep this one.",
+        session_id="session-1",
+        approval_id="approval-1",
+        root=tmp_path,
+        created_at="2026-05-09T12:00:00+00:00",
+    )
+    second = save_room_transcript(
+        room_id="merlin-build",
+        room_name="Merlin Build",
+        user_input="Second session",
+        merlin_response="Delete this one.",
+        session_id="session-2",
+        approval_id="approval-2",
+        root=tmp_path,
+        created_at="2026-05-09T13:00:00+00:00",
+    )
+
+    result = delete_room_transcript(
+        room_id="merlin-build",
+        transcript_id=second.transcript_id,
+        approval_id="approval-delete-1",
+        root=tmp_path,
+        deleted_at="2026-05-09T14:00:00+00:00",
+    )
+
+    assert result.room_id == "merlin-build"
+    assert result.transcript_id == second.transcript_id
+    assert result.memory_written is False
+    assert result.context_reuse == "disabled_until_user_approved"
+    assert (tmp_path / "merlin-build" / "transcripts" / f"{first.transcript_id}.md").exists()
+    assert not (tmp_path / "merlin-build" / "transcripts" / f"{second.transcript_id}.md").exists()
+    assert (tmp_path / "merlin-build" / "room.md").exists()
 
 
 def test_generate_room_master_prompt_draft_requires_transcript(tmp_path) -> None:

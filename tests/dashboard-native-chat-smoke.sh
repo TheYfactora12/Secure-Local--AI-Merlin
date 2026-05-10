@@ -147,6 +147,16 @@ grep -q "savedTranscriptEntries" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must reconstruct saved Room sessions into chat rows"
 grep -q "Saved Room chat loaded into this session" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must restore saved Room transcript into the active chat session"
+grep -q "prepareSavedTranscriptRemoval" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must expose saved transcript delete preparation"
+grep -q "allowSavedTranscriptRemoval" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must expose one-time saved transcript delete approval"
+grep -q "/approvals/room-transcript-delete" "$DASHBOARD_FILE" \
+  || fail "dashboard missing saved transcript delete approval endpoint"
+grep -q "/rooms/transcripts/delete" "$DASHBOARD_FILE" \
+  || fail "dashboard missing approved saved transcript delete endpoint"
+grep -q "Other saved sessions remain in the Room" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must distinguish transcript delete from Room delete"
 grep -q "source-line" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing local/source proof line"
 grep -q "Local by default" "$DASHBOARD_FILE" \

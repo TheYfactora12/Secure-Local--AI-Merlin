@@ -124,6 +124,9 @@ for required in \
   "POST http://localhost:8766/approvals/room-transcript" \
   "POST http://localhost:8766/approvals/room-transcript-read" \
   "POST http://localhost:8766/rooms/transcripts/read" \
+  "POST http://localhost:8766/approvals/room-transcript-delete" \
+  "POST http://localhost:8766/rooms/transcripts/delete" \
+  "deletes one saved transcript/session inside a Room" \
   "The approval is marked used after the local read" \
   "rejects approvals that are still"; do
   grep -Fq "$required" "$ROOMS_DOC" || fail "Rooms doc missing: $required"
@@ -139,10 +142,18 @@ grep -q "/approvals/room-transcript-read" "$DASHBOARD_FILE" \
   || fail "dashboard missing Room transcript read approval path"
 grep -q "/rooms/transcripts/read" "$DASHBOARD_FILE" \
   || fail "dashboard missing approved Room transcript read path"
+grep -q "/approvals/room-transcript-delete" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Room transcript delete approval path"
+grep -q "/rooms/transcripts/delete" "$DASHBOARD_FILE" \
+  || fail "dashboard missing approved Room transcript delete path"
 grep -q "Allow once to reopen saved chat" "$DASHBOARD_FILE" \
   || fail "Rooms surface must expose one-time saved chat reopen approval"
+grep -q "Delete this saved transcript" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must expose one-time saved transcript delete approval"
 grep -q "No local transcript was read, no memory was written" "$DASHBOARD_FILE" \
   || fail "Rooms read cancel path must fail closed"
+grep -q "No saved transcript was deleted" "$DASHBOARD_FILE" \
+  || fail "Rooms delete cancel path must fail closed"
 
 if grep -qiE '<input|type="password"|writeRoom|deleteRoom|writeMemory|approveGate|denyGate|runShell|downloadModel|pullModel|data-action="approve"|data-action="deny"' "$DASHBOARD_FILE"; then
   fail "Rooms surface must not expose unsafe browser controls"

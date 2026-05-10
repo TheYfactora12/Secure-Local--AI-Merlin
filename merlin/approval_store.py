@@ -110,6 +110,25 @@ def room_transcript_read_payload_hash(
     )
 
 
+def room_transcript_delete_payload_hash(
+    *,
+    room_id: str,
+    room_name: str | None,
+    transcript_id: str,
+) -> str:
+    return stable_hash(
+        {
+            "action": "room_transcript_delete",
+            "version": 1,
+            "room_id": room_id.strip(),
+            "room_name": (room_name or "").strip(),
+            "transcript_id": transcript_id.strip(),
+            "memory_write": False,
+            "context_reuse": "disabled_until_user_approved",
+        }
+    )
+
+
 def _append_record(record: ApprovalRecord, path: Path | None = None) -> None:
     approval_log = path or approval_log_path()
     approval_log.parent.mkdir(parents=True, exist_ok=True)
@@ -243,6 +262,40 @@ def create_room_transcript_read_approval(
     return record
 
 
+def create_room_transcript_delete_approval(
+    *,
+    room_id: str,
+    room_name: str | None,
+    transcript_id: str,
+    path: Path | None = None,
+) -> ApprovalRecord:
+    payload_hash = room_transcript_delete_payload_hash(
+        room_id=room_id,
+        room_name=room_name,
+        transcript_id=transcript_id,
+    )
+    record = ApprovalRecord(
+        approval_request_id=f"approval_room_transcript_delete_{uuid.uuid4().hex[:12]}",
+        timestamp=now_iso(),
+        status="required_pending",
+        action="room_transcript_delete",
+        approval_gates=["file_delete"],
+        payload_hash=payload_hash,
+        payload_summary={
+            "room_id": room_id.strip(),
+            "room_name": (room_name or "").strip(),
+            "transcript_id": transcript_id.strip(),
+            "raw_content_in_approval": False,
+            "memory_write": False,
+            "context_reuse": "disabled_until_user_approved",
+        },
+        side_effects="local_transcript_file_delete_after_approval",
+        tool_execution="local_file_delete_after_approval",
+    )
+    _append_record(record, path)
+    return record
+
+
 def decide_approval(approval_id: str, status: str, path: Path | None = None) -> ApprovalRecord:
     if status not in {"approved", "denied"}:
         raise ValueError("approval decision must be approved or denied")
@@ -336,6 +389,31 @@ def require_room_transcript_read_approval(
     )
     if current.payload_hash != expected:
         raise PermissionError("approval payload hash does not match transcript read payload")
+    return current
+
+
+def require_room_transcript_delete_approval(
+    *,
+    approval_id: str,
+    room_id: str,
+    room_name: str | None,
+    transcript_id: str,
+    path: Path | None = None,
+) -> ApprovalRecord:
+    current = latest_approval(approval_id, path)
+    if current is None:
+        raise PermissionError("approval id not found")
+    if current.status != "approved" or not current.execution_allowed:
+        raise PermissionError("approval is not approved for execution")
+    if current.action != "room_transcript_delete":
+        raise PermissionError("approval action does not match room transcript delete")
+    expected = room_transcript_delete_payload_hash(
+        room_id=room_id,
+        room_name=room_name,
+        transcript_id=transcript_id,
+    )
+    if current.payload_hash != expected:
+        raise PermissionError("approval payload hash does not match transcript delete payload")
     return current
 
 

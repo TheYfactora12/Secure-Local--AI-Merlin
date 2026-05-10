@@ -69,6 +69,17 @@ class RoomTranscriptReadResult(BaseModel):
     context_reuse: str = "disabled_until_user_approved"
 
 
+class RoomTranscriptDeleteResult(BaseModel):
+    room_id: str
+    room_name: str
+    transcript_id: str
+    transcript_path: str
+    deleted_at: str
+    approval_id: str
+    memory_written: bool = False
+    context_reuse: str = "disabled_until_user_approved"
+
+
 class RoomMasterPromptRecord(BaseModel):
     status: str = "missing"
     path: str | None = None
@@ -285,6 +296,42 @@ def read_room_transcript(
         merlin_response=merlin_text,
         size_bytes=size_bytes,
         modified_at=_file_modified_at(transcript_path),
+    )
+
+
+def delete_room_transcript(
+    *,
+    room_id: str,
+    transcript_id: str,
+    approval_id: str,
+    root: Path | None = None,
+    deleted_at: str | None = None,
+) -> RoomTranscriptDeleteResult:
+    """Delete one saved local Room transcript after explicit approval."""
+
+    safe_room_id = _validate_room_id(room_id)
+    safe_transcript_id = _validate_room_id(transcript_id)
+    safe_approval_id = _validate_text_field(approval_id, "approval_id", 120)
+    rooms_root = root or rooms_root_path()
+    room_path = rooms_root / safe_room_id
+    transcript_path = room_path / "transcripts" / f"{safe_transcript_id}.md"
+    if not transcript_path.exists() or not transcript_path.is_file():
+        raise FileNotFoundError("Room transcript not found")
+
+    room_name = _room_name_from_metadata(room_path / "room.md", safe_room_id.replace("-", " ").title())
+    ts = deleted_at or _utc_now()
+    try:
+        transcript_path.unlink()
+    except OSError:
+        raise
+
+    return RoomTranscriptDeleteResult(
+        room_id=safe_room_id,
+        room_name=room_name,
+        transcript_id=safe_transcript_id,
+        transcript_path=str(transcript_path),
+        deleted_at=ts,
+        approval_id=safe_approval_id,
     )
 
 

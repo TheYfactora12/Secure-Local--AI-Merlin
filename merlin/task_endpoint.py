@@ -20,11 +20,13 @@ from pydantic import BaseModel
 from merlin.approval_store import (
     ApprovalRecord,
     create_room_master_prompt_approval,
+    create_room_transcript_delete_approval,
     create_room_transcript_read_approval,
     create_room_transcript_approval,
     decide_approval,
     mark_approval_used,
     require_room_master_prompt_approval,
+    require_room_transcript_delete_approval,
     require_room_transcript_read_approval,
     require_room_transcript_approval,
 )
@@ -34,9 +36,11 @@ from merlin.persona_injector import build_system_prompt
 from merlin.policy_engine import ApprovalRequiredError, requires_approval
 from merlin.room_store import (
     RoomMasterPromptDraftResult,
+    RoomTranscriptDeleteResult,
     RoomTranscriptReadResult,
     RoomTranscriptSaveResult,
     count_room_transcripts,
+    delete_room_transcript,
     generate_room_master_prompt_draft,
     read_room_transcript,
     save_room_transcript,
@@ -107,6 +111,12 @@ class RoomTranscriptReadApprovalRequest(BaseModel):
     transcript_id: str
 
 
+class RoomTranscriptDeleteApprovalRequest(BaseModel):
+    room_id: str
+    room_name: str | None = None
+    transcript_id: str
+
+
 class RoomTranscriptApprovalResponse(BaseModel):
     approval_request_id: str
     status: str
@@ -158,6 +168,24 @@ class RoomTranscriptReadResponse(BaseModel):
     memory_written: bool
     context_reuse: str
     raw_content_loaded: bool
+    audit_id: str | None
+
+
+class RoomTranscriptDeleteRequest(BaseModel):
+    room_id: str
+    room_name: str | None = None
+    transcript_id: str
+    approval_id: str | None = None
+
+
+class RoomTranscriptDeleteResponse(BaseModel):
+    status: str
+    room_id: str
+    room_name: str
+    transcript_id: str
+    deleted_at: str
+    memory_written: bool
+    context_reuse: str
     audit_id: str | None
 
 
@@ -383,6 +411,28 @@ def _write_room_transcript_read_audit(
     }
     try:
         return MemoryManager().write_audit_event("room_transcript_read", metadata)
+    except Exception:
+        return None
+
+
+def _write_room_transcript_delete_audit(
+    result: RoomTranscriptDeleteResult,
+    request: RoomTranscriptDeleteRequest,
+) -> str | None:
+    metadata = {
+        "room_id": result.room_id,
+        "room_name": result.room_name,
+        "transcript_id": result.transcript_id,
+        "transcript_path": result.transcript_path,
+        "approval_id": result.approval_id,
+        "deleted_at": result.deleted_at,
+        "memory_written": False,
+        "context_reuse": result.context_reuse,
+        "raw_transcript_in_audit": False,
+        "cloud_sync_default": False,
+    }
+    try:
+        return MemoryManager().write_audit_event("room_transcript_delete", metadata)
     except Exception:
         return None
 
@@ -648,6 +698,89 @@ def read_room_transcript_endpoint(request: RoomTranscriptReadRequest) -> RoomTra
         memory_written=False,
         context_reuse=result.context_reuse,
         raw_content_loaded=True,
+        audit_id=audit_id,
+    )
+
+
+@app.post("/approvals/room-transcript-delete", response_model=RoomTranscriptApprovalResponse)
+def create_room_transcript_delete_approval_endpoint(
+    request: RoomTranscriptDeleteApprovalRequest,
+) -> RoomTranscriptApprovalResponse:
+    try:
+        record = create_room_transcript_delete_approval(
+            room_id=request.room_id,
+            room_name=request.room_name,
+            transcript_id=request.transcript_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return _approval_response(record)
+
+
+@app.post("/rooms/transcripts/delete", response_model=RoomTranscriptDeleteResponse)
+def delete_room_transcript_endpoint(request: RoomTranscriptDeleteRequest) -> RoomTranscriptDeleteResponse:
+    approval_id = (request.approval_id or "").strip()
+    if not approval_id:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": "Deleting a saved Room transcript requires explicit approval.",
+                "approval_gates": ["file_delete"],
+                "memory_written": False,
+                "context_reuse": "disabled_until_user_approved",
+            },
+        )
+
+    try:
+        require_room_transcript_delete_approval(
+            approval_id=approval_id,
+            room_id=request.room_id,
+            room_name=request.room_name,
+            transcript_id=request.transcript_id,
+        )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": str(exc),
+                "approval_gates": ["file_delete"],
+                "memory_written": False,
+                "context_reuse": "disabled_until_user_approved",
+            },
+        ) from exc
+
+    try:
+        result = delete_room_transcript(
+            room_id=request.room_id,
+            transcript_id=request.transcript_id,
+            approval_id=approval_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "Room transcript could not be deleted locally.",
+                "error": exc.__class__.__name__,
+            },
+        ) from exc
+
+    audit_id = _write_room_transcript_delete_audit(result, request)
+    try:
+        mark_approval_used(approval_id)
+    except KeyError:
+        pass
+    return RoomTranscriptDeleteResponse(
+        status="deleted_local_transcript_only",
+        room_id=result.room_id,
+        room_name=result.room_name,
+        transcript_id=result.transcript_id,
+        deleted_at=result.deleted_at,
+        memory_written=False,
+        context_reuse=result.context_reuse,
         audit_id=audit_id,
     )
 
