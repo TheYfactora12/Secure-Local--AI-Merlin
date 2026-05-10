@@ -28,23 +28,21 @@ grep -q "Saving the latest chat uses the backend approval lifecycle and writes l
   || fail "Rooms manifest must describe approval-gated local save behavior"
 grep -q "Room Master Prompt drafts require a separate backend approval and are not approved context" "$DASHBOARD_FILE" \
   || fail "Rooms manifest must describe approval-gated Room Master Prompt drafts"
-grep -q "Save latest chat to Room" "$DASHBOARD_FILE" \
-  || fail "Rooms surface must expose latest-chat Room save surface"
-grep -q "Prepare Room save" "$DASHBOARD_FILE" \
+grep -q "Save chat to Room" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must expose user-initiated chat Room save surface"
+grep -q "Save to Room" "$DASHBOARD_FILE" \
   || fail "Rooms save flow must require a prepare approval step"
 grep -q "Allow once" "$DASHBOARD_FILE" \
   || fail "Rooms save flow must require explicit one-time allow action"
-grep -q "This approval is one-time for this transcript only" "$DASHBOARD_FILE" \
-  || fail "Rooms save flow must explain one-time transcript approval"
-grep -q "Merlin asks again next time" "$DASHBOARD_FILE" \
-  || fail "Rooms save flow must explain repeat approvals are required by default"
+grep -q "Merlin does not interrupt every prompt" "$DASHBOARD_FILE" \
+  || fail "Rooms save flow must stay user-initiated, not nag every prompt"
 grep -q 'data-room-save-stage="waiting"' "$DASHBOARD_FILE" \
   || fail "Rooms save flow must expose a waiting stage before Merlin responds"
 grep -q 'data-room-save-stage="response-ready"' "$DASHBOARD_FILE" \
   || fail "Rooms save flow must expose a prepare stage after a safe response"
 grep -q 'data-room-save-stage="approval-prepared"' "$DASHBOARD_FILE" \
   || fail "Rooms save flow must expose an allow/cancel stage after backend approval"
-grep -q "Ask Merlin and wait for a safe local response before Room save is available" "$DASHBOARD_FILE" \
+grep -q "Chat normally. Save becomes available after Merlin returns a safe local response" "$DASHBOARD_FILE" \
   || fail "Rooms save waiting stage must explain why save is unavailable"
 grep -q "Room approval endpoint is unavailable. Restart Merlin Task API" "$DASHBOARD_FILE" \
   || fail "Rooms save flow must explain stale Task API 404s"
@@ -69,8 +67,12 @@ grep -q "Target Room:" "$DASHBOARD_FILE" \
   || fail "Room save panel must show selected target Room"
 grep -q "reference policy persistence is tested" "$DASHBOARD_FILE" \
   || fail "Room picker must keep reference policy persistence locked"
-grep -q "future policy-gated create flow" "$DASHBOARD_FILE" \
-  || fail "Rooms surface must keep new Room creation locked"
+grep -q "function createRoomFromField" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must expose local Room creation"
+grep -q "New Room name" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must let users name a Room before creating it"
+grep -q "Similarity guard planned" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must track future duplicate/similar Room guard"
 grep -q "Room context not active yet" "$DASHBOARD_FILE" \
   || fail "chat surface must show Room context state"
 grep -q "unless you explicitly allow selected-Room or all-Room sharing" "$DASHBOARD_FILE" \
@@ -109,6 +111,7 @@ for required in \
   "Room Master Prompt" \
   "POST http://localhost:8766/approvals/room-master-prompt" \
   "POST http://localhost:8766/rooms/master-prompt-drafts" \
+  "POST http://localhost:8766/rooms" \
   "approved_for_context: false" \
   "context_reuse: disabled_until_user_approved" \
   "This is a local draft only" \
@@ -133,7 +136,7 @@ for required in \
 done
 
 POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
-[[ "$POST_COUNT" == "2" ]] || fail "dashboard must use only Task POST and shared policy-gated POST helper"
+[[ "$POST_COUNT" == "3" ]] || fail "dashboard must use only Task API /task POSTs and shared policy-gated POST helper"
 grep -q "/approvals/room-transcript" "$DASHBOARD_FILE" \
   || fail "dashboard missing Room transcript approval path"
 grep -q "/rooms/transcripts" "$DASHBOARD_FILE" \

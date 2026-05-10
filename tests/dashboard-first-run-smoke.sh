@@ -44,8 +44,8 @@ grep -q "composer-tools" "$DASHBOARD_FILE" \
   || fail "Chat home missing clean composer tool rail"
 grep -q "composer-mode-selector" "$DASHBOARD_FILE" \
   || fail "Chat home missing mode selector in composer"
-grep -q "Smart mode selected. Merlin router still chooses the actual local model." "$DASHBOARD_FILE" \
-  || fail "Chat home missing honest mode-to-router copy"
+grep -q "Smart mode. Merlin routes to the best available model." "$DASHBOARD_FILE" \
+  || fail "Chat home missing confident mode-to-router copy"
 grep -q "New conversation" "$DASHBOARD_FILE" \
   || fail "Chat home missing local chat workspace affordance"
 grep -q "Merlin AI" "$DASHBOARD_FILE" \
@@ -105,7 +105,7 @@ if grep -qiE '<input|type="password"|api[_-]?key|token[[:space:]]*[:=]|password[
 fi
 
 POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
-[[ "$POST_COUNT" == "2" ]] || fail "dashboard must use only the Task POST and shared policy-gated POST helper"
+[[ "$POST_COUNT" == "3" ]] || fail "dashboard must use only Task API /task POSTs and shared policy-gated POST helper"
 grep -q 'fetch(`${TASK_API}/task`' "$DASHBOARD_FILE" \
   || fail "dashboard chat POST must route through Merlin Task API /task"
 grep -q 'function postJson' "$DASHBOARD_FILE" \

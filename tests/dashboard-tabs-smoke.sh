@@ -127,7 +127,7 @@ grep -q "Cloud escalation" "$DASHBOARD_FILE" \
   || fail "dashboard missing cloud escalation setting"
 
 POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
-[[ "$POST_COUNT" == "2" ]] || fail "dashboard must use only Task POST and shared policy-gated POST helper"
+[[ "$POST_COUNT" == "3" ]] || fail "dashboard must use only Task API /task POSTs and shared policy-gated POST helper"
 grep -q "/approvals/room-transcript" "$DASHBOARD_FILE" \
   || fail "dashboard missing Room transcript approval path"
 grep -q "/rooms/transcripts" "$DASHBOARD_FILE" \

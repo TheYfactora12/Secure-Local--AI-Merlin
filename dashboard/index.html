@@ -225,7 +225,8 @@ textarea {
   grid-template-columns: minmax(0, 1fr);
 }
 .merlin-front-shell {
-  min-height: calc(100dvh - 148px);
+  height: calc(100dvh - 148px);
+  min-height: 560px;
   display: grid;
   grid-template-columns: 256px minmax(0, 1fr);
   overflow: hidden;
@@ -242,10 +243,12 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 0;
+  min-height: 0;
   padding: 0;
   border-right: 1px solid rgba(103, 232, 249, 0.08);
   background: rgba(15, 18, 17, 0.84);
-  overflow: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   transition: opacity 180ms ease, transform 180ms ease;
 }
 .merlin-front-shell.sidebar-collapsed .front-sidebar {
@@ -483,6 +486,7 @@ textarea {
 }
 .front-main {
   min-width: 0;
+  min-height: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
 }
@@ -545,6 +549,16 @@ button.mode-pill:hover {
   display: grid;
   gap: 14px;
   text-align: center;
+}
+.front-empty.chat-active {
+  min-height: 100%;
+  align-content: start;
+  text-align: left;
+}
+.front-empty.chat-active .merlin-orb-stage,
+.front-empty.chat-active .hero-title,
+.front-empty.chat-active .suggestion-grid {
+  display: none;
 }
 .front-empty h2 {
   margin: 0;
@@ -1026,6 +1040,36 @@ button.mode-pill:hover {
   font-size: 12px;
 }
 .chat-output { display: grid; gap: 10px; }
+.new-room-create {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin: 10px 0;
+}
+.new-room-create textarea {
+  min-height: 34px;
+  max-height: 84px;
+  resize: none;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+.new-room-create textarea::placeholder {
+  color: var(--muted);
+}
+.new-room-create button {
+  min-height: 34px;
+  border: 1px solid rgba(103, 232, 249, 0.28);
+  border-radius: 10px;
+  padding: 7px 10px;
+  background: rgba(103, 232, 249, 0.08);
+  color: var(--cyan);
+  cursor: pointer;
+}
 .room-save-panel {
   display: grid;
   gap: 10px;
@@ -1084,7 +1128,7 @@ button.mode-pill:hover {
 .message-thread {
   display: grid;
   gap: 12px;
-  min-height: 116px;
+  min-height: min(48dvh, 420px);
 }
 .message-row {
   display: flex;
@@ -1473,7 +1517,11 @@ button.mode-pill:hover {
   .tabbar { width: 100%; }
   .shell.tab-page { grid-template-columns: 1fr; padding: 12px; }
   .tab-page { padding: 12px; }
-  .merlin-front-shell { grid-template-columns: 1fr; }
+  .merlin-front-shell {
+    grid-template-columns: 1fr;
+    height: calc(100dvh - 118px);
+    min-height: 520px;
+  }
   .merlin-front-shell.sidebar-collapsed { grid-template-columns: 1fr; }
   .front-sidebar {
     position: absolute;
@@ -1481,6 +1529,7 @@ button.mode-pill:hover {
     z-index: 20;
     width: min(288px, 86vw);
     max-width: 86vw;
+    max-height: 100%;
     border-right-color: rgba(103, 232, 249, 0.18);
     transform: translateX(-105%);
     opacity: 0;
@@ -1505,6 +1554,139 @@ button.mode-pill:hover {
   .surface-card.wide { grid-column: auto; }
   .route-table { display: block; overflow-x: auto; }
   .model-table { display: block; overflow-x: auto; }
+}
+/* Merlin composer polish: scoped to composer/status row only. */
+.composer-tools .tool-chip {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 9999px;
+  border: 1px solid oklch(1 0 0 / 0.12);
+  background: transparent;
+  color: var(--color-text-muted, #8a8884);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.composer-tools .tool-chip:hover {
+  border-color: oklch(1 0 0 / 0.22);
+  color: var(--color-text, #e8e6e1);
+}
+.composer-tools .tool-chip.active {
+  border-color: #5b8ee8;
+  color: #5b8ee8;
+}
+.composer-tools .tool-chip.attach {
+  width: 34px;
+  min-width: 34px;
+  justify-content: center;
+  padding-inline: 0;
+  font-size: 0;
+}
+.composer-tools .tool-chip::before {
+  font-size: 13px;
+  line-height: 1;
+}
+.composer-tools .tool-chip.attach::before { content: "📎"; }
+.composer-tools .tool-chip.memory::before { content: "🧠"; }
+.composer-tools .tool-chip.search::before { content: "🌐"; }
+.composer-tools .tool-chip.rooms::before { content: "👥"; }
+.composer-tools .tool-chip.memory::after,
+.composer-tools .tool-chip.search::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: oklch(1 0 0 / 0.24);
+}
+.composer-tools .tool-chip.memory.active::after,
+.composer-tools .tool-chip.search.active::after {
+  background: var(--green);
+  box-shadow: 0 0 8px rgba(66, 211, 146, 0.35);
+}
+.composer-tools .tool-chip.search.on::after {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
+}
+.composer-tools .tool-chip.rooms.locked::after {
+  content: "🔒";
+  font-size: 11px;
+  opacity: 0.72;
+}
+.chat-form textarea#merlin-chat-input {
+  min-height: 42px;
+  max-height: 180px;
+  resize: none;
+  overflow-y: auto;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #e8e6e1;
+  caret-color: #4fd1c5;
+}
+.composer-mode-selector .mode-btn {
+  padding: 8px 18px;
+  border-radius: 9999px;
+  border: 1px solid oklch(1 0 0 / 0.14);
+  background: transparent;
+  color: #6b6a68;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.composer-mode-selector .mode-btn.active {
+  border-color: #4fd1c5;
+  color: #4fd1c5;
+  background: oklch(from #4fd1c5 l c h / 0.07);
+  box-shadow: 0 0 0 1px oklch(from #4fd1c5 l c h / 0.15);
+}
+.composer-mode-selector .mode-btn:hover:not(.active) {
+  border-color: oklch(1 0 0 / 0.3);
+  color: #c8c6c2;
+}
+.composer-status,
+.chat-actions .selected-mode-note,
+.chat-actions .chat-hint {
+  font-size: 12px;
+  color: oklch(1 0 0 / 0.32);
+  line-height: 1.55;
+  padding: 4px 4px 0;
+}
+#merlin-chat-submit.send-btn {
+  opacity: 0.45;
+}
+#merlin-chat-submit.send-btn:hover {
+  box-shadow: 0 0 0 3px oklch(from #4fd1c5 l c h / 0.2);
+  transition: box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.approval-card {
+  border: 1px solid oklch(from #f97316 l c h / 0.35);
+  background: oklch(from #f97316 l c h / 0.06);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+.approval-card strong {
+  color: #f97316;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.approval-card p {
+  color: #8a8884;
+  font-size: 13px;
+  line-height: 1.55;
+}
+@media (max-width: 560px) {
+  .composer-tools .tool-chip.attach {
+    width: 34px;
+    min-width: 34px;
+    justify-content: center;
+    padding-inline: 0;
+    font-size: 0;
+  }
+  .composer-tools .tool-chip.attach::before {
+    font-size: 14px;
+  }
 }
 </style>
 </head>
@@ -1549,7 +1731,11 @@ button.mode-pill:hover {
         <button class="new-chat-btn" type="button" onclick="clearMerlinChat()">New conversation</button>
         <div class="front-sidebar-card">
           <h3>Current Room</h3>
-          <p>Choose the local Room for this chat session. Room context still stays off until reference policy persistence is tested.</p>
+          <p>Choose the local Room for this chat session or create a new one. Room context still stays off until reference policy persistence is tested and you explicitly approve reuse.</p>
+          <div class="new-room-create" aria-label="Create local Room">
+            <textarea id="chat-new-room-name" rows="1" aria-label="New Room name" placeholder="New Room name"></textarea>
+            <button type="button" onclick="createRoomFromField('chat-new-room-name')">Create</button>
+          </div>
           <div class="mini-control-stack" id="chat-room-picker" aria-label="Active Room picker">
             <button class="mini-control active" type="button" onclick="selectActiveRoom('merlin-build', 'Merlin Build')">
               <strong>Merlin Build</strong>
@@ -1568,7 +1754,7 @@ button.mode-pill:hover {
         <div class="front-sidebar-card">
           <h3>Room Save Meter</h3>
           <div id="chat-room-save-meter" class="model-readiness compact">
-            <span class="chip good">0 / 6 prompts</span>
+            <span class="chip good">0 / 12 prompts</span>
             <p>Save to a Room before this chat gets too long.</p>
           </div>
         </div>
@@ -1626,7 +1812,7 @@ button.mode-pill:hover {
           <div class="mode-strip" aria-label="Merlin response mode">
             <button class="mode-pill" type="button" data-chat-mode="fast" onclick="selectChatMode('fast')">Fast</button>
             <button class="mode-pill active" type="button" data-chat-mode="smart" onclick="selectChatMode('smart')">Smart</button>
-            <button class="mode-pill" type="button" data-chat-mode="deep" onclick="selectChatMode('deep')">Deep requires future Round Table</button>
+            <button class="mode-pill" type="button" data-chat-mode="deep" onclick="selectChatMode('deep')">Deep</button>
           </div>
         </div>
 
@@ -1653,21 +1839,21 @@ button.mode-pill:hover {
         <div class="front-composer-wrap">
           <form class="chat-form" id="merlin-chat-form" onsubmit="submitMerlinChat(event)">
             <div class="composer-tools" aria-label="Composer tools">
-              <span class="tool-chip">Attach later</span>
-              <span class="tool-chip">Memory visible</span>
-              <span class="tool-chip">Search off</span>
-              <span class="tool-chip locked">Round Table gated</span>
+              <span class="tool-chip attach" title="Attach file" aria-label="Attach file">Attach</span>
+              <span class="tool-chip memory active" title="Memory available">Memory</span>
+              <span class="tool-chip search" role="button" aria-pressed="false" title="Toggle search" onclick="toggleSearchChip()">Search</span>
+              <span class="tool-chip rooms locked" title="Rooms save to local project spaces">Rooms</span>
             </div>
             <label class="sr-only" for="merlin-chat-input">Ask Merlin</label>
             <textarea id="merlin-chat-input" name="merlin-chat-input" maxlength="4000" placeholder="Ask Merlin..." autocomplete="off" spellcheck="true"></textarea>
             <div class="chat-actions">
               <div class="composer-mode-selector" aria-label="Merlin mode selector">
-                <button class="mode-pill" type="button" data-chat-mode="fast" onclick="selectChatMode('fast')">Fast</button>
-                <button class="mode-pill active" type="button" data-chat-mode="smart" onclick="selectChatMode('smart')">Smart</button>
-                <button class="mode-pill" type="button" data-chat-mode="deep" onclick="selectChatMode('deep')">Deep</button>
+                <button class="mode-pill mode-btn" type="button" data-chat-mode="fast" data-mode="fast" data-status-text="Fast mode. Merlin uses the quickest local model." onclick="selectChatMode('fast')">Fast</button>
+                <button class="mode-pill mode-btn active" type="button" data-chat-mode="smart" data-mode="smart" data-status-text="Smart mode. Merlin routes to the best available model." onclick="selectChatMode('smart')">Smart</button>
+                <button class="mode-pill mode-btn" type="button" data-chat-mode="deep" data-mode="deep" data-status-text="Deep mode. Round Table agents work together on your query." onclick="selectChatMode('deep')">Deep</button>
               </div>
-              <button id="merlin-chat-submit" type="submit">Ask Merlin</button>
-              <span class="selected-mode-note" id="chat-mode-note">Smart mode selected. Merlin router still chooses the actual local model.</span>
+              <button id="merlin-chat-submit" class="send-btn" type="submit">Ask Merlin</button>
+              <span class="selected-mode-note mode-status-text" id="chat-mode-note">Smart mode. Merlin routes to the best available model.</span>
               <span class="chat-hint">Local-first. No cloud by default. Approval-required routes are blocked, not executed.</span>
             </div>
           </form>
@@ -1727,6 +1913,10 @@ button.mode-pill:hover {
       <article class="surface-card">
         <h3>Active Room</h3>
         <p>The default Room is Merlin Build. Room context stays off until you explicitly choose to reference it.</p>
+        <div class="new-room-create" aria-label="Create local Room from Rooms page">
+          <textarea id="rooms-new-room-name" rows="1" aria-label="New Room name" placeholder="New Room name"></textarea>
+          <button type="button" onclick="createRoomFromField('rooms-new-room-name')">Create Room</button>
+        </div>
         <div class="mini-control-stack" id="rooms-active-picker" aria-label="Room picker">
           <button class="mini-control active" type="button" onclick="selectActiveRoom('merlin-build', 'Merlin Build')">
             <strong>Merlin Build</strong>
@@ -1782,7 +1972,7 @@ button.mode-pill:hover {
       </article>
       <article class="surface-card">
         <h3>Save To Room</h3>
-        <p>The latest Merlin exchange can be saved to the default local Room only after an explicit approval step. This stores transcript history, not approved memory.</p>
+        <p>The current Merlin chat can be saved to the local Room only after an explicit approval step. This stores transcript history, not approved memory.</p>
         <div class="status-list">
           <div class="status-pill"><strong>Save current chat</strong><span class="locked">approval required</span></div>
           <div class="status-pill"><strong>Memory extraction</strong><span class="locked">separate approval</span></div>
@@ -2035,9 +2225,9 @@ const STATUS_PANEL_TIMEOUT_MS = 7000;
 const TASK_REQUEST_TIMEOUT_MS = 90000;
 const WARMING_COPY = 'Warming on low-memory systems can take 35-40 seconds after launchd registration.';
 const CHAT_MODE_COPY = {
-  fast: 'Fast mode selected. Merlin still routes through the local policy engine.',
-  smart: 'Smart mode selected. Merlin router still chooses the actual local model.',
-  deep: 'Deep mode selected. Round Table is future-gated; today this remains a normal Merlin Task API request.',
+  fast: 'Fast mode. Merlin uses the quickest local model.',
+  smart: 'Smart mode. Merlin routes to the best available model.',
+  deep: 'Deep mode. Round Table agents work together on your query.',
 };
 const DEFAULT_ROOM_ID = 'merlin-build';
 const DEFAULT_ROOM_NAME = 'Merlin Build';
@@ -2065,12 +2255,15 @@ let selectedRoomId = DEFAULT_ROOM_ID;
 let selectedRoomName = DEFAULT_ROOM_NAME;
 let lastMerlinExchange = null;
 let pendingRoomApproval = null;
+let pendingTaskRouteApproval = null;
 let pendingRoomRead = null;
 let pendingTranscriptRemoval = null;
 let currentChatTranscript = [];
 let roomSaveStatus = 'Save becomes available after Merlin returns a response.';
 let roomSaveState = 'neutral';
-const CHAT_ROOM_PROMPT_LIMIT = 6;
+let currentChatSavedRoomId = null;
+let currentChatSavedTranscriptTitle = null;
+const CHAT_ROOM_PROMPT_LIMIT = 12;
 let promptsSinceRoomSave = 0;
 let lastRouteDetail = null;
 
@@ -2201,7 +2394,17 @@ function setMerlinPrompt(prompt) {
   const input = document.getElementById('merlin-chat-input');
   if (!input) return;
   input.value = prompt;
+  updateComposerState();
   input.focus();
+}
+
+function updateComposerState() {
+  const textarea = document.getElementById('merlin-chat-input');
+  const sendBtn = document.getElementById('merlin-chat-submit');
+  if (!textarea || !sendBtn) return;
+  textarea.style.height = 'auto';
+  textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
+  sendBtn.style.opacity = textarea.value.trim() ? '1' : '0.45';
 }
 
 function selectChatMode(mode) {
@@ -2210,6 +2413,15 @@ function selectChatMode(mode) {
     button.classList.toggle('active', button.getAttribute('data-chat-mode') === selectedChatMode);
   });
   text('chat-mode-note', CHAT_MODE_COPY[selectedChatMode]);
+}
+
+function toggleSearchChip() {
+  const chip = document.querySelector('.composer-tools .tool-chip.search');
+  if (!chip) return;
+  const enabled = !chip.classList.contains('on');
+  chip.classList.toggle('on', enabled);
+  chip.setAttribute('aria-pressed', String(enabled));
+  chip.setAttribute('title', enabled ? 'Search enabled' : 'Toggle search');
 }
 
 function roomOptionsFromState() {
@@ -2234,11 +2446,16 @@ function roomOptionsFromState() {
 }
 
 function selectActiveRoom(roomId, roomName, openChat = false) {
+  const previousRoomId = selectedRoomId;
   selectedRoomId = safe(roomId, DEFAULT_ROOM_ID);
   selectedRoomName = safe(roomName, selectedRoomId);
   pendingRoomApproval = null;
+  if (previousRoomId !== selectedRoomId) {
+    currentChatSavedRoomId = null;
+    currentChatSavedTranscriptTitle = null;
+  }
   roomSaveStatus = lastMerlinExchange
-    ? `Room target changed to ${selectedRoomName}. Prepare approval again before saving.`
+    ? `Room target changed to ${selectedRoomName}. Save when you want this chat filed there.`
     : `Room target selected: ${selectedRoomName}.`;
   roomSaveState = 'neutral';
   renderRoomPicker();
@@ -2252,6 +2469,35 @@ function selectActiveRoom(roomId, roomName, openChat = false) {
 
 function openRoomInChat(roomId, roomName) {
   selectActiveRoom(roomId, roomName, true);
+}
+
+async function createRoomFromField(fieldId) {
+  const field = document.getElementById(fieldId);
+  const roomName = field ? field.value.trim() : '';
+  if (!roomName) {
+    roomSaveStatus = 'Name the Room before creating it.';
+    roomSaveState = 'warn';
+    updateRoomSavePanel();
+    return;
+  }
+  roomSaveStatus = `Creating local Room: ${roomName}`;
+  roomSaveState = 'warn';
+  updateRoomSavePanel();
+  try {
+    const data = await postJson(`${TASK_API}/rooms`, { room_name: roomName });
+    if (field) field.value = '';
+    selectedRoomId = data.room_id || selectedRoomId;
+    selectedRoomName = data.room_name || roomName;
+    roomSaveStatus = `Room created: ${selectedRoomName}. Save when you want to file this chat.`;
+    roomSaveState = 'good';
+    await loadRooms();
+    updateRoomSavePanel();
+    selectActiveRoom(selectedRoomId, selectedRoomName, true);
+  } catch (error) {
+    roomSaveStatus = `Room create failed: ${safe(error && error.message, 'unknown error')}`;
+    roomSaveState = 'bad';
+    updateRoomSavePanel();
+  }
 }
 
 async function openSavedRoomChat(roomId, roomName, transcriptId) {
@@ -2444,7 +2690,7 @@ function renderRoomHistory() {
     const transcriptRows = transcripts.map(transcript => `
       <div class="front-session-row">
         <button class="front-session" type="button" onclick="openSavedRoomChat(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(transcript.transcript_id || 'transcript')})">
-          ${escapeHtml(transcript.transcript_id || 'transcript')} · raw hidden
+          ${escapeHtml(transcript.title || transcript.transcript_id || 'Saved chat')} · raw hidden
         </button>
         <button class="front-session-remove" type="button" onclick="prepareSavedTranscriptRemoval(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(transcript.transcript_id || 'transcript')})" aria-label="Delete saved transcript ${escapeHtml(transcript.transcript_id || 'transcript')}">Delete</button>
       </div>
@@ -2474,13 +2720,13 @@ function renderRoomPicker() {
       </button>
     `;
   };
-  const lockedCreate = `
-    <button class="mini-control locked" type="button" disabled>
-      <strong>New Room</strong>
-      <span>future policy-gated create flow</span>
-    </button>
+  const createNote = `
+    <div class="mini-control locked" aria-label="Room duplicate guard roadmap note">
+      <strong>Similarity guard planned</strong>
+      <span>Before creating near-duplicate Rooms, Merlin should suggest the closest existing Room first.</span>
+    </div>
   `;
-  const html = options.map(renderButton).join('') + lockedCreate;
+  const html = options.map(renderButton).join('') + createNote;
   const chatPicker = document.getElementById('chat-room-picker');
   const roomsPicker = document.getElementById('rooms-active-picker');
   if (chatPicker) chatPicker.innerHTML = html;
@@ -2541,32 +2787,38 @@ window.addEventListener('resize', () => {
 
 function clearMerlinChat() {
   const input = document.getElementById('merlin-chat-input');
+  const panel = document.getElementById('merlin-chat-output');
+  const home = document.querySelector('.front-empty');
   if (input) {
     input.value = '';
     input.focus();
   }
   lastMerlinExchange = null;
   pendingRoomApproval = null;
+  pendingTaskRouteApproval = null;
   pendingRoomRead = null;
   pendingTranscriptRemoval = null;
   currentChatTranscript = [];
+  currentChatSavedRoomId = null;
+  currentChatSavedTranscriptTitle = null;
   roomSaveStatus = 'Save becomes available after Merlin returns a response.';
   roomSaveState = 'neutral';
   promptsSinceRoomSave = 0;
   lastRouteDetail = null;
   updateRoomSaveMeter();
   updateChatRouteDetail(null);
-  renderChatOutput({
-    state: 'pending',
-    title: 'new local conversation',
-    body: 'Start a fresh local question here. Nothing was saved, deleted, or written to memory.',
-    mode: selectedChatMode,
-  });
+  if (home) home.classList.remove('chat-active');
+  if (panel) {
+    panel.classList.add('empty');
+    panel.innerHTML = '';
+  }
+  updateComposerState();
 }
 
 function roomSavePanelHtml() {
   const canRequest = Boolean(lastMerlinExchange) && !pendingRoomApproval;
   const canAllow = Boolean(lastMerlinExchange && pendingRoomApproval);
+  const alreadySavedHere = currentChatSavedRoomId === selectedRoomId;
   const statusChip = roomSaveState === 'good'
     ? 'good'
     : (roomSaveState === 'warn' ? 'warn' : (roomSaveState === 'bad' ? 'bad' : 'neutral'));
@@ -2581,26 +2833,28 @@ function roomSavePanelHtml() {
     : (canRequest
       ? `
         <div class="room-save-actions" data-room-save-stage="response-ready">
-          <button type="button" onclick="requestRoomTranscriptApproval()">Prepare Room save</button>
+          <button type="button" onclick="requestRoomTranscriptApproval()">${alreadySavedHere ? 'Update Room transcript' : 'Save to Room'}</button>
+          <button class="secondary" type="button" onclick="createRoomFromField('chat-new-room-name')">Create named Room first</button>
         </div>
       `
       : `
         <div class="room-save-hint" data-room-save-stage="waiting">
-          Ask Merlin and wait for a safe local response before Room save is available.
+          Chat normally. Save becomes available after Merlin returns a safe local response.
         </div>
       `);
   return `
     <div class="room-save-panel" id="room-save-panel" aria-label="Save latest chat to local Room">
       <header>
         <div>
-          <h3>Save latest chat to Room</h3>
+          <h3>${alreadySavedHere ? 'Saved in Room' : 'Save chat to Room'}</h3>
           <p>Target Room: ${escapeHtml(selectedRoomName)} · Transcript only · Memory extraction separate.</p>
         </div>
         <span class="chip ${statusChip}" id="room-save-status-chip">${escapeHtml(roomSaveStatus)}</span>
       </header>
       ${actionHtml}
-      <p>Saved Room transcripts are local Markdown history. This approval is one-time for this transcript only; Merlin asks again next time unless you later enable a permanent policy in Security Settings.</p>
+      <p>Saved Room transcripts are local Markdown history. Merlin does not interrupt every prompt; save when you want to file or update this chat.</p>
       <p>Room transcripts are not reused as approved memory unless you approve a separate memory proposal later.</p>
+      ${currentChatSavedTranscriptTitle ? `<p>Last saved as: ${escapeHtml(currentChatSavedTranscriptTitle)}</p>` : ''}
     </div>
   `;
 }
@@ -2619,6 +2873,107 @@ function keepBlockedRoute() {
       <strong>Kept blocked</strong>
       <p>Merlin did not continue this route. No model call, memory write, or Room save happened.</p>
     `;
+  }
+}
+
+async function allowTaskRouteOnce() {
+  if (!pendingTaskRouteApproval) return;
+  const request = pendingTaskRouteApproval;
+  renderChatOutput({
+    state: 'pending',
+    title: 'approval preparing',
+    body: 'Merlin is preparing a one-time approval for a local model response only. No tools, file reads, memory writes, or cloud calls are enabled.',
+    userInput: request.userInput,
+    route: request.route,
+    gates: request.gates,
+    mode: request.mode,
+    allowRoomSave: false,
+  });
+  try {
+    const approval = await postJson(`${TASK_API}/approvals/task-route`, {
+      input: request.userInput,
+      session_id: request.sessionId,
+    });
+    await postJson(`${TASK_API}/approvals/${encodeURIComponent(approval.approval_request_id)}/approve`, {});
+    renderChatOutput({
+      state: 'pending',
+      title: 'approval accepted',
+      body: 'Merlin is answering through the approved local model route. This approval is one-time and will be consumed after this attempt.',
+      userInput: request.userInput,
+      route: approval.route || request.route,
+      gates: approval.approval_gates || request.gates,
+      mode: request.mode,
+      allowRoomSave: false,
+    });
+    const response = await fetch(`${TASK_API}/task`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        input: request.userInput,
+        session_id: request.sessionId,
+        approval_id: approval.approval_request_id,
+      }),
+      signal: AbortSignal.timeout(TASK_REQUEST_TIMEOUT_MS),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const detail = data.detail || {};
+      throw new Error(safe(detail.message || detail || data.message, `Task API returned ${response.status}`));
+    }
+    pendingTaskRouteApproval = null;
+    const merlinResponse = data.degraded ? modelReadinessCopy() : safe(data.response, 'Merlin returned no response text.');
+    if (data.approved && !data.degraded) {
+      promptsSinceRoomSave += 1;
+      currentChatTranscript.push({
+        userInput: request.userInput,
+        merlinResponse,
+        roomName: selectedRoomName,
+        routeId: data.route && data.route.route_id,
+        staffMode: data.route && data.route.staff_mode,
+        title: 'Merlin response',
+      });
+      updateLastMerlinExchangeFromTranscript(data.session_id);
+      roomSaveStatus = promptsSinceRoomSave >= CHAT_ROOM_PROMPT_LIMIT
+        ? 'Room save recommended soon. You can keep chatting, but file this thread before it gets too long.'
+        : (currentChatSavedRoomId === selectedRoomId ? 'Unsaved changes since the last Room save.' : 'Save is available when you want to file this chat.');
+      roomSaveState = 'neutral';
+      lastRouteDetail = data.route || {};
+      updateChatRouteDetail(lastRouteDetail, request.mode);
+      updateRoomSaveMeter();
+    } else {
+      lastMerlinExchange = null;
+      roomSaveStatus = 'Degraded responses are not saved to Rooms.';
+      roomSaveState = 'warn';
+      updateChatRouteDetail(null);
+    }
+    renderChatOutput({
+      state: data.approved ? 'approved' : 'degraded',
+      title: data.approved ? 'Merlin response' : 'Merlin degraded',
+      body: merlinResponse,
+      route: data.route || {},
+      degraded: Boolean(data.degraded),
+      userInput: request.userInput,
+      mode: request.mode,
+    });
+    await loadRoutes();
+    await loadApprovals();
+    await loadMemory();
+    await loadTraces();
+  } catch (error) {
+    pendingTaskRouteApproval = null;
+    lastMerlinExchange = null;
+    roomSaveStatus = 'Room save unavailable because the approved route did not return a safe response.';
+    roomSaveState = 'warn';
+    renderChatOutput({
+      state: 'degraded',
+      title: 'approval route failed',
+      body: `Merlin could not complete the one-time approved route. Detail: ${safe(error && error.message, 'unknown error')}`,
+      userInput: request.userInput,
+      route: request.route,
+      gates: request.gates,
+      mode: request.mode,
+      allowRoomSave: false,
+    });
   }
 }
 
@@ -2644,13 +2999,14 @@ function approvalCardHtml(routeData, gateText) {
   const routeLabel = routeData.route_id || 'protected route';
   return `
     <div class="approval-card" aria-label="Merlin approval required">
-      <strong>Route blocked for this build</strong>
-      <p>Merlin stopped this request because it needs ${escapeHtml(gateText)}. Task-route approval is not wired yet, so this card fails closed instead of sending you to a dead-end Security page. No data was sent to a model for this blocked route.</p>
+      <strong>Approval needed</strong>
+      <p>Merlin stopped this request because it needs ${escapeHtml(gateText)}. Allow once permits one local model response for this same prompt only. It does not enable tools, file reads, shell commands, memory writes, cloud calls, or permanent approval.</p>
       <div class="approval-actions">
+        <button type="button" onclick="allowTaskRouteOnce()">Allow once</button>
         <button class="locked" type="button" onclick="openPermanentApprovalSettings(${jsArg(gateText)})">Don't ask again</button>
         <button class="secondary" type="button" onclick="keepBlockedRoute()">Keep blocked</button>
       </div>
-      <p>Route: ${escapeHtml(routeLabel)} · use Room save/read/delete approvals only after Merlin returns a safe response.</p>
+      <p>Route: ${escapeHtml(routeLabel)} · this approval asks again next time.</p>
     </div>
   `;
 }
@@ -2698,6 +3054,8 @@ function roomApprovalUnavailableCopy(error) {
 function renderChatOutput({ state, title, body, route, gates, degraded, userInput, mode, allowRoomSave = true }) {
   const panel = document.getElementById('merlin-chat-output');
   if (!panel) return;
+  const home = document.querySelector('.front-empty');
+  if (home) home.classList.add('chat-active');
   panel.classList.remove('empty');
   const savedThreadRows = transcriptRowsHtml();
   const showStatusRow = state !== 'approved' || !currentChatTranscript.length || Boolean(pendingRoomRead);
@@ -2761,6 +3119,8 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
     </div>
     ${showRoomSave ? roomSavePanelHtml() : ''}
   `;
+  const scroller = document.querySelector('.front-chat-scroll');
+  if (scroller) scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
 }
 
 async function requestRoomTranscriptApproval() {
@@ -2778,7 +3138,7 @@ async function requestRoomTranscriptApproval() {
       session_id: lastMerlinExchange.sessionId,
     });
     pendingRoomApproval = data.approval_request_id;
-    roomSaveStatus = 'Approval prepared. Allow once to write local Markdown.';
+    roomSaveStatus = 'Approval prepared. Allow once to write this local Markdown transcript.';
     roomSaveState = 'warn';
   } catch (error) {
     roomSaveStatus = roomApprovalUnavailableCopy(error);
@@ -2803,7 +3163,9 @@ async function allowRoomTranscriptSave() {
       approval_id: pendingRoomApproval,
     });
     pendingRoomApproval = null;
-    roomSaveStatus = `Saved locally: ${safe(data.transcript_id, 'transcript')} · memory not written`;
+    currentChatSavedRoomId = selectedRoomId;
+    currentChatSavedTranscriptTitle = safe(data.transcript_title || data.transcript_id, 'Saved chat');
+    roomSaveStatus = `Saved locally: ${currentChatSavedTranscriptTitle} · memory not written`;
     roomSaveState = 'good';
     updateLastMerlinExchangeFromTranscript(data.transcript_id || lastMerlinExchange.sessionId);
     promptsSinceRoomSave = 0;
@@ -3044,6 +3406,7 @@ async function submitMerlinChat(event) {
   const modeAtSubmit = selectedChatMode;
   lastMerlinExchange = null;
   pendingRoomApproval = null;
+  pendingTaskRouteApproval = null;
   pendingRoomRead = null;
   roomSaveStatus = 'Waiting for Merlin response before Room save is available.';
   roomSaveState = 'neutral';
@@ -3065,6 +3428,13 @@ async function submitMerlinChat(event) {
     const data = await response.json().catch(() => ({}));
     if (response.status === 403) {
       const detail = data.detail || {};
+      pendingTaskRouteApproval = {
+        userInput,
+        sessionId: detail.session_id || `chat-${Date.now()}`,
+        route: detail.route || { route_id: detail.route_id },
+        gates: detail.approval_gates || [],
+        mode: modeAtSubmit,
+      };
       roomSaveStatus = 'Blocked routes cannot be saved until Merlin returns a safe response.';
       roomSaveState = 'warn';
       updateChatRouteDetail(detail.route || { route_id: detail.route_id }, modeAtSubmit);
@@ -3097,8 +3467,8 @@ async function submitMerlinChat(event) {
       });
       updateLastMerlinExchangeFromTranscript(data.session_id);
       roomSaveStatus = promptsSinceRoomSave >= CHAT_ROOM_PROMPT_LIMIT
-        ? 'Room save recommended now. Save this thread before continuing.'
-        : 'Latest response can be saved to the local Room.';
+        ? 'Room save recommended soon. You can keep chatting, but file this thread before it gets too long.'
+        : (currentChatSavedRoomId === selectedRoomId ? 'Unsaved changes since the last Room save.' : 'Save is available when you want to file this chat.');
       roomSaveState = 'neutral';
       lastRouteDetail = data.route || {};
       updateChatRouteDetail(lastRouteDetail, modeAtSubmit);
@@ -3261,9 +3631,11 @@ async function loadRooms() {
       const roomName = safe(room.name || room.room_id, roomId);
       const active = roomId === selectedRoomId;
       const transcripts = (room.transcripts || []).slice(0, 3).map(transcript => `
-        <div class="status-pill">
-          <strong>${escapeHtml(transcript.transcript_id || 'transcript')}</strong>
-          <span>${escapeHtml(transcript.size_bytes || 0)} bytes · raw hidden</span>
+        <div class="front-session-row">
+          <button class="front-session" type="button" onclick="openSavedRoomChat(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(transcript.transcript_id || 'transcript')})">
+            ${escapeHtml(transcript.title || transcript.transcript_id || 'Saved chat')} · ${escapeHtml(transcript.size_bytes || 0)} bytes · raw hidden
+          </button>
+          <button class="front-session-remove" type="button" onclick="prepareSavedTranscriptRemoval(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(transcript.transcript_id || 'transcript')})" aria-label="Delete saved transcript ${escapeHtml(transcript.transcript_id || 'transcript')}">Delete</button>
         </div>
       `).join('');
       const masterPrompt = room.master_prompt || {};
@@ -3276,6 +3648,10 @@ async function loadRooms() {
           <strong>Room Master Prompt</strong>
           <span>${escapeHtml(masterPrompt.status || 'missing')} · context reuse disabled until approved · raw hidden</span>
         </div>
+        <div class="status-pill">
+          <strong>Delete Room</strong>
+          <span class="locked">whole-Room delete requires a separate approval design</span>
+        </div>
         ${transcripts ? `<div class="readonly-note"><strong>Latest transcripts</strong>${transcripts}</div>` : ''}
       `;
     }).join('');
@@ -3287,7 +3663,7 @@ async function loadRooms() {
       <div class="status-pill"><strong>Save to Room</strong><span class="locked">${data.save_to_room_api_enabled ? 'backend approval required' : 'locked until Task API write gate'}</span></div>
       <div class="status-pill"><strong>Room Master Prompt</strong><span class="locked">${data.master_prompt_draft_api_enabled ? 'draft approval required' : 'locked'}</span></div>
       <div class="status-pill"><strong>Memory extraction</strong><span class="locked">${data.memory_extraction_enabled ? 'enabled' : 'requires approve/edit/deny'}</span></div>
-      <div class="readonly-note"><strong>Room launcher</strong><p>Select a Room to jump back to Merlin Chat. The Room tag scopes transcript saves to that Room; future context retrieval remains Room-only unless explicit sharing is enabled.</p>${roomRows || '<div class="status-pill"><strong>Existing Rooms</strong><span>none discovered</span></div>'}</div>
+      <div class="readonly-note"><strong>Room launcher</strong><p>Select a Room to jump back to Merlin Chat. The Room tag scopes transcript saves to that Room; future context retrieval remains Room-only unless explicit sharing is enabled.</p><p>Future similarity guard: before creating near-duplicate Rooms, Merlin should suggest adding to the closest existing Room first so knowledge does not scatter.</p>${roomRows || '<div class="status-pill"><strong>Existing Rooms</strong><span>none discovered</span></div>'}</div>
     `;
   } catch (_) {
     readinessState.rooms = null;
@@ -3565,6 +3941,8 @@ selectInitialTab();
 renderRoomPicker();
 updateRoomSaveMeter();
 updateChatRouteDetail(null);
+updateComposerState();
+document.getElementById('merlin-chat-input')?.addEventListener('input', updateComposerState);
 window.addEventListener('hashchange', selectInitialTab);
 refreshAll();
 setInterval(refreshAll, 30000);

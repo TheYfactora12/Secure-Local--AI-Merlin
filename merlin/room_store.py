@@ -36,16 +36,26 @@ class RoomRecord(BaseModel):
 
 class RoomTranscriptRecord(BaseModel):
     transcript_id: str
+    title: str = "Saved chat"
     path: str
     size_bytes: int
     modified_at: str | None = None
     raw_content_loaded: bool = False
 
 
+class RoomCreateResult(BaseModel):
+    room_id: str
+    room_name: str
+    room_path: str
+    metadata_file: str
+    created_at: str
+
+
 class RoomTranscriptSaveResult(BaseModel):
     room_id: str
     room_name: str
     transcript_id: str
+    transcript_title: str
     transcript_path: str
     metadata_file: str
     created_at: str
@@ -131,6 +141,106 @@ def _timestamp_slug(ts_iso: str) -> str:
     )
 
 
+def _slugify_room_name(value: str) -> str:
+    compact = re.sub(r"[^a-zA-Z0-9._-]+", "-", value.strip().lower()).strip(".-_")
+    compact = re.sub(r"-{2,}", "-", compact)
+    if not compact or not compact[0].isalnum():
+        compact = "room"
+    return compact[:60]
+
+
+def _unique_room_id(rooms_root: Path, base_id: str) -> str:
+    candidate = base_id
+    index = 2
+    while (rooms_root / candidate).exists():
+        suffix = f"-{index}"
+        candidate = f"{base_id[: 80 - len(suffix)]}{suffix}"
+        index += 1
+    return candidate
+
+
+def _markdown_value(value: str) -> str:
+    return " ".join(value.replace("\n", " ").split())
+
+
+def _transcript_title(user_input: str, max_chars: int = 72) -> str:
+    compact = " ".join(user_input.split())
+    compact = re.sub(r"^[#*\-_\s]+", "", compact).strip()
+    if not compact:
+        return "Saved chat"
+    title = compact[:max_chars].rstrip()
+    return title if len(compact) <= max_chars else f"{title}..."
+
+
+def _frontmatter_value(path: Path, key: str) -> str | None:
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    if not lines or lines[0] != "---":
+        return None
+    for line in lines[1:40]:
+        if line == "---":
+            break
+        if line.lower().startswith(f"{key.lower()}:"):
+            value = line.split(":", 1)[1].strip()
+            return value or None
+    return None
+
+
+def _transcript_display_title(path: Path) -> str:
+    modified = _file_modified_at(path)
+    if modified:
+        return f"Saved chat {modified[:10]}"
+    return path.stem
+
+
+def create_room(
+    *,
+    room_name: str,
+    root: Path | None = None,
+    created_at: str | None = None,
+) -> RoomCreateResult:
+    """Create an empty local Room metadata folder.
+
+    Creating a Room stores local organization metadata only. It does not write
+    chat memory, enable context retrieval, or call a model.
+    """
+
+    safe_room_name = _validate_text_field(room_name, "room_name", 120)
+    rooms_root = root or rooms_root_path()
+    ts = created_at or _utc_now()
+    room_id = _unique_room_id(rooms_root, _slugify_room_name(safe_room_name))
+    room_path = rooms_root / room_id
+    metadata_file = room_path / "room.md"
+    metadata = "\n".join(
+        [
+            f"name: {_markdown_value(safe_room_name)}",
+            f"room_id: {room_id}",
+            f"created_at: {ts}",
+            "reference_policy: no_room_context",
+            "memory_extraction: requires_approval",
+            "",
+        ]
+    )
+
+    try:
+        (room_path / "transcripts").mkdir(parents=True, exist_ok=False)
+        (room_path / "summaries").mkdir(exist_ok=True)
+        (room_path / "master-prompts").mkdir(exist_ok=True)
+        metadata_file.write_text(metadata, encoding="utf-8")
+    except OSError:
+        raise
+
+    return RoomCreateResult(
+        room_id=room_id,
+        room_name=safe_room_name,
+        room_path=str(room_path),
+        metadata_file=str(metadata_file),
+        created_at=ts,
+    )
+
+
 def _count_markdown_files(path: Path) -> int:
     try:
         return sum(1 for item in path.iterdir() if item.is_file() and item.suffix.lower() == ".md")
@@ -189,6 +299,7 @@ def list_room_transcripts(room_path: Path, limit: int = 5) -> list[RoomTranscrip
         records.append(
             RoomTranscriptRecord(
                 transcript_id=item.stem,
+                title=_transcript_display_title(item),
                 path=str(item),
                 size_bytes=size_bytes,
                 modified_at=_file_modified_at(item),
@@ -368,6 +479,7 @@ def save_room_transcript(
     safe_merlin_response = _validate_text_field(merlin_response, "merlin_response", 20000)
     safe_session_id = _validate_text_field(session_id, "session_id", 120)
     safe_approval_id = _validate_text_field(approval_id, "approval_id", 120)
+    transcript_title = _transcript_title(safe_user_input)
     ts = created_at or _utc_now()
 
     rooms_root = root or rooms_root_path()
@@ -383,6 +495,7 @@ def save_room_transcript(
             "---",
             f"room_id: {safe_room_id}",
             f"name: {safe_room_name}",
+            f"title: {_markdown_value(transcript_title)}",
             f"session_id: {safe_session_id}",
             f"approval_id: {safe_approval_id}",
             f"created_at: {ts}",
@@ -431,6 +544,7 @@ def save_room_transcript(
         room_id=safe_room_id,
         room_name=safe_room_name,
         transcript_id=transcript_id,
+        transcript_title=transcript_title,
         transcript_path=str(transcript_file),
         metadata_file=str(metadata_file),
         created_at=ts,

@@ -54,13 +54,21 @@ if grep -q "All systems ready\\|Merlin is ready\\|System ready" "$DASHBOARD_FILE
   fail "dashboard contains fake/static readiness language"
 fi
 POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
-[[ "$POST_COUNT" == "2" ]] || fail "dashboard must use only Task POST and shared policy-gated POST helper"
+[[ "$POST_COUNT" == "3" ]] || fail "dashboard must use only Task API /task POSTs and shared policy-gated POST helper"
 grep -q 'fetch(`${TASK_API}/task`' "$DASHBOARD_FILE" \
   || fail "dashboard chat POST must route through Merlin Task API /task"
 grep -q "/approvals/room-transcript" "$DASHBOARD_FILE" \
   || fail "dashboard missing Room transcript approval path"
 grep -q "/rooms/transcripts" "$DASHBOARD_FILE" \
   || fail "dashboard missing approved Room transcript save path"
+grep -q "/approvals/task-route" "$DASHBOARD_FILE" \
+  || fail "dashboard missing one-time task route approval path"
+grep -q "function allowTaskRouteOnce" "$DASHBOARD_FILE" \
+  || fail "dashboard missing one-time route approval handler"
+grep -q "one local model response for this same prompt only" "$DASHBOARD_FILE" \
+  || fail "dashboard task approval copy must limit the scope"
+grep -q "does not enable tools, file reads, shell commands, memory writes, cloud calls, or permanent approval" "$DASHBOARD_FILE" \
+  || fail "dashboard task approval copy must preserve protected boundaries"
 if grep -q "api/generate\\|/api/chat\\|/v1/chat/completions\\|localhost:4000/v1" "$DASHBOARD_FILE"; then
   fail "dashboard readiness must not call model backends directly"
 fi

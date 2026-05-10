@@ -42,6 +42,8 @@ grep -q "@media (prefers-reduced-motion: reduce)" "$DASHBOARD_FILE" \
   || fail "dashboard Merlin orb motion must respect reduced-motion preference"
 grep -q "front-sidebar" "$DASHBOARD_FILE" \
   || fail "dashboard missing local chat sidebar"
+grep -q "overflow-y: auto" "$DASHBOARD_FILE" \
+  || fail "chat sidebar must scroll in constrained/mobile layouts"
 grep -q "toggleChatSidebar" "$DASHBOARD_FILE" \
   || fail "dashboard missing collapsible chat sidebar handler"
 grep -q "sidebar-collapsed" "$DASHBOARD_FILE" \
@@ -52,11 +54,11 @@ grep -q "chat-context-sidebar" "$DASHBOARD_FILE" \
   || fail "dashboard missing accessible chat context sidebar id"
 grep -q "Room Save Meter" "$DASHBOARD_FILE" \
   || fail "dashboard missing prompt countdown before Room save"
-grep -q "CHAT_ROOM_PROMPT_LIMIT = 6" "$DASHBOARD_FILE" \
+grep -q "CHAT_ROOM_PROMPT_LIMIT = 12" "$DASHBOARD_FILE" \
   || fail "dashboard missing Room save prompt limit"
 grep -q "promptsSinceRoomSave" "$DASHBOARD_FILE" \
   || fail "dashboard missing prompt counter state"
-grep -q "Room save recommended now" "$DASHBOARD_FILE" \
+grep -q "Room save recommended soon" "$DASHBOARD_FILE" \
   || fail "dashboard missing save recommendation after prompt limit"
 grep -q "Route Details" "$DASHBOARD_FILE" \
   || fail "dashboard missing side-panel route/model details"
@@ -123,18 +125,20 @@ grep -q "staff_mode" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must display staff mode"
 grep -q "approval required" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must handle approval-required routes"
-grep -q "Route blocked for this build" "$DASHBOARD_FILE" \
-  || fail "Merlin Chat must fail closed instead of sending blocked task routes to Security"
-grep -q "Task-route approval is not wired yet" "$DASHBOARD_FILE" \
-  || fail "Merlin Chat must explain blocked task-route approval is not available yet"
+grep -q "function allowTaskRouteOnce" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must expose one-time task route approval"
+grep -q "one local model response for this same prompt only" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must scope one-time task approval to the same prompt"
+grep -q "does not enable tools, file reads, shell commands, memory writes, cloud calls, or permanent approval" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must explain task approval boundaries"
 grep -q "Don't ask again" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must expose the future permanent approval path"
 grep -q "openPermanentApprovalSettings" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must route permanent approval requests to Security Settings"
 grep -q "Keep blocked" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must give users a safe deny/dismiss action for blocked routes"
-grep -q "use Room save/read/delete approvals only after Merlin returns a safe response" "$DASHBOARD_FILE" \
-  || fail "Merlin Chat must distinguish task-route blocks from Room approvals"
+grep -q "this approval asks again next time" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must distinguish one-time approval from permanent approval"
 grep -q "Task API is classifying the request and checking policy gates" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing policy-gate routing copy"
 grep -q "Safe Merlin starter prompts" "$DASHBOARD_FILE" \
@@ -143,6 +147,8 @@ grep -q "function setMerlinPrompt" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing safe prompt-fill helper"
 grep -q "message-thread" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing message thread layout"
+grep -q "chat-active" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must collapse the hero after chat starts"
 grep -q "currentChatTranscript" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must keep the active session transcript in browser state"
 grep -q "formatTranscriptSide" "$DASHBOARD_FILE" \
@@ -155,6 +161,8 @@ grep -q "prepareSavedTranscriptRemoval" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must expose saved transcript delete preparation"
 grep -q "allowSavedTranscriptRemoval" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must expose one-time saved transcript delete approval"
+grep -q "whole-Room delete requires a separate approval design" "$DASHBOARD_FILE" \
+  || fail "Rooms tab must not pretend whole-Room delete is implemented"
 grep -q "/approvals/room-transcript-delete" "$DASHBOARD_FILE" \
   || fail "dashboard missing saved transcript delete approval endpoint"
 grep -q "/rooms/transcripts/delete" "$DASHBOARD_FILE" \
@@ -173,7 +181,7 @@ grep -q ".chat-output.empty" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing hidden empty output state"
 grep -q "panel.classList.remove('empty')" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must reveal output only after Merlin renders a response"
-grep -q "Save latest chat to Room" "$DASHBOARD_FILE" \
+grep -q "Save chat to Room" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing Room transcript save surface"
 grep -q "requestRoomTranscriptApproval" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing Room save approval request flow"
@@ -193,7 +201,7 @@ grep -q "memory not written" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must show Room save does not write memory"
 
 POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
-[[ "$POST_COUNT" == "2" ]] || fail "dashboard must use only Task POST and shared policy-gated POST helper"
+[[ "$POST_COUNT" == "3" ]] || fail "dashboard must use only Task API /task POSTs and shared policy-gated POST helper"
 
 if grep -q "api/generate\\|/api/chat\\|/v1/chat/completions\\|localhost:4000/v1" "$DASHBOARD_FILE"; then
   fail "native chat must not call model backends directly"

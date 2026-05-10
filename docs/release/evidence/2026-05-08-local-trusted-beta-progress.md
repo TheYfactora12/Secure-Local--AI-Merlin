@@ -9480,3 +9480,653 @@ approval behavior.
 
 Positive, but public beta needs the full Security Settings design before
 permanent approvals can become active.
+
+## 2026-05-10 - One-Time Task Route Approval And Composer Polish
+
+### Date/Time
+
+2026-05-10 09:15 EDT
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`f513c9bb7d46a3c484adf2e4a0929c372c9bb6d8`
+
+### Target Issues
+
+- #106 Wizard HQ product shell.
+- #122/#123/#134 local brain value loop.
+- #135 Rooms and local transcript flow.
+- #95 release-readiness evidence.
+
+### Scope
+
+Fix the user-reported regression where blocked chat routes had no useful
+one-time approval path and Room save felt unavailable after a protected prompt.
+Add a narrow one-time task-route approval that permits only a local model
+response for the same prompt/session. Also apply composer polish to the chat
+tool chips, mode buttons, textarea, status row, send button, and warning-card
+border without changing installer behavior.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `merlin/approval_store.py`
+- `merlin/task_endpoint.py`
+- `tests/test_task_endpoint.py`
+- `tests/dashboard-readiness-smoke.sh`
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `merlin/task_endpoint.py`
+- `merlin/approval_store.py`
+
+No installer, uninstall, package, cloud default, telemetry, model download, or
+browser-side shell execution paths were changed.
+
+### Commands Run
+
+- `curl -sS -i http://localhost:8766/status/rooms`
+- `curl -sS -i -X POST http://localhost:8766/approvals/room-transcript ...`
+- `bash scripts/merlin-task-api.sh status`
+- `python3 - <<'PY' ...` - FAILED, shell Python lacked FastAPI.
+- `.venv-test/bin/python - <<'PY' ...` - direct Room approval/save/read/delete smoke.
+- `.venv-test/bin/python -m pytest tests/test_task_endpoint.py tests/test_room_store.py`
+- `bash tests/dashboard-readiness-smoke.sh`
+- `bash -n scripts/merlin-task-api.sh`
+- `bash -n install.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- Task API was running on `http://127.0.0.1:8766/status/routes`.
+- `/status/rooms` returned `200 OK` and showed the local Rooms root at
+  `/Users/kevinmedeiros/Merlin/brain/rooms`.
+- `/approvals/room-transcript` returned `200 OK`.
+- Direct Room lifecycle smoke with `.venv-test/bin/python`: prepare 200,
+  approve 200, save 200, read prepare 200, read 200, delete prepare 200,
+  delete 200.
+- Focused pytest: 38 passed.
+- Dashboard readiness smoke: PASS.
+- Bash syntax checks: PASS.
+- Diff whitespace check: PASS.
+
+### Tests Skipped And Why
+
+Live browser click-through with screenshots remains pending. Static dashboard
+smoke and direct API smoke were used for this pass because the defect was first
+isolated to approval/backend state and dashboard wiring.
+
+### Failures Found
+
+1. `python3` API smoke failed because the system Python could not import
+   `fastapi`.
+2. `tests/dashboard-readiness-smoke.sh` failed because it hardcoded the old
+   number of browser POST call sites.
+3. The new prompt-mismatch regression test initially used a prompt that routed
+   outside the protected branch and therefore did not exercise the mismatch
+   guard.
+
+### Failure Categories
+
+- Test design gap.
+- CI/static smoke gap.
+- UX/readiness confusion.
+
+### Root Cause Or Current Hypothesis
+
+The backend Room save/read/delete approval lifecycle was working, but task
+routes that require approval had no one-time local-model approval path. That
+made the browser feel stuck when the user asked a protected prompt, and because
+no safe Merlin response was returned, Room save correctly stayed unavailable.
+
+### Fix Applied
+
+- Added `task_route_model_call` approval records with hashed prompt/session
+  payloads and redacted approval summaries.
+- Added `POST /approvals/task-route`.
+- Let `POST /task` accept a matching approved one-time `approval_id` for local
+  model response only.
+- Mark task-route approvals used after the approved attempt so they cannot be
+  reused.
+- Added a browser `Allow once` path for blocked route cards.
+- Kept `Don't ask again` locked and pointed at the Security placeholder.
+- Polished the composer chips, textarea, mode active state, status text, send
+  button dim/glow, and warning-card border.
+
+### Retest Result
+
+PASS after using the repo virtualenv and after updating the static smoke
+expectation to protect the real invariant: Task API-only browser POSTs and no
+direct model backend calls.
+
+### Regression Test Added Or Updated
+
+- `tests/test_task_endpoint.py` now verifies one-time task-route approval,
+  redacted approval summaries, no tool execution, no memory write, no cloud
+  calls, approval reuse rejection, and prompt mismatch rejection.
+- `tests/dashboard-readiness-smoke.sh` now requires the `/approvals/task-route`
+  browser path, `allowTaskRouteOnce`, and copy that limits the approval scope.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended: browser click-through QA issue for the full chat path:
+protected prompt -> Allow once -> local response -> save Room -> reopen Room ->
+delete transcript, with screenshots and logs.
+
+Recommended: full Security Settings issue for scoped permanent approvals with
+explicit off-by-default policy, expiration, revoke/audit controls, and backend
+policy evidence before enabling "don't ask again".
+
+### Lesson Learned
+
+Backend correctness was not enough. The UI needs a real path for common
+protected prompts that are safe to answer with the local model, while still
+blocking tool/file/shell/cloud behavior.
+
+### What Not To Repeat Next Time
+
+Do not treat every protected route as an execution request. Separate "local
+model may answer this protected prompt" from "Merlin may read files, run tools,
+write memory, or use cloud." Do not hardcode browser POST counts when the
+security property is which endpoints are called.
+
+### Next Recommended Step
+
+Restart the Task API so the running server picks up `/approvals/task-route`,
+then run a live browser click-through and capture evidence.
+
+### Local Trusted Beta Impact
+
+Positive. The chat loop is less likely to dead-end on protected prompts while
+still preserving local-first and approval-gated boundaries.
+
+### Public Beta Impact
+
+Positive, but public beta remains blocked on browser QA evidence, full Security
+Settings for permanent approvals, and broader install/onboarding validation.
+
+## 2026-05-10 - Chat UI Stress Pass And Honest Local Engine Fallback
+
+### Date/Time
+
+2026-05-10 09:35 EDT
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`f513c9bb7d46a3c484adf2e4a0929c372c9bb6d8`
+
+### Target Issues
+
+- #106 Wizard HQ product shell.
+- #122/#123/#134 local brain value loop.
+- #135 Rooms and transcript UX.
+- #95 release-readiness evidence.
+
+### Scope
+
+Stress the chat UI against a one-click, non-debug product bar. Fix the most
+visible friction: sidebar scrolling in constrained/mobile layouts, main chat
+space collapsing after the user starts chatting, Room transcript controls in
+the Rooms tab, a less aggressive Room-save prompt limit, and confusing local
+model alias fallback.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `configs/merlin/routes.yaml`
+- `tests/test_router.py`
+- dashboard smoke tests
+- release evidence note
+
+### Protected Files Touched
+
+- `configs/merlin/routes.yaml`
+
+No installer, uninstall, package, cloud default, telemetry, browser-side shell,
+memory-write, or provider-key behavior changed.
+
+### Commands Run
+
+- `bash scripts/merlin-task-api.sh restart`
+- `curl -fsS --max-time 5 -X POST http://127.0.0.1:8766/approvals/task-route ...`
+- `curl -fsS --max-time 20 -X POST http://127.0.0.1:8766/task ...` - timed out.
+- `curl -fsS --max-time 5 http://127.0.0.1:8766/status/models`
+- `curl -fsS --max-time 5 http://localhost:4000/health/readiness`
+- `curl -fsS --max-time 5 http://localhost:11434/api/tags`
+- `.venv-test/bin/python -m pytest tests/test_router.py tests/test_task_endpoint.py tests/test_room_store.py tests/test_status_extension.py`
+- `bash tests/config-root-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-readiness-smoke.sh`
+
+### Test Output Summary
+
+- Focused pytest: 107 passed.
+- Config root smoke: PASS.
+- Dashboard native chat smoke: PASS.
+- Dashboard readiness smoke: PASS.
+- Live `/approvals/task-route` after route config restart returned
+  `selected_model_alias: qwen7b` for `Review this project for security gaps.`
+- LiteLLM readiness endpoint returned healthy.
+- Ollama listed `qwen2.5:7b` and `nomic-embed-text:latest`.
+
+### Tests Skipped And Why
+
+Automated browser screenshot/click-through was not run because this environment
+does not currently have Node/npm/Playwright available. Manual browser QA remains
+required before claiming Local Trusted Beta readiness.
+
+### Failures Found
+
+1. Task API restart reported started, but the first immediate curl saw
+   connection refused. A second start stabilized the service.
+2. Approved `/task` live model call timed out after 20 seconds with no bytes
+   returned.
+3. Dashboard smoke scripts still expected older placeholder text and the old
+   number of Task API POST call sites.
+4. Low-memory route fallback selected alias `mistral`, but that alias mapped to
+   `qwen2.5:7b`, creating confusing product language.
+
+### Failure Categories
+
+- Launchd/autostart / service startup.
+- LiteLLM/model router / local model warmup.
+- UX/readiness confusion.
+- Test design gap.
+
+### Root Cause Or Current Hypothesis
+
+The model timeout is likely local model warmup or LiteLLM/Ollama latency rather
+than approval failure: approval prepare/approve worked and status endpoints were
+healthy. The alias issue was a configuration naming problem: Merlin used a
+`mistral` alias as low-memory fallback even though the actual local installed
+engine was Qwen.
+
+### Fix Applied
+
+- Chat app shell now uses a bounded viewport so the side panel can scroll.
+- Mobile/constrained sidebar gets `overflow-y: auto` and `max-height: 100%`.
+- Main chat collapses the orb/suggestions after the user starts chatting so the
+  transcript has room to behave like a normal chat.
+- Room transcript open/delete controls are visible in the Rooms tab as well as
+  the chat side panel.
+- Whole-Room delete remains locked with explicit copy that it needs a separate
+  approval design.
+- Room save reminder changed from 6 prompts to 12 prompts.
+- Low-memory fallback changed from misleading `mistral` alias to honest
+  installed `qwen7b`.
+
+### Retest Result
+
+PASS for focused pytest and static smokes listed above. Live one-time approval
+route now reports `qwen7b`. Live model completion still needs a longer/manual
+browser test because the 20-second curl timed out.
+
+### Regression Test Added Or Updated
+
+- `tests/test_router.py` now expects low-memory fallback to `qwen7b`.
+- Dashboard smokes now verify sidebar scrolling, chat-active collapse,
+  transcript delete controls, and the 12-prompt Room save limit.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended: focused issue for Task API lifecycle instability during restart
+because connection refused after a reported start is at least a Local Trusted
+Beta blocker until reproduced or ruled out.
+
+Recommended: focused issue for browser click-through evidence covering:
+one-time protected prompt approval, long local-model wait behavior, Room save,
+Room reopen, and transcript delete.
+
+Recommended: future issue to replace prompt-count Room reminder with a token or
+character budget tied to the actual local model context window.
+
+### Lesson Learned
+
+Static correctness is not the product. A local AI product must handle slow local
+model warmup, constrained windows, and visible transcript controls without
+making users feel stuck.
+
+### What Not To Repeat Next Time
+
+Do not use model aliases that imply one engine while pointing to another. Do not
+let the main chat be visually dominated by the hero once the conversation has
+started. Do not rely only on prompt count forever; use token/character budget
+once the local chat loop stabilizes.
+
+### Next Recommended Step
+
+Run manual browser QA with screenshots and record the complete click path:
+open chat, ask protected prompt, allow once, wait through local model response,
+save to Room, reopen saved transcript, delete transcript, confirm Room remains.
+
+### Local Trusted Beta Impact
+
+Positive, but live model completion and Task API restart stability need browser
+evidence before this area can be called trusted.
+
+### Public Beta Impact
+
+Positive UI direction, but public beta remains blocked by manual browser QA,
+restart stability evidence, and full Security Settings/permanent approval design.
+
+## 2026-05-10 - Room Creation And Non-Nagging Save UX
+
+### Date/Time
+
+2026-05-10 10:05 EDT
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`f513c9bb7d46a3c484adf2e4a0929c372c9bb6d8`
+
+### Target Issues
+
+- #135 Merlin Rooms.
+- #106 Wizard HQ Product Shell.
+- #122/#123/#134 local brain value loop.
+- #95 release-readiness evidence.
+
+### Scope
+
+Improve the Room filing model so Merlin Chat behaves like a normal chat first
+and Rooms behave like local project spaces. Save is user-initiated, Rooms can be
+created by name, and saved transcript lists avoid raw prompt leakage.
+
+### Files Changed
+
+- `merlin/room_store.py`
+- `merlin/task_endpoint.py`
+- `dashboard/index.html`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `tests/test_room_store.py`
+- `tests/test_task_endpoint.py`
+- dashboard smoke tests
+- release evidence note
+
+### Protected Files Touched
+
+- `merlin/task_endpoint.py`
+
+No installer, uninstall, package, cloud default, telemetry, browser-side shell,
+model download, provider key, or memory-write behavior changed.
+
+### Commands Run
+
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py`
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py tests/test_router.py tests/test_status_extension.py`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh && bash tests/dashboard-rooms-smoke.sh && bash tests/dashboard-security-center-smoke.sh && bash tests/dashboard-tabs-smoke.sh && bash tests/dashboard-first-run-smoke.sh && bash tests/dashboard-readiness-smoke.sh && bash tests/dashboard-model-readiness-smoke.sh && bash tests/dashboard-settings-policy-smoke.sh && bash tests/dashboard-merlin-status-smoke.sh`
+- `bash tests/master-prompt-smoke.sh`
+- `git diff --check`
+- `bash -n install.sh`
+- `bash -n scripts/merlin-task-api.sh`
+- `bash tests/installer-branding-smoke.sh && bash tests/pkg-readiness-smoke.sh && bash tests/uninstall-smoke.sh`
+- `bash install.sh --help`
+
+### Test Output Summary
+
+- Focused Room/task pytest after fixes: 41 passed.
+- Broader focused pytest: 110 passed.
+- Dashboard Room/native chat smokes: PASS.
+- Full dashboard smoke chain listed above: PASS.
+- Master prompt smoke: PASS.
+- Installer branding/package readiness/uninstall smokes: PASS.
+- `bash install.sh --help`: printed expected usage without changing install state.
+- `git diff --check`, `bash -n install.sh`, and `bash -n scripts/merlin-task-api.sh`: PASS.
+
+### Tests Skipped And Why
+
+Automated browser screenshot/click-through remains skipped because this runtime
+still does not provide Node/npm/Playwright. Manual browser QA is still required
+for the full Room create/save/reopen/delete click path.
+
+### Failures Found
+
+1. Initial pytest failed because transcript titles derived from the user prompt
+   appeared in Room manifest/status JSON.
+2. Initial task endpoint pytest failed because `transcript_title` was written to
+   audit metadata and exposed raw prompt text.
+3. Dashboard smoke failed because the test still expected the older aggressive
+   `Room save recommended now` copy.
+4. Dashboard first-run smoke failed because the older exact local Room save copy
+   changed during UX polish.
+
+### Failure Category
+
+- Secret/log redaction.
+- UX/readiness confusion.
+- Test design gap.
+
+### Root Cause Or Current Hypothesis
+
+Readable titles improve UX, but prompt-derived titles can leak raw private text
+through status and audit surfaces. The tests correctly enforced the privacy
+boundary. The dashboard smoke failures were expected drift from copy changes and
+were updated after confirming the new copy preserves the same safety invariant.
+
+### Fix Applied
+
+- Added local Room creation to `room_store.py` and `/rooms` in `task_endpoint.py`.
+- New Room creation writes only local metadata and audit metadata; it does not
+  write memory, call a model, enable context reuse, or enable cloud sync.
+- Save flow copy now treats saving as user-initiated filing, not a prompt after
+  every response.
+- Dashboard side panel and Rooms tab now expose named Room creation.
+- Transcript manifests expose safe display titles instead of raw prompt-derived
+  titles.
+- Audit metadata no longer includes raw prompt-derived `transcript_title`.
+- Rooms architecture doc now records the future duplicate/similar-Room guard:
+  Merlin should suggest adding to an existing related Room before creating a new
+  near-duplicate Room.
+
+### Retest Result
+
+PASS after redaction and smoke-test updates.
+
+### Regression Test Added Or Updated
+
+- `tests/test_room_store.py` covers Room creation, safe Room slug
+  deduplication, transcript title frontmatter, and non-raw manifest metadata.
+- `tests/test_task_endpoint.py` covers `/rooms` local metadata creation and
+  confirms Room transcript save still writes no approved memory.
+- Dashboard smokes now verify user-initiated Room save copy, Room naming, and
+  the future similarity guard note.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended: implement a full Room table/review screen with Room name, path,
+transcript count, latest safe title, open, rename, archive/delete, and Master
+Prompt status.
+
+Recommended: implement similar-Room suggestion before creating a Room, using
+safe metadata first and later approved semantic summaries when available.
+
+Recommended: implement whole-Room delete/archive with explicit approval, linked
+memory visibility, and local trash/archive before hard delete.
+
+Recommended: add browser QA evidence for Room create -> chat -> save -> reopen
+-> delete transcript.
+
+### Lesson Learned
+
+A convenience title can become a privacy leak if it crosses from the immediate
+chat UI into status or audit surfaces. Room organization must separate
+user-facing convenience from redacted system metadata.
+
+### What Not To Repeat Next Time
+
+Do not put raw prompt-derived labels into manifests, audit logs, status APIs, or
+side-panel metadata without a redaction policy. Do not make save prompts feel
+like interruptions; Room filing should be available, not nagging.
+
+### Next Recommended Step
+
+Build the Room table/review screen and manual browser QA path. Keep whole-Room
+delete behind a separate approval-gated issue until archive/trash and linked
+memory visibility are designed.
+
+### Local Trusted Beta Impact
+
+Positive. Room creation and filing are closer to a real product flow while
+privacy boundaries are stronger after the redaction regression.
+
+### Public Beta Impact
+
+Positive, but public beta remains blocked by browser QA evidence, Room table
+polish, whole-Room delete/archive design, and full installer retest after UX
+changes land.
+
+## 2026-05-10 - Merlin Composer Jobs-Style Polish
+
+### Date/Time
+
+2026-05-10 10:35 EDT
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`f513c9bb7d46a3c484adf2e4a0929c372c9bb6d8`
+
+### Target Issues
+
+- #106 Wizard HQ Product Shell.
+- #122/#123/#134 local brain value loop.
+- #135 Rooms.
+- #95 release-readiness evidence.
+
+### Scope
+
+Polish the Merlin Chat composer through the product lens: make visible controls
+read as user actions instead of system internals, shorten the primary input
+copy, strengthen mode selection state, make the send button feel alive, and
+soften blocked-route cards so protection does not read as a crash.
+
+### Files Changed
+
+- `dashboard/index.html`
+- dashboard smoke tests
+- release evidence note
+
+### Protected Files Touched
+
+None in this slice. No routing, installer, package, cloud default, telemetry,
+model download, memory-write, or Task API behavior changed.
+
+### Commands Run
+
+- `rg -n "Attach later|Memory visible|Round Table gated|Smart mode selected|still chooses|Ask Merlin anything|Deep requires future Round Table|Search off" dashboard/index.html tests || true`
+- `bash tests/dashboard-first-run-smoke.sh && bash tests/dashboard-native-chat-smoke.sh && bash tests/dashboard-merlin-status-smoke.sh && bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh && bash tests/dashboard-rooms-smoke.sh && bash tests/dashboard-security-center-smoke.sh && bash tests/dashboard-tabs-smoke.sh && bash tests/dashboard-first-run-smoke.sh && bash tests/dashboard-readiness-smoke.sh && bash tests/dashboard-model-readiness-smoke.sh && bash tests/dashboard-settings-policy-smoke.sh && bash tests/dashboard-merlin-status-smoke.sh`
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py tests/test_router.py tests/test_status_extension.py`
+- `bash tests/master-prompt-smoke.sh`
+- `git diff --check`
+- `bash -n install.sh`
+- `bash -n scripts/merlin-task-api.sh`
+
+### Test Output Summary
+
+- Removed old visible/internal composer wording: no matches for `Attach later`,
+  `Memory visible`, `Round Table gated`, `Smart mode selected`, `still chooses`,
+  `Ask Merlin anything`, or `Deep requires future Round Table`.
+- Dashboard smoke chain: PASS.
+- Focused pytest: 110 passed.
+- Master prompt smoke: PASS.
+- `git diff --check`, `bash -n install.sh`, and `bash -n scripts/merlin-task-api.sh`: PASS.
+
+### Tests Skipped And Why
+
+Live visual viewport testing at 1280px desktop and 375px mobile was not run
+because this runtime still lacks browser automation tooling. Source-level
+responsive checks remain covered by existing dashboard smokes and CSS media
+rules, but manual browser screenshots are still required before signoff.
+
+### Failures Found
+
+Initial smoke expectations still referenced older composer copy. This was a
+test-design drift issue after the product copy changed.
+
+### Failure Category
+
+- UX/readiness confusion.
+- Test design gap.
+
+### Root Cause Or Current Hypothesis
+
+The UI copy changed from engineering-state language to user-action language,
+but the static smoke tests still protected the older wording.
+
+### Fix Applied
+
+- Composer placeholder changed to `Ask Merlin...`.
+- Tool chips now read as actions: Attach icon, Memory, Search, Rooms.
+- Search chip gets an explicit toggle state without changing backend search
+  behavior.
+- Mode copy is confident: Fast uses quickest local model, Smart routes to the
+  best available model, Deep describes future Round Table collaboration.
+- Mode buttons have stronger active state.
+- Send button dims when empty and gains a subtle Merlin teal hover glow.
+- Approval cards use softer amber border/fill so blocked routes feel like a
+  protection feature, not a broken state.
+- Dashboard smokes now protect the new product copy.
+
+### Retest Result
+
+PASS for dashboard smokes, focused pytest, master prompt smoke, shell syntax
+checks, and diff whitespace check.
+
+### Regression Test Added Or Updated
+
+- `tests/dashboard-first-run-smoke.sh`
+- `tests/dashboard-native-chat-smoke.sh`
+- `tests/dashboard-merlin-status-smoke.sh`
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended: add Playwright or another browser QA path for 1280px and 375px
+screenshots of Merlin Chat, including empty composer, typed composer, blocked
+approval card, Room save state, and mobile sidebar.
+
+### Lesson Learned
+
+Composer polish is not cosmetic. A few words can make Merlin feel like a system
+dumping state or a product offering clear actions.
+
+### What Not To Repeat Next Time
+
+Do not let engineer words such as `gated`, `still chooses`, or `later` leak into
+the primary chat path unless the user needs that exact term to make a decision.
+
+### Next Recommended Step
+
+Run live browser QA with screenshots and then continue to the Room table/review
+screen.
+
+### Local Trusted Beta Impact
+
+Positive. Merlin Chat is clearer and less debug-like, but visual viewport
+evidence is still required before Local Trusted Beta signoff.
+
+### Public Beta Impact
+
+Positive, but public beta remains blocked by browser QA evidence, Room
+management polish, whole-Room archive/delete design, and full installer retest
+after Wizard HQ changes land.

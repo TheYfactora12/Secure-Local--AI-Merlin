@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from merlin.room_store import (
+    create_room,
     delete_room_transcript,
     generate_room_master_prompt_draft,
     list_room_transcripts,
@@ -9,6 +10,28 @@ from merlin.room_store import (
     room_manifest,
     save_room_transcript,
 )
+
+
+def test_create_room_writes_local_metadata_without_context_reuse(tmp_path) -> None:
+    result = create_room(room_name="Client Risk Review", root=tmp_path, created_at="2026-05-10T12:00:00+00:00")
+
+    metadata = (tmp_path / result.room_id / "room.md").read_text(encoding="utf-8")
+
+    assert result.room_id == "client-risk-review"
+    assert result.room_name == "Client Risk Review"
+    assert (tmp_path / result.room_id / "transcripts").is_dir()
+    assert (tmp_path / result.room_id / "summaries").is_dir()
+    assert (tmp_path / result.room_id / "master-prompts").is_dir()
+    assert "reference_policy: no_room_context" in metadata
+    assert "memory_extraction: requires_approval" in metadata
+
+
+def test_create_room_deduplicates_slug_without_merging_content(tmp_path) -> None:
+    first = create_room(room_name="Merlin Build", root=tmp_path, created_at="2026-05-10T12:00:00+00:00")
+    second = create_room(room_name="Merlin Build", root=tmp_path, created_at="2026-05-10T12:01:00+00:00")
+
+    assert first.room_id == "merlin-build"
+    assert second.room_id == "merlin-build-2"
 
 
 def test_room_manifest_defaults_to_read_only_no_context(monkeypatch, tmp_path) -> None:
@@ -55,6 +78,7 @@ def test_list_rooms_discovers_metadata_without_reading_transcripts(tmp_path) -> 
     assert record.transcript_count == 1
     assert len(record.transcripts) == 1
     assert record.transcripts[0].transcript_id == "2026-05-09"
+    assert record.transcripts[0].title.startswith("Saved chat")
     assert record.transcripts[0].raw_content_loaded is False
     assert record.summary_count == 1
     assert record.master_prompt is not None
@@ -126,6 +150,8 @@ def test_save_room_transcript_writes_local_markdown_without_memory(tmp_path) -> 
     assert result.room_name == "Merlin Build"
     assert result.approved_memory_written is False
     assert result.memory_extraction == "not_performed_requires_separate_approval"
+    assert result.transcript_title == "What are we building?"
+    assert "title: What are we building?" in transcript
     assert "What are we building?" in transcript
     assert "A local-first Merlin product." in transcript
     assert "memory_extraction: not_performed_requires_separate_approval" in transcript

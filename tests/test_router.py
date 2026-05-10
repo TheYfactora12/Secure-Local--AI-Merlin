@@ -156,7 +156,7 @@ def test_staff_modes_select_configured_model_aliases_on_non_low_memory(monkeypat
         ("write a python function to parse JSON", "software_engineer", "qwen-coder"),
         ("scan this code for SQL injection vulnerabilities", "security_reviewer", "deepseek"),
         ("design the user onboarding flow", "product_designer", "qwen7b"),
-        ("set up an n8n automation for daily reports", "operator", "mistral"),
+        ("set up an n8n automation for daily reports", "operator", "qwen7b"),
     ]
 
     for text, staff_mode, model_alias in cases:
@@ -174,7 +174,7 @@ def test_low_memory_tier_falls_back_to_safe_local_alias(monkeypatch) -> None:
 
     assert decision.staff_mode == "architect"
     assert decision.preferred_model_alias == "deepseek"
-    assert decision.selected_model_alias == "mistral"
+    assert decision.selected_model_alias == "qwen7b"
     assert decision.model_fallback_applied is True
     assert decision.model_fallback_reason is not None
 
@@ -285,7 +285,7 @@ def test_low_memory_fallback(monkeypatch) -> None:
     decision = classify_task("design scalable microservice architecture")
 
     assert decision.model_fallback_applied is True
-    assert decision.selected_model_alias == "mistral"
+    assert decision.selected_model_alias == "qwen7b"
 
 
 def test_cloud_block_via_approval_gate() -> None:

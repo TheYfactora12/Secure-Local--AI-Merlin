@@ -37,6 +37,10 @@ Merlin AI / Home AI Elite has a working local-first foundation:
   launcher in Wizard HQ,
 - approval-gated Room transcript saves through the 8766 Task API, writing local
   Markdown history only and not approved memory,
+- one-time task-route approvals through the 8766 Task API for local model
+  responses on the same prompt/session only; they do not enable browser-side
+  tool execution, file reads, shell commands, memory writes, cloud calls, or
+  permanent approvals,
 - approval-gated Room Master Prompt draft generation under
   `master-prompts/master-prompt.md`; drafts are local artifacts only and are not
   approved for context reuse,
@@ -121,10 +125,13 @@ flowchart LR
    install, open Wizard HQ, select/create a Room, save local context, ask
    Merlin, see local/private proof, and review/delete/export what was stored.
 2. #135: Merlin Rooms for local chat history and scoped context. Current slices
-   created the default Room layout, session Room launcher, approval-gated
-   transcript saves, and approval-gated Room Master Prompt drafts. Next slices
-   should add the Wizard HQ review/edit screen and a separate approve-for-context
-   gate before any Room content is reused.
+   created the default Room layout, named local Room creation, session Room
+   launcher, user-initiated approval-gated transcript saves, one-time
+   transcript reopen/delete approvals, safe transcript metadata titles, and
+   approval-gated Room Master Prompt drafts. Next slices should add a Room table
+   review/edit screen, duplicate/similar-Room suggestions before creating new
+   Rooms, and a separate approve-for-context gate before any Room content is
+   reused.
 3. #106: Wizard HQ Product Shell parent; keep Chat, Brains, Memory, Agents,
    Security, System, and Settings aligned before deeper governance features.
 4. #31/#32/#120: memory approval, review, and delete paths. These are required

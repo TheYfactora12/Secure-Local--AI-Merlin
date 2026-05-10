@@ -51,6 +51,30 @@ def stable_hash(payload: dict[str, Any]) -> str:
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
+def task_route_payload_hash(
+    *,
+    user_input: str,
+    session_id: str,
+    route_id: str,
+    staff_mode: str,
+    selected_model_alias: str,
+) -> str:
+    return stable_hash(
+        {
+            "action": "task_route_model_call",
+            "version": 1,
+            "user_input_hash": stable_hash({"user_input": user_input.strip()}),
+            "session_id": session_id.strip(),
+            "route_id": route_id.strip(),
+            "staff_mode": staff_mode.strip(),
+            "selected_model_alias": selected_model_alias.strip(),
+            "tool_execution": "none",
+            "memory_write": False,
+            "cloud_calls": "none",
+        }
+    )
+
+
 def room_transcript_payload_hash(
     *,
     room_id: str,
@@ -157,6 +181,49 @@ def latest_approval(approval_id: str, path: Path | None = None) -> ApprovalRecor
         if record.approval_request_id == approval_id:
             latest = record
     return latest
+
+
+def create_task_route_approval(
+    *,
+    user_input: str,
+    session_id: str,
+    route_id: str,
+    staff_mode: str,
+    selected_model_alias: str,
+    approval_gates: list[str],
+    path: Path | None = None,
+) -> ApprovalRecord:
+    payload_hash = task_route_payload_hash(
+        user_input=user_input,
+        session_id=session_id,
+        route_id=route_id,
+        staff_mode=staff_mode,
+        selected_model_alias=selected_model_alias,
+    )
+    record = ApprovalRecord(
+        approval_request_id=f"approval_task_route_{uuid.uuid4().hex[:12]}",
+        timestamp=now_iso(),
+        status="required_pending",
+        action="task_route_model_call",
+        approval_gates=approval_gates,
+        payload_hash=payload_hash,
+        payload_summary={
+            "session_id_hash": stable_hash({"session_id": session_id.strip()}),
+            "user_input_hash": stable_hash({"user_input": user_input.strip()}),
+            "route_id": route_id.strip(),
+            "staff_mode": staff_mode.strip(),
+            "selected_model_alias": selected_model_alias.strip(),
+            "raw_content_in_approval": False,
+            "tool_execution": "none",
+            "memory_write": False,
+            "cloud_calls": "none",
+            "approval_scope": "one_time_local_model_call",
+        },
+        model_calls="local_model_call_after_approval",
+        tool_execution="none",
+    )
+    _append_record(record, path)
+    return record
 
 
 def create_room_transcript_approval(
@@ -364,6 +431,35 @@ def require_room_transcript_approval(
     )
     if current.payload_hash != expected:
         raise PermissionError("approval payload hash does not match transcript payload")
+    return current
+
+
+def require_task_route_approval(
+    *,
+    approval_id: str,
+    user_input: str,
+    session_id: str,
+    route_id: str,
+    staff_mode: str,
+    selected_model_alias: str,
+    path: Path | None = None,
+) -> ApprovalRecord:
+    current = latest_approval(approval_id, path)
+    if current is None:
+        raise PermissionError("approval id not found")
+    if current.status != "approved" or not current.execution_allowed:
+        raise PermissionError("approval is not approved for execution")
+    if current.action != "task_route_model_call":
+        raise PermissionError("approval action does not match task route model call")
+    expected = task_route_payload_hash(
+        user_input=user_input,
+        session_id=session_id,
+        route_id=route_id,
+        staff_mode=staff_mode,
+        selected_model_alias=selected_model_alias,
+    )
+    if current.payload_hash != expected:
+        raise PermissionError("approval payload hash does not match task route payload")
     return current
 
 

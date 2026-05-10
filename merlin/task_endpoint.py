@@ -23,23 +23,27 @@ from merlin.approval_store import (
     create_room_transcript_delete_approval,
     create_room_transcript_read_approval,
     create_room_transcript_approval,
+    create_task_route_approval,
     decide_approval,
     mark_approval_used,
     require_room_master_prompt_approval,
     require_room_transcript_delete_approval,
     require_room_transcript_read_approval,
     require_room_transcript_approval,
+    require_task_route_approval,
 )
 from merlin.memory_manager import MemoryManager
 from merlin.outcome_observer import observe_task_outcome
 from merlin.persona_injector import build_system_prompt
 from merlin.policy_engine import ApprovalRequiredError, requires_approval
 from merlin.room_store import (
+    RoomCreateResult,
     RoomMasterPromptDraftResult,
     RoomTranscriptDeleteResult,
     RoomTranscriptReadResult,
     RoomTranscriptSaveResult,
     count_room_transcripts,
+    create_room,
     delete_room_transcript,
     generate_room_master_prompt_draft,
     read_room_transcript,
@@ -67,6 +71,7 @@ TASK_TRACE_BUFFER: deque[dict[str, Any]] = deque(maxlen=50)
 class TaskRequest(BaseModel):
     input: str
     session_id: str | None = None
+    approval_id: str | None = None
 
 
 class TaskResponse(BaseModel):
@@ -87,10 +92,27 @@ class RoomTranscriptSaveRequest(BaseModel):
     approval_id: str | None = None
 
 
+class RoomCreateRequest(BaseModel):
+    room_name: str
+
+
+class RoomCreateResponse(BaseModel):
+    status: str
+    room_id: str
+    room_name: str
+    room_path: str
+    metadata_file: str
+    created_at: str
+    audit_id: str | None
+    memory_written: bool
+    context_reuse: str
+
+
 class RoomTranscriptSaveResponse(BaseModel):
     status: str
     room_id: str
     transcript_id: str
+    transcript_title: str
     transcript_path: str
     audit_id: str | None
     memory_written: bool
@@ -125,6 +147,22 @@ class RoomTranscriptApprovalResponse(BaseModel):
     execution_allowed: bool
     payload_hash: str
     payload_summary: dict[str, Any]
+
+
+class TaskRouteApprovalRequest(BaseModel):
+    input: str
+    session_id: str | None = None
+
+
+class TaskRouteApprovalResponse(BaseModel):
+    approval_request_id: str
+    status: str
+    action: str
+    approval_gates: list[str]
+    execution_allowed: bool
+    payload_hash: str
+    payload_summary: dict[str, Any]
+    route: dict[str, Any]
 
 
 class RoomMasterPromptApprovalRequest(BaseModel):
@@ -209,6 +247,19 @@ def _approval_response(record: ApprovalRecord) -> RoomTranscriptApprovalResponse
     )
 
 
+def _task_route_approval_response(record: ApprovalRecord, route: RouteDecision) -> TaskRouteApprovalResponse:
+    return TaskRouteApprovalResponse(
+        approval_request_id=record.approval_request_id,
+        status=record.status,
+        action=record.action,
+        approval_gates=record.approval_gates,
+        execution_allowed=record.execution_allowed,
+        payload_hash=record.payload_hash,
+        payload_summary=record.payload_summary,
+        route=route.model_dump(),
+    )
+
+
 def _decision_response(record: ApprovalRecord) -> ApprovalDecisionResponse:
     return ApprovalDecisionResponse(
         approval_request_id=record.approval_request_id,
@@ -216,6 +267,20 @@ def _decision_response(record: ApprovalRecord) -> ApprovalDecisionResponse:
         action=record.action,
         execution_allowed=record.execution_allowed,
         decision_recorded=record.decision_recorded,
+    )
+
+
+def _room_create_response(result: RoomCreateResult, audit_id: str | None) -> RoomCreateResponse:
+    return RoomCreateResponse(
+        status="created_local_room_only",
+        room_id=result.room_id,
+        room_name=result.room_name,
+        room_path=result.room_path,
+        metadata_file=result.metadata_file,
+        created_at=result.created_at,
+        audit_id=audit_id,
+        memory_written=False,
+        context_reuse="disabled_until_user_approved",
     )
 
 
@@ -366,6 +431,24 @@ def _write_room_transcript_audit(result: RoomTranscriptSaveResult, request: Room
         return None
 
 
+def _write_room_create_audit(result: RoomCreateResult) -> str | None:
+    metadata = {
+        "room_id": result.room_id,
+        "room_name": result.room_name,
+        "room_path": result.room_path,
+        "metadata_file": result.metadata_file,
+        "created_at": result.created_at,
+        "memory_written": False,
+        "context_reuse": "disabled_until_user_approved",
+        "cloud_sync_default": False,
+        "raw_transcript_in_audit": False,
+    }
+    try:
+        return MemoryManager().write_audit_event("room_create", metadata)
+    except Exception:
+        return None
+
+
 def _write_room_master_prompt_audit(
     result: RoomMasterPromptDraftResult,
     request: RoomMasterPromptDraftRequest,
@@ -446,32 +529,69 @@ def task(request: TaskRequest) -> TaskResponse:
     logger.info("Task request received: input_hash=%s session_id=%s", input_hash, session_id)
 
     route = route_task(user_input)
+    route_approved_by_id = False
+    approval_id = (request.approval_id or "").strip()
     if route.requires_approval:
-        latency_ms = int((time.perf_counter() - started) * 1000)
-        record_task_trace(
-            input_hash=input_hash,
-            session_id=session_id,
-            route=route,
-            approved=False,
-            memory_written=False,
-            degraded=False,
-            latency_ms=latency_ms,
-        )
-        observe_task_outcome(
-            user_input=user_input,
-            route_decision=route,
-            outcome_status="rejected",
-            latency_ms=latency_ms,
-        )
-        raise HTTPException(
-            status_code=403,
-            detail={
-                "message": "Approval required before Merlin can continue this route.",
-                "route_id": route.route_id,
-                "route": route.model_dump(),
-                "approval_gates": route.approval_gates,
-            },
-        )
+        if approval_id:
+            try:
+                require_task_route_approval(
+                    approval_id=approval_id,
+                    user_input=user_input,
+                    session_id=session_id,
+                    route_id=route.route_id,
+                    staff_mode=route.staff_mode,
+                    selected_model_alias=route.selected_model_alias,
+                )
+            except PermissionError as exc:
+                raise HTTPException(
+                    status_code=403,
+                    detail={
+                        "message": str(exc),
+                        "route_id": route.route_id,
+                        "route": route.model_dump(),
+                        "approval_gates": route.approval_gates,
+                        "approval_supported": True,
+                        "approval_scope": "one_time_local_model_call",
+                        "session_id": session_id,
+                    },
+                ) from exc
+            route_approved_by_id = True
+        else:
+            latency_ms = int((time.perf_counter() - started) * 1000)
+            record_task_trace(
+                input_hash=input_hash,
+                session_id=session_id,
+                route=route,
+                approved=False,
+                memory_written=False,
+                degraded=False,
+                latency_ms=latency_ms,
+            )
+            observe_task_outcome(
+                user_input=user_input,
+                route_decision=route,
+                outcome_status="rejected",
+                latency_ms=latency_ms,
+            )
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "message": "Approval required before Merlin can continue this route.",
+                    "route_id": route.route_id,
+                    "route": route.model_dump(),
+                    "approval_gates": route.approval_gates,
+                    "approval_supported": True,
+                    "approval_scope": "one_time_local_model_call",
+                    "session_id": session_id,
+                },
+            )
+
+    if route_approved_by_id:
+        try:
+            mark_approval_used(approval_id)
+        except KeyError:
+            pass
+
     system_prompt = build_system_prompt(route)
 
     try:
@@ -531,6 +651,51 @@ def task(request: TaskRequest) -> TaskResponse:
         session_id=session_id,
         memory_written=memory_written,
     )
+
+
+@app.post("/approvals/task-route", response_model=TaskRouteApprovalResponse)
+def create_task_route_approval_endpoint(request: TaskRouteApprovalRequest) -> TaskRouteApprovalResponse:
+    user_input = _validate_user_input(request.input)
+    session_id = request.session_id or str(uuid.uuid4())
+    route = route_task(user_input)
+    if not route.requires_approval:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "This route does not require approval.",
+                "route_id": route.route_id,
+                "route": route.model_dump(),
+            },
+        )
+    record = create_task_route_approval(
+        user_input=user_input,
+        session_id=session_id,
+        route_id=route.route_id,
+        staff_mode=route.staff_mode,
+        selected_model_alias=route.selected_model_alias,
+        approval_gates=route.approval_gates,
+    )
+    return _task_route_approval_response(record, route)
+
+
+@app.post("/rooms", response_model=RoomCreateResponse)
+def create_room_endpoint(request: RoomCreateRequest) -> RoomCreateResponse:
+    try:
+        result = create_room(room_name=request.room_name)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except FileExistsError as exc:
+        raise HTTPException(status_code=409, detail="Room already exists") from exc
+    except OSError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "Room could not be created locally.",
+                "error": exc.__class__.__name__,
+            },
+        ) from exc
+
+    return _room_create_response(result, _write_room_create_audit(result))
 
 
 @app.post("/rooms/transcripts", response_model=RoomTranscriptSaveResponse)
@@ -594,6 +759,7 @@ def save_room_transcript_endpoint(request: RoomTranscriptSaveRequest) -> RoomTra
         status="saved_local_transcript_only",
         room_id=result.room_id,
         transcript_id=result.transcript_id,
+        transcript_title=result.transcript_title,
         transcript_path=result.transcript_path,
         audit_id=audit_id,
         memory_written=False,

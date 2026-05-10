@@ -1,7 +1,7 @@
 # Merlin Rooms Architecture
 
 **Status:** Current design contract for issue #135.
-**Last updated:** 2026-05-09
+**Last updated:** 2026-05-10
 **Scope:** Local chat history and scoped context containers.
 
 ## Purpose
@@ -43,6 +43,9 @@ still requires explicit approval.
 10. Prompt-based Room deletion may exist only as an approval-gated intent flow:
     Merlin can identify the Room by name, but deletion requires explicit review
     and confirmation before any local files are removed.
+11. Room creation should keep knowledge clustered. If Merlin can detect a
+    similar Room later, it should suggest adding the transcript to the existing
+    Room before creating a near-duplicate Room.
 
 ## Reference Policies
 
@@ -99,6 +102,24 @@ without changing global Merlin memory.
 Current implementation does **not** generate Room Master Prompts yet. It only
 creates the folder structure needed for that future workflow and saves approved
 transcripts as local Markdown.
+
+## Room Creation
+
+Current implementation exposes a local metadata-only Room creation path:
+
+```text
+POST http://localhost:8766/rooms
+```
+
+The request accepts a user-provided Room name. Merlin creates a safe local slug,
+creates `transcripts/`, `summaries/`, `master-prompts/`, and `room.md`, and
+records audit metadata without raw chat content. This does not write approved
+memory, approve context reuse, call a model, or enable cloud sync.
+
+Future duplicate prevention should compare the proposed Room name and first
+transcript topic against existing Rooms. When a close match exists, Wizard HQ
+should ask: "This looks related to <Room>. Add it there instead?" The user can
+choose the existing Room or continue creating the new Room.
 
 ## Prompt-Based Room Management
 
@@ -170,6 +191,7 @@ The manifest reports:
 - brain root,
 - Rooms root,
 - discovered Room metadata folders,
+- create Room by name,
 - latest transcript metadata by Room,
 - active Room state,
 - reference policy,
@@ -200,9 +222,9 @@ file controls.
 
 Wizard HQ currently uses this path only for:
 
-- the latest completed Merlin response,
+- user-initiated save of the current Merlin Chat session,
 - the selected active Room in browser UI state, defaulting to `merlin-build`,
-- explicit "Prepare Room save" then "Allow once" clicks,
+- explicit "Save to Room" then "Allow once" clicks,
 - local transcript history only.
 
 Active Room selection is session-local in Wizard HQ. It is not persisted to

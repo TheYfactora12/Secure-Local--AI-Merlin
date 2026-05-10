@@ -20,9 +20,9 @@ staff_model_aliases:
   software_engineer: qwen-coder
   security_reviewer: deepseek
   product_designer: qwen7b
-  operator: mistral
+  operator: qwen7b
 
-low_memory_fallback_model_alias: mistral
+low_memory_fallback_model_alias: qwen7b
 
 routes:
   general:

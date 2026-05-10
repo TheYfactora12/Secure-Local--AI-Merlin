@@ -92,6 +92,70 @@ def test_post_task_route_requiring_approval_returns_403_with_gates(monkeypatch) 
         "git_operation",
         "openhands_task",
     ]
+    assert detail["approval_supported"] is True
+    assert detail["approval_scope"] == "one_time_local_model_call"
+    assert detail["session_id"]
+
+
+def test_task_route_approval_allows_one_local_model_call_without_raw_prompt(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("MERLIN_APPROVAL_LOG", str(tmp_path / "approvals.jsonl"))
+    monkeypatch.setattr("merlin.task_endpoint.observe_task_outcome", _noop_outcome_observer)
+    monkeypatch.setattr("merlin.task_endpoint.httpx.post", lambda *args, **kwargs: _FakeLiteLLMResponse())
+
+    payload = {"input": "write a python function", "session_id": "session-route-1"}
+    approval_response = client.post("/approvals/task-route", json=payload)
+    approval_body = approval_response.json()
+
+    assert approval_response.status_code == 200
+    assert approval_body["status"] == "required_pending"
+    assert approval_body["action"] == "task_route_model_call"
+    assert approval_body["execution_allowed"] is False
+    assert approval_body["payload_summary"]["raw_content_in_approval"] is False
+    assert approval_body["payload_summary"]["tool_execution"] == "none"
+    assert approval_body["payload_summary"]["memory_write"] is False
+    assert approval_body["payload_summary"]["cloud_calls"] == "none"
+    assert "write a python function" not in str(approval_body)
+
+    approval_id = approval_body["approval_request_id"]
+    decision_response = client.post(f"/approvals/{approval_id}/approve")
+    assert decision_response.status_code == 200
+    assert decision_response.json()["execution_allowed"] is True
+
+    response = client.post("/task", json={**payload, "approval_id": approval_id})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["response"] == "Merlin response"
+    assert body["route"]["route_id"] == "code"
+    assert body["approved"] is True
+    assert body["memory_written"] is False
+
+    reused_response = client.post("/task", json={**payload, "approval_id": approval_id})
+    assert reused_response.status_code == 403
+    assert "not approved" in reused_response.json()["detail"]["message"]
+
+
+def test_task_route_approval_rejects_prompt_mismatch(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("MERLIN_APPROVAL_LOG", str(tmp_path / "approvals.jsonl"))
+    monkeypatch.setattr("merlin.task_endpoint.observe_task_outcome", _noop_outcome_observer)
+
+    approval_response = client.post(
+        "/approvals/task-route",
+        json={"input": "write a python function", "session_id": "session-route-1"},
+    )
+    approval_id = approval_response.json()["approval_request_id"]
+    client.post(f"/approvals/{approval_id}/approve")
+
+    mismatch = client.post(
+        "/task",
+        json={
+            "input": "write a javascript function",
+            "session_id": "session-route-1",
+            "approval_id": approval_id,
+        },
+    )
+
+    assert mismatch.status_code == 403
+    assert "payload hash" in mismatch.json()["detail"]["message"]
 
 
 def test_post_task_when_litellm_unreachable_returns_degraded_response(monkeypatch) -> None:
@@ -176,6 +240,32 @@ def test_save_room_transcript_requires_approval_id() -> None:
     assert detail["memory_extraction"] == "not_performed_requires_separate_approval"
 
 
+def test_create_room_endpoint_writes_local_metadata_without_memory(tmp_path, monkeypatch) -> None:
+    audit_calls = []
+
+    class FakeMemoryManager:
+        def write_audit_event(self, event_type: str, metadata: dict) -> str:
+            audit_calls.append((event_type, metadata))
+            return "audit-room-create-1"
+
+    monkeypatch.setenv("MERLIN_ROOMS_ROOT", str(tmp_path / "rooms"))
+    monkeypatch.setattr("merlin.task_endpoint.MemoryManager", FakeMemoryManager)
+
+    response = client.post("/rooms", json={"room_name": "Client Risk Review"})
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["status"] == "created_local_room_only"
+    assert body["room_id"] == "client-risk-review"
+    assert body["room_name"] == "Client Risk Review"
+    assert body["memory_written"] is False
+    assert body["context_reuse"] == "disabled_until_user_approved"
+    assert body["audit_id"] == "audit-room-create-1"
+    assert (tmp_path / "rooms" / "client-risk-review" / "room.md").exists()
+    assert audit_calls[0][0] == "room_create"
+    assert audit_calls[0][1]["raw_transcript_in_audit"] is False
+
+
 def test_save_room_transcript_writes_local_file_without_memory(tmp_path, monkeypatch) -> None:
     audit_calls = []
 
@@ -228,6 +318,7 @@ def test_save_room_transcript_writes_local_file_without_memory(tmp_path, monkeyp
 
     assert response.status_code == 200
     assert body["status"] == "saved_local_transcript_only"
+    assert body["transcript_title"] == "What are we building?"
     assert body["memory_written"] is False
     assert body["memory_extraction"] == "not_performed_requires_separate_approval"
     assert body["audit_id"] == "audit-room-1"

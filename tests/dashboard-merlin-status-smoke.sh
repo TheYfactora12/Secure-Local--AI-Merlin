@@ -60,8 +60,8 @@ require '/approvals/room-transcript' "dashboard missing Room transcript approval
 require '/rooms/transcripts' "dashboard missing approved Room transcript save"
 
 POST_COUNT="$(grep -c "method: 'POST'" "$DASHBOARD_FILE" || true)"
-if [[ "$POST_COUNT" != "2" ]]; then
-  echo "Dashboard must use only Task POST and shared policy-gated POST helper" >&2
+if [[ "$POST_COUNT" != "3" ]]; then
+  echo "Dashboard must use only Task API /task POSTs and shared policy-gated POST helper" >&2
   exit 1
 fi
 
