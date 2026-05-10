@@ -1180,6 +1180,47 @@ button.mode-pill:hover {
   background: rgba(255, 255, 255, 0.03);
   color: var(--muted);
 }
+.approval-actions button.locked {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--muted);
+}
+.surface-card.attention {
+  border-color: rgba(245, 158, 11, 0.44);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12), var(--shadow-md);
+}
+.security-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.security-toggle {
+  width: 44px;
+  height: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  position: relative;
+  flex: 0 0 auto;
+}
+.security-toggle::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  top: 2px;
+  border-radius: 999px;
+  background: var(--muted);
+}
+.security-toggle.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 .chat-output.empty {
   display: none;
 }
@@ -1894,7 +1935,8 @@ button.mode-pill:hover {
     </div>
     <section class="surface-grid">
       <article class="surface-card"><h3>Privacy Mode</h3><p>Merlin defaults to owned hardware and localhost services.</p><div class="status-list"><div class="status-pill"><strong>Local-only</strong><span class="good">enabled</span></div><div class="status-pill"><strong>Cloud escalation</strong><span class="off">disabled</span></div></div></article>
-      <article class="surface-card"><h3>Approval Gates</h3><p>Approval is temporary by default: allow once for this action, ask again next time. Permanent allow belongs in Security Settings after policy-backed controls exist.</p><div class="status-list"><div class="status-pill"><strong>Gates</strong><span id="tab-security-gates">checking</span></div><div class="status-pill"><strong>Default approval</strong><span class="good">allow once</span></div><div class="status-pill"><strong>Permanent allow</strong><span class="locked">settings only</span></div><div class="status-pill"><strong>Approve buttons</strong><span class="locked">not present here</span></div></div></article>
+      <article class="surface-card"><h3>Approval Gates</h3><p>Approval is temporary by default: allow once for this action, ask again next time. Permanent allow belongs in the full Security Settings page after policy-backed controls exist.</p><div class="status-list"><div class="status-pill"><strong>Gates</strong><span id="tab-security-gates">checking</span></div><div class="status-pill"><strong>Default approval</strong><span class="good">allow once</span></div><div class="status-pill"><strong>Permanent allow</strong><span class="locked">off / future settings</span></div><div class="status-pill"><strong>Approve buttons</strong><span class="locked">not present here</span></div></div></article>
+      <article class="surface-card" id="security-permanent-approvals" tabindex="-1"><h3>Permanent Approvals</h3><p>Future full security settings will let you review, scope, revoke, and audit persistent approvals. This build keeps permanent approvals off.</p><div class="status-list"><div class="status-pill"><strong>Don't ask again</strong><span class="locked">disabled</span></div><div class="status-pill"><strong>Scope controls</strong><span class="locked">planned</span></div><div class="status-pill"><strong>Revoke/audit</strong><span class="locked">required before enable</span></div></div><div class="security-toggle-row"><div><strong>Don't ask again for this action type</strong><p>Locked until backend policy scopes, expiration, revoke, and audit controls are implemented.</p></div><button class="security-toggle locked" type="button" aria-label="Permanent approvals are locked off" aria-pressed="false" onclick="explainPermanentApprovalsLocked()"></button></div><p id="permanent-approval-note">Permanent approvals are off. Use one-time approval for now.</p></article>
       <article class="surface-card"><h3>Telemetry</h3><p>Wizard HQ does not add analytics, tracking pixels, or external telemetry.</p><div class="status-list"><div class="status-pill"><strong>Telemetry</strong><span class="good">off</span></div><div class="status-pill"><strong>Protected values</strong><span class="locked">not displayed</span></div></div></article>
     </section>
   </main>
@@ -2532,6 +2574,7 @@ function roomSavePanelHtml() {
     ? `
       <div class="room-save-actions" data-room-save-stage="approval-prepared">
         <button type="button" onclick="allowRoomTranscriptSave()">Allow once</button>
+        <button class="secondary" type="button" onclick="openPermanentApprovalSettings('Room transcript save')">Don't ask again</button>
         <button class="secondary" type="button" onclick="cancelRoomTranscriptSave()">Cancel save</button>
       </div>
     `
@@ -2567,10 +2610,6 @@ function updateRoomSavePanel() {
   if (panel) panel.outerHTML = roomSavePanelHtml();
 }
 
-function reviewApprovalInSecurity() {
-  selectTab('security');
-}
-
 function keepBlockedRoute() {
   const panel = document.getElementById('merlin-chat-output');
   if (!panel) return;
@@ -2583,17 +2622,35 @@ function keepBlockedRoute() {
   }
 }
 
+function openPermanentApprovalSettings(actionLabel = 'this action type') {
+  selectTab('security');
+  const panel = document.getElementById('security-permanent-approvals');
+  const note = document.getElementById('permanent-approval-note');
+  if (note) {
+    note.textContent = `Permanent approval for ${actionLabel} is locked off until policy-backed scope, expiration, revoke, and audit controls exist.`;
+  }
+  if (panel) {
+    panel.classList.add('attention');
+    panel.focus({ preventScroll: false });
+    window.setTimeout(() => panel.classList.remove('attention'), 2400);
+  }
+}
+
+function explainPermanentApprovalsLocked() {
+  openPermanentApprovalSettings('this action type');
+}
+
 function approvalCardHtml(routeData, gateText) {
   const routeLabel = routeData.route_id || 'protected route';
   return `
     <div class="approval-card" aria-label="Merlin approval required">
-      <strong>Approval needed to continue</strong>
-      <p>Merlin stopped this request because it needs permission for ${escapeHtml(gateText)}. Review the gate before continuing; no data was sent to a model for this blocked route.</p>
+      <strong>Route blocked for this build</strong>
+      <p>Merlin stopped this request because it needs ${escapeHtml(gateText)}. Task-route approval is not wired yet, so this card fails closed instead of sending you to a dead-end Security page. No data was sent to a model for this blocked route.</p>
       <div class="approval-actions">
-        <button type="button" onclick="reviewApprovalInSecurity()">Review approval</button>
+        <button class="locked" type="button" onclick="openPermanentApprovalSettings(${jsArg(gateText)})">Don't ask again</button>
         <button class="secondary" type="button" onclick="keepBlockedRoute()">Keep blocked</button>
       </div>
-      <p>Route: ${escapeHtml(routeLabel)} · current build records the block but does not yet create a chat approval id.</p>
+      <p>Route: ${escapeHtml(routeLabel)} · use Room save/read/delete approvals only after Merlin returns a safe response.</p>
     </div>
   `;
 }
@@ -2606,6 +2663,7 @@ function roomReadApprovalCardHtml() {
       <p>Merlin will read this one local transcript into the chat view. It will not write memory, approve context reuse, or share it across Rooms.</p>
       <div class="approval-actions">
         <button type="button" onclick="allowRoomTranscriptRead()">Allow once</button>
+        <button class="locked" type="button" onclick="openPermanentApprovalSettings('saved transcript read')">Don't ask again</button>
         <button class="secondary" type="button" onclick="cancelRoomTranscriptRead()">Cancel</button>
       </div>
       <p>Room: ${escapeHtml(pendingRoomRead.roomName)} · Transcript: ${escapeHtml(pendingRoomRead.transcriptId)} · approval asks again next time.</p>
@@ -2621,6 +2679,7 @@ function transcriptRemovalApprovalCardHtml() {
       <p>Merlin will delete this one local transcript file. The Room, other transcripts, and approved memory are not deleted.</p>
       <div class="approval-actions">
         <button type="button" onclick="allowSavedTranscriptRemoval()">Allow once</button>
+        <button class="locked" type="button" onclick="openPermanentApprovalSettings('saved transcript delete')">Don't ask again</button>
         <button class="secondary" type="button" onclick="cancelSavedTranscriptRemoval()">Cancel</button>
       </div>
       <p>Room: ${escapeHtml(pendingTranscriptRemoval.roomName)} · Transcript: ${escapeHtml(pendingTranscriptRemoval.transcriptId)} · approval asks again next time.</p>

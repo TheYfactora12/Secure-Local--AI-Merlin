@@ -123,14 +123,18 @@ grep -q "staff_mode" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must display staff mode"
 grep -q "approval required" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must handle approval-required routes"
-grep -q "Approval needed to continue" "$DASHBOARD_FILE" \
-  || fail "Merlin Chat must show a clean blocked-route approval card"
-grep -q "Review approval" "$DASHBOARD_FILE" \
-  || fail "Merlin Chat must give users a clear path to review blocked routes"
+grep -q "Route blocked for this build" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must fail closed instead of sending blocked task routes to Security"
+grep -q "Task-route approval is not wired yet" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must explain blocked task-route approval is not available yet"
+grep -q "Don't ask again" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must expose the future permanent approval path"
+grep -q "openPermanentApprovalSettings" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must route permanent approval requests to Security Settings"
 grep -q "Keep blocked" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must give users a safe deny/dismiss action for blocked routes"
-grep -q "does not yet create a chat approval id" "$DASHBOARD_FILE" \
-  || fail "Merlin Chat must not pretend blocked routes have inline approval ids"
+grep -q "use Room save/read/delete approvals only after Merlin returns a safe response" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must distinguish task-route blocks from Room approvals"
 grep -q "Task API is classifying the request and checking policy gates" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing policy-gate routing copy"
 grep -q "Safe Merlin starter prompts" "$DASHBOARD_FILE" \

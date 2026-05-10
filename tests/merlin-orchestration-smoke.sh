@@ -36,17 +36,17 @@ for forbidden in replace_install_sh replace_open_webui replace_litellm replace_q
 done
 
 search_block="$(awk '/^  search:/,/^  automation:/' "$ORCH_FILE")"
-echo "$search_block" | grep -q 'starts_by_default: false' || fail "search should not start by default"
-echo "$search_block" | grep -q 'requires_approval: true' || fail "search should require approval"
+grep -q 'starts_by_default: false' <<<"$search_block" || fail "search should not start by default"
+grep -q 'requires_approval: true' <<<"$search_block" || fail "search should require approval"
 
 automation_block="$(awk '/^  automation:/,/^  coding:/' "$ORCH_FILE")"
-echo "$automation_block" | grep -q 'starts_by_default: false' || fail "automation should not start by default"
-echo "$automation_block" | grep -q 'requires_approval: true' || fail "automation should require approval"
+grep -q 'starts_by_default: false' <<<"$automation_block" || fail "automation should not start by default"
+grep -q 'requires_approval: true' <<<"$automation_block" || fail "automation should require approval"
 
 coding_block="$(awk '/^  coding:/,/^  mcp:/' "$ORCH_FILE")"
-echo "$coding_block" | grep -q 'starts_by_default: false' || fail "coding should not start by default"
-echo "$coding_block" | grep -q 'requires_approval: true' || fail "coding should require approval"
-echo "$coding_block" | grep -q 'risk: critical' || fail "coding should stay critical risk"
+grep -q 'starts_by_default: false' <<<"$coding_block" || fail "coding should not start by default"
+grep -q 'requires_approval: true' <<<"$coding_block" || fail "coding should require approval"
+grep -q 'risk: critical' <<<"$coding_block" || fail "coding should stay critical risk"
 
 require_grep 'langgraph:' "$ORCH_FILE" "LangGraph framework position missing"
 require_grep 'status: optional_future' "$ORCH_FILE" "heavy frameworks should be optional future"

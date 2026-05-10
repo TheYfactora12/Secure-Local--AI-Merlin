@@ -9218,3 +9218,265 @@ Room.
 
 Positive, but public beta still needs browser evidence and whole-Room deletion
 must be designed separately before exposing project-space removal.
+
+## 2026-05-10 - CI Static Smoke Broken Pipe Fix
+
+### Date/Time
+
+2026-05-10 09:00 EDT
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`0ab54134a3ed9d69d8ff3b25facbc3d90ee80e85`
+
+### Target Issues
+
+- #95 release-readiness evidence.
+- #97 trusted local beta evidence discipline.
+
+### Scope
+
+Fix CI-only static smoke instability in `tests/merlin-orchestration-smoke.sh`.
+
+### Files Changed
+
+- `tests/merlin-orchestration-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None. Test harness only.
+
+### Commands Run
+
+- `gh run watch 25629319944 --exit-status`
+- `gh run view 25629319944 --job 75230023787 --log`
+- `bash tests/merlin-orchestration-smoke.sh`
+
+### Test Output Summary
+
+- GitHub Actions static smoke failed in `tests/merlin-orchestration-smoke.sh`.
+- Local `bash tests/merlin-orchestration-smoke.sh` passed, showing the product
+  config was not the defect.
+
+### Tests Skipped And Why
+
+Full rerun pending after this patch is committed and pushed.
+
+### Failures Found
+
+CI static smoke failure:
+
+```text
+tests/merlin-orchestration-smoke.sh: line 48: echo: write error: Broken pipe
+FAIL: coding should require approval
+```
+
+### Failure Category
+
+- CI/static smoke gap
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+The test used `echo "$block" | grep -q ...` under `set -euo pipefail`. On the
+Ubuntu GitHub runner, `grep -q` can exit after finding the match while `echo` is
+still writing, causing SIGPIPE and making the whole pipe fail even though the
+pattern exists.
+
+### Fix Applied
+
+Replaced block assertions with here-strings:
+
+```bash
+grep -q 'requires_approval: true' <<<"$coding_block"
+```
+
+### Retest Result
+
+Pending after commit/push.
+
+### Regression Test Added Or Updated
+
+Updated `tests/merlin-orchestration-smoke.sh` so static smoke checks do not use
+fragile `echo | grep -q` pipelines under `pipefail`.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended: audit older smoke tests for `echo "$block" | grep -q` patterns and
+replace with here-strings or `grep -q <<<` when running under pipefail.
+
+### Lesson Learned
+
+A test can pass locally and fail in CI because shell pipeline behavior changes
+with runner timing. Avoid pipefail-sensitive `echo | grep -q` patterns in static
+smoke tests.
+
+### What Not To Repeat Next Time
+
+Do not use `echo "$large_block" | grep -q` in CI-gated shell tests with
+`set -o pipefail`.
+
+### Next Recommended Step
+
+Run the orchestration smoke locally, rerun focused dashboard/backend checks, then
+commit and push the CI fix.
+
+### Local Trusted Beta Impact
+
+Positive. Removes a CI false failure from release-readiness validation.
+
+### Public Beta Impact
+
+Positive. CI needs to be boring and deterministic before broader release.
+
+## 2026-05-10 - Approval UX Loop And Permanent Approval Placeholder
+
+### Date/Time
+
+2026-05-10 09:06 EDT
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`0ab54134a3ed9d69d8ff3b25facbc3d90ee80e85`
+
+### Target Issues
+
+- #135 Rooms and local transcript flow.
+- #106 Wizard HQ product shell.
+- #95 release-readiness evidence.
+
+### Scope
+
+Fix the approval UX loop reported in chat. Blocked task-route approvals no
+longer send users to Security where no approval action exists. Room save/read/
+delete approvals keep inline `Allow once` controls. A `Don't ask again` path now
+opens the Security tab and focuses a locked permanent-approvals section, without
+enabling permanent approvals yet.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-native-chat-smoke.sh`
+- `tests/dashboard-security-center-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None in runtime policy/installer. Dashboard and static smokes only.
+
+### Commands Run
+
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py tests/test_status_extension.py`
+- `bash tests/merlin-orchestration-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-security-center-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `git diff --check`
+- `python - <<'PY' ...` - FAILED, local shell has no `python` command.
+
+### Test Output Summary
+
+- Python tests: 66 passed.
+- Orchestration smoke: PASS.
+- Native chat smoke: PASS.
+- Rooms smoke: PASS.
+- Security center smoke: PASS.
+- First-run smoke: PASS.
+- Tabs smoke: PASS.
+- Diff whitespace check: PASS.
+
+### Tests Skipped And Why
+
+Live browser click-through remains pending; static dashboard checks cover the
+copy and control path.
+
+### Failures Found
+
+User-reported UX failure: approval flow pointed to Security, but Security had no
+usable approval action. The Room save/read/delete approval model became confused
+with blocked task-route approval.
+
+Tooling failure while updating this evidence note:
+
+```text
+zsh:1: command not found: python
+```
+
+### Failure Category
+
+- UX/readiness confusion
+- Documentation mismatch
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+The dashboard had one generic `Review approval` path for blocked task routes,
+but only Room transcript save/read/delete approvals had implemented one-time
+approval IDs. Security correctly lacked arbitrary approve buttons, which made
+`Review approval` a dead end.
+
+### Fix Applied
+
+- Blocked task routes now fail closed with `Keep blocked` and explain that task
+  route approval is not wired yet.
+- Room save/read/delete cards keep inline `Allow once` controls.
+- Added `Don't ask again` buttons that open the Security permanent-approval
+  section.
+- Added a locked/off permanent approval toggle placeholder with scope,
+  revoke/audit requirements.
+
+### Retest Result
+
+PASS for all commands listed above except the attempted `python` helper, which
+was replaced with a normal patch.
+
+### Regression Test Added Or Updated
+
+- `tests/dashboard-native-chat-smoke.sh` now rejects the dead-end review flow
+  and requires the permanent approval settings route.
+- `tests/dashboard-security-center-smoke.sh` now verifies the permanent approval
+  placeholder and locked/off state.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended: implement full customizable Security Settings with permanent
+approval policies only after backend policy scopes, expiration, revoke controls,
+and audit evidence exist.
+
+### Lesson Learned
+
+A visible approval path must either complete the action or clearly fail closed.
+Sending users to a status-only Security page creates a loop and breaks trust.
+
+### What Not To Repeat Next Time
+
+Do not expose `Review approval` or `Don't ask again` as active product controls
+unless the destination can honestly explain or complete the action.
+Do not assume `python` is available as a command on this macOS shell; use the
+repo virtualenv, `python3`, or a normal patch.
+
+### Next Recommended Step
+
+Run dashboard/backend/static tests, then commit the CI test fix and approval UX
+correction together if green.
+
+### Local Trusted Beta Impact
+
+Positive. Removes an approval dead-end and clarifies temporary versus permanent
+approval behavior.
+
+### Public Beta Impact
+
+Positive, but public beta needs the full Security Settings design before
+permanent approvals can become active.
