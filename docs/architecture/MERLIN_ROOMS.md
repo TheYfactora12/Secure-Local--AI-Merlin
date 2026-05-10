@@ -116,10 +116,16 @@ creates `transcripts/`, `summaries/`, `master-prompts/`, and `room.md`, and
 records audit metadata without raw chat content. This does not write approved
 memory, approve context reuse, call a model, or enable cloud sync.
 
-Future duplicate prevention should compare the proposed Room name and first
-transcript topic against existing Rooms. When a close match exists, Wizard HQ
-should ask: "This looks related to <Room>. Add it there instead?" The user can
-choose the existing Room or continue creating the new Room.
+Current Wizard HQ duplicate prevention compares the proposed Room name against
+existing Room names before calling the create endpoint. When an obvious match
+exists, Wizard HQ asks the user to use the existing Room or explicitly create a
+separate Room. This is a guidance layer only; it does not write files until the
+user chooses.
+
+Future duplicate prevention should also compare the first transcript topic and
+Room Master Prompt summaries against existing Rooms. When a close match exists,
+Wizard HQ should ask: "This looks related to <Room>. Add it there instead?" The
+user can choose the existing Room or continue creating the new Room.
 
 ## Prompt-Based Room Management
 
@@ -173,6 +179,11 @@ It must not show raw transcript bodies, approve Room context reuse, delete a
 whole Room, or bypass the Task API approval lifecycle. Whole-Room archive/delete
 remains locked until linked approved memory and Room Master Prompt artifacts can
 be reviewed before removal.
+
+The Room creation surface should stay one or two clicks from the right outcome:
+name the Room, then either create it or pick the suggested existing Room if the
+name appears related. It must not nag during normal chat and must not create
+near-duplicate Room folders without the user's explicit confirmation.
 
 Install-time setup creates the default local folder layout:
 

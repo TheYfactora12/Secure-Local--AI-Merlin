@@ -71,7 +71,7 @@ grep -q "Reopen latest" "$DASHBOARD_FILE" \
   || fail "Rooms table must expose latest transcript reopen action"
 grep -q "Delete latest transcript" "$DASHBOARD_FILE" \
   || fail "Rooms table must expose latest transcript delete action"
-grep -q "Room archive/delete remains locked until linked-memory review exists" "$DASHBOARD_FILE" \
+grep -q "whole-Room archive/delete locked until linked-memory review exists" "$DASHBOARD_FILE" \
   || fail "Rooms table must keep whole-Room archive/delete locked"
 grep -q "Ask Merlin first. Save becomes available after a safe local response returns" "$DASHBOARD_FILE" \
   || fail "Rooms table save action must fail closed before Merlin responds"
@@ -89,6 +89,14 @@ grep -q "New Room name" "$DASHBOARD_FILE" \
   || fail "Rooms surface must let users name a Room before creating it"
 grep -q "Similarity guard planned" "$DASHBOARD_FILE" \
   || fail "Rooms surface must track future duplicate/similar Room guard"
+grep -q "function similarRoomForName" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must check for similar Rooms before creation"
+grep -q "Similar Room found" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must show similar Room suggestion"
+grep -Fq 'Use ${escapeHtml(match.roomName)}' "$DASHBOARD_FILE" \
+  || fail "Rooms surface must let users choose the existing similar Room"
+grep -q "Create separate Room" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must require confirmation before near-duplicate Room creation"
 grep -q "Room context not active yet" "$DASHBOARD_FILE" \
   || fail "chat surface must show Room context state"
 grep -q "unless you explicitly allow selected-Room or all-Room sharing" "$DASHBOARD_FILE" \

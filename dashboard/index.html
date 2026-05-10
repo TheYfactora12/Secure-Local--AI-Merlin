@@ -1015,6 +1015,7 @@ button.mode-pill:hover {
   overflow-x: auto;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
+  background: rgba(255, 255, 255, 0.018);
 }
 .rooms-review-table {
   width: 100%;
@@ -1071,6 +1072,96 @@ button.mode-pill:hover {
   border-color: rgba(243, 201, 105, 0.22);
   color: var(--gold);
   cursor: default;
+}
+.rooms-page .page-head {
+  align-items: end;
+}
+.rooms-page .page-head p {
+  max-width: 720px;
+}
+.rooms-page .surface-card p {
+  max-width: 68ch;
+}
+.rooms-primary-card {
+  border-color: rgba(103, 232, 249, 0.16);
+  background: linear-gradient(135deg, rgba(103, 232, 249, 0.055), rgba(255, 255, 255, 0.018));
+}
+.rooms-manage-card {
+  grid-column: span 2;
+}
+.rooms-create-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+}
+.rooms-page .new-room-create {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+.room-similarity-panel {
+  display: none;
+  gap: 8px;
+  margin-top: 10px;
+  border: 1px solid rgba(243, 201, 105, 0.24);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(243, 201, 105, 0.055);
+}
+.room-similarity-panel.visible {
+  display: grid;
+}
+.room-similarity-panel strong {
+  color: var(--gold);
+  font-size: 12px;
+}
+.room-similarity-panel p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.room-similarity-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.room-similarity-actions button {
+  border: 1px solid rgba(103, 232, 249, 0.28);
+  border-radius: 9999px;
+  padding: 7px 10px;
+  background: rgba(103, 232, 249, 0.07);
+  color: var(--cyan);
+  font-size: 11px;
+  cursor: pointer;
+}
+.room-similarity-actions button.secondary {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+}
+.room-table-empty {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+}
+.room-table-empty strong {
+  color: var(--text);
+}
+.room-table-empty span {
+  color: var(--dim);
+  font-size: 11px;
+}
+@media (max-width: 760px) {
+  .rooms-create-row {
+    grid-template-columns: 1fr;
+  }
+  .rooms-manage-card {
+    grid-column: auto;
+  }
+  .rooms-review-table {
+    min-width: 760px;
+  }
 }
 .mode-choice-grid {
   display: grid;
@@ -1962,7 +2053,7 @@ button.mode-pill:hover {
     </div>
   </main>
 
-  <main class="tab-page" data-tab-page="rooms">
+  <main class="tab-page rooms-page" data-tab-page="rooms">
     <div class="page-head">
       <div>
         <h2>Rooms</h2>
@@ -1971,12 +2062,15 @@ button.mode-pill:hover {
       <span class="chip warn">design surface</span>
     </div>
     <section class="surface-grid" aria-label="Merlin Rooms design surface">
-      <article class="surface-card">
+      <article class="surface-card rooms-primary-card">
         <h3>Active Room</h3>
-        <p>The default Room is Merlin Build. Room context stays off until you explicitly choose to reference it.</p>
+        <p>Create or select a local project space. Merlin files chat history here only when you ask.</p>
         <div class="new-room-create" aria-label="Create local Room from Rooms page">
-          <textarea id="rooms-new-room-name" rows="1" aria-label="New Room name" placeholder="New Room name"></textarea>
-          <button type="button" onclick="createRoomFromField('rooms-new-room-name')">Create Room</button>
+          <div class="rooms-create-row">
+            <textarea id="rooms-new-room-name" rows="1" aria-label="New Room name" placeholder="Name a new Room"></textarea>
+            <button type="button" onclick="createRoomFromField('rooms-new-room-name')">Create Room</button>
+          </div>
+          <div id="room-similarity-panel" class="room-similarity-panel" aria-live="polite"></div>
         </div>
         <div class="mini-control-stack" id="rooms-active-picker" aria-label="Room picker">
           <button class="mini-control active" type="button" onclick="selectActiveRoom('merlin-build', 'Merlin Build')">
@@ -1984,8 +2078,8 @@ button.mode-pill:hover {
             <span>selected for this browser session · local Markdown transcripts</span>
           </button>
           <button class="mini-control locked" type="button" disabled>
-            <strong>New Room</strong>
-            <span>future policy-gated create flow</span>
+            <strong>Similarity guard planned</strong>
+            <span>Before creating near-duplicate Rooms, Merlin should suggest the closest existing Room first.</span>
           </button>
         </div>
         <div class="status-list">
@@ -2002,9 +2096,9 @@ button.mode-pill:hover {
           <div class="status-pill"><strong>Save to Room</strong><span class="locked">locked until Task API write gate</span></div>
         </div>
       </article>
-      <article class="surface-card wide">
+      <article class="surface-card wide rooms-manage-card">
         <h3>Room Review Table</h3>
-        <p>Review local Room metadata in one place. This table shows safe metadata only: no raw transcript body, no approved memory reuse, and no whole-Room delete until the archive/delete approval design exists. Room archive/delete remains locked until linked-memory review exists.</p>
+        <p>Review Rooms, reopen saved chats, or file the current chat. The table shows safe metadata only and keeps whole-Room archive/delete locked until linked-memory review exists.</p>
         <div id="rooms-review-table" class="rooms-review-wrap" aria-label="Room review table">
           <table class="rooms-review-table">
             <thead>
@@ -2333,6 +2427,8 @@ let pendingRoomApproval = null;
 let pendingTaskRouteApproval = null;
 let pendingRoomRead = null;
 let pendingTranscriptRemoval = null;
+let pendingSimilarRoomName = null;
+let pendingSimilarRoomMatch = null;
 let currentChatTranscript = [];
 let roomSaveStatus = 'Save becomes available after Merlin returns a response.';
 let roomSaveState = 'neutral';
@@ -2557,6 +2653,74 @@ function saveCurrentChatToRoom(roomId, roomName) {
   window.setTimeout(() => requestRoomTranscriptApproval(), 0);
 }
 
+function normalizeRoomName(value) {
+  return safe(value, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function roomNameTokens(value) {
+  return normalizeRoomName(value)
+    .split(/\s+/)
+    .filter(word => word.length > 2);
+}
+
+function similarRoomForName(roomName) {
+  const proposed = normalizeRoomName(roomName);
+  if (!proposed) return null;
+  const proposedTokens = roomNameTokens(roomName);
+  return roomOptionsFromState().find(room => {
+    const existing = normalizeRoomName(room.roomName);
+    if (!existing) return false;
+    if (existing === proposed || existing.includes(proposed) || proposed.includes(existing)) return true;
+    const existingTokens = roomNameTokens(room.roomName);
+    return proposedTokens.some(word => existingTokens.includes(word));
+  }) || null;
+}
+
+function renderRoomSimilarityGuard(roomName, match) {
+  const panel = document.getElementById('room-similarity-panel');
+  if (!panel) return;
+  if (!roomName || !match) {
+    panel.classList.remove('visible');
+    panel.innerHTML = '';
+    return;
+  }
+  pendingSimilarRoomName = roomName;
+  pendingSimilarRoomMatch = match;
+  panel.classList.add('visible');
+  panel.innerHTML = `
+    <strong>Similar Room found</strong>
+    <p>${escapeHtml(roomName)} looks related to ${escapeHtml(match.roomName)}. Keep knowledge together unless this is truly a separate project.</p>
+    <div class="room-similarity-actions">
+      <button type="button" onclick="useSimilarRoomSuggestion()">Use ${escapeHtml(match.roomName)}</button>
+      <button class="secondary" type="button" onclick="continueCreatingSimilarRoom()">Create separate Room</button>
+    </div>
+  `;
+}
+
+function useSimilarRoomSuggestion() {
+  if (!pendingSimilarRoomMatch) return;
+  const match = pendingSimilarRoomMatch;
+  pendingSimilarRoomName = null;
+  pendingSimilarRoomMatch = null;
+  renderRoomSimilarityGuard('', null);
+  const field = document.getElementById('rooms-new-room-name');
+  if (field) field.value = '';
+  roomSaveStatus = `Using existing Room: ${match.roomName}.`;
+  roomSaveState = 'neutral';
+  selectActiveRoom(match.roomId, match.roomName, true);
+}
+
+function continueCreatingSimilarRoom() {
+  const roomName = pendingSimilarRoomName;
+  pendingSimilarRoomName = null;
+  pendingSimilarRoomMatch = null;
+  renderRoomSimilarityGuard('', null);
+  if (roomName) createRoomByName(roomName);
+}
+
 async function createRoomFromField(fieldId) {
   const field = document.getElementById(fieldId);
   const roomName = field ? field.value.trim() : '';
@@ -2566,11 +2730,27 @@ async function createRoomFromField(fieldId) {
     updateRoomSavePanel();
     return;
   }
+  const similarRoom = similarRoomForName(roomName);
+  if (similarRoom && pendingSimilarRoomName !== roomName) {
+    renderRoomSimilarityGuard(roomName, similarRoom);
+    roomSaveStatus = `Similar Room found: ${similarRoom.roomName}. Choose it or confirm a separate Room.`;
+    roomSaveState = 'warn';
+    updateRoomSavePanel();
+    return;
+  }
+  pendingSimilarRoomName = null;
+  pendingSimilarRoomMatch = null;
+  renderRoomSimilarityGuard('', null);
+  await createRoomByName(roomName);
+}
+
+async function createRoomByName(roomName) {
   roomSaveStatus = `Creating local Room: ${roomName}`;
   roomSaveState = 'warn';
   updateRoomSavePanel();
   try {
     const data = await postJson(`${TASK_API}/rooms`, { room_name: roomName });
+    const field = document.getElementById('rooms-new-room-name');
     if (field) field.value = '';
     selectedRoomId = data.room_id || selectedRoomId;
     selectedRoomName = data.room_name || roomName;

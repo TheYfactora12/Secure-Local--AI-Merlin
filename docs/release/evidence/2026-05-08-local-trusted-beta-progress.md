@@ -10418,3 +10418,158 @@ browser screenshot evidence covering the Rooms page.
 Positive, but Public Beta remains blocked by full installer retest, broader
 first-run evidence on a clean machine, whole-Room archive/delete design, memory
 review/delete completion, and final packaging evidence.
+
+## 2026-05-10 - Rooms Polish And Similar Room Guard
+
+### Date/Time
+
+2026-05-10 10:50 EDT
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`f513eab`
+
+### Target Issues
+
+- #135 Merlin Rooms for local chat history and scoped context.
+- #106 Wizard HQ Product Shell.
+- #95 release-readiness evidence.
+
+### Scope
+
+Polish the Rooms page and add a first-pass duplicate/similar Room guard so
+users are nudged toward the correct existing Room before creating a near
+duplicate.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `scripts/dashboard-browser-qa.py`
+- `tests/dashboard-browser-qa-smoke.sh`
+- `tests/dashboard-rooms-smoke.sh`
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `docs/release/evidence/assets/2026-05-10-wizard-hq-rooms-polish-qa/*`
+- release evidence note
+
+### Protected Files Touched
+
+None. No installer behavior, cloud default, telemetry, Task API policy,
+memory-write policy, model download behavior, or 8765/8766 boundary changed.
+
+### Commands Run
+
+- `git diff --check`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-browser-qa-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `.venv-test/bin/python scripts/dashboard-browser-qa.py --output-dir docs/release/evidence/assets/2026-05-10-wizard-hq-rooms-polish-qa`
+- `.venv-test/bin/python -m pytest tests/test_room_store.py tests/test_task_endpoint.py tests/test_router.py tests/test_status_extension.py`
+- `bash tests/installer-branding-smoke.sh`
+- `bash tests/pkg-readiness-smoke.sh`
+- `bash tests/uninstall-smoke.sh`
+
+### Test Output Summary
+
+- `git diff --check`: PASS.
+- Rooms static smoke: PASS after fixing a test pattern.
+- Browser QA static smoke: PASS.
+- Native Merlin Chat smoke: PASS.
+- Chat first-run smoke: PASS.
+- Live browser QA: PASS; desktop/mobile Chat, Rooms, and similar-Room guard
+  screenshots written to
+  `docs/release/evidence/assets/2026-05-10-wizard-hq-rooms-polish-qa/`.
+- Python regression suite: PASS, 110 tests passed.
+- Installer branding, package readiness, and uninstall smokes: PASS.
+
+### Tests Skipped And Why
+
+Full installer retest was not run because this slice changed Wizard HQ UI,
+docs, tests, and screenshots only. It remains required before Local Trusted
+Beta signoff because Wizard HQ behavior changed.
+
+### Failures Found
+
+1. `bash tests/dashboard-rooms-smoke.sh` failed with `grep: invalid repetition count(s)`.
+2. Initial live browser QA failed because the create button selector matched
+   both the Chat-side create control and the Rooms-page create control.
+3. Live screenshot review showed the similar-Room guard sitting beside the
+   create row instead of below it.
+4. The Rooms smoke secret-like regex flagged local JavaScript variable names
+   containing `token =>`.
+
+### Failure Category
+
+- Test design gap.
+- Browser QA selector ambiguity.
+- UX/readiness confusion.
+- Secret/log redaction static-test false positive.
+
+### Root Cause Or Current Hypothesis
+
+The first static test used a regex-sensitive grep pattern for literal `${...}`
+JavaScript template text. The browser QA selector was too broad for a page with
+multiple create controls. The Rooms create form inherited an older two-column
+layout. The secret scan treated `token =>` as a possible credential pattern.
+
+### Fix Applied
+
+- Changed the fragile grep to fixed-string matching.
+- Tightened browser QA to click the accessible `Create Room` button.
+- Scoped the Rooms creation layout so the suggestion guard stacks under the
+  create row on desktop and mobile.
+- Renamed local duplicate-guard iterator variables from `token` to `word`.
+- Added browser QA coverage for the similar-Room guard and screenshot evidence.
+
+### Retest Result
+
+PASS after fixes for static smokes, live browser QA, Python regressions, and
+installer/package/uninstall smokes.
+
+### Regression Test Added Or Updated
+
+- `tests/dashboard-rooms-smoke.sh`
+- `tests/dashboard-browser-qa-smoke.sh`
+- `scripts/dashboard-browser-qa.py`
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended #135 child issue:
+
+**Title:** `v3.1 Rooms: backend-backed duplicate detection and whole-Room archive review`
+
+Scope: compare transcript summaries and Room Master Prompt drafts, not just
+Room names; add whole-Room archive/delete with linked approved memory review;
+preserve one-time approvals and local-only defaults.
+
+### Lesson Learned
+
+The browser QA harness is now valuable because it caught a selector ambiguity
+and a real layout issue that static greps could not see. Static safety tests
+should use fixed-string matching for literal JavaScript template snippets.
+
+### What Not To Repeat Next Time
+
+Do not write broad browser locators for repeated controls. Use accessible names
+or scoped selectors that match the exact user action.
+
+### Next Recommended Step
+
+Add backend-backed duplicate detection using Room summaries, then design
+whole-Room archive/delete with linked-memory review before approve-for-context.
+
+### Local Trusted Beta Impact
+
+Positive. Room creation is harder to scatter accidentally, and there is
+desktop/mobile browser evidence for the guard.
+
+### Public Beta Impact
+
+Positive, but Public Beta remains blocked by full installer retest, final
+memory review/delete, whole-Room archive/delete, and clean-machine onboarding
+evidence.

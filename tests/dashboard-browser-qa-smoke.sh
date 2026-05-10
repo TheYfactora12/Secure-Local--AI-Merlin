@@ -32,8 +32,12 @@ grep -q "Search chip did not toggle on" "$QA_SCRIPT" \
   || fail "browser QA must validate interactive chip state"
 grep -q "Room Review Table" "$QA_SCRIPT" \
   || fail "browser QA must validate Rooms review table"
-grep -q "Room archive/delete remains locked" "$QA_SCRIPT" \
+grep -q "whole-Room archive/delete locked" "$QA_SCRIPT" \
   || fail "browser QA must validate whole-Room archive/delete lock"
+grep -q "Similar Room found" "$QA_SCRIPT" \
+  || fail "browser QA must validate similar Room guard"
+grep -q "rooms-guard.png" "$QA_SCRIPT" \
+  || fail "browser QA must capture similar Room guard screenshots"
 grep -q "rooms.png" "$QA_SCRIPT" \
   || fail "browser QA must capture Rooms viewport screenshots"
 grep -q "cloud_calls_expected.*False" "$QA_SCRIPT" \
