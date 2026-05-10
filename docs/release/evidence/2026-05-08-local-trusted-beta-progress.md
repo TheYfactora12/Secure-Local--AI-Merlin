@@ -8072,3 +8072,133 @@ future scoped Room brain without silent memory writes.
 Positive, but public beta still needs full installer retest, live browser
 evidence, and the Room Master Prompt review/approval UX before making context
 reuse claims.
+
+---
+
+## 2026-05-10 00:26 EDT - #133 Round Table Agent Governance Spec
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`caf916dca7a7d4b20a4c8b1bc226fa8771be3b42`
+
+### Ending Commit SHA
+
+Pending commit at time of note.
+
+### Target Issues
+
+- #133 Round Table Architecture Doc
+- #122 Product Focus Cut support
+- #135 Room context boundary support
+
+### Scope
+
+Add a governance spec for project agents before building any runtime agent
+behavior. The spec keeps Round Table roles suggest-only by default and blocks
+unattended execution, cloud calls, memory writes, Room deletion, and cross-Room
+context until future approval-gated issues exist.
+
+### Files Changed
+
+- `docs/architecture/ROUND_TABLE_AGENT_GOVERNANCE.md`
+- `tests/round-table-agent-governance-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None.
+
+### Commands Run
+
+```bash
+bash tests/round-table-agent-governance-smoke.sh
+bash tests/codex-master-prompt-v2-smoke.sh
+git diff --check
+```
+
+### Test Output Summary
+
+- `bash tests/round-table-agent-governance-smoke.sh` - PASS after one test
+  design correction.
+- `bash tests/codex-master-prompt-v2-smoke.sh` - PASS.
+- `git diff --check` - PASS.
+
+### Tests Skipped And Why
+
+- Runtime agent tests: no runtime agent API was added.
+- Live browser tests: this is a docs/governance slice only.
+
+### Failures Found
+
+Two smoke-test failures were found while creating the new governance test:
+
+1. The smoke expected the exact phrase `Room Master Prompt as approved for
+   context reuse`; the doc used equivalent but less testable wording.
+2. The negative regex matched the required sentence `They are not autonomous
+   workers by default`.
+
+### Failure Category
+
+- Documentation mismatch
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+The initial smoke mixed semantic intent with brittle exact phrasing and used an
+overbroad negative regex that flagged safe language.
+
+### Fix Applied
+
+- Tightened the doc wording for the Room Master Prompt context-reuse boundary.
+- Narrowed the negative regex so it flags unsafe allowance language without
+  matching explicit denial language.
+
+### Retest Result
+
+PASS for all commands listed above.
+
+### Regression Test Added Or Updated
+
+Added `tests/round-table-agent-governance-smoke.sh` to enforce:
+
+- Round Table agents are suggest-only by default,
+- no agent execution API in the first slice,
+- no cloud, memory, or Room deletion defaults,
+- Room context waits for approved Room Master Prompt reuse.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended under #133:
+
+- Add a read-only Wizard HQ Round Table panel showing agent roles and default
+  permissions.
+- Add issue templates for future agent runtime work that require permission
+  model, rollback, and evidence sections.
+
+### Lesson Learned
+
+Governance docs need smoke tests, but those tests must avoid matching protective
+negative language as if it were permission.
+
+### What Not To Repeat Next Time
+
+Do not create broad negative regexes that match both allowed and denied forms of
+the same concept.
+
+### Next Recommended Step
+
+Add a read-only Round Table panel in Wizard HQ after the Room Master Prompt
+review screen, keeping all agent actions locked.
+
+### Local Trusted Beta Impact
+
+Positive. The project now has a documented agent governance boundary before any
+agent runtime work begins.
+
+### Public Beta Impact
+
+Positive for trust posture, but no release-readiness claim changes.
