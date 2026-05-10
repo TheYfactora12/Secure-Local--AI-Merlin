@@ -32,6 +32,17 @@ grep -q "Prepare Room save" "$DASHBOARD_FILE" \
   || fail "Rooms save flow must require a prepare approval step"
 grep -q "Allow local save" "$DASHBOARD_FILE" \
   || fail "Rooms save flow must require explicit allow action"
+grep -q 'data-room-save-stage="waiting"' "$DASHBOARD_FILE" \
+  || fail "Rooms save flow must expose a waiting stage before Merlin responds"
+grep -q 'data-room-save-stage="response-ready"' "$DASHBOARD_FILE" \
+  || fail "Rooms save flow must expose a prepare stage after a safe response"
+grep -q 'data-room-save-stage="approval-prepared"' "$DASHBOARD_FILE" \
+  || fail "Rooms save flow must expose an allow/cancel stage after backend approval"
+grep -q "Ask Merlin and wait for a safe local response before Room save is available" "$DASHBOARD_FILE" \
+  || fail "Rooms save waiting stage must explain why save is unavailable"
+if grep -qE 'requestRoomTranscriptApproval\(\)" \$\{canRequest|allowRoomTranscriptSave\(\)" \$\{canAllow|cancelRoomTranscriptSave\(\)" \$\{canAllow' "$DASHBOARD_FILE"; then
+  fail "Rooms save flow must not render unavailable actions as disabled buttons"
+fi
 grep -q "Rooms are local project spaces" "$DASHBOARD_FILE" \
   || fail "dashboard must explain Rooms in plain language"
 grep -q "Active Room picker" "$DASHBOARD_FILE" \

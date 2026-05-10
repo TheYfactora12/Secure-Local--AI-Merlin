@@ -117,6 +117,12 @@ grep -q "requestRoomTranscriptApproval" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing Room save approval request flow"
 grep -q "allowRoomTranscriptSave" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing explicit local Room save flow"
+grep -q 'data-room-save-stage="waiting"' "$DASHBOARD_FILE" \
+  || fail "Merlin Chat Room save must hide save buttons until a safe response exists"
+grep -q 'data-room-save-stage="response-ready"' "$DASHBOARD_FILE" \
+  || fail "Merlin Chat Room save must show a prepare-only stage after Merlin responds"
+grep -q 'data-room-save-stage="approval-prepared"' "$DASHBOARD_FILE" \
+  || fail "Merlin Chat Room save must show allow/cancel only after backend approval is prepared"
 grep -q "/approvals/room-transcript" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing Room transcript approval endpoint"
 grep -q "/rooms/transcripts" "$DASHBOARD_FILE" \

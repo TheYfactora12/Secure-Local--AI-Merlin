@@ -982,9 +982,14 @@ button.mode-pill:hover {
   background: rgba(255, 255, 255, 0.03);
   color: var(--muted);
 }
-.room-save-actions button:disabled {
-  cursor: not-allowed;
-  opacity: 0.52;
+.room-save-hint {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 9px 11px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
 }
 .message-thread {
   display: grid;
@@ -2147,6 +2152,24 @@ function roomSavePanelHtml() {
   const statusChip = roomSaveState === 'good'
     ? 'good'
     : (roomSaveState === 'warn' ? 'warn' : (roomSaveState === 'bad' ? 'bad' : 'neutral'));
+  const actionHtml = canAllow
+    ? `
+      <div class="room-save-actions" data-room-save-stage="approval-prepared">
+        <button type="button" onclick="allowRoomTranscriptSave()">Allow local save</button>
+        <button class="secondary" type="button" onclick="cancelRoomTranscriptSave()">Cancel save</button>
+      </div>
+    `
+    : (canRequest
+      ? `
+        <div class="room-save-actions" data-room-save-stage="response-ready">
+          <button type="button" onclick="requestRoomTranscriptApproval()">Prepare Room save</button>
+        </div>
+      `
+      : `
+        <div class="room-save-hint" data-room-save-stage="waiting">
+          Ask Merlin and wait for a safe local response before Room save is available.
+        </div>
+      `);
   return `
     <div class="room-save-panel" id="room-save-panel" aria-label="Save latest chat to local Room">
       <header>
@@ -2156,11 +2179,7 @@ function roomSavePanelHtml() {
         </div>
         <span class="chip ${statusChip}" id="room-save-status-chip">${escapeHtml(roomSaveStatus)}</span>
       </header>
-      <div class="room-save-actions">
-        <button type="button" onclick="requestRoomTranscriptApproval()" ${canRequest ? '' : 'disabled'}>Prepare Room save</button>
-        <button type="button" onclick="allowRoomTranscriptSave()" ${canAllow ? '' : 'disabled'}>Allow local save</button>
-        <button class="secondary" type="button" onclick="cancelRoomTranscriptSave()" ${canAllow ? '' : 'disabled'}>Cancel save</button>
-      </div>
+      ${actionHtml}
       <p>Saved Room transcripts are local Markdown history. They are not reused as approved memory unless you approve a separate memory proposal later.</p>
     </div>
   `;
@@ -2261,6 +2280,7 @@ async function allowRoomTranscriptSave() {
     pendingRoomApproval = null;
     roomSaveStatus = `Saved locally: ${safe(data.transcript_id, 'transcript')} · memory not written`;
     roomSaveState = 'good';
+    lastMerlinExchange = null;
     await loadRooms();
     await loadMemory();
   } catch (error) {

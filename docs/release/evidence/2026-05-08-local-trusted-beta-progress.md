@@ -7312,3 +7312,154 @@ while preserving no-context and no-memory-write defaults.
 ### Public Beta Impact
 
 Positive, but live browser evidence is still required.
+
+---
+
+## 2026-05-09 23:35 EDT - Room Save Button UX Fix
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`4c5420202880cb4e296295342c4451d61ddde22b`
+
+### Ending Commit SHA If Changed
+
+Recorded in the session closeout and `git log`. The commit cannot embed its own
+final SHA without changing that SHA.
+
+### Target Issue(s)
+
+#106 Wizard HQ Product Shell, #135 Merlin Rooms, #95 release-readiness evidence.
+
+### Scope
+
+Fix the Merlin Chat Room save surface so unavailable Room save actions are not
+shown as inert buttons before Merlin has produced a safe local response.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-rooms-smoke.sh`
+- `tests/dashboard-native-chat-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None. Installer, runtime APIs, policy engine, memory manager, router, and patent
+files were not changed.
+
+### Commands Run
+
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-merlin-status-smoke.sh`
+- `bash tests/dashboard-model-readiness-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- `bash tests/dashboard-rooms-smoke.sh` - PASS: Merlin Rooms surface is local,
+  explicit, and non-writing.
+- `bash tests/dashboard-native-chat-smoke.sh` - PASS: Wizard HQ native Merlin
+  Chat is policy-gated through Task API.
+- `bash tests/dashboard-first-run-smoke.sh` - PASS: Wizard HQ Chat home product
+  clarity is safe and read-only.
+- `bash tests/dashboard-merlin-status-smoke.sh` - PASS: Dashboard Merlin status
+  smoke test passed.
+- `bash tests/dashboard-model-readiness-smoke.sh` - PASS: Wizard HQ model
+  readiness UX is explicit and no-download.
+- `bash tests/dashboard-settings-policy-smoke.sh` - PASS: Wizard HQ Settings is
+  backend-manifested and policy-gated.
+- `bash tests/dashboard-tabs-smoke.sh` - PASS: Wizard HQ tab shell is
+  Merlin-native and read-only.
+- `git diff --check` - PASS, no whitespace errors.
+
+### Tests Skipped And Why
+
+- Live browser click-through: not run in this pass. Previous evidence shows
+  `localhost:8888` and `localhost:8766` were unavailable in this shell session.
+- Full installer retest: not triggered. This change touches only dashboard
+  rendering and static smoke tests.
+
+### Failures Found
+
+User-reported UI failure: after asking Merlin, the Room save panel showed
+`Prepare Room save`, `Allow local save`, and `Cancel save`, but the buttons did
+not work in the visible state.
+
+### Failure Category
+
+- UX/readiness confusion
+- Wizard HQ/dashboard
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+The Room save panel rendered all three actions in every state and relied on
+`disabled` button attributes to block unavailable actions. When the latest
+Merlin exchange was not eligible for save, or backend approval had not been
+prepared yet, the UI looked actionable but behaved inertly.
+
+### Fix Applied
+
+Changed the Room save surface to a staged flow:
+
+- `waiting`: no action buttons; plain-language hint says to ask Merlin and wait
+  for a safe local response.
+- `response-ready`: only `Prepare Room save` is shown.
+- `approval-prepared`: only `Allow local save` and `Cancel save` are shown.
+
+After a successful transcript save, the latest exchange is cleared so the same
+response is not offered for duplicate save.
+
+### Retest Result
+
+PASS for all focused static dashboard smoke tests listed above.
+
+### Regression Test Added Or Reason Not Added
+
+Updated:
+
+- `tests/dashboard-rooms-smoke.sh`
+- `tests/dashboard-native-chat-smoke.sh`
+
+The tests now assert the three explicit Room save stages and fail if the old
+pattern of rendering unavailable actions as disabled buttons returns.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended under #135/#106:
+
+- Add live browser automation for the staged Room save flow once the local stack
+  is running in the test environment.
+- Verify visually that Room save transitions from waiting to prepare to
+  allow/cancel after a real Task API response.
+
+### Lesson Learned
+
+Approval-gated controls must not look clickable before the backend has created
+the state required for them to work. For trust UX, unavailable actions should be
+replaced with the next true step, not shown as dead controls.
+
+### What Not To Repeat Next Time
+
+Do not render every future approval action upfront with disabled attributes when
+the user has not reached that stage. Stage the action surface around the real
+backend lifecycle.
+
+### Local Trusted Beta Impact
+
+Positive. This removes a confusing first-use Room save failure from the Merlin
+Chat path while preserving transcript-only local save and separate memory
+approval.
+
+### Public Beta Impact
+
+Positive, but live browser click-through evidence remains required before any
+public-beta readiness claim.
