@@ -1052,18 +1052,50 @@ button.mode-pill:hover {
   gap: 7px;
   margin-top: 10px;
 }
+.approval-card {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  border: 1px solid rgba(245, 158, 11, 0.30);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(245, 158, 11, 0.07);
+}
+.approval-card strong {
+  color: var(--text);
+  font-size: 13px;
+}
+.approval-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.approval-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.approval-actions button {
+  border: 1px solid rgba(245, 158, 11, 0.34);
+  border-radius: 8px;
+  min-height: 34px;
+  padding: 7px 11px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  cursor: pointer;
+}
+.approval-actions button.secondary {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+}
 .chat-output.empty {
   display: none;
 }
 .chat-output:not(.empty) {
   display: grid;
 }
-.route-meta {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
-.route-meta .metric { min-height: 62px; padding: 9px; }
 .chat-output .empty { min-height: 84px; }
 
 .action-grid {
@@ -2190,6 +2222,37 @@ function updateRoomSavePanel() {
   if (panel) panel.outerHTML = roomSavePanelHtml();
 }
 
+function reviewApprovalInSecurity() {
+  selectTab('security');
+}
+
+function keepBlockedRoute() {
+  const panel = document.getElementById('merlin-chat-output');
+  if (!panel) return;
+  const card = panel.querySelector('.approval-card');
+  if (card) {
+    card.innerHTML = `
+      <strong>Kept blocked</strong>
+      <p>Merlin did not continue this route. No model call, memory write, or Room save happened.</p>
+    `;
+  }
+}
+
+function approvalCardHtml(routeData, gateText) {
+  const routeLabel = routeData.route_id || 'protected route';
+  return `
+    <div class="approval-card" aria-label="Merlin approval required">
+      <strong>Approval needed to continue</strong>
+      <p>Merlin stopped this request because it needs permission for ${escapeHtml(gateText)}. Review the gate before continuing; no data was sent to a model for this blocked route.</p>
+      <div class="approval-actions">
+        <button type="button" onclick="reviewApprovalInSecurity()">Review approval</button>
+        <button class="secondary" type="button" onclick="keepBlockedRoute()">Keep blocked</button>
+      </div>
+      <p>Route: ${escapeHtml(routeLabel)} · current build records the block but does not yet create a chat approval id.</p>
+    </div>
+  `;
+}
+
 function renderChatOutput({ state, title, body, route, gates, degraded, userInput, mode }) {
   const panel = document.getElementById('merlin-chat-output');
   if (!panel) return;
@@ -2200,6 +2263,24 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
   const routeData = route || {};
   const gateText = (gates || routeData.approval_gates || []).join(', ') || 'none';
   const modeLabel = safe(mode || selectedChatMode, 'smart');
+  const isBlocked = state === 'blocked';
+  const showRoomSave = state === 'approved' && !degraded;
+  const routeLabel = routeData.route_id || 'unavailable';
+  const staffLabel = routeData.staff_mode || null;
+  const modelLabel = routeData.selected_model_alias || null;
+  const sourceLine = isBlocked
+    ? `
+      <span class="chip good">Local by default</span>
+      <span class="chip warn">Approval needed</span>
+      <span class="chip neutral">Route: ${escapeHtml(routeLabel)}</span>
+    `
+    : `
+      <span class="chip good">Local by default</span>
+      <span class="chip neutral">${escapeHtml(modeLabel)} mode</span>
+      <span class="chip info">Route: ${escapeHtml(routeLabel)}</span>
+      ${modelLabel ? `<span class="chip neutral">Brain: ${escapeHtml(modelLabel)}</span>` : ''}
+      ${staffLabel ? `<span class="chip neutral">Staff: ${escapeHtml(staffLabel)}</span>` : ''}
+    `;
   const userRow = userInput ? `
     <div class="message-row user">
       <div class="message-bubble">
@@ -2220,21 +2301,13 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
           </div>
           <div class="body">${escapeHtml(body)}</div>
           <div class="source-line">
-            <span class="chip good">Local by default</span>
-            <span class="chip info">Task API route</span>
-            <span class="chip neutral">Mode: ${escapeHtml(modeLabel)}</span>
-            <span class="chip ${gateText === 'none' ? 'good' : 'warn'}">Gates: ${escapeHtml(gateText)}</span>
+            ${sourceLine}
           </div>
+          ${isBlocked ? approvalCardHtml(routeData, gateText) : ''}
         </div>
       </div>
     </div>
-    <div class="route-meta">
-      <div class="metric"><span>Route</span><strong>${escapeHtml(routeData.route_id || 'unavailable')}</strong></div>
-      <div class="metric"><span>Staff mode</span><strong>${escapeHtml(routeData.staff_mode || 'unavailable')}</strong></div>
-      <div class="metric"><span>Model</span><strong>${escapeHtml(routeData.selected_model_alias || 'unavailable')}</strong></div>
-      <div class="metric"><span>UI mode</span><strong>${escapeHtml(modeLabel)}</strong></div>
-    </div>
-    ${roomSavePanelHtml()}
+    ${showRoomSave ? roomSavePanelHtml() : ''}
   `;
 }
 

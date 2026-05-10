@@ -66,10 +66,11 @@ grep -q "function selectChatMode" "$DASHBOARD_FILE" \
   || fail "dashboard missing mode selector state binding"
 grep -q "selectedChatMode" "$DASHBOARD_FILE" \
   || fail "dashboard missing selected chat mode state"
-grep -q "Mode: " "$DASHBOARD_FILE" \
-  || fail "dashboard response metadata must display selected UI mode"
-grep -q "UI mode" "$DASHBOARD_FILE" \
-  || fail "dashboard route metadata must include UI mode"
+grep -q "\${escapeHtml(modeLabel)} mode" "$DASHBOARD_FILE" \
+  || fail "dashboard response metadata must display selected UI mode as a compact tag"
+if grep -q 'class="route-meta"' "$DASHBOARD_FILE"; then
+  fail "dashboard must not render bulky route metadata cards inside Merlin Chat"
+fi
 if grep -q "Talk to Merlin first" "$DASHBOARD_FILE"; then
   fail "dashboard must not show the old Merlin-first intro block in the clean chat center"
 fi
@@ -91,6 +92,14 @@ grep -q "staff_mode" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must display staff mode"
 grep -q "approval required" "$DASHBOARD_FILE" \
   || fail "Merlin Chat must handle approval-required routes"
+grep -q "Approval needed to continue" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must show a clean blocked-route approval card"
+grep -q "Review approval" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must give users a clear path to review blocked routes"
+grep -q "Keep blocked" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must give users a safe deny/dismiss action for blocked routes"
+grep -q "does not yet create a chat approval id" "$DASHBOARD_FILE" \
+  || fail "Merlin Chat must not pretend blocked routes have inline approval ids"
 grep -q "Task API is classifying the request and checking policy gates" "$DASHBOARD_FILE" \
   || fail "Merlin Chat missing policy-gate routing copy"
 grep -q "Safe Merlin starter prompts" "$DASHBOARD_FILE" \

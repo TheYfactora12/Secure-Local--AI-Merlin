@@ -7463,3 +7463,148 @@ approval.
 
 Positive, but live browser click-through evidence remains required before any
 public-beta readiness claim.
+
+---
+
+## 2026-05-09 23:39 EDT - Chat Approval Card And Metadata Cleanup
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`dbf8a0a4d55c933edf211779a3b2922a8863eae9`
+
+### Ending Commit SHA If Changed
+
+Recorded in the session closeout and `git log`. The commit cannot embed its own
+final SHA without changing that SHA.
+
+### Target Issue(s)
+
+#106 Wizard HQ Product Shell, #135 Merlin Rooms, #95 release-readiness evidence.
+
+### Scope
+
+Tighten the blocked-route chat experience after user review showed the main chat
+felt clunky and exposed too much route telemetry.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-native-chat-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None. The Task API, policy engine, router, installer, memory manager, and patent
+files were not changed.
+
+### Commands Run
+
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-merlin-status-smoke.sh`
+- `bash tests/dashboard-model-readiness-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- `bash tests/dashboard-native-chat-smoke.sh` - PASS: Wizard HQ native Merlin
+  Chat is policy-gated through Task API.
+- `bash tests/dashboard-first-run-smoke.sh` - PASS: Wizard HQ Chat home product
+  clarity is safe and read-only.
+- `bash tests/dashboard-rooms-smoke.sh` - PASS: Merlin Rooms surface is local,
+  explicit, and non-writing.
+- `bash tests/dashboard-merlin-status-smoke.sh` - PASS: Dashboard Merlin status
+  smoke test passed.
+- `bash tests/dashboard-model-readiness-smoke.sh` - PASS: Wizard HQ model
+  readiness UX is explicit and no-download.
+- `bash tests/dashboard-settings-policy-smoke.sh` - PASS: Wizard HQ Settings is
+  backend-manifested and policy-gated.
+- `bash tests/dashboard-tabs-smoke.sh` - PASS: Wizard HQ tab shell is
+  Merlin-native and read-only.
+- `git diff --check` - PASS, no whitespace errors.
+
+### Tests Skipped And Why
+
+- Live browser click-through: not run in this pass because the current task was
+  a static dashboard UX correction. It still needs visual confirmation after the
+  local stack is started.
+- Full installer retest: not triggered. No installer, package, launchd, or
+  startup behavior changed.
+
+### Failures Found
+
+User-reported UX failure: a blocked `Review this project for security gaps`
+request showed route/model/staff metadata as large cards in the chat and showed
+Room save context even though the route was blocked.
+
+### Failure Category
+
+- UX/readiness confusion
+- Wizard HQ/dashboard
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+`renderChatOutput()` rendered operational route metadata as a full grid for
+every response state and always appended the Room save panel. Blocked routes do
+not return a safe Merlin response and the Task API does not yet create an inline
+chat approval id, so the UI looked like a dashboard/debug trace instead of a
+clean chat decision point.
+
+### Fix Applied
+
+- Replaced the large route metadata grid with compact message tags.
+- Added a blocked-route approval card with `Review approval` and `Keep blocked`.
+- Kept the browser safe: the card does not pretend to approve a route without a
+  backend approval id.
+- Hid Room save unless Merlin returns an approved, non-degraded response.
+
+### Retest Result
+
+PASS for the dashboard smoke set listed above.
+
+### Regression Test Added Or Reason Not Added
+
+Updated `tests/dashboard-native-chat-smoke.sh` to assert:
+
+- chat route metadata stays compact,
+- bulky route metadata cards do not return,
+- blocked routes show a clear approval card,
+- the UI states that chat approvals are not yet backed by an inline approval id.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended under #106/#135:
+
+- Add a backend chat-route approval request id if we want true inline
+  `Allow`/`Deny` decisions for blocked routes.
+- Add live browser automation for blocked route -> review approval -> keep
+  blocked.
+
+### Lesson Learned
+
+Merlin Chat should feel like an assistant first and an operations dashboard
+second. Route, model, and staff data belong as small proof tags unless the user
+opens a system/debug surface.
+
+### What Not To Repeat Next Time
+
+Do not place full route/debug cards between the user and the assistant response.
+Do not show Room save on blocked, pending, or degraded responses.
+
+### Local Trusted Beta Impact
+
+Positive. This makes the first blocked-route experience clearer and keeps the
+policy gate visible without making the chat feel like an engineering console.
+
+### Public Beta Impact
+
+Positive, with remaining need for live browser evidence and a future backend
+approval-id flow before true inline route approvals are advertised.
