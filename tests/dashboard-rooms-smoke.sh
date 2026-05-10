@@ -51,6 +51,12 @@ grep -q "Active Room picker" "$DASHBOARD_FILE" \
   || fail "chat surface must include active Room picker"
 grep -q "function selectActiveRoom" "$DASHBOARD_FILE" \
   || fail "dashboard missing client-side active Room selection"
+grep -q "function openRoomInChat" "$DASHBOARD_FILE" \
+  || fail "Rooms tab must let users jump back into Chat with a Room selected"
+grep -q "Open in Chat" "$DASHBOARD_FILE" \
+  || fail "Rooms list must expose Room launcher actions"
+grep -q "selectTab('chat')" "$DASHBOARD_FILE" \
+  || fail "Room launcher must return the user to Merlin Chat"
 grep -q "active this session" "$DASHBOARD_FILE" \
   || fail "Room picker must show session-only selection state"
 grep -q "Target Room:" "$DASHBOARD_FILE" \
@@ -61,6 +67,10 @@ grep -q "future policy-gated create flow" "$DASHBOARD_FILE" \
   || fail "Rooms surface must keep new Room creation locked"
 grep -q "Room context not active yet" "$DASHBOARD_FILE" \
   || fail "chat surface must show Room context state"
+grep -q "unless you explicitly allow selected-Room or all-Room sharing" "$DASHBOARD_FILE" \
+  || fail "chat Room tag must keep cross-Room sharing explicit"
+grep -q "future context retrieval remains Room-only unless explicit sharing is enabled" "$DASHBOARD_FILE" \
+  || fail "Rooms launcher must state Room-only context default"
 grep -q "Current chat is not silently saved or promoted into memory" "$DASHBOARD_FILE" \
   || fail "chat surface must block silent transcript-to-memory implication"
 grep -q "Storage is not inference" "$DASHBOARD_FILE" \

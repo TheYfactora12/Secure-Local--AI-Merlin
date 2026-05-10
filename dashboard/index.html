@@ -31,6 +31,34 @@
 html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); }
 body { font-size: 14px; line-height: 1.45; }
 button, input, textarea { font: inherit; }
+button,
+.tab-button,
+.chip,
+.mini-control,
+.surface-card,
+.suggestion-chip,
+.mode-pill,
+.tool-chip,
+.status-pill,
+.message-bubble,
+.room-save-panel,
+.approval-card {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+button:focus-visible,
+a:focus-visible,
+textarea:focus-visible,
+.mini-control:focus-visible,
+.tab-button:focus-visible {
+  outline: 2px solid rgba(103, 232, 249, 0.62);
+  outline-offset: 2px;
+}
 textarea {
   width: 100%;
   border: 1px solid rgba(103, 232, 249, 0.28);
@@ -182,7 +210,14 @@ textarea {
   grid-template-columns: minmax(0, 1fr);
   gap: 18px;
 }
-.tab-page.active { display: grid; }
+.tab-page.active {
+  display: grid;
+  animation: pageFadeIn 180ms ease-out both;
+}
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
 .shell.tab-page { grid-template-columns: 270px minmax(0, 1fr) 340px; }
 .chat-home.tab-page {
   max-width: 1500px;
@@ -342,6 +377,14 @@ textarea {
   to { transform: rotate(360deg); }
 }
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
   .merlin-orb-image,
   .merlin-orb-stage::before,
   .merlin-orb-stage::after {
@@ -892,6 +935,11 @@ button.mode-pill:hover {
   color: var(--muted);
   text-align: left;
 }
+.mini-control:hover:not(:disabled) {
+  border-color: rgba(103, 232, 249, 0.24);
+  background: rgba(103, 232, 249, 0.06);
+  transform: translateY(-1px);
+}
 .mini-control strong {
   color: var(--text);
   font-size: 12px;
@@ -1190,6 +1238,10 @@ button.mode-pill:hover {
     linear-gradient(180deg, rgba(21, 28, 36, 0.92), rgba(14, 18, 23, 0.92));
   padding: 14px;
   min-height: 150px;
+}
+.surface-card:hover {
+  border-color: rgba(103, 232, 249, 0.18);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.22);
 }
 .surface-card h3 { margin: 0 0 8px; font-size: 15px; }
 .surface-card p { margin: 0 0 12px; color: var(--muted); }
@@ -2075,7 +2127,7 @@ function roomOptionsFromState() {
   return options;
 }
 
-function selectActiveRoom(roomId, roomName) {
+function selectActiveRoom(roomId, roomName, openChat = false) {
   selectedRoomId = safe(roomId, DEFAULT_ROOM_ID);
   selectedRoomName = safe(roomName, selectedRoomId);
   pendingRoomApproval = null;
@@ -2085,6 +2137,15 @@ function selectActiveRoom(roomId, roomName) {
   roomSaveState = 'neutral';
   renderRoomPicker();
   updateRoomSavePanel();
+  if (openChat) {
+    selectTab('chat');
+    const input = document.getElementById('merlin-chat-input');
+    if (input) input.focus();
+  }
+}
+
+function openRoomInChat(roomId, roomName) {
+  selectActiveRoom(roomId, roomName, true);
 }
 
 function renderRoomPicker() {
@@ -2114,8 +2175,9 @@ function renderRoomPicker() {
   const contextPanel = document.getElementById('chat-room-context');
   if (contextPanel) {
     contextPanel.innerHTML = `
+      <span class="chip info">Room: ${escapeHtml(selectedRoomName)}</span>
       <span class="chip warn">Room context not active yet</span>
-      <p>Active Room: ${escapeHtml(selectedRoomName)}. This is the transcript save target only; Merlin does not reference Room context until policy persistence is implemented.</p>
+      <p>Chat is scoped to ${escapeHtml(selectedRoomName)} as the transcript target. Future Room context will reference this Room only unless you explicitly allow selected-Room or all-Room sharing.</p>
     `;
   }
 }
@@ -2683,6 +2745,9 @@ async function loadRooms() {
     if (!panel) return;
     const rooms = data.rooms || [];
     const roomRows = rooms.map(room => {
+      const roomId = safe(room.room_id, DEFAULT_ROOM_ID);
+      const roomName = safe(room.name || room.room_id, roomId);
+      const active = roomId === selectedRoomId;
       const transcripts = (room.transcripts || []).slice(0, 3).map(transcript => `
         <div class="status-pill">
           <strong>${escapeHtml(transcript.transcript_id || 'transcript')}</strong>
@@ -2690,10 +2755,10 @@ async function loadRooms() {
         </div>
       `).join('');
       return `
-        <div class="status-pill">
-          <strong>${escapeHtml(room.name || room.room_id)}</strong>
-          <span>${escapeHtml(room.reference_policy || 'no_room_context')} · transcripts: ${escapeHtml(room.transcript_count || 0)} · memory: ${escapeHtml(room.memory_extraction || 'requires_approval')}</span>
-        </div>
+        <button class="mini-control ${active ? 'active' : ''}" type="button" onclick="openRoomInChat(${jsArg(roomId)}, ${jsArg(roomName)})" aria-pressed="${active ? 'true' : 'false'}">
+          <strong>${escapeHtml(roomName)}</strong>
+          <span>Open in Chat · ${escapeHtml(room.reference_policy || 'no_room_context')} · transcripts: ${escapeHtml(room.transcript_count || 0)} · memory: ${escapeHtml(room.memory_extraction || 'requires_approval')}</span>
+        </button>
         ${transcripts ? `<div class="readonly-note"><strong>Latest transcripts</strong>${transcripts}</div>` : ''}
       `;
     }).join('');
@@ -2704,7 +2769,7 @@ async function loadRooms() {
       <div class="status-pill"><strong>Reference policy</strong><span>${escapeHtml(data.reference_policy || 'no_room_context')}</span></div>
       <div class="status-pill"><strong>Save to Room</strong><span class="locked">${data.save_to_room_api_enabled ? 'backend approval required' : 'locked until Task API write gate'}</span></div>
       <div class="status-pill"><strong>Memory extraction</strong><span class="locked">${data.memory_extraction_enabled ? 'enabled' : 'requires approve/edit/deny'}</span></div>
-      ${roomRows || '<div class="status-pill"><strong>Existing Rooms</strong><span>none discovered</span></div>'}
+      <div class="readonly-note"><strong>Room launcher</strong><p>Select a Room to jump back to Merlin Chat. The Room tag scopes transcript saves to that Room; future context retrieval remains Room-only unless explicit sharing is enabled.</p>${roomRows || '<div class="status-pill"><strong>Existing Rooms</strong><span>none discovered</span></div>'}</div>
     `;
   } catch (_) {
     readinessState.rooms = null;

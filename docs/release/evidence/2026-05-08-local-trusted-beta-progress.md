@@ -7782,3 +7782,128 @@ changed.
 
 Positive, but public beta remains blocked until full installer retest and live
 browser evidence are captured.
+
+---
+
+## 2026-05-09 23:59 EDT - Room Launcher And Smooth Page UX
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`0490b9bcec1b689eca4ccc78b1aab5c5eb3ae90b`
+
+### Ending Commit SHA If Changed
+
+Recorded in the session closeout and `git log`. The commit cannot embed its own
+final SHA without changing that SHA.
+
+### Target Issue(s)
+
+#106 Wizard HQ Product Shell, #135 Merlin Rooms, #95 release-readiness evidence.
+
+### Scope
+
+Make the Rooms tab behave like a Room launcher and add a smooth, reduced-motion
+safe interaction layer across Wizard HQ.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-first-run-smoke.sh`
+- `tests/dashboard-rooms-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None. No installer, package, API, policy, memory, router, or patent files were
+changed in this slice.
+
+### Commands Run
+
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- `bash tests/dashboard-rooms-smoke.sh` - PASS.
+- `bash tests/dashboard-first-run-smoke.sh` - PASS.
+- `bash tests/dashboard-native-chat-smoke.sh` - PASS.
+- `git diff --check` - PASS.
+
+### Tests Skipped And Why
+
+- Live browser click-through: not run in this static UX slice. Needs visual QA
+  after the dashboard is opened.
+- Full installer retest: not triggered by this slice. The prior installer
+  change still requires full installer retest before Local Trusted Beta signoff.
+
+### Failures Found
+
+No command failures in this slice. User feedback identified a UX gap: Rooms
+should be one or two clicks away from active Chat use, not just displayed as
+status.
+
+### Failure Category
+
+- UX/readiness confusion
+
+### Root Cause Or Current Hypothesis
+
+Rooms were visible but passive. Selecting a Room did not clearly behave like
+jumping into that Room's chat workspace, and page transitions were abrupt.
+
+### Fix Applied
+
+- Added `openRoomInChat()` so Rooms can launch back into Chat.
+- Room selection now focuses the Chat input and shows a visible Room tag.
+- Chat Room tag states that future context remains Room-only unless explicit
+  selected-Room or all-Room sharing is enabled.
+- Added smooth tab/page transitions, hover polish, focus-visible styling, and
+  reduced-motion safeguards.
+
+### Retest Result
+
+PASS for focused dashboard static smokes listed above.
+
+### Regression Test Added Or Reason Not Added
+
+Updated:
+
+- `tests/dashboard-rooms-smoke.sh`
+- `tests/dashboard-first-run-smoke.sh`
+
+The tests now check Room launcher behavior, Chat return behavior, explicit
+cross-Room sharing language, smooth page transitions, visible focus, and
+reduced-motion support.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended under #135:
+
+- Persist active Room and reference policy through a backend settings gate.
+- Add real Room-only context retrieval only after policy persistence exists.
+- Add live browser automation for Room launcher -> Chat input focus.
+
+### Lesson Learned
+
+Rooms become useful when they behave like workspaces the user can jump into, not
+when they are only listed as backend state.
+
+### What Not To Repeat Next Time
+
+Do not add product tabs that are more than two clicks away from the task they
+support. Do not enable cross-Room context by implication.
+
+### Local Trusted Beta Impact
+
+Positive. Wizard HQ now feels closer to a usable local AI workspace while
+preserving no-context defaults.
+
+### Public Beta Impact
+
+Positive, but still needs live visual/browser evidence.

@@ -32,6 +32,12 @@ grep -q "merlin-orb-stage" "$DASHBOARD_FILE" \
   || fail "Chat home missing living Merlin orb stage"
 grep -q "merlinOrbBreathe" "$DASHBOARD_FILE" \
   || fail "Chat home missing subtle Merlin orb motion"
+grep -q "pageFadeIn" "$DASHBOARD_FILE" \
+  || fail "dashboard pages need smooth tab transitions"
+grep -q "prefers-reduced-motion" "$DASHBOARD_FILE" \
+  || fail "dashboard motion must respect reduced-motion preference"
+grep -q "focus-visible" "$DASHBOARD_FILE" \
+  || fail "dashboard interactive controls need visible keyboard focus"
 grep -q "prefers-reduced-motion: reduce" "$DASHBOARD_FILE" \
   || fail "Chat home orb motion must respect reduced-motion preference"
 grep -q "composer-tools" "$DASHBOARD_FILE" \
