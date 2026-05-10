@@ -7179,3 +7179,136 @@ scrolling.
 ### Public Beta Impact
 
 Positive, pending screenshot evidence and further visual polish.
+
+---
+
+## v3.1 Rooms Active Picker Slice — 2026-05-09
+
+### Date / Time
+
+2026-05-09 EDT.
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`02f2e87` — `feat(dashboard): lock product tabs in header`
+
+### Target Issues
+
+- #135: Merlin Rooms for local chat history and scoped context.
+- #106: Wizard HQ Product Shell.
+
+### Scope
+
+Add a client-side active Room picker backed by the read-only Rooms manifest.
+The selected Room is session-local in Wizard HQ and becomes the explicit target
+for an approved transcript save. It does not persist reference policy, index
+Room context, write memory, or create Rooms.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `docs/architecture/MERLIN_ROOMS.md`
+- `tests/dashboard-rooms-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None.
+
+### Commands Run
+
+- `git status --short && git rev-parse HEAD`
+- `curl -fsS --max-time 3 http://localhost:8888 >/dev/null && echo wizard-hq-ok || echo wizard-hq-unavailable`
+- `curl -fsS --max-time 3 http://localhost:8766/status/rooms || true`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-merlin-status-smoke.sh`
+- `bash tests/dashboard-model-readiness-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+Static dashboard smoke set passed locally. Live Wizard HQ and Task API curls did
+not connect because services were not running in the current environment.
+
+### Tests Skipped And Why
+
+- Live browser screenshot / click-through: skipped because `localhost:8888` was
+  unavailable.
+- Live `/status/rooms` validation: skipped because `localhost:8766` was
+  unavailable.
+- Full installer retest: not triggered by this dashboard/architecture/static
+  test slice.
+
+### Failures Found
+
+Live service checks failed:
+
+- `curl -fsS --max-time 3 http://localhost:8888`
+- `curl -fsS --max-time 3 http://localhost:8766/status/rooms`
+
+### Failure Category
+
+- Wizard HQ/dashboard environment unavailable
+- Task API 8766 environment unavailable
+- UX/readiness validation blocked
+
+### Root Cause Or Current Hypothesis
+
+The local Merlin services were not running in this shell session. This is not a
+product defect proven by this pass, but it blocks visual/browser evidence.
+
+### Fix Applied
+
+No runtime fix applied. Continued with static implementation and documented the
+live-check blocker.
+
+### Retest Result
+
+PASS for static dashboard smokes after implementation.
+
+### Regression Test Added Or Reason Not Added
+
+Updated `tests/dashboard-rooms-smoke.sh` to assert:
+
+- active Room picker exists,
+- `selectActiveRoom()` exists,
+- session-only selection state is visible,
+- selected target Room appears in save flow,
+- reference policy persistence remains locked.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended under #135/#106:
+
+- Run live Wizard HQ visual QA after starting the local stack.
+- Capture desktop and narrow-layout screenshots for Chat and Rooms.
+- Add browser automation for Room picker collapsed/expanded/selected states once
+  Playwright or equivalent is stable in the repo.
+
+### Lesson Learned
+
+Room selection can improve the product loop without crossing the memory boundary
+if it is explicitly labeled as session-local and reference policy remains
+locked.
+
+### What Not To Repeat Next Time
+
+Do not call Room selection "context enabled" until backend reference policy,
+indexing, and approval tests exist.
+
+### Local Trusted Beta Impact
+
+Positive. Merlin now shows a clearer path from Chat to a selected local Room
+while preserving no-context and no-memory-write defaults.
+
+### Public Beta Impact
+
+Positive, but live browser evidence is still required.

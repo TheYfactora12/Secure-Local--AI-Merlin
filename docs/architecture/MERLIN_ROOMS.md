@@ -126,12 +126,17 @@ file controls.
 Wizard HQ currently uses this path only for:
 
 - the latest completed Merlin response,
-- the default `merlin-build` Room,
+- the selected active Room in browser UI state, defaulting to `merlin-build`,
 - explicit "Prepare Room save" then "Allow local save" clicks,
 - local transcript history only.
 
+Active Room selection is session-local in Wizard HQ. It is not persisted to
+backend settings, does not enable Room context retrieval, and does not change the
+reference policy. It only makes the selected Room visible as the explicit
+transcript save target before the approval flow.
+
 It does not save degraded/blocked responses, does not index the Room for future
-context, and does not write approved memory.
+context, does not persist reference policy, and does not write approved memory.
 
 The `approval_id` must come from the Task API approval lifecycle:
 

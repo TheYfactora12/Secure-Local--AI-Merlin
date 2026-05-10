@@ -1377,15 +1377,15 @@ button.mode-pill:hover {
         <button class="new-chat-btn" type="button" onclick="clearMerlinChat()">New conversation</button>
         <div class="front-sidebar-card">
           <h3>Current Room</h3>
-          <p>No Room selected. Room context stays off until you explicitly choose it.</p>
-          <div class="mini-control-stack" aria-label="Read-only Room picker preview">
-            <button class="mini-control active" type="button" disabled>
+          <p>Choose the local Room for this chat session. Room context still stays off until reference policy persistence is tested.</p>
+          <div class="mini-control-stack" id="chat-room-picker" aria-label="Active Room picker">
+            <button class="mini-control active" type="button" onclick="selectActiveRoom('merlin-build', 'Merlin Build')">
               <strong>Merlin Build</strong>
-              <span>default local Room · transcript save available after approval</span>
+              <span>selected for this browser session · transcript save requires approval</span>
             </button>
             <button class="mini-control locked" type="button" disabled>
-              <strong>Choose another Room</strong>
-              <span>locked until Room picker and reference policy persistence are tested</span>
+              <strong>Loading Rooms</strong>
+              <span>Task API manifest populates discovered local Rooms</span>
             </button>
           </div>
           <div class="model-readiness compact" id="chat-room-context">
@@ -1540,10 +1540,10 @@ button.mode-pill:hover {
       <article class="surface-card">
         <h3>Active Room</h3>
         <p>The default Room is Merlin Build. Room context stays off until you explicitly choose to reference it.</p>
-        <div class="mini-control-stack" aria-label="Room picker preview">
-          <button class="mini-control active" type="button" disabled>
+        <div class="mini-control-stack" id="rooms-active-picker" aria-label="Room picker">
+          <button class="mini-control active" type="button" onclick="selectActiveRoom('merlin-build', 'Merlin Build')">
             <strong>Merlin Build</strong>
-            <span>current default Room · local Markdown transcripts</span>
+            <span>selected for this browser session · local Markdown transcripts</span>
           </button>
           <button class="mini-control locked" type="button" disabled>
             <strong>New Room</strong>
@@ -1551,7 +1551,7 @@ button.mode-pill:hover {
           </button>
         </div>
         <div class="status-list">
-          <div class="status-pill"><strong>Active Room</strong><span>merlin-build</span></div>
+          <div class="status-pill"><strong>Active Room</strong><span id="rooms-active-room-label">merlin-build</span></div>
           <div class="status-pill"><strong>Reference policy</strong><span class="locked">no Room context</span></div>
           <div class="status-pill"><strong>Cloud sync</strong><span class="off">not automatic</span></div>
         </div>
@@ -1872,6 +1872,8 @@ const readinessState = {
   probesComplete: false,
 };
 let selectedChatMode = 'smart';
+let selectedRoomId = DEFAULT_ROOM_ID;
+let selectedRoomName = DEFAULT_ROOM_NAME;
 let lastMerlinExchange = null;
 let pendingRoomApproval = null;
 let roomSaveStatus = 'Save becomes available after Merlin returns a response.';
@@ -1967,6 +1969,10 @@ function escapeHtml(value) {
   }[character]));
 }
 
+function jsArg(value) {
+  return JSON.stringify(safe(value, '')).replace(/</g, '\\u003c');
+}
+
 function riskClass(risk) {
   const normalized = String(risk || '').toLowerCase();
   if (normalized === 'critical') return 'critical';
@@ -2009,6 +2015,72 @@ function selectChatMode(mode) {
     button.classList.toggle('active', button.getAttribute('data-chat-mode') === selectedChatMode);
   });
   text('chat-mode-note', CHAT_MODE_COPY[selectedChatMode]);
+}
+
+function roomOptionsFromState() {
+  const rooms = readinessState.rooms && Array.isArray(readinessState.rooms.rooms)
+    ? readinessState.rooms.rooms
+    : [];
+  const options = rooms.map(room => ({
+    roomId: safe(room.room_id, DEFAULT_ROOM_ID),
+    roomName: safe(room.name || room.room_id, DEFAULT_ROOM_NAME),
+    transcriptCount: Number(room.transcript_count || 0),
+    referencePolicy: safe(room.reference_policy, 'no_room_context'),
+  }));
+  if (!options.some(room => room.roomId === DEFAULT_ROOM_ID)) {
+    options.unshift({
+      roomId: DEFAULT_ROOM_ID,
+      roomName: DEFAULT_ROOM_NAME,
+      transcriptCount: 0,
+      referencePolicy: 'no_room_context',
+    });
+  }
+  return options;
+}
+
+function selectActiveRoom(roomId, roomName) {
+  selectedRoomId = safe(roomId, DEFAULT_ROOM_ID);
+  selectedRoomName = safe(roomName, selectedRoomId);
+  pendingRoomApproval = null;
+  roomSaveStatus = lastMerlinExchange
+    ? `Room target changed to ${selectedRoomName}. Prepare approval again before saving.`
+    : `Room target selected: ${selectedRoomName}.`;
+  roomSaveState = 'neutral';
+  renderRoomPicker();
+  updateRoomSavePanel();
+}
+
+function renderRoomPicker() {
+  const options = roomOptionsFromState();
+  const renderButton = room => {
+    const active = room.roomId === selectedRoomId;
+    return `
+      <button class="mini-control ${active ? 'active' : ''}" type="button" onclick="selectActiveRoom(${jsArg(room.roomId)}, ${jsArg(room.roomName)})" aria-pressed="${active ? 'true' : 'false'}">
+        <strong>${escapeHtml(room.roomName)}</strong>
+        <span>${active ? 'active this session' : 'select for this session'} · transcripts: ${escapeHtml(room.transcriptCount)} · ${escapeHtml(room.referencePolicy)}</span>
+      </button>
+    `;
+  };
+  const lockedCreate = `
+    <button class="mini-control locked" type="button" disabled>
+      <strong>New Room</strong>
+      <span>future policy-gated create flow</span>
+    </button>
+  `;
+  const html = options.map(renderButton).join('') + lockedCreate;
+  const chatPicker = document.getElementById('chat-room-picker');
+  const roomsPicker = document.getElementById('rooms-active-picker');
+  if (chatPicker) chatPicker.innerHTML = html;
+  if (roomsPicker) roomsPicker.innerHTML = html;
+  text('rooms-active-room-label', selectedRoomId);
+
+  const contextPanel = document.getElementById('chat-room-context');
+  if (contextPanel) {
+    contextPanel.innerHTML = `
+      <span class="chip warn">Room context not active yet</span>
+      <p>Active Room: ${escapeHtml(selectedRoomName)}. This is the transcript save target only; Merlin does not reference Room context until policy persistence is implemented.</p>
+    `;
+  }
 }
 
 function toggleChatSidebar(forceOpen = null) {
@@ -2080,7 +2152,7 @@ function roomSavePanelHtml() {
       <header>
         <div>
           <h3>Save latest chat to Room</h3>
-          <p>Default Room: ${escapeHtml(DEFAULT_ROOM_NAME)} · Transcript only · Memory extraction separate.</p>
+          <p>Target Room: ${escapeHtml(selectedRoomName)} · Transcript only · Memory extraction separate.</p>
         </div>
         <span class="chip ${statusChip}" id="room-save-status-chip">${escapeHtml(roomSaveStatus)}</span>
       </header>
@@ -2155,8 +2227,8 @@ async function requestRoomTranscriptApproval() {
   updateRoomSavePanel();
   try {
     const data = await postJson(`${TASK_API}/approvals/room-transcript`, {
-      room_id: DEFAULT_ROOM_ID,
-      room_name: DEFAULT_ROOM_NAME,
+      room_id: selectedRoomId,
+      room_name: selectedRoomName,
       user_input: lastMerlinExchange.userInput,
       merlin_response: lastMerlinExchange.merlinResponse,
       session_id: lastMerlinExchange.sessionId,
@@ -2179,8 +2251,8 @@ async function allowRoomTranscriptSave() {
   try {
     await postJson(`${TASK_API}/approvals/${encodeURIComponent(pendingRoomApproval)}/approve`, {});
     const data = await postJson(`${TASK_API}/rooms/transcripts`, {
-      room_id: DEFAULT_ROOM_ID,
-      room_name: DEFAULT_ROOM_NAME,
+      room_id: selectedRoomId,
+      room_name: selectedRoomName,
       user_input: lastMerlinExchange.userInput,
       merlin_response: lastMerlinExchange.merlinResponse,
       session_id: lastMerlinExchange.sessionId,
@@ -2502,6 +2574,11 @@ async function loadRooms() {
   try {
     const data = await getJson(`${TASK_API}/status/rooms`);
     readinessState.rooms = data;
+    if (!roomOptionsFromState().some(room => room.roomId === selectedRoomId)) {
+      selectedRoomId = DEFAULT_ROOM_ID;
+      selectedRoomName = DEFAULT_ROOM_NAME;
+    }
+    renderRoomPicker();
     if (!panel) return;
     const rooms = data.rooms || [];
     const roomRows = rooms.map(room => {
@@ -2530,6 +2607,7 @@ async function loadRooms() {
     `;
   } catch (_) {
     readinessState.rooms = null;
+    renderRoomPicker();
     if (panel) {
       panel.innerHTML = '<div class="status-pill"><strong>Rooms manifest</strong><span>warming</span></div><div class="status-pill"><strong>Save to Room</strong><span class="locked">backend approval required</span></div>';
     }
@@ -2797,6 +2875,7 @@ async function refreshAll() {
 }
 
 selectInitialTab();
+renderRoomPicker();
 window.addEventListener('hashchange', selectInitialTab);
 refreshAll();
 setInterval(refreshAll, 30000);

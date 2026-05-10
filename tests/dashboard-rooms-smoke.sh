@@ -34,8 +34,16 @@ grep -q "Allow local save" "$DASHBOARD_FILE" \
   || fail "Rooms save flow must require explicit allow action"
 grep -q "Rooms are local project spaces" "$DASHBOARD_FILE" \
   || fail "dashboard must explain Rooms in plain language"
-grep -q "Room picker preview" "$DASHBOARD_FILE" \
-  || fail "Rooms surface must include read-only Room picker preview"
+grep -q "Active Room picker" "$DASHBOARD_FILE" \
+  || fail "chat surface must include active Room picker"
+grep -q "function selectActiveRoom" "$DASHBOARD_FILE" \
+  || fail "dashboard missing client-side active Room selection"
+grep -q "active this session" "$DASHBOARD_FILE" \
+  || fail "Room picker must show session-only selection state"
+grep -q "Target Room:" "$DASHBOARD_FILE" \
+  || fail "Room save panel must show selected target Room"
+grep -q "reference policy persistence is tested" "$DASHBOARD_FILE" \
+  || fail "Room picker must keep reference policy persistence locked"
 grep -q "future policy-gated create flow" "$DASHBOARD_FILE" \
   || fail "Rooms surface must keep new Room creation locked"
 grep -q "Room context not active yet" "$DASHBOARD_FILE" \
