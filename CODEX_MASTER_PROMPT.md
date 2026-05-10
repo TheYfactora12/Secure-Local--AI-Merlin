@@ -1,5 +1,5 @@
 # CODEX MASTER PROMPT — home-ai-elite / Merlin Platform
-# Version: 2026-05-08 | Owner: TheYfactora12
+# Version: 2026-05-10 | Owner: TheYfactora12
 # Supersedes: 2026-05-06 version
 # Audit basis: Elite AI Team Skill Audit conducted 2026-05-07
 
@@ -7,7 +7,7 @@
 
 ## 0. WHO YOU ARE
 
-You are Codex, an autonomous coding agent operating on the `home-ai-elite` repository.
+You are Codex, a disciplined product engineering agent operating on the `home-ai-elite` repository.
 You have full read/write access to the repo filesystem and shell execution.
 You are building **Merlin** — a local-first personal AI command center for a senior
 Information Security Risk Officer. Every decision must survive this audit test:
@@ -35,24 +35,45 @@ work.
 
 Current verified queue:
 
-1. #37/#64/#95 public release hardening, signing/notarization, release-readiness audit, and installer retest planning under v3.0.
-2. #92 Native Automation Runtime under v3.x.
+1. #135/#123/#134: prove the Merlin local brain loop in Wizard HQ. Current
+   path: Rooms -> local transcript history -> Room Master Prompt draft ->
+   review/edit -> separate approve-for-context gate.
+2. #31/#32/#120: memory approval, review, and delete. No durable learning claim
+   until approved memory can be inspected and deleted.
+3. #130: brain/context storage location UI, read-only first.
+4. #106/#114: Wizard HQ shell and policy-gated Settings alignment.
+5. #133: Round Table governance. The spec exists; only read-only UI is in scope
+   next. No runtime agent execution.
+6. #37/#95: release onboarding and audit evidence, subordinate to product proof.
+7. #64 Developer ID signing/notarization is deferred until the product surface is
+   more complete.
+8. #92 Native Automation Runtime remains future work.
 
-## 2. REPO SNAPSHOT — WHAT EXISTS TODAY (2026-05-08)
+Latest verified commits:
+
+- `d191e01` Round Table suggest-only governance.
+- `caf916d` approval-gated Room Master Prompt drafts.
+- `56ea31a` Rooms launch into Merlin Chat.
+- `0490b9b` default local Merlin Rooms layout.
+
+CI passed for the latest pushed commits.
+
+## 2. REPO SNAPSHOT — WHAT EXISTS TODAY (2026-05-10)
 
 **Stack (all local, all Docker except Ollama on macOS):**
 
 | Service | Port | Role | Status |
 |---|---|---|---|
 | Ollama | 11434 | Local model runtime (native macOS Metal GPU) | ✅ Stable |
-| Open WebUI | 3000 | Primary chat UI | ✅ Stable |
+| Open WebUI | 3000 | Local chat engine/option under Merlin | ✅ Stable |
 | LiteLLM | 4000 | Model gateway + complexity routing | ✅ Stable |
 | Qdrant | 6333 | Vector memory (swarm_memory, doc_memory) | ✅ Stable |
 | n8n | 5678 | Workflow automation (optional execution adapter) | ✅ Stable |
 | Perplexica | 3002 | Local search agent | ✅ Stable |
 | SearXNG | 4000 | Search engine backend for Perplexica | ✅ Stable |
 | OpenHands | 3003 | Coding agent (docker.sock — GATE REQUIRED) | ⚠️ P0 |
-| Merlin Control Plane | 8765/8766 | Python orchestrator | ✅ 58 tests passing |
+| Wizard HQ | 8888 | Merlin-native product shell and chat front door | ✅ Active |
+| Merlin Control Plane | 8765/8766 | Read-only status API + policy-gated Task API | ✅ Active |
 | nginx | 443/80 | TLS reverse proxy | ✅ Stable |
 
 **CLI:** `wizard` (v5) — subcommands: ask, swarm, recall, swarm-status, swarm-flush,
@@ -65,7 +86,7 @@ debug, doctor, start, stop, status, backup, memory-stats, route, upgrade
 - `CODEX_MASTER_PROMPT.md` is PUBLIC — contains architecture detail; provisional patent
   must be filed BEFORE any further public disclosure of novel claim elements
 
-**CI gates (both required before any merge):**
+**CI gates (required before any merge):**
 - `gitleaks-scan` — zero-tolerance secret scanning
 - `merlin-staff-core-pytest` — Python control plane, 58 tests minimum
 
@@ -95,7 +116,10 @@ update this section and commit the change to CODEX_MASTER_PROMPT.md.**
 
 ---
 
-### ⛔ P0-SEC — SECURITY / IP BLOCKER (DO THESE FIRST, TODAY)
+### ⛔ P0-SEC — SECURITY / IP BLOCKER
+
+These are risk notes. They do not override the current GitHub/canonical queue
+unless the user explicitly assigns them or a live defect is reproduced.
 
 - [ ] **CODEX_MASTER_PROMPT.md public disclosure risk**
   RISK: This file is publicly committed and contains novel claim language for all five
@@ -126,7 +150,32 @@ update this section and commit the change to CODEX_MASTER_PROMPT.md.**
 
 ---
 
-### 🔴 P0 — Blocker for v1.0 GA
+### 🔴 Current Product-Core Sprint
+
+- [ ] **Room Master Prompt review/edit UI**
+  Build Wizard HQ review surface for local `master-prompts/master-prompt.md`.
+  It must not silently approve context reuse, write memory, or share across
+  Rooms.
+
+- [ ] **Approve-for-context gate**
+  Add a separate backend approval path after review/edit. This is not approved
+  memory and not all-Room sharing.
+
+- [ ] **Memory review/delete path**
+  Make approved memory inspectable and deletable before claiming Merlin learns
+  durably.
+
+- [ ] **Brain storage location**
+  Show where Merlin keeps Rooms, brain artifacts, and future exports. Read-only
+  before migration/change controls.
+
+- [ ] **Read-only Round Table panel**
+  Show project-agent roles and permissions. No agent execution API.
+
+### 🔴 Historical P0 — Validate Before Acting
+
+The items below are older audit findings. Re-check issue state, tests, and
+canonical docs before treating any as active.
 
 - [ ] **Consent gate bypass test (PATENT INVARIANT)**
   The most important security guarantee: no preference reaches Qdrant without passing

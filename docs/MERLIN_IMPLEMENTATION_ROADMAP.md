@@ -1,6 +1,8 @@
 # Merlin Implementation Roadmap
 
-> **Canonical roadmap.** This file was updated 2026-05-08 after GitHub issue and milestone validation. Use `docs/CANONICAL_PROJECT_STATE.md` first for the current queue, then this roadmap for milestone strategy.
+> **Canonical roadmap.** This file was updated 2026-05-10 after GitHub issue,
+> milestone, commit, and CI validation. Use `docs/CANONICAL_PROJECT_STATE.md`
+> first for the current queue, then this roadmap for milestone strategy.
 
 ---
 
@@ -60,7 +62,7 @@ not hijack the active session for unrelated cleanup. Before closing a milestone,
 review its related open issues and stale findings again so nothing relevant is
 left behind.
 
-## Current Issue Alignment (2026-05-08)
+## Current Issue Alignment (2026-05-10)
 
 - GitHub milestones `v1.0 — Stable Installer Release`,
   `v1.1 — Mobile Access + Remote-Safe Entry Points`, and
@@ -158,6 +160,22 @@ left behind.
   containers, save-to-Room UX, user-selected storage location, reference policy,
   and approval-gated memory extraction. This is now the product-core path for
   v3.1 and should be designed before adding more peripheral features.
+- Recent #135 implementation slices added the default local Rooms layout under
+  `~/Merlin/brain/rooms`, a session-local Room launcher in Wizard HQ,
+  approval-gated transcript saves through the Task API, and approval-gated Room
+  Master Prompt draft generation. The draft is local Markdown only and remains
+  `approved_for_context: false`.
+- #133 has a current Round Table governance spec in
+  `docs/architecture/ROUND_TABLE_AGENT_GOVERNANCE.md`. Runtime agent work is
+  still future; the first UI slice should be read-only and suggest-only.
+- #123 and #134 are active product checkpoints. The core value demo is now:
+  install -> Wizard HQ -> Room -> save local context -> draft/review Room Master
+  Prompt -> ask Merlin with local proof -> review/delete/export what was stored.
+- #31, #32, and #120 are directly tied to the next honest learning claim. Merlin
+  should not claim durable learning from Rooms until memory proposal, review,
+  delete, and audit paths are user-visible and tested.
+- #130 should show the brain/context storage location read-only before adding
+  migration or folder-change controls.
 - #37 and #95 remain open under `v3.0` for public onboarding/release hardening
   and release readiness audit/evidence collection.
 - #64 remains open under `v3.0`, but Developer ID/notarization is deferred until
@@ -206,7 +224,23 @@ enterprise governance suite.
 
 ## Current Checkpoint
 
-Last updated: 2026-05-08.
+Last updated: 2026-05-10.
+
+Current v3.1 checkpoint:
+
+- `0490b9b` initialized local Merlin Rooms layout.
+- `56ea31a` launched Rooms back into Merlin Chat.
+- `caf916d` added approval-gated Room Master Prompt drafts.
+- `d191e01` added Round Table suggest-only governance.
+- CI passed for the latest pushed commits.
+
+Next roadmap slice:
+
+1. Room Master Prompt review/edit surface in Wizard HQ.
+2. Separate approve-for-context gate; no cross-Room sharing by default.
+3. Memory proposal/review/delete path so approved learning becomes inspectable.
+4. Brain storage location UI, read-only first.
+5. Read-only Round Table panel after the Room review path is clear.
 
 Phase 2 is complete on `main` through `b4f35c8`.
 

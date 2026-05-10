@@ -50,8 +50,8 @@ grep -q "#114" "$CANONICAL" \
   || fail "canonical queue must include policy-gated Settings parent"
 grep -q "#117" "$CANONICAL" \
   || fail "canonical queue must include provider connector setup follow-up"
-grep -q "#118" "$CANONICAL" \
-  || fail "canonical queue must include model library follow-up"
+grep -q "#129" "$CANONICAL" \
+  || fail "canonical queue must include model selection follow-up"
 grep -q "#119" "$CANONICAL" \
   || fail "canonical queue must include startup/API controls follow-up"
 grep -q "#120" "$CANONICAL" \

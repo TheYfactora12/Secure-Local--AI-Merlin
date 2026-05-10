@@ -1,9 +1,11 @@
 # Merlin AI — Product North Star
 
 **Version:** 1.1
-**Date:** 2026-05-09
+**Date:** 2026-05-10
 **Status:** CANONICAL — supersedes all prior positioning docs
-**Change from v1.0:** Added Export Brain / Import Brain full spec. Promoted agent + PC control to Phase 2 (not deferred). Added Secure Connector model. Updated decision rules and success criteria accordingly.
+**Change from v1.1:** Aligned active sprint with live v3.1 execution: Rooms,
+Room Master Prompt review, approved memory review/delete, and storage-location
+clarity come before PC control, broad connectors, or runtime agents.
 
 ---
 
@@ -345,14 +347,19 @@ These are real ideas. They go into `docs/product/FUTURE_IDEAS.md`.
 - #114, #117, #119 — Settings and security controls (Promise 3)
 - #95 — Product audit (gate for any public beta)
 
-**New issues to open from this doc:**
-- Export Brain button + package spec (Promise 5)
-- Import Brain on first-run screen (Promise 5)
-- Flash drive installer bundling (Promise 5)
-- Connector permission model + Settings UI (Promise 6)
-- PC task execution — first actions (open app, create file, search files) (Promise 6)
-- Agent definition + storage format (Promise 6)
-- Offline model selection ("Fast" / "Smart") UI (Promise 6)
+**Current v3.1 product-core order:**
+- #135 — Finish Rooms: Room Master Prompt review/edit, approve-for-context, and
+  no cross-Room sharing by default.
+- #31, #32, #120 — Memory approval, review, and delete.
+- #130 — Brain/context storage location UI, read-only first.
+- #123, #134 — Prove the local brain value demo before expanding scope.
+
+**Already tracked, after product proof improves:**
+- #124, #125 — Export/Import Brain.
+- #126 — Connector permission model + Settings UI.
+- #127 — PC task execution first actions.
+- #128 — Agent definition + storage format.
+- #129 — Offline model selection ("Fast" / "Smart") UI.
 
 **Parallel track — never blocks product:**
 - #81, #82, #83, #84 — Patent anchors
@@ -366,7 +373,7 @@ Before any new issue is opened or feature prioritized, ask:
 1. Does this help Merlin remember better? → **Build it.**
 2. Does this make install easier for a non-technical user? → **Build it.**
 3. Does this let users export or import their brain easily? → **Build it now.**
-4. Does this let Merlin do tasks on the user's machine, with permission? → **Build it in Phase 2.**
+4. Does this let Merlin do tasks on the user's machine, with permission? → **Design it, but do not build runtime execution until Rooms, memory review/delete, and connector permissions are proven.**
 5. Does this let the user control their data and security simply? → **Build it.**
 6. Does this add complexity the user has to manage? → **Defer it.**
 7. Does this require the user to understand infrastructure? → **Defer it.**

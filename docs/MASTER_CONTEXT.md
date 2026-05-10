@@ -1,6 +1,6 @@
 # Wizard AI Master Context
 
-Last verified: 2026-05-08
+Last verified: 2026-05-10
 Repo: `TheYfactora12/home-ai-elite`
 Branch: `main`
 Installer: `install.sh` v1.6
@@ -216,10 +216,25 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Continue #37/#95: public onboarding hardening and product audit evidence collection without claiming Public Beta readiness.
-2. Continue #64: Developer ID signing/notarization path.
-3. Run the full Local Trusted Beta evidence pack on the 8GB low/core Mac after #94/#96/#97 user-facing changes.
-4. Continue optional live tests for search, automation, coding, and upgrade profiles on hardware with enough memory.
+1. Continue #135/#123/#134: prove the Merlin local brain loop in Wizard HQ.
+   The current path is Rooms -> transcript history -> Room Master Prompt draft
+   -> review/edit -> separate approve-for-context gate.
+2. Continue #31/#32/#120: memory approval, review, and delete. Merlin cannot
+   honestly claim durable learning until approved memory can be reviewed and
+   deleted by the user.
+3. Continue #130: show where Merlin keeps its brain and Room artifacts, read-only
+   first.
+4. Continue #106/#114: keep Wizard HQ shell and policy-gated Settings aligned
+   around the local chat/Rooms/memory loop.
+5. Continue #37/#95: public onboarding hardening and product audit evidence
+   collection without claiming Public Beta readiness.
+6. Defer #64 Developer ID signing/notarization until the product surface is more
+   complete. The user explicitly accepted skipping Developer ID for now.
+7. Run the full Local Trusted Beta evidence pack on the 8GB low/core Mac after
+   installer, loading, onboarding, or Room/context changes that affect first-run
+   behavior.
+8. Continue optional live tests for search, automation, coding, and upgrade
+   profiles on hardware with enough memory.
 
 ## Reasoning Summary
 
@@ -278,13 +293,31 @@ The next engineering priority is supportability: diagnostics, sanitized bug repo
 
 ## Next Actions
 
-1. Commit and push the uninstaller launchd warning fix with the v1.0 validation notes.
-2. Keep verifying `ci-success` requires both `gitleaks-scan` and `merlin-staff-core-pytest`.
-3. Close #1 only after CI is green and the completion comment records fresh install, package, backup/restore, upgrade, launchd, and clean reinstall validation.
+1. Build the Wizard HQ Room Master Prompt review/edit surface. It should show the
+   local draft path and metadata, keep raw content controlled, and make context
+   reuse unavailable until a separate backend approval gate exists.
+2. Add the approve-for-Room-context contract after review/edit, without writing
+   approved memory or sharing across Rooms by default.
+3. Add a read-only Round Table panel only after the Room review path is clear.
+   It should show suggest-only roles and no execution controls.
+4. Keep release evidence updated for every test/failure. Full installer retest
+   remains required before Local Trusted Beta signoff because installer behavior
+   changed earlier in the v3.1 push.
 
 ## Validation
 
-Last verified: 2026-05-07.
+Last verified: 2026-05-10.
+
+- Recent v3.1 commits:
+  - `d191e01` adds the Round Table agent governance spec and smoke test.
+  - `caf916d` adds approval-gated Room Master Prompt draft generation.
+  - `56ea31a` launches Rooms into Merlin Chat.
+  - `0490b9b` initializes the default local Merlin Rooms layout.
+- GitHub Actions passed for `d191e01` and `caf916d`.
+- Local evidence is recorded in
+  `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`.
+- Current live issue queue confirms #135, #123, #134, #106, #130, and
+  #31/#32/#120 are the product-core path. #64 remains deferred.
 
 - Phase 2F merged at `b4f35c8`; local Phase 2 Python suite reported 58 passing tests.
 - CI was green for the Phase 2F merge run.

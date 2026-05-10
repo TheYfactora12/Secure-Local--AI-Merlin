@@ -1,6 +1,6 @@
 # Canonical Project State
 
-Last verified: 2026-05-08
+Last verified: 2026-05-10
 
 This document is the tie-breaker when roadmap notes, phase prompts, patent notes,
 or older architecture docs disagree. Start from GitHub issue and milestone state,
@@ -22,7 +22,7 @@ open a GitHub issue. Do not follow stale phase prompts.
 
 ## Current Product Reality
 
-Home AI Elite has a working local-first foundation:
+Merlin AI / Home AI Elite has a working local-first foundation:
 
 - protected installer and uninstall/upgrade paths,
 - local Ollama, LiteLLM, Open WebUI, Qdrant, optional n8n, and Merlin APIs,
@@ -32,6 +32,16 @@ Home AI Elite has a working local-first foundation:
 - local JSONL observability baseline plus optional self-hosted Langfuse profile,
 - Wizard HQ Merlin-native tab shell with Chat, Brains, Memory, Agents,
   Security, System, and Settings information architecture,
+- Merlin Rooms initialized under `~/Merlin/brain/rooms`, with a default
+  `merlin-build` Room, local transcript save flow, and session-local Room
+  launcher in Wizard HQ,
+- approval-gated Room transcript saves through the 8766 Task API, writing local
+  Markdown history only and not approved memory,
+- approval-gated Room Master Prompt draft generation under
+  `master-prompts/master-prompt.md`; drafts are local artifacts only and are not
+  approved for context reuse,
+- a Round Table agent governance spec that keeps project agents suggest-only by
+  default and blocks runtime agent execution until future approval-gated work,
 - read-only provider connector capability catalog for local Ollama, LiteLLM,
   ChatGPT/OpenAI, Claude/Anthropic, Perplexity Sonar, Gemini/Google AI,
   Mistral AI, and OpenRouter,
@@ -52,7 +62,7 @@ reporting, or public-release polish takes priority.
 
 ## Current Architecture Diagram
 
-This is current-state as of 2026-05-08.
+This is current-state as of 2026-05-10.
 
 ```mermaid
 flowchart LR
@@ -64,14 +74,17 @@ flowchart LR
     Wizard --> MerlinTask[Merlin Task API :8766]
     Dashboard --> StatusAPI[Read-only Status API :8765]
     Dashboard --> MerlinTask
+    Dashboard --> Rooms[Local Rooms Markdown]
 
     WebUI --> LiteLLM[LiteLLM :4000]
     MerlinTask --> Router[Merlin router and policy gates]
     Router --> LiteLLM
     Router --> Memory[Memory Manager]
+    MerlinTask --> Rooms
 
     LiteLLM --> Ollama[Native Ollama :11434]
     Memory --> Qdrant[Qdrant :6333]
+    Rooms --> RoomPrompts[Room Master Prompt drafts]
 
     Wizard --> N8N[n8n optional adapter :5678]
     N8N --> Qdrant
@@ -104,23 +117,35 @@ flowchart LR
 
 ## Active Execution Queue
 
-1. #106: Wizard HQ Product Shell parent; keep Chat, Brains, Memory, Agents,
+1. #122/#123/#134: keep the product focus on the local brain value loop:
+   install, open Wizard HQ, select/create a Room, save local context, ask
+   Merlin, see local/private proof, and review/delete/export what was stored.
+2. #135: Merlin Rooms for local chat history and scoped context. Current slices
+   created the default Room layout, session Room launcher, approval-gated
+   transcript saves, and approval-gated Room Master Prompt drafts. Next slices
+   should add the Wizard HQ review/edit screen and a separate approve-for-context
+   gate before any Room content is reused.
+3. #106: Wizard HQ Product Shell parent; keep Chat, Brains, Memory, Agents,
    Security, System, and Settings aligned before deeper governance features.
-2. #114: policy-gated Wizard HQ Settings backend parent.
-3. #135: Merlin Rooms for local chat history and scoped context; design this
-   before adding more peripheral provider, automation, or web-comprehension
-   surfaces.
-4. #117: provider connector setup with secret presence-only storage and
+4. #31/#32/#120: memory approval, review, and delete paths. These are required
+   before Merlin can honestly claim it learns durably from approved Room
+   content.
+5. #130: brain/context storage location UI, read-only first, so users can see
+   where Merlin keeps Rooms, memory artifacts, and future exports.
+6. #129: Fast/Smart model selection UI. Keep raw model names out of the normal
+   user path; actual routing still belongs to Merlin.
+7. #133: Round Table agent governance. The doc exists; next runtime work should
+   be a read-only Wizard HQ panel only, not agent execution.
+8. #114: policy-gated Wizard HQ Settings backend parent.
+9. #117: provider connector setup with secret presence-only storage and
    explicit allow/not-allow flow. Backend presence-marker setup exists; Wizard
    HQ UI and real secret-vault/cloud-routing slices remain separate.
-5. #118, #119, and #120: model library confirmations, startup/API service
-   controls, and memory review/delete controls as separate policy-gated
-   Settings slices. #120 is directly related to #135 and should stay close.
-6. #37 and #95: public onboarding hardening and product audit evidence
+10. #119: startup/API service controls as a separate policy-gated Settings slice.
+11. #37 and #95: public onboarding hardening and product audit evidence
    collection under v3.0.
-7. #64: Developer ID signing/notarization under v3.0, deferred until the
+12. #64: Developer ID signing/notarization under v3.0, deferred until the
    installer, Wizard HQ, and release evidence are otherwise product-complete.
-8. #92: Native Automation Runtime in v3.x after release readiness work and
+13. #92: Native Automation Runtime in v3.x after release readiness work and
    control-plane product milestones.
 
 Patent/IP issues #81 through #84 are cross-cutting governance work. They should
@@ -139,6 +164,8 @@ approves the disclosure and the relevant evidence exists in code.
 | `docs/MERLIN_IMPLEMENTATION_ROADMAP.md` | Roadmap | Milestone ladder, issue alignment, and long-range execution plan. |
 | `docs/product/MERLIN_CONTROL_PLANE_STRATEGY.md` | Product strategy | Validated control-plane direction, current/future boundary, and v3.1-v4.x milestone ladder. |
 | `docs/product/PROVIDER_CONNECTOR_CAPABILITIES.md` | Product/engineering | Current provider API family map and #117 connector setup boundary. |
+| `docs/architecture/MERLIN_ROOMS.md` | Product/architecture | Current Room schema, transcript save flow, Room Master Prompt draft boundary, and future Room context rules. |
+| `docs/architecture/ROUND_TABLE_AGENT_GOVERNANCE.md` | Product/security architecture | Suggest-only Round Table roles and future agent governance boundary. |
 | `docs/observability-guide.md` | v1.6 feature owner | JSONL baseline, optional local Langfuse, trace export, and related tests. |
 | `docs/architecture/MERLIN_STAFF_CORE.md` | Merlin core owner | Staff router, swarm context, policy gates, team modes, and Phase 2 boundary. |
 | `docs/architecture/AUTOMATION_RUNTIME_STRATEGY.md` | Product/architecture | Why n8n remains optional today and how a native runtime becomes a v3.x milestone. |

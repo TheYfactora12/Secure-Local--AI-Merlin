@@ -1,7 +1,7 @@
 # Merlin AI Coding Master Prompt v2
 
 **Status:** Current product/engineering operating prompt.
-**Last verified:** 2026-05-09
+**Last verified:** 2026-05-10
 **Repository:** `TheYfactora12/home-ai-elite`
 **Product:** Merlin AI
 **Control surface:** Wizard HQ, `localhost:8888`
@@ -119,8 +119,11 @@ Live issue state is the source of truth. As of 2026-05-09, the focus stack is:
   backend policy gates or remain disabled.
 - **#130 Brain Storage Location UI.** Show where Merlin keeps its brain.
 - **#135 Merlin Rooms.** Local chat history and scoped context containers.
+  Current slices include default Room layout, transcript save, Room launcher,
+  and Room Master Prompt drafts. Next: review/edit and approve-for-context.
 - **#133 Round Table Architecture Doc.** Approval/governance model before broad
-  agent work.
+  agent work. Current spec exists; next runtime slice should be read-only UI
+  only.
 - **#129 Fast/Smart Model Selection UI.** No raw model config for normal users.
 - **#31 and #32 Memory Approval + Delete Path.** Blockers for memory review and
   durable learning UX.
@@ -292,10 +295,9 @@ Confidence must be visible:
 5. Memory delete/review path (#32/#120).
 6. Merlin Chat first context path (#123).
 7. Product value demo (#134).
-8. Rooms data model and transcript history (#135).
+8. Rooms review/edit path for Room Master Prompt drafts (#135).
 9. Export/Import Brain (#124/#125).
-10. Round Table architecture doc (#133).
+10. Read-only Round Table panel (#133).
 
 Do not skip ahead unless a live GitHub issue, security blocker, or user decision
 explicitly changes the order.
-

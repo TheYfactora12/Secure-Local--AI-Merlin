@@ -8202,3 +8202,163 @@ agent runtime work begins.
 ### Public Beta Impact
 
 Positive for trust posture, but no release-readiness claim changes.
+
+---
+
+## 2026-05-10 00:56 EDT - Roadmap And Master Prompt Drift Alignment
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`d191e01c43775d637cc9427e39eda122c8395936`
+
+### Ending Commit SHA
+
+Pending commit at time of note.
+
+### Target Issues
+
+- #122 Product Focus Cut
+- #123 Offline local brain and user-owned context store
+- #134 Product Value Checkpoint
+- #135 Merlin Rooms
+- #133 Round Table governance
+- #37/#95 release evidence support
+
+### Scope
+
+Align the top-level project prompts and roadmap docs with the live GitHub issue
+queue and recent commits. The active product direction is v3.1 local brain proof:
+Rooms, Room Master Prompt review, approved memory review/delete, and storage
+location clarity. Developer ID signing and native automation remain deferred.
+
+### Files Changed
+
+- `CODEX_MASTER_PROMPT.md`
+- `docs/CANONICAL_PROJECT_STATE.md`
+- `docs/MASTER_CONTEXT.md`
+- `docs/MASTER_PROMPT.md`
+- `docs/MERLIN_IMPLEMENTATION_ROADMAP.md`
+- `docs/CODEX_MASTER_PROMPT_V2.md`
+- `docs/product/PRODUCT_NORTH_STAR.md`
+- `tests/master-prompt-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None.
+
+### Commands Run
+
+```bash
+git status --short
+git branch --show-current
+git rev-parse HEAD
+git log --oneline -8
+gh issue list --state open --limit 40 --json number,title,state,labels,milestone,updatedAt,url
+gh issue list --state closed --limit 30 --json number,title,state,labels,milestone,closedAt,updatedAt,url
+rg --files docs
+sed -n '1,260p' docs/CANONICAL_PROJECT_STATE.md
+sed -n '1,220p' docs/MASTER_CONTEXT.md
+sed -n '1,260p' docs/MASTER_PROMPT.md
+sed -n '1,340p' docs/MERLIN_IMPLEMENTATION_ROADMAP.md
+bash tests/master-prompt-smoke.sh
+bash tests/codex-master-prompt-v2-smoke.sh
+bash tests/round-table-agent-governance-smoke.sh
+bash tests/control-plane-strategy-smoke.sh
+bash tests/observability-design-smoke.sh
+git diff --check
+```
+
+### Test Output Summary
+
+- `bash tests/master-prompt-smoke.sh` - PASS after smoke update.
+- `bash tests/codex-master-prompt-v2-smoke.sh` - PASS.
+- `bash tests/round-table-agent-governance-smoke.sh` - PASS.
+- `bash tests/control-plane-strategy-smoke.sh` - PASS after aligning closed
+  #118 expectation to current #129 model selection follow-up and canonical queue.
+- `bash tests/observability-design-smoke.sh` - PASS.
+- `git diff --check` - PASS.
+
+### Tests Skipped And Why
+
+- Runtime Python tests: not run for docs-only governance alignment.
+- Full installer retest: still required before Local Trusted Beta signoff, but
+  this slice did not change installer/package behavior.
+
+### Failures Found
+
+`bash tests/master-prompt-smoke.sh` failed because it required
+`Last verified: 2026-05-07` in `docs/MASTER_CONTEXT.md`.
+
+`bash tests/control-plane-strategy-smoke.sh` failed because it required #118 as
+an active canonical queue item even though #118 is closed. The current active
+model UX follow-up is #129.
+
+### Failure Category
+
+- Documentation mismatch
+- Test design gap
+- Roadmap/governance drift
+
+### Root Cause Or Current Hypothesis
+
+The smoke test encoded an old date as truth instead of checking that
+`MASTER_CONTEXT` reflects the current verified state.
+
+### Fix Applied
+
+- Updated `tests/master-prompt-smoke.sh` to require `Last verified: 2026-05-10`
+  and current v3.1 focus markers.
+- Updated `tests/control-plane-strategy-smoke.sh` to check #129 model selection
+  instead of stale #118 model library follow-up, and added #129 back to the
+  canonical active queue.
+- Updated top-level roadmap/prompt docs to prioritize #135/#123/#134,
+  #31/#32/#120, #130, #106/#114, and #133 before release signing or automation.
+- Updated root `CODEX_MASTER_PROMPT.md` to stop future sessions from treating
+  #37/#64/#95 or #92 as the immediate build queue.
+
+### Retest Result
+
+PASS for all commands listed above.
+
+### Regression Test Added Or Updated
+
+Updated `tests/master-prompt-smoke.sh` so future prompt/context drift checks
+track the current v3.1 local brain direction.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended:
+
+- Add a docs-governance smoke that verifies root `CODEX_MASTER_PROMPT.md`,
+  `docs/CANONICAL_PROJECT_STATE.md`, and `docs/MERLIN_IMPLEMENTATION_ROADMAP.md`
+  all mention the same top three active priorities.
+
+### Lesson Learned
+
+Governance tests should protect current product direction, not freeze old dates
+or old milestone queues.
+
+### What Not To Repeat Next Time
+
+Do not let release/signing or automation prompts outrank the local
+chat/Rooms/memory proof loop unless GitHub issue state and canonical state are
+updated first.
+
+### Next Recommended Step
+
+Build the Wizard HQ Room Master Prompt review/edit surface, then add a separate
+approve-for-context gate.
+
+### Local Trusted Beta Impact
+
+Positive. Future Codex sessions should now start from the correct v3.1 product
+core instead of stale release/signing queues.
+
+### Public Beta Impact
+
+Positive for discipline, but no public beta readiness claim changes.
