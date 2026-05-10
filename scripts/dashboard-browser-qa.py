@@ -155,12 +155,14 @@ def run_viewport(
     require_visible(page, "text=Room Review Table", "Rooms review table heading")
     require_visible(page, "#rooms-review-table", "Rooms review table")
     require_visible(page, "text=whole-Room archive/delete locked", "whole-Room archive/delete lock")
+    page.wait_for_timeout(240)
     page.screenshot(path=str(output / f"{name}-rooms.png"), full_page=True)
 
     page.locator("#rooms-new-room-name").fill("Merlin Build Notes")
     page.get_by_role("button", name="Create Room").click()
     require_visible(page, "text=Similar Room found", "similar Room guard")
     require_visible(page, "text=Use Merlin Build", "similar Room use-existing action")
+    page.wait_for_timeout(240)
     page.screenshot(path=str(output / f"{name}-rooms-guard.png"), full_page=True)
 
     context.close()

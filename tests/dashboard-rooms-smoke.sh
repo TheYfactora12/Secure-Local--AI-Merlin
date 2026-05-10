@@ -105,6 +105,16 @@ grep -Fq 'Use ${escapeHtml(match.roomName)}' "$DASHBOARD_FILE" \
   || fail "Rooms surface must let users choose the existing similar Room"
 grep -q "Create separate Room" "$DASHBOARD_FILE" \
   || fail "Rooms surface must require confirmation before near-duplicate Room creation"
+grep -q "Room Save Meter" "$DASHBOARD_FILE" \
+  || fail "chat surface must show Room save meter"
+grep -q "Save thread" "$DASHBOARD_FILE" \
+  || fail "chat Room save meter must expose a manual save action"
+grep -q "Update Room" "$DASHBOARD_FILE" \
+  || fail "chat Room save meter must expose update action after first save"
+grep -q "currentChatSavedExchangeCount" "$DASHBOARD_FILE" \
+  || fail "chat Room save UX must track saved exchange count"
+grep -q "currentChatSavedRoomId !== selectedRoomId" "$DASHBOARD_FILE" \
+  || fail "chat must not keep showing the large save panel after saving to the active Room"
 grep -q "Room context not active yet" "$DASHBOARD_FILE" \
   || fail "chat surface must show Room context state"
 grep -q "unless you explicitly allow selected-Room or all-Room sharing" "$DASHBOARD_FILE" \

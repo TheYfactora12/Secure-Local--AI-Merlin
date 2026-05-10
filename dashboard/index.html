@@ -223,10 +223,13 @@ textarea {
   max-width: 1500px;
   margin: 0 auto;
   grid-template-columns: minmax(0, 1fr);
+  height: calc(100dvh - 72px);
+  min-height: 0;
+  overflow: hidden;
 }
 .merlin-front-shell {
-  height: calc(100dvh - 148px);
-  min-height: 560px;
+  height: 100%;
+  min-height: 0;
   display: grid;
   grid-template-columns: 256px minmax(0, 1fr);
   overflow: hidden;
@@ -1669,10 +1672,14 @@ button.mode-pill:hover {
   .tabbar { width: 100%; }
   .shell.tab-page { grid-template-columns: 1fr; padding: 12px; }
   .tab-page { padding: 12px; }
+  .chat-home.tab-page {
+    height: calc(100dvh - 136px);
+    min-height: 0;
+  }
   .merlin-front-shell {
     grid-template-columns: 1fr;
-    height: calc(100dvh - 118px);
-    min-height: 520px;
+    height: 100%;
+    min-height: 0;
   }
   .merlin-front-shell.sidebar-collapsed { grid-template-columns: 1fr; }
   .front-sidebar {
@@ -2435,6 +2442,7 @@ let roomSaveStatus = 'Save becomes available after Merlin returns a response.';
 let roomSaveState = 'neutral';
 let currentChatSavedRoomId = null;
 let currentChatSavedTranscriptTitle = null;
+let currentChatSavedExchangeCount = 0;
 const CHAT_ROOM_PROMPT_LIMIT = 12;
 let promptsSinceRoomSave = 0;
 let lastRouteDetail = null;
@@ -2625,6 +2633,7 @@ function selectActiveRoom(roomId, roomName, openChat = false) {
   if (previousRoomId !== selectedRoomId) {
     currentChatSavedRoomId = null;
     currentChatSavedTranscriptTitle = null;
+    currentChatSavedExchangeCount = 0;
   }
   roomSaveStatus = lastMerlinExchange
     ? `Room target changed to ${selectedRoomName}. Save when you want this chat filed there.`
@@ -2885,15 +2894,37 @@ function updateRoomSaveMeter() {
   const panel = document.getElementById('chat-room-save-meter');
   if (!panel) return;
   const remaining = Math.max(0, CHAT_ROOM_PROMPT_LIMIT - promptsSinceRoomSave);
+  const savedInCurrentRoom = currentChatSavedRoomId === selectedRoomId;
+  const unsavedSinceSave = savedInCurrentRoom
+    ? Math.max(0, currentChatTranscript.length - currentChatSavedExchangeCount)
+    : currentChatTranscript.length;
   const state = promptsSinceRoomSave >= CHAT_ROOM_PROMPT_LIMIT
     ? 'warn'
     : (remaining <= 2 ? 'info' : 'good');
   const message = promptsSinceRoomSave >= CHAT_ROOM_PROMPT_LIMIT
     ? 'Save this chat to a Room before continuing so Merlin can preserve the thread locally.'
-    : `${remaining} prompt${remaining === 1 ? '' : 's'} before Room save is recommended.`;
+    : (savedInCurrentRoom
+      ? `${unsavedSinceSave} new prompt${unsavedSinceSave === 1 ? '' : 's'} since the last Room save.`
+      : `${remaining} prompt${remaining === 1 ? '' : 's'} before Room save is recommended.`);
+  const action = pendingRoomApproval
+    ? `
+      <div class="room-save-actions compact" data-room-save-stage="approval-prepared">
+        <button type="button" onclick="allowRoomTranscriptSave()">Allow once</button>
+        <button class="secondary" type="button" onclick="cancelRoomTranscriptSave()">Cancel</button>
+      </div>
+    `
+    : (lastMerlinExchange
+      ? `
+        <div class="room-save-actions compact" data-room-save-stage="response-ready">
+          <button type="button" onclick="requestRoomTranscriptApproval()">${savedInCurrentRoom ? 'Update Room' : 'Save thread'}</button>
+        </div>
+      `
+      : '');
   panel.innerHTML = `
     <span class="chip ${state}">${escapeHtml(promptsSinceRoomSave)} / ${escapeHtml(CHAT_ROOM_PROMPT_LIMIT)} prompts</span>
     <p>${escapeHtml(message)}</p>
+    ${action}
+    ${currentChatSavedTranscriptTitle ? `<p>Saved as: ${escapeHtml(currentChatSavedTranscriptTitle)}</p>` : ''}
   `;
 }
 
@@ -3108,6 +3139,7 @@ function clearMerlinChat() {
   currentChatTranscript = [];
   currentChatSavedRoomId = null;
   currentChatSavedTranscriptTitle = null;
+  currentChatSavedExchangeCount = 0;
   roomSaveStatus = 'Save becomes available after Merlin returns a response.';
   roomSaveState = 'neutral';
   promptsSinceRoomSave = 0;
@@ -3392,7 +3424,10 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
   const showRoomReadApproval = state === 'pending' && Boolean(pendingRoomRead);
   const showTranscriptRemovalApproval = state === 'pending' && Boolean(pendingTranscriptRemoval);
   const showRoomArchiveApproval = state === 'pending' && Boolean(pendingRoomArchive);
-  const showRoomSave = allowRoomSave && state === 'approved' && !degraded;
+  const showRoomSave = allowRoomSave
+    && state === 'approved'
+    && !degraded
+    && currentChatSavedRoomId !== selectedRoomId;
   const routeLabel = routeData.route_id || 'unavailable';
   const staffLabel = routeData.staff_mode || null;
   const routeEngineAvailable = Boolean(routeData.selected_model_alias);
@@ -3451,9 +3486,10 @@ function renderChatOutput({ state, title, body, route, gates, degraded, userInpu
 async function requestRoomTranscriptApproval() {
   if (!lastMerlinExchange) return;
   pendingRoomApproval = null;
-  roomSaveStatus = 'Preparing approval request...';
-  roomSaveState = 'warn';
-  updateRoomSavePanel();
+    roomSaveStatus = 'Preparing approval request...';
+    roomSaveState = 'warn';
+    updateRoomSavePanel();
+    updateRoomSaveMeter();
   try {
     const data = await postJson(`${TASK_API}/approvals/room-transcript`, {
       room_id: selectedRoomId,
@@ -3470,6 +3506,7 @@ async function requestRoomTranscriptApproval() {
     roomSaveState = 'bad';
   }
   updateRoomSavePanel();
+  updateRoomSaveMeter();
 }
 
 async function allowRoomTranscriptSave() {
@@ -3490,6 +3527,7 @@ async function allowRoomTranscriptSave() {
     pendingRoomApproval = null;
     currentChatSavedRoomId = selectedRoomId;
     currentChatSavedTranscriptTitle = safe(data.transcript_title || data.transcript_id, 'Saved chat');
+    currentChatSavedExchangeCount = currentChatTranscript.length;
     roomSaveStatus = `Saved locally: ${currentChatSavedTranscriptTitle} · memory not written`;
     roomSaveState = 'good';
     updateLastMerlinExchangeFromTranscript(data.transcript_id || lastMerlinExchange.sessionId);
@@ -3502,6 +3540,7 @@ async function allowRoomTranscriptSave() {
     roomSaveState = 'bad';
   }
   updateRoomSavePanel();
+  updateRoomSaveMeter();
 }
 
 async function allowRoomTranscriptRead() {
@@ -3640,8 +3679,9 @@ async function allowRoomArchive() {
       approval_id: request.approvalId,
     });
     pendingRoomArchive = null;
-    currentChatSavedRoomId = null;
-    currentChatSavedTranscriptTitle = null;
+  currentChatSavedRoomId = null;
+  currentChatSavedTranscriptTitle = null;
+  currentChatSavedExchangeCount = 0;
     if (selectedRoomId === request.roomId) {
       selectedRoomId = DEFAULT_ROOM_ID;
       selectedRoomName = DEFAULT_ROOM_NAME;
@@ -3689,6 +3729,7 @@ async function cancelRoomTranscriptSave() {
   roomSaveStatus = 'Room save canceled. No transcript was written.';
   roomSaveState = 'neutral';
   updateRoomSavePanel();
+  updateRoomSaveMeter();
   try {
     await postJson(`${TASK_API}/approvals/${encodeURIComponent(approvalId)}/deny`, {});
   } catch (_) {

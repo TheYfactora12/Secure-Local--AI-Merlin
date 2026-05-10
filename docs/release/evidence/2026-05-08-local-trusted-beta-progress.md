@@ -10741,3 +10741,145 @@ without hard deletion or hidden memory changes.
 Positive, but Public Beta remains blocked by full installer retest, restore
 from archive, memory review/delete, approve-for-context, and clean-machine
 onboarding evidence.
+
+## 2026-05-10 - Room Save UX And Browser QA Evidence
+
+### Date/time
+
+2026-05-10T15:14:33Z
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`1bdb8420b4f70e4c670978e58a7ab7d7d3f3e368`
+
+### Target Issues
+
+- #135 Merlin Rooms for local chat history and scoped context.
+- #106 Wizard HQ Product Shell.
+- #95 release-readiness evidence.
+
+### Scope
+
+Polish the Room save workflow so Wizard HQ does not keep showing the large
+save panel after a chat has already been saved to the active Room. Keep a
+small sidebar save/update control available instead. Fix the browser QA
+evidence timing so Rooms screenshots are captured after the tab fade-in.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `scripts/dashboard-browser-qa.py`
+- `tests/dashboard-rooms-smoke.sh`
+- `docs/release/evidence/assets/2026-05-10-wizard-hq-room-save-qa/*`
+- release evidence note
+
+### Protected Files Touched
+
+No installer, package, runtime policy engine, memory manager, router, or API
+boundary file was touched in this slice.
+
+### Commands Run
+
+- `python3 -m py_compile merlin/room_store.py merlin/approval_store.py merlin/task_endpoint.py`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `git diff --check`
+- `.venv-test/bin/python scripts/dashboard-browser-qa.py --output-dir docs/release/evidence/assets/2026-05-10-wizard-hq-room-save-qa`
+- `bash tests/dashboard-browser-qa-smoke.sh`
+
+### Test Output Summary
+
+- Python compile: PASS.
+- Rooms static smoke: PASS.
+- Whitespace check: PASS.
+- Browser QA live screenshot run: PASS; evidence written to
+  `docs/release/evidence/assets/2026-05-10-wizard-hq-room-save-qa/`.
+- Browser QA static harness smoke: PASS.
+
+### Tests Skipped And Why
+
+Full installer retest was not run. This slice changes Wizard HQ UI and QA
+evidence capture only, so a full installer retest is still required before
+Local Trusted Beta signoff but was not necessary for this narrow patch.
+
+### Failures Found
+
+1. Browser QA initially captured the Rooms page while the tab fade-in animation
+   was still dimming the page.
+2. UX review found the chat save prompt was too persistent after a user had
+   already saved the active Room.
+
+### Failure Category
+
+- UX/readiness confusion.
+- Test design gap.
+
+### Root Cause Or Current Hypothesis
+
+The QA harness clicked the Rooms tab and immediately captured evidence before
+the 180ms page transition settled. The save panel logic treated every approved
+answer as needing the same large save prompt even when the user had already
+filed the thread to the active Room.
+
+### Fix Applied
+
+- Added saved exchange count tracking for the active Room.
+- Moved ongoing save/update control into the sidebar Room Save Meter.
+- Hid the large bottom save panel after the current chat has already been
+  saved to the selected Room.
+- Kept one-time approval for transcript save/update.
+- Made chat app height viewport-bound so the sidebar scrolls in smaller
+  windows.
+- Added a short wait in browser QA before Rooms screenshots after tab changes.
+
+### Retest Result
+
+PASS for static Rooms smoke, whitespace check, browser QA static smoke, and
+live browser QA screenshots after the harness timing fix.
+
+### Regression Test Added Or Updated
+
+- `tests/dashboard-rooms-smoke.sh` now asserts the manual `Save thread` and
+  `Update Room` controls exist and that the large save panel is gated by
+  active-Room save state.
+- `scripts/dashboard-browser-qa.py` now waits for Rooms tab transitions before
+  screenshot evidence.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended #135 child issue:
+
+**Title:** `v3.1 Rooms: restore archived Room and make saved transcript list a first-class Room view`
+
+Scope: add restore-from-archive, show all saved transcripts for a Room in a
+dedicated Room view, and keep transcript read/delete behind one-time approval.
+
+### Lesson Learned
+
+Screenshots are product evidence. Capturing a transition frame can make a
+working page look broken, so browser QA must wait for UI state to settle before
+recording evidence.
+
+### What Not To Repeat Next Time
+
+Do not let safety prompts become repetitive UI noise. One-time approval stays,
+but the main chat should stay clean once the user has already made the Room
+filing decision.
+
+### Next Recommended Step
+
+Build the first-class saved transcript list for each Room, then add
+restore-from-archive before moving to approve-for-context.
+
+### Local Trusted Beta Impact
+
+Positive. The Room save flow is less intrusive and has better browser evidence.
+
+### Public Beta Impact
+
+Positive, but Public Beta remains blocked by full installer retest,
+restore-from-archive, memory review/delete, approve-for-context, and clean
+onboarding evidence.
