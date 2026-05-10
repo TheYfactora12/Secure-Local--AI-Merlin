@@ -6936,3 +6936,144 @@ unsafe writes are already enabled.
 Positive, but Public Beta still needs real Room picker persistence, memory
 review/delete, export/import, clean installer evidence, and polished browser
 validation screenshots.
+
+---
+
+## Wizard HQ Header Cleanup — 2026-05-09
+
+### Date / Time
+
+2026-05-09 EDT.
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`b84d26d` — `feat(dashboard): polish Merlin chat shell controls`
+
+### Target Issues
+
+- #106: Wizard HQ Product Shell.
+- #135: Merlin Rooms / local chat context clarity.
+- #129/#130 support: model mode and storage trust signals.
+
+### Scope
+
+Clean the global header and reduce duplicated diagnostics in the Chat page:
+
+- move local mode, cloud-disabled, hardware tier, readiness, and Task API state
+  out of the global header and into the collapsible Chat side panel;
+- add hover explanations for product tabs and status chips;
+- keep product tabs sticky while scrolling;
+- preserve side-panel collapse/expand behavior.
+- record the future talk-mode direction: the central Merlin presence is the
+  voice/listening surface once local audio consent and privacy checks exist.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-first-run-smoke.sh`
+- `tests/dashboard-merlin-status-smoke.sh`
+- `tests/dashboard-first-run-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None.
+
+### Commands Run
+
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-merlin-status-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-model-readiness-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `git diff --check`
+- `gh run list --branch main --limit 2 --json databaseId,headSha,status,conclusion,name,createdAt,url`
+
+### Test Output Summary
+
+All local static dashboard smokes passed. GitHub Actions run `25618439525` for
+commit `b84d26d` completed successfully before this cleanup commit.
+
+### Tests Skipped And Why
+
+- Full installer retest: not triggered by this dashboard-only layout cleanup.
+- Live browser screenshot: not captured in this sub-slice; recommended before
+  closing #106/#135 UI work.
+
+### Failures Found
+
+`tests/dashboard-native-chat-smoke.sh` initially failed because removing the old
+Trust card also removed the exact phrase `Memory writes require approval`.
+
+### Failure Category
+
+- UX/readiness confusion
+- Test design gap
+
+### Root Cause Or Current Hypothesis
+
+The old Trust card mixed several concepts. Moving status into the side panel was
+correct, but the memory approval warning is still a required user trust signal
+and test contract.
+
+### Fix Applied
+
+Added a side-panel status chip:
+
+`memory_approval_required`
+
+with hover copy explaining that memory writes require approval and local
+transcripts do not automatically become reusable memory.
+
+Added a future talk-mode note under the central Merlin presence. It explicitly
+does not claim voice is implemented; it says listening and reply pulses stay
+disabled until voice capture, consent, and local audio privacy checks exist.
+
+### Retest Result
+
+PASS after restoring the memory approval signal in the side panel.
+
+### Regression Test Added Or Reason Not Added
+
+Updated first-run and Merlin status smokes to assert:
+
+- status chips live in the side panel,
+- status chips have hover explanations,
+- top product tabs have hover explanations,
+- sticky tab bar styles remain.
+- future talk-mode presence is documented without claiming voice support.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended under #106/#135:
+
+- capture desktop and narrow-layout screenshots after the side-panel move;
+- add Playwright or static DOM checks for collapsed/expanded visual states once
+  browser automation is stable.
+
+### Lesson Learned
+
+Reducing dashboard noise is good, but trust signals should be relocated, not
+deleted. If a phrase is part of a safety contract, preserve the concept even
+when the visual layout changes.
+
+### What Not To Repeat Next Time
+
+Do not remove status or approval language as "redundant" until the replacement
+surface carries the same user-facing trust guarantee.
+
+### Local Trusted Beta Impact
+
+Positive. The Chat surface is cleaner while local-only, cloud-disabled,
+readiness, Task API, and memory-approval states remain visible in the side
+panel.
+
+### Public Beta Impact
+
+Positive, pending visual screenshot evidence and continued UI polish.

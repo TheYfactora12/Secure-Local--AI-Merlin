@@ -586,6 +586,14 @@ button.mode-pill:hover {
   margin: 0 0 10px;
 }
 .hero-title p { font-size: 15px; max-width: 720px; margin: 0 auto; }
+.voice-future-note {
+  display: block;
+  max-width: 48ch;
+  margin: 9px auto 0;
+  color: var(--dim);
+  font-size: 12px;
+  line-height: 1.5;
+}
 .hero-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .chat-home .hero {
   min-height: auto;
@@ -1291,7 +1299,7 @@ button.mode-pill:hover {
 }
 @media (max-width: 820px) {
   .topbar { align-items: flex-start; flex-direction: column; }
-  .tabbar-wrap { position: static; padding: 10px 12px 0; }
+  .tabbar-wrap { top: 86px; padding: 10px 12px 0; }
   .shell.tab-page { grid-template-columns: 1fr; padding: 12px; }
   .tab-page { padding: 12px; }
   .merlin-front-shell { grid-template-columns: 1fr; }
@@ -1341,30 +1349,21 @@ button.mode-pill:hover {
         <p>Merlin AI · Private Intelligence. Locally Owned.</p>
       </div>
     </div>
-    <div class="top-actions" aria-label="Current Merlin state">
-      <span class="sovereignty-indicator" id="sovereignty-indicator" aria-label="Sovereignty Indicator: Local Mode">
-        <span class="sovereignty-icon" aria-hidden="true">●</span>
-        <strong id="sovereignty-label">Local Mode</strong>
-      </span>
-      <span class="chip good" id="chip-local">local_only</span>
-      <span class="chip good" id="chip-cloud">cloud_disabled</span>
-      <span class="chip info" id="chip-tier">tier: checking</span>
-      <span class="chip warn" id="chip-readiness">readiness: checking</span>
-      <span class="chip warn" id="chip-task-api">task_api: checking</span>
+    <div class="top-actions" aria-label="Wizard HQ actions">
       <button class="refresh" type="button" onclick="refreshAll()" aria-label="Refresh dashboard">Refresh</button>
     </div>
   </header>
 
   <nav class="tabbar-wrap" aria-label="Wizard HQ product tabs">
     <div class="tabbar">
-      <button class="tab-button active" type="button" data-tab-target="chat" onclick="selectTab('chat')">Chat</button>
-      <button class="tab-button" type="button" data-tab-target="rooms" onclick="selectTab('rooms')">Rooms</button>
-      <button class="tab-button" type="button" data-tab-target="brains" onclick="selectTab('brains')">Brains</button>
-      <button class="tab-button" type="button" data-tab-target="memory" onclick="selectTab('memory')">Memory</button>
-      <button class="tab-button" type="button" data-tab-target="agents" onclick="selectTab('agents')">Agents</button>
-      <button class="tab-button" type="button" data-tab-target="security" onclick="selectTab('security')">Security</button>
-      <button class="tab-button" type="button" data-tab-target="system" onclick="selectTab('system')">System</button>
-      <button class="tab-button" type="button" data-tab-target="settings" onclick="selectTab('settings')">Settings</button>
+      <button class="tab-button active" type="button" data-tab-target="chat" onclick="selectTab('chat')" title="Chat with Merlin through the local policy-gated route.">Chat</button>
+      <button class="tab-button" type="button" data-tab-target="rooms" onclick="selectTab('rooms')" title="Local project spaces for saved transcripts and scoped context.">Rooms</button>
+      <button class="tab-button" type="button" data-tab-target="brains" onclick="selectTab('brains')" title="Local model, router, and optional provider connector status.">Brains</button>
+      <button class="tab-button" type="button" data-tab-target="memory" onclick="selectTab('memory')" title="Approved memory and vector vault readiness without raw private content.">Memory</button>
+      <button class="tab-button" type="button" data-tab-target="agents" onclick="selectTab('agents')" title="Supervised agent surfaces; execution stays policy-gated.">Agents</button>
+      <button class="tab-button" type="button" data-tab-target="security" onclick="selectTab('security')" title="Local-first privacy, approvals, secrets, and telemetry posture.">Security</button>
+      <button class="tab-button" type="button" data-tab-target="system" onclick="selectTab('system')" title="Read-only service health, startup readiness, and recovery guidance.">System</button>
+      <button class="tab-button" type="button" data-tab-target="settings" onclick="selectTab('settings')" title="Conservative setup previews and locked policy-gated configuration.">Settings</button>
     </div>
   </nav>
 
@@ -1414,8 +1413,20 @@ button.mode-pill:hover {
           </div>
         </div>
         <div class="front-sidebar-card">
-          <h3>Trust</h3>
-          <p>Local by default. Cloud is off. Memory writes require approval.</p>
+          <h3>System State</h3>
+          <p>These explain why Merlin is safe to use before you ask.</p>
+          <div class="mini-control-stack" aria-label="Current Merlin state">
+            <span class="sovereignty-indicator" id="sovereignty-indicator" aria-label="Sovereignty Indicator: Local Mode" title="Shows whether Merlin is using local-only mode, an approved cloud bridge, or offline/warming mode.">
+              <span class="sovereignty-icon" aria-hidden="true">●</span>
+              <strong id="sovereignty-label">Local Mode</strong>
+            </span>
+            <span class="chip good" id="chip-local" title="Privacy mode. local_only means Merlin is operating on this machine by default.">local_only</span>
+            <span class="chip good" id="chip-cloud" title="Cloud default. cloud_disabled means Merlin will not silently send data outside this machine.">cloud_disabled</span>
+            <span class="chip info" id="chip-tier" title="Hardware tier. Low tier means Merlin protects memory and avoids heavy defaults.">tier: checking</span>
+            <span class="chip warn" id="chip-readiness" title="Readiness state. Merlin only says ready after required local checks pass.">readiness: checking</span>
+            <span class="chip warn" id="chip-task-api" title="Task API state. Chat uses the policy-gated local Task API, not direct model calls.">task_api: checking</span>
+            <span class="chip warn" title="Memory writes require approval. Chat transcripts can be saved locally without becoming reusable memory.">memory_approval_required</span>
+          </div>
         </div>
       </aside>
 
@@ -1444,6 +1455,7 @@ button.mode-pill:hover {
             <div class="hero-title">
               <h2 id="merlin-brand-title">Merlin AI</h2>
               <p>Private Intelligence. Locally Owned.</p>
+              <span class="voice-future-note">Future talk mode: this is the Merlin presence you speak with. Listening and reply pulses stay disabled until voice capture, consent, and local audio privacy checks are implemented.</span>
             </div>
             <div class="suggestion-grid" aria-label="Safe Merlin starter prompts">
               <button class="suggestion-chip" type="button" onclick="setMerlinPrompt('Explain what Merlin can do locally right now.')">Explain local abilities</button>

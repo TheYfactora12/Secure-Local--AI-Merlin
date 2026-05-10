@@ -44,6 +44,10 @@ grep -q "New conversation" "$DASHBOARD_FILE" \
   || fail "Chat home missing local chat workspace affordance"
 grep -q "Merlin AI" "$DASHBOARD_FILE" \
   || fail "Chat home missing Merlin AI center brand"
+grep -q "Future talk mode: this is the Merlin presence you speak with" "$DASHBOARD_FILE" \
+  || fail "Chat home missing future Merlin talk-mode presence note"
+grep -q "voice capture, consent, and local audio privacy checks" "$DASHBOARD_FILE" \
+  || fail "future talk-mode note must stay privacy/consent gated"
 grep -q "placeholder=\"Ask Merlin...\"" "$DASHBOARD_FILE" \
   || fail "Chat home missing clean Ask Merlin input"
 if grep -q "Talk to Merlin first" "$DASHBOARD_FILE"; then
@@ -57,6 +61,16 @@ grep -q "sidebar-open" "$DASHBOARD_FILE" \
   || fail "Chat home missing mobile side panel expanded state"
 grep -q 'id="sovereignty-indicator"' "$DASHBOARD_FILE" \
   || fail "dashboard missing persistent Sovereignty Indicator"
+grep -q "System State" "$DASHBOARD_FILE" \
+  || fail "dashboard must move status chips into the chat side panel"
+grep -q "Shows whether Merlin is using local-only mode" "$DASHBOARD_FILE" \
+  || fail "status chips must explain their purpose on hover"
+grep -q "Chat with Merlin through the local policy-gated route" "$DASHBOARD_FILE" \
+  || fail "top product tabs must include user-facing hover explanations"
+grep -q "Local project spaces for saved transcripts" "$DASHBOARD_FILE" \
+  || fail "Rooms tab must explain its purpose on hover"
+grep -q ".tabbar-wrap {" "$DASHBOARD_FILE" \
+  || fail "dashboard missing sticky product tab bar styles"
 grep -q "Sovereignty Indicator: Local Mode" "$DASHBOARD_FILE" \
   || fail "Sovereignty Indicator must default to Local Mode"
 grep -q "Cloud Bridge Active" "$DASHBOARD_FILE" \
