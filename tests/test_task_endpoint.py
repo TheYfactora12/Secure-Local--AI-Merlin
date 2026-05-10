@@ -117,12 +117,15 @@ def test_system_prompt_contains_persona_name_merlin() -> None:
 
 
 def test_system_prompt_prevents_model_identity_and_language_drift() -> None:
-    prompt = build_system_prompt(route_task("explain how RAG works"))
+    route = route_task("explain how RAG works")
+    prompt = build_system_prompt(route)
 
     assert IDENTITY_AND_LANGUAGE_BLOCK in prompt
     assert "You are Merlin AI" in prompt
     assert "Never identify as Qwen" in prompt
     assert "Respond in clear English unless the user explicitly asks for another language." in prompt
+    assert f"Technical engine alias for this task: {route.selected_model_alias}" in prompt
+    assert "If the user asks what model was used, answer with this engine alias" in prompt
 
 
 def test_task_endpoint_sends_merlin_identity_guard_to_litellm(monkeypatch) -> None:
@@ -142,6 +145,7 @@ def test_task_endpoint_sends_merlin_identity_guard_to_litellm(monkeypatch) -> No
     assert "You are Merlin AI" in system_message
     assert "Never identify as Qwen" in system_message
     assert "Respond in clear English unless the user explicitly asks for another language." in system_message
+    assert "Technical engine alias for this task:" in system_message
 
 
 def test_system_prompt_contains_guardian_ethos_commitment_text() -> None:

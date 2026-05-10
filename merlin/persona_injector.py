@@ -81,6 +81,8 @@ def build_system_prompt(route_decision: RouteDecision, voice_ready: bool = False
         "[Active Team Mode]",
         f"Staff mode: {route_decision.staff_mode}",
         f"Route ID: {route_decision.route_id}",
+        f"Technical engine alias for this task: {route_decision.selected_model_alias}",
+        "If the user asks what model was used, answer with this engine alias while making clear that Merlin is the assistant identity.",
         f"Focus: {active_focus}",
         "",
         "[Response Contract]",

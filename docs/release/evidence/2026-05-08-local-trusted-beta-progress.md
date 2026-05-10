@@ -8511,3 +8511,293 @@ Positive. This directly improves first-use trust and product identity.
 ### Public Beta Impact
 
 Positive, but still needs live browser evidence before signoff.
+
+---
+
+## 2026-05-10 - Chat Room Save Meter And Side-Panel Engine Detail
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`e0c41fac4442ac6073e647b058a931585ed6d3ff`
+
+### Ending Commit SHA
+
+Pending commit at time of note.
+
+### Target Issues
+
+- #106 Wizard HQ Product Shell
+- #123 Offline local brain and user-owned context store
+- #129 Fast/Smart model selection UI
+- #135 Merlin Rooms
+
+### Scope
+
+Move technical model/route detail out of the main chat and into the side panel,
+add a prompt-count meter that recommends saving to a Room before a chat grows too
+long, and show saved Room transcript metadata in the side panel without exposing
+raw transcript text.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `merlin/persona_injector.py`
+- `tests/dashboard-native-chat-smoke.sh`
+- `tests/test_task_endpoint.py`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+- `merlin/persona_injector.py` - prompt contract only.
+- `dashboard/index.html` - UI only.
+
+No installer, policy gate, memory write, cloud, secret, or service-control
+behavior changed.
+
+### Commands Run
+
+```bash
+bash scripts/merlin-task-api.sh status
+tail -n 80 logs/merlin-task-api.log
+lsof -nP -iTCP:8766 -sTCP:LISTEN || true
+gh run list --branch main --limit 3 --json databaseId,headSha,status,conclusion,name,createdAt,url
+.venv-test/bin/python -m pytest tests/test_task_endpoint.py tests/test_status_extension.py
+bash tests/dashboard-native-chat-smoke.sh
+bash tests/dashboard-rooms-smoke.sh
+bash tests/dashboard-first-run-smoke.sh
+bash tests/dashboard-model-readiness-smoke.sh
+bash tests/dashboard-tabs-smoke.sh
+git diff --check
+```
+
+### Test Output Summary
+
+- `tests/test_task_endpoint.py tests/test_status_extension.py` - 49 passed.
+- `bash tests/dashboard-native-chat-smoke.sh` - PASS.
+- `bash tests/dashboard-rooms-smoke.sh` - PASS.
+- `bash tests/dashboard-first-run-smoke.sh` - PASS.
+- `bash tests/dashboard-model-readiness-smoke.sh` - PASS.
+- `bash tests/dashboard-tabs-smoke.sh` - PASS.
+- `git diff --check` - PASS.
+- GitHub Actions for prior identity fix commit `e0c41fa` - PASS.
+
+### Tests Skipped And Why
+
+- Live browser click-through: not run in this slice. Needed to visually confirm
+  the side panel feels like a Perplexity-style Room/Space history.
+- Raw saved transcript reopen: intentionally not implemented. Reopening raw
+  transcript content needs a future policy-gated local read endpoint.
+
+### Failures Found
+
+After `bash scripts/merlin-task-api.sh restart`, a live curl to port 8766 failed
+with `curl: (7) Failed to connect`. A later status check reported
+`status: stopped`; logs showed recent successful starts plus intermittent bind
+errors.
+
+### Failure Category
+
+- Task API 8766
+- Launchd/autostart or local service lifecycle
+- UX/readiness confusion
+
+### Root Cause Or Current Hypothesis
+
+The task API process can report started after a health check and then exit or be
+replaced, likely due to local launchd/manual process coordination or intermittent
+bind behavior. This was not fixed in this UI slice because the requested work
+was chat/Rooms UX and no service-manager code was changed.
+
+### Fix Applied
+
+- Added Room Save Meter in the chat side panel with a six-prompt recommendation.
+- Reset the meter after local Room save.
+- Added Route Details side-panel card showing route, staff mode, and technical
+  engine alias outside the main chat.
+- Added Room History side-panel dropdowns from the read-only Rooms manifest.
+- Selecting a saved transcript jumps back into that Room but does not load raw
+  transcript content yet.
+- Added technical engine alias to the Merlin system prompt so Merlin can answer
+  model questions honestly while preserving Merlin as the assistant identity.
+
+### Retest Result
+
+PASS for all commands listed above.
+
+### Regression Test Added Or Updated
+
+- `tests/dashboard-native-chat-smoke.sh` verifies the Room Save Meter, prompt
+  counter state, Room History, side-panel engine detail, and raw transcript
+  reopen boundary.
+- `tests/test_task_endpoint.py` verifies selected engine alias is included in
+  the system prompt as technical route detail while preserving Merlin identity.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended:
+
+- Add focused issue for Task API restart instability if the stopped-after-start
+  behavior repeats.
+- Add policy-gated saved transcript read/reopen endpoint for Room History.
+- Add browser QA for side-panel Room dropdown and prompt meter behavior.
+
+### Lesson Learned
+
+The main chat should show Merlin, not engine plumbing. Technical model details
+belong in an inspectable side panel, and saved transcript reopening needs its
+own local read boundary.
+
+### What Not To Repeat Next Time
+
+Do not expose raw local transcript content through the read-only Rooms manifest.
+Do not put raw model aliases in the main chat as the product identity.
+
+### Next Recommended Step
+
+Build the policy-gated saved transcript read/reopen endpoint, then wire the Room
+History side panel to reopen saved chats safely.
+
+### Local Trusted Beta Impact
+
+Positive. Chat now better guides the user toward saving context and keeps Merlin
+identity clean while preserving inspectable route details.
+
+### Public Beta Impact
+
+Positive, but public beta still needs browser evidence and the safe transcript
+reopen path.
+
+## 2026-05-10 - Temporary Approval Copy And Security Panel Clarity
+
+### Date/Time
+
+2026-05-10 08:22:45 EDT
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`e0c41fac4442ac6073e647b058a931585ed6d3ff`
+
+### Target Issues
+
+- #135 Rooms and local transcript flow.
+- #31/#32 approval-gated memory/review principles.
+- #106 Wizard HQ product shell clarity.
+
+### Scope
+
+Clarify that dashboard approvals are temporary by default. Room transcript save
+now presents an `Allow once` action, and the Security panel explains that
+permanent allow belongs in Security Settings only after policy-backed controls
+exist.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-rooms-smoke.sh`
+- `tests/dashboard-security-center-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None in installer/runtime policy files. Dashboard and static smoke tests only.
+
+### Commands Run
+
+- `.venv-test/bin/python -m pytest tests/test_task_endpoint.py tests/test_status_extension.py`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-security-center-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-model-readiness-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- Python tests: 49 passed.
+- Native chat smoke: PASS.
+- Rooms smoke: PASS.
+- Security center smoke: PASS.
+- First-run smoke: PASS.
+- Model readiness smoke: PASS.
+- Tabs smoke: PASS.
+- Diff whitespace check: PASS.
+
+### Tests Skipped And Why
+
+Live browser click-through is deferred for this small copy/test slice; static
+smokes cover the required user-facing approval semantics.
+
+### Failures Found
+
+None during this copy/test update at time of writing.
+
+### Failure Category
+
+No new failure.
+
+### Root Cause Or Current Hypothesis
+
+The UI phrase `Allow local save` was too broad. The backend approval is scoped
+to a specific Room transcript payload, but the copy did not teach the user that
+the approval is one-time and Merlin will ask again next time.
+
+### Fix Applied
+
+- Changed Room transcript save action from `Allow local save` to `Allow once`.
+- Added one-time transcript approval copy to the Room save panel.
+- Updated the Security panel to show `Default approval: allow once` and
+  `Permanent allow: settings only`.
+- Kept arbitrary approval buttons out of the Security dashboard.
+
+### Retest Result
+
+PASS for all commands listed above.
+
+### Regression Test Added Or Updated
+
+- `tests/dashboard-rooms-smoke.sh` now requires `Allow once`, one-time approval
+  copy, and ask-again behavior.
+- `tests/dashboard-security-center-smoke.sh` now requires temporary approval
+  language and permanent-allow settings-only language.
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended future issue: design policy-backed permanent approval settings with
+clear scope, expiration, revoke controls, audit entries, and fail-closed
+behavior. Do not implement permanent allow as a browser-only toggle.
+
+### Lesson Learned
+
+Permission words matter. `Allow local save` sounds like a broad capability,
+while `Allow once` matches the actual payload-scoped approval model and better
+protects user trust.
+
+### What Not To Repeat Next Time
+
+Do not use broad approval labels when the backend approval is one-time,
+payload-scoped, or otherwise limited.
+
+### Next Recommended Step
+
+Run focused dashboard smokes and Python task endpoint tests, then commit the
+chat/Rooms/approval clarity slice if all checks pass.
+
+### Local Trusted Beta Impact
+
+Positive. First-time users should better understand that Merlin asks again by
+default and permanent allow is not silently enabled.
+
+### Public Beta Impact
+
+Positive, but public beta still needs browser click-through evidence and a
+designed permanent approval settings model before offering always-allow
+behavior.

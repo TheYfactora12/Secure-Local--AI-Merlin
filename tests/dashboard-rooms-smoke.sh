@@ -32,8 +32,12 @@ grep -q "Save latest chat to Room" "$DASHBOARD_FILE" \
   || fail "Rooms surface must expose latest-chat Room save surface"
 grep -q "Prepare Room save" "$DASHBOARD_FILE" \
   || fail "Rooms save flow must require a prepare approval step"
-grep -q "Allow local save" "$DASHBOARD_FILE" \
-  || fail "Rooms save flow must require explicit allow action"
+grep -q "Allow once" "$DASHBOARD_FILE" \
+  || fail "Rooms save flow must require explicit one-time allow action"
+grep -q "This approval is one-time for this transcript only" "$DASHBOARD_FILE" \
+  || fail "Rooms save flow must explain one-time transcript approval"
+grep -q "Merlin asks again next time" "$DASHBOARD_FILE" \
+  || fail "Rooms save flow must explain repeat approvals are required by default"
 grep -q 'data-room-save-stage="waiting"' "$DASHBOARD_FILE" \
   || fail "Rooms save flow must expose a waiting stage before Merlin responds"
 grep -q 'data-room-save-stage="response-ready"' "$DASHBOARD_FILE" \

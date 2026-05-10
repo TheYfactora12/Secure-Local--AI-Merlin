@@ -50,6 +50,26 @@ grep -q "sidebar-open" "$DASHBOARD_FILE" \
   || fail "dashboard missing mobile expanded sidebar state"
 grep -q "chat-context-sidebar" "$DASHBOARD_FILE" \
   || fail "dashboard missing accessible chat context sidebar id"
+grep -q "Room Save Meter" "$DASHBOARD_FILE" \
+  || fail "dashboard missing prompt countdown before Room save"
+grep -q "CHAT_ROOM_PROMPT_LIMIT = 6" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Room save prompt limit"
+grep -q "promptsSinceRoomSave" "$DASHBOARD_FILE" \
+  || fail "dashboard missing prompt counter state"
+grep -q "Room save recommended now" "$DASHBOARD_FILE" \
+  || fail "dashboard missing save recommendation after prompt limit"
+grep -q "Route Details" "$DASHBOARD_FILE" \
+  || fail "dashboard missing side-panel route/model details"
+grep -q "Engine:" "$DASHBOARD_FILE" \
+  || fail "dashboard side panel must expose engine detail outside main chat"
+grep -q "Merlin is the assistant identity" "$DASHBOARD_FILE" \
+  || fail "dashboard must explain model engine vs Merlin identity"
+grep -q "Room History" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Room history side panel"
+grep -q "openSavedRoomChat" "$DASHBOARD_FILE" \
+  || fail "dashboard missing saved Room chat launcher"
+grep -q "Reopening raw transcript content requires a future policy-gated local read" "$DASHBOARD_FILE" \
+  || fail "dashboard must not pretend raw transcript reopen is implemented"
 grep -q "front-composer-wrap" "$DASHBOARD_FILE" \
   || fail "dashboard missing premium composer wrapper"
 grep -q "composer-tools" "$DASHBOARD_FILE" \
