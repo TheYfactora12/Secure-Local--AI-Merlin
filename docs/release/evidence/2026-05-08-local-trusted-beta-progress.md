@@ -7077,3 +7077,105 @@ panel.
 ### Public Beta Impact
 
 Positive, pending visual screenshot evidence and continued UI polish.
+
+---
+
+## Wizard HQ Locked Header Navigation — 2026-05-09
+
+### Date / Time
+
+2026-05-09 EDT.
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`ade51a2` — `feat(dashboard): move chat status into side panel`
+
+### Target Issues
+
+- #106: Wizard HQ Product Shell.
+
+### Scope
+
+Move the Chat, Rooms, Brains, Memory, Agents, Security, System, and Settings
+navigation into the locked top header beside the refresh action. Remove the
+separate second-row tab strip so navigation and refresh stay together while the
+page scrolls.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-first-run-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None.
+
+### Commands Run
+
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-merlin-status-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-model-readiness-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+All commands above passed locally.
+
+### Tests Skipped And Why
+
+- Full installer retest: not triggered by this dashboard-only navigation layout
+  change.
+- Live screenshot: recommended after the next visual pass, but not required for
+  this static layout move.
+
+### Failures Found
+
+None.
+
+### Failure Category
+
+No new failure.
+
+### Fix Applied
+
+- Moved product tabs into the sticky `topbar`, beside Refresh.
+- Removed the redundant second-row tab wrapper.
+- Kept hover explanations on each top navigation item.
+- Updated the first-run smoke so it asserts the product tabs live in the locked
+  header.
+
+### Retest Result
+
+PASS locally for the dashboard static smoke set.
+
+### Regression Test Added Or Reason Not Added
+
+Updated the existing first-run smoke instead of adding a duplicate test.
+
+### Lesson Learned
+
+The navigation belongs with the persistent product chrome. Status diagnostics
+belong in the side panel; primary product areas belong in the locked header.
+
+### What Not To Repeat Next Time
+
+Do not reintroduce a separate sticky tab row unless the header runs out of
+responsive space and the fallback is explicitly tested.
+
+### Local Trusted Beta Impact
+
+Positive. The navigation is easier to understand and stays available while
+scrolling.
+
+### Public Beta Impact
+
+Positive, pending screenshot evidence and further visual polish.

@@ -69,8 +69,12 @@ grep -q "Chat with Merlin through the local policy-gated route" "$DASHBOARD_FILE
   || fail "top product tabs must include user-facing hover explanations"
 grep -q "Local project spaces for saved transcripts" "$DASHBOARD_FILE" \
   || fail "Rooms tab must explain its purpose on hover"
-grep -q ".tabbar-wrap {" "$DASHBOARD_FILE" \
-  || fail "dashboard missing sticky product tab bar styles"
+grep -q ".topbar {" "$DASHBOARD_FILE" \
+  || fail "dashboard missing sticky top bar styles"
+grep -q "position: sticky" "$DASHBOARD_FILE" \
+  || fail "top bar must stay locked while scrolling"
+grep -q '<nav class="tabbar" aria-label="Wizard HQ product tabs">' "$DASHBOARD_FILE" \
+  || fail "product tabs must live in the locked top bar"
 grep -q "Sovereignty Indicator: Local Mode" "$DASHBOARD_FILE" \
   || fail "Sovereignty Indicator must default to Local Mode"
 grep -q "Cloud Bridge Active" "$DASHBOARD_FILE" \

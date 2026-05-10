@@ -74,7 +74,14 @@ textarea {
 }
 .brand h1 { margin: 0; font-size: 18px; letter-spacing: 0; }
 .brand p { margin: 1px 0 0; color: var(--muted); font-size: 12px; }
-.top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-end;
+}
 .sovereignty-indicator {
   display: inline-flex;
   align-items: center;
@@ -101,20 +108,11 @@ textarea {
 .sovereignty-indicator strong { font-weight: 700; }
 .sovereignty-icon { font-size: 13px; line-height: 1; }
 
-.tabbar-wrap {
-  position: sticky;
-  top: 63px;
-  z-index: 4;
-  padding: 10px 18px 0;
-  background: linear-gradient(180deg, rgba(11, 13, 16, 0.94), rgba(11, 13, 16, 0.78));
-  backdrop-filter: blur(14px);
-}
 .tabbar {
-  max-width: 1500px;
-  margin: 0 auto;
   display: flex;
   gap: 6px;
   overflow-x: auto;
+  min-width: 0;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
   padding: 5px;
@@ -1299,7 +1297,8 @@ button.mode-pill:hover {
 }
 @media (max-width: 820px) {
   .topbar { align-items: flex-start; flex-direction: column; }
-  .tabbar-wrap { top: 86px; padding: 10px 12px 0; }
+  .top-actions { width: 100%; }
+  .tabbar { width: 100%; }
   .shell.tab-page { grid-template-columns: 1fr; padding: 12px; }
   .tab-page { padding: 12px; }
   .merlin-front-shell { grid-template-columns: 1fr; }
@@ -1350,22 +1349,19 @@ button.mode-pill:hover {
       </div>
     </div>
     <div class="top-actions" aria-label="Wizard HQ actions">
+      <nav class="tabbar" aria-label="Wizard HQ product tabs">
+        <button class="tab-button active" type="button" data-tab-target="chat" onclick="selectTab('chat')" title="Chat with Merlin through the local policy-gated route.">Chat</button>
+        <button class="tab-button" type="button" data-tab-target="rooms" onclick="selectTab('rooms')" title="Local project spaces for saved transcripts and scoped context.">Rooms</button>
+        <button class="tab-button" type="button" data-tab-target="brains" onclick="selectTab('brains')" title="Local model, router, and optional provider connector status.">Brains</button>
+        <button class="tab-button" type="button" data-tab-target="memory" onclick="selectTab('memory')" title="Approved memory and vector vault readiness without raw private content.">Memory</button>
+        <button class="tab-button" type="button" data-tab-target="agents" onclick="selectTab('agents')" title="Supervised agent surfaces; execution stays policy-gated.">Agents</button>
+        <button class="tab-button" type="button" data-tab-target="security" onclick="selectTab('security')" title="Local-first privacy, approvals, secrets, and telemetry posture.">Security</button>
+        <button class="tab-button" type="button" data-tab-target="system" onclick="selectTab('system')" title="Read-only service health, startup readiness, and recovery guidance.">System</button>
+        <button class="tab-button" type="button" data-tab-target="settings" onclick="selectTab('settings')" title="Conservative setup previews and locked policy-gated configuration.">Settings</button>
+      </nav>
       <button class="refresh" type="button" onclick="refreshAll()" aria-label="Refresh dashboard">Refresh</button>
     </div>
   </header>
-
-  <nav class="tabbar-wrap" aria-label="Wizard HQ product tabs">
-    <div class="tabbar">
-      <button class="tab-button active" type="button" data-tab-target="chat" onclick="selectTab('chat')" title="Chat with Merlin through the local policy-gated route.">Chat</button>
-      <button class="tab-button" type="button" data-tab-target="rooms" onclick="selectTab('rooms')" title="Local project spaces for saved transcripts and scoped context.">Rooms</button>
-      <button class="tab-button" type="button" data-tab-target="brains" onclick="selectTab('brains')" title="Local model, router, and optional provider connector status.">Brains</button>
-      <button class="tab-button" type="button" data-tab-target="memory" onclick="selectTab('memory')" title="Approved memory and vector vault readiness without raw private content.">Memory</button>
-      <button class="tab-button" type="button" data-tab-target="agents" onclick="selectTab('agents')" title="Supervised agent surfaces; execution stays policy-gated.">Agents</button>
-      <button class="tab-button" type="button" data-tab-target="security" onclick="selectTab('security')" title="Local-first privacy, approvals, secrets, and telemetry posture.">Security</button>
-      <button class="tab-button" type="button" data-tab-target="system" onclick="selectTab('system')" title="Read-only service health, startup readiness, and recovery guidance.">System</button>
-      <button class="tab-button" type="button" data-tab-target="settings" onclick="selectTab('settings')" title="Conservative setup previews and locked policy-gated configuration.">Settings</button>
-    </div>
-  </nav>
 
   <main class="chat-home tab-page active" data-tab-page="chat">
     <section class="merlin-front-shell" aria-labelledby="merlin-brand-title">
