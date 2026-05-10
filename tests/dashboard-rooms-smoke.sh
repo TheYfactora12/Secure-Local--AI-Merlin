@@ -71,6 +71,10 @@ grep -q "Reopen latest" "$DASHBOARD_FILE" \
   || fail "Rooms table must expose latest transcript reopen action"
 grep -q "Delete latest transcript" "$DASHBOARD_FILE" \
   || fail "Rooms table must expose latest transcript delete action"
+grep -q "Saved sessions" "$DASHBOARD_FILE" \
+  || fail "Rooms table must expose first-class saved session list"
+grep -q "room-transcript-list" "$DASHBOARD_FILE" \
+  || fail "Rooms table must style saved transcript list"
 grep -q "Archive Room" "$DASHBOARD_FILE" \
   || fail "Rooms table must expose one-time whole-Room archive action"
 grep -q "function prepareRoomArchive" "$DASHBOARD_FILE" \

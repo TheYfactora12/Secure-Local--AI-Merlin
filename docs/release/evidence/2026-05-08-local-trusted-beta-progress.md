@@ -10883,3 +10883,126 @@ Positive. The Room save flow is less intrusive and has better browser evidence.
 Positive, but Public Beta remains blocked by full installer retest,
 restore-from-archive, memory review/delete, approve-for-context, and clean
 onboarding evidence.
+
+## 2026-05-10 - Room Saved Session List
+
+### Date/time
+
+2026-05-10T15:17:05Z
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`f4c90ef28d976398b74c62dc5bddf90a363c19e0`
+
+### Target Issues
+
+- #135 Merlin Rooms for local chat history and scoped context.
+- #106 Wizard HQ Product Shell.
+- #95 release-readiness evidence.
+
+### Scope
+
+Make saved Room transcripts visible as first-class saved sessions in the Rooms
+review table, while keeping raw transcript content hidden and preserving
+one-time approval for reopen/delete actions.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-rooms-smoke.sh`
+- `docs/release/evidence/assets/2026-05-10-wizard-hq-room-history-qa/*`
+- release evidence note
+
+### Protected Files Touched
+
+No protected installer, package, runtime API, policy, memory, router, or model
+files were touched.
+
+### Commands Run
+
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-browser-qa-smoke.sh`
+- `git diff --check`
+- `.venv-test/bin/python scripts/dashboard-browser-qa.py --output-dir docs/release/evidence/assets/2026-05-10-wizard-hq-room-history-qa`
+
+### Test Output Summary
+
+- Rooms static smoke: PASS.
+- Browser QA harness static smoke: PASS.
+- Whitespace check: PASS.
+- Browser QA live screenshot run: PASS; evidence written to
+  `docs/release/evidence/assets/2026-05-10-wizard-hq-room-history-qa/`.
+
+### Tests Skipped And Why
+
+Python API tests and installer tests were skipped for this slice because only
+dashboard HTML/CSS/static JavaScript and a static smoke assertion changed.
+
+### Failures Found
+
+No command failures in this slice.
+
+### Failure Category
+
+No release failure found. This addresses a UX gap from user review: saved
+transcripts were discoverable but not presented as a clear Room history list.
+
+### Root Cause Or Current Hypothesis
+
+The Rooms table only elevated the latest saved transcript. Users need to see
+saved sessions as concrete items they can reopen or delete.
+
+### Fix Applied
+
+- Added a `Saved sessions` disclosure list under each Room's transcript column.
+- Preserved raw-content hidden language.
+- Reused existing one-time approval actions for reopen and delete.
+- Added static smoke coverage for the saved session list.
+
+### Retest Result
+
+PASS for static Rooms smoke, browser QA harness smoke, whitespace check, and
+live browser QA screenshot run.
+
+### Regression Test Added Or Updated
+
+- `tests/dashboard-rooms-smoke.sh`
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended #135 child issue remains:
+
+**Title:** `v3.1 Rooms: restore archived Room and add full Room detail view`
+
+Scope: add restore-from-archive and a dedicated Room detail view when a Room
+has many saved sessions, summaries, and draft master prompts.
+
+### Lesson Learned
+
+Room history must behave like user-owned project history, not debug metadata.
+The UI can show useful saved-session metadata without reading raw transcript
+content or approving context reuse.
+
+### What Not To Repeat Next Time
+
+Do not hide user-owned history behind only "latest" actions. Latest is useful,
+but a Room needs a visible session list.
+
+### Next Recommended Step
+
+Add restore-from-archive, then build the Room detail view if the table becomes
+too dense for Apple-clean navigation.
+
+### Local Trusted Beta Impact
+
+Positive. Saved Room history is more understandable and actionable.
+
+### Public Beta Impact
+
+Positive, but Public Beta remains blocked by full installer retest,
+restore-from-archive, memory review/delete, approve-for-context, and clean
+onboarding evidence.

@@ -1057,6 +1057,24 @@ button.mode-pill:hover {
   flex-wrap: wrap;
   gap: 6px;
 }
+.room-transcript-list {
+  margin-top: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+  padding: 7px;
+  background: rgba(255, 255, 255, 0.025);
+}
+.room-transcript-list summary {
+  cursor: pointer;
+  color: var(--text);
+  font-size: 12px;
+}
+.room-transcript-list .front-session-row {
+  margin-top: 6px;
+}
+.room-transcript-list .front-session {
+  background: rgba(255, 255, 255, 0.025);
+}
 .room-table-action {
   border: 1px solid rgba(103, 232, 249, 0.28);
   border-radius: 9999px;
@@ -4061,11 +4079,30 @@ function roomReviewTableHtml(data) {
       ? `<button class="room-table-action secondary" type="button" onclick="openSavedRoomChat(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(latestId)})">Reopen latest</button>
          <button class="room-table-action secondary" type="button" onclick="prepareSavedTranscriptRemoval(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(latestId)})">Delete latest transcript</button>`
       : '<span class="chip neutral">no saved chat yet</span>';
+    const transcriptList = transcripts.length
+      ? `
+        <details class="room-transcript-list">
+          <summary>Saved sessions (${escapeHtml(transcriptCount)})</summary>
+          ${transcripts.map(transcript => {
+            const transcriptId = transcript.transcript_id || 'transcript';
+            const transcriptTitle = transcript.title || transcriptId || 'Saved chat';
+            return `
+              <div class="front-session-row">
+                <button class="front-session" type="button" onclick="openSavedRoomChat(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(transcriptId)})">
+                  ${escapeHtml(transcriptTitle)} · ${escapeHtml(transcript.size_bytes || 0)} bytes · raw hidden
+                </button>
+                <button class="front-session-remove" type="button" onclick="prepareSavedTranscriptRemoval(${jsArg(roomId)}, ${jsArg(roomName)}, ${jsArg(transcriptId)})" aria-label="Delete saved transcript ${escapeHtml(transcriptId)}">Delete</button>
+              </div>
+            `;
+          }).join('')}
+        </details>
+      `
+      : '<span class="chip neutral">No saved sessions yet</span>';
     return `
       <tr class="${active ? 'active-room-row' : ''}">
         <td><strong>${escapeHtml(roomName)}</strong><span class="chip ${active ? 'good' : 'neutral'}">${active ? 'active' : 'available'}</span></td>
         <td><code>${escapeHtml(room.path || data.rooms_root || '~/Merlin/brain/rooms')}</code><br><span>${escapeHtml(room.reference_policy || 'no_room_context')}</span></td>
-        <td><strong>${escapeHtml(transcriptCount)} saved</strong><span>${escapeHtml(latestTitle)} · raw hidden</span></td>
+        <td><strong>${escapeHtml(transcriptCount)} saved</strong><span>${escapeHtml(latestTitle)} · raw hidden</span>${transcriptList}</td>
         <td><strong>${escapeHtml(masterPromptStatus)}</strong><span>context reuse disabled until approved</span></td>
         <td>
           <div class="room-action-row">
