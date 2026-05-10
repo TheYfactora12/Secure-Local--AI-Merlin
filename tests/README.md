@@ -88,6 +88,37 @@ Full integration testing in CI (via Docker Compose) is planned for v0.9.
 
 ---
 
+## dashboard-browser-qa.py
+
+This optional browser QA harness captures Wizard HQ desktop and mobile
+screenshots without a human clicking through the UI.
+
+Install local browser dependencies:
+
+```bash
+bash scripts/setup-browser-qa.sh
+```
+
+Run the browser QA:
+
+```bash
+.venv-test/bin/python scripts/dashboard-browser-qa.py
+```
+
+Expected evidence is written under:
+
+```text
+docs/release/evidence/assets/<date>-wizard-hq-browser-qa/
+```
+
+The static smoke for this harness does not require Playwright:
+
+```bash
+bash tests/dashboard-browser-qa-smoke.sh
+```
+
+---
+
 ## memory-config-smoke.sh
 
 This test does not require Docker. It validates that the Merlin memory runtime

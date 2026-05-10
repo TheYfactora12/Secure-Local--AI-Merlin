@@ -188,6 +188,22 @@ bash tests/dashboard-security-center-smoke.sh
 bash tests/dashboard-first-run-smoke.sh
 ```
 
+Optional automated browser evidence:
+
+```bash
+bash scripts/setup-browser-qa.sh
+.venv-test/bin/python scripts/dashboard-browser-qa.py
+```
+
+Expected evidence:
+
+- desktop 1280px screenshots
+- mobile 375px screenshots
+- composer typed-state validation
+- mode selector validation
+- search chip toggle validation
+- summary JSON under `docs/release/evidence/assets/<date>-wizard-hq-browser-qa/`
+
 Manual screenshots to capture:
 
 - package welcome screen with Merlin M logo

@@ -10130,3 +10130,143 @@ evidence is still required before Local Trusted Beta signoff.
 Positive, but public beta remains blocked by browser QA evidence, Room
 management polish, whole-Room archive/delete design, and full installer retest
 after Wizard HQ changes land.
+
+## 2026-05-10 - Optional Browser QA Harness
+
+### Date/Time
+
+2026-05-10 10:55 EDT
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`51620b74d72fa87ac8d959a4a628e3a9b70fef6a`
+
+### Target Issues
+
+- #95 release-readiness evidence.
+- #106 Wizard HQ Product Shell.
+- #135 Rooms and local transcript flow.
+
+### Scope
+
+Add a repeatable way for Codex/engineering to test Wizard HQ UI without a human
+manually clicking and taking screenshots. Keep it optional so normal CI and
+static smokes still work on machines without browser automation installed.
+
+### Files Changed
+
+- `scripts/dashboard-browser-qa.py`
+- `scripts/setup-browser-qa.sh`
+- `tests/dashboard-browser-qa-smoke.sh`
+- `docs/operations/TRUSTED_LOCAL_BETA_EVIDENCE.md`
+- `tests/README.md`
+- release evidence note
+
+### Protected Files Touched
+
+None. No installer behavior, cloud default, telemetry, Task API, memory-write,
+or model-download behavior changed.
+
+### Commands Run
+
+- `command -v node || true; command -v npm || true; node --version 2>/dev/null || true; npm --version 2>/dev/null || true`
+- `.venv-test/bin/python - <<'PY' ... import playwright ... PY`
+- `python3 -m py_compile scripts/dashboard-browser-qa.py`
+- `bash -n scripts/setup-browser-qa.sh`
+- `python3 scripts/dashboard-browser-qa.py --help`
+- `bash tests/dashboard-browser-qa-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+- Node/npm are unavailable in this environment, so a Node Playwright setup would
+  not be usable here.
+- Python Playwright is not installed yet in `.venv-test`.
+- Browser QA static smoke passes without requiring Playwright.
+- Browser QA script help works without Playwright installed.
+- The optional setup command is documented:
+  `bash scripts/setup-browser-qa.sh`.
+- After setup, live browser QA generated desktop and mobile screenshots under
+  `docs/release/evidence/assets/2026-05-10-wizard-hq-browser-qa/`.
+- Live browser QA validated the Merlin Chat brand, composer input, Ask Merlin
+  button, mode selector, typed send state, Fast/Smart mode status copy, and
+  Search chip toggle.
+
+### Tests Skipped And Why
+
+No browser QA checks were skipped after installing the optional dependency.
+This script does not submit a live model prompt yet; it validates first-load,
+typed-composer, mode, chip, and viewport behavior only.
+
+### Failures Found
+
+Browser QA automation dependency missing: no Node/npm and no Python Playwright.
+
+### Failure Category
+
+- Test design gap.
+- CI/static smoke gap.
+
+### Root Cause Or Current Hypothesis
+
+The project relied on static dashboard greps and manual screenshots. There was
+no executable browser automation lane checked into the repo.
+
+### Fix Applied
+
+- Added `scripts/dashboard-browser-qa.py`, an optional Python Playwright runner.
+- Added desktop 1280px and mobile 375px viewport checks.
+- Added screenshot output under `docs/release/evidence/assets/<date>-wizard-hq-browser-qa/`.
+- Added composer typed-state, mode selector, and search-chip toggle assertions.
+- Added `scripts/setup-browser-qa.sh` to install Python Playwright and Chromium.
+- Added `tests/dashboard-browser-qa-smoke.sh` to ensure the harness remains
+  present, safe, and syntactically valid without requiring Playwright.
+- Updated the Trusted Local Beta evidence pack and tests README.
+
+### Retest Result
+
+PASS for static browser QA smoke, syntax checks, dependency setup, and live
+desktop/mobile screenshot generation.
+
+### Regression Test Added Or Updated
+
+- `tests/dashboard-browser-qa-smoke.sh`
+
+### Follow-Up Issues Created Or Recommended
+
+Recommended: run `bash scripts/setup-browser-qa.sh`, then run
+`.venv-test/bin/python scripts/dashboard-browser-qa.py` and commit or attach the
+generated screenshot evidence if appropriate.
+
+Recommended: once stable, decide whether browser QA runs locally only or in a
+separate GitHub Actions job with browser dependencies.
+
+### Lesson Learned
+
+Static UI tests keep us safe, but they cannot prove the actual viewport,
+composer feel, or mobile layout. Browser QA needs to be a first-class evidence
+lane before Local Trusted Beta signoff.
+
+### What Not To Repeat Next Time
+
+Do not keep saying browser evidence is required without providing an executable
+path to produce it.
+
+### Next Recommended Step
+
+Install the optional browser QA dependencies and run the screenshot harness,
+then continue the Room table/review screen.
+
+### Local Trusted Beta Impact
+
+Positive. The release process now has a concrete path to collect Wizard HQ
+desktop/mobile evidence without a human manually driving every check.
+
+### Public Beta Impact
+
+Positive, but public beta remains blocked until browser QA evidence is actually
+generated and the full installer retest is complete.
