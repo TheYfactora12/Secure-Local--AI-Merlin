@@ -42,12 +42,19 @@ grep -q "Smart mode selected. Merlin router still chooses the actual local model
   || fail "Chat home missing honest mode-to-router copy"
 grep -q "New conversation" "$DASHBOARD_FILE" \
   || fail "Chat home missing local chat workspace affordance"
-grep -q ">Ask Merlin<" "$DASHBOARD_FILE" \
-  || fail "Chat home missing Ask Merlin heading/button"
+grep -q "Merlin AI" "$DASHBOARD_FILE" \
+  || fail "Chat home missing Merlin AI center brand"
 grep -q "placeholder=\"Ask Merlin...\"" "$DASHBOARD_FILE" \
   || fail "Chat home missing clean Ask Merlin input"
-grep -q "Talk to Merlin first" "$DASHBOARD_FILE" \
-  || fail "Chat home missing Merlin-first explanation"
+if grep -q "Talk to Merlin first" "$DASHBOARD_FILE"; then
+  fail "Chat home must not show the removed Merlin-first intro block"
+fi
+grep -q "toggleChatSidebar" "$DASHBOARD_FILE" \
+  || fail "Chat home missing collapsible side panel behavior"
+grep -q "sidebar-collapsed" "$DASHBOARD_FILE" \
+  || fail "Chat home missing desktop side panel collapsed state"
+grep -q "sidebar-open" "$DASHBOARD_FILE" \
+  || fail "Chat home missing mobile side panel expanded state"
 grep -q 'id="sovereignty-indicator"' "$DASHBOARD_FILE" \
   || fail "dashboard missing persistent Sovereignty Indicator"
 grep -q "Sovereignty Indicator: Local Mode" "$DASHBOARD_FILE" \

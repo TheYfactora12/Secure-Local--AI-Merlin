@@ -32,6 +32,16 @@ grep -q "brains-safe-install" "$DASHBOARD_FILE" \
   || fail "dashboard missing safe install guidance slot"
 grep -q "Local Model Library" "$DASHBOARD_FILE" \
   || fail "dashboard missing local model library view"
+grep -q "Offline model selection preview" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Fast/Smart model selector preview"
+grep -q "Default local path for 8GB/core systems" "$DASHBOARD_FILE" \
+  || fail "Fast mode must be framed as the safe 8GB/core default"
+grep -q "Better reasoning when hardware and installed local models support it" "$DASHBOARD_FILE" \
+  || fail "Smart mode must stay hardware-aware"
+grep -q "Cloud Bridge" "$DASHBOARD_FILE" \
+  || fail "dashboard missing explicit cloud bridge state"
+grep -q "off until allowed" "$DASHBOARD_FILE" \
+  || fail "cloud bridge must remain off until explicitly allowed"
 grep -q "brains-model-library" "$DASHBOARD_FILE" \
   || fail "dashboard missing Brains model library render target"
 grep -q "settings-model-library" "$DASHBOARD_FILE" \

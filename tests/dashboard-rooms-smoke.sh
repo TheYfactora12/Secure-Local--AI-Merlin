@@ -34,10 +34,16 @@ grep -q "Allow local save" "$DASHBOARD_FILE" \
   || fail "Rooms save flow must require explicit allow action"
 grep -q "Rooms are local project spaces" "$DASHBOARD_FILE" \
   || fail "dashboard must explain Rooms in plain language"
+grep -q "Room picker preview" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must include read-only Room picker preview"
+grep -q "future policy-gated create flow" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must keep new Room creation locked"
 grep -q "Room context not active yet" "$DASHBOARD_FILE" \
   || fail "chat surface must show Room context state"
 grep -q "Current chat is not silently saved or promoted into memory" "$DASHBOARD_FILE" \
   || fail "chat surface must block silent transcript-to-memory implication"
+grep -q "Storage is not inference" "$DASHBOARD_FILE" \
+  || fail "Rooms surface must distinguish storage from inference"
 grep -q "No Room context" "$DASHBOARD_FILE" \
   || fail "Rooms page must show no-context default"
 grep -q "Active Room only" "$DASHBOARD_FILE" \

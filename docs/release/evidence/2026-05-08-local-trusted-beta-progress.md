@@ -6783,3 +6783,156 @@ Positive. This improves CI reliability without changing runtime behavior.
 ### Public Beta Impact
 
 Positive, but Public Beta still requires full manual installer/browser evidence.
+
+---
+
+## v3.1 Product Shell Safe UI Slice — 2026-05-09
+
+### Date / Time
+
+2026-05-09 EDT.
+
+### Branch
+
+`main`
+
+### Starting Commit SHA
+
+`7e36488` — `fix(dashboard): repair Merlin status smoke for room saves`
+
+### Target Issues
+
+- #106: Wizard HQ Product Shell.
+- #135: Merlin Rooms for local chat history and scoped context.
+- #130: brain/context storage location visibility.
+- #129: Fast/Smart offline model selection UI.
+- #117/#126 support: provider connector setup preview without secret display or
+  cloud enablement.
+
+### Scope
+
+Advance the next three milestone-aligned UI tasks without adding risky runtime
+behavior:
+
+1. Room picker preview and local Room storage explanation.
+2. Fast/Smart/Cloud Bridge model selection preview.
+3. AI connector setup preview with presence-only secret language.
+4. Cleaner Chat center: removed the old "Ask Merlin / Talk to Merlin first"
+   intro block and kept the orb, suggestions, and composer as the focus.
+5. Collapsible Chat context side panel for desktop and narrow/mobile layouts.
+
+### Files Changed
+
+- `dashboard/index.html`
+- `tests/dashboard-rooms-smoke.sh`
+- `tests/dashboard-model-readiness-smoke.sh`
+- `tests/dashboard-settings-policy-smoke.sh`
+- `tests/dashboard-first-run-smoke.sh`
+- `tests/dashboard-merlin-status-smoke.sh`
+- `tests/dashboard-native-chat-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+None.
+
+### Commands Run
+
+- `bash tests/dashboard-rooms-smoke.sh`
+- `bash tests/dashboard-model-readiness-smoke.sh`
+- `bash tests/dashboard-settings-policy-smoke.sh`
+- `bash tests/dashboard-native-chat-smoke.sh`
+- `bash tests/dashboard-first-run-smoke.sh`
+- `bash tests/dashboard-merlin-status-smoke.sh`
+- `bash tests/dashboard-tabs-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+All commands above passed locally.
+
+### Tests Skipped And Why
+
+- Full installer retest: not triggered by this dashboard-only static UI slice.
+- Live model/provider setup: intentionally not run because this slice does not
+  enable model downloads, API-key entry, cloud routing, or connector writes.
+
+### Failures Found
+
+None in this slice.
+
+### Failure Category
+
+No new failure.
+
+### Root Cause Or Current Hypothesis
+
+Not applicable.
+
+### Fix Applied
+
+- Added a disabled Room picker preview in Chat and Rooms so the user can see the
+  intended local workspace model before writable Room creation ships.
+- Added explicit "storage is not inference" copy to prevent OneDrive/iCloud/local
+  folder confusion.
+- Added Fast/Smart/Cloud Bridge selection previews in Brains while keeping cloud
+  locked and model downloads manual-only.
+- Added AI connector setup preview in Settings with secret presence-only copy and
+  a clear rule that saving a key does not enable cloud routing.
+- Removed the duplicate Chat intro block so the Chat center stays focused on the
+  Merlin orb, starter prompts, and composer.
+- Added desktop collapsed and narrow-layout expanded states for the Chat context
+  side panel.
+- Extended static dashboard smokes to protect these trust boundaries.
+
+### Retest Result
+
+PASS locally for Rooms, model readiness, Settings, first-run Chat, Merlin status
+smoke, native Chat, tab shell, and diff whitespace checks.
+
+### Regression Test Added Or Reason Not Added
+
+Updated existing static smokes instead of adding duplicate files:
+
+- Rooms smoke now asserts read-only Room picker preview and storage/inference
+  separation.
+- Model readiness smoke now asserts Fast/Smart/Cloud Bridge preview language and
+  cloud remains off until allowed.
+- Settings smoke now asserts AI connector setup preview, secret presence-only
+  language, and separation between stored credential presence and cloud routing.
+- First-run/native Chat/Merlin status smokes now assert the removed intro block
+  stays removed and the side panel remains collapsible/expandable.
+
+### Follow-Up Issues Created Or Recommended
+
+Existing follow-ups remain:
+
+- #135 child: Room picker and reference-policy persistence.
+- #130 child: storage migration validation, rollback, and audit tests.
+- #129 child: real model mode switching after safe local model availability is
+  proven.
+- #117 child: provider setup write flow through backend policy gate and OS
+  secret storage.
+
+### Lesson Learned
+
+The dashboard can communicate the future product shape without turning previews
+into unsafe controls. Disabled previews are useful only when the copy clearly
+states what is locked and which backend gate must exist first.
+
+### What Not To Repeat Next Time
+
+Do not add visual toggles that look live before their backend policy gate,
+rollback, audit, and tests exist.
+
+### Local Trusted Beta Impact
+
+Positive. A trusted tester can now see where Rooms, Fast/Smart models, storage
+location, and provider setup are going without being misled into thinking those
+unsafe writes are already enabled.
+
+### Public Beta Impact
+
+Positive, but Public Beta still needs real Room picker persistence, memory
+review/delete, export/import, clean installer evidence, and polished browser
+validation screenshots.

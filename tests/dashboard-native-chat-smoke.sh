@@ -10,8 +10,8 @@ fail() {
   exit 1
 }
 
-grep -q "Ask Merlin" "$DASHBOARD_FILE" \
-  || fail "dashboard missing Ask Merlin heading"
+grep -q "Merlin AI" "$DASHBOARD_FILE" \
+  || fail "dashboard missing Merlin AI chat brand"
 grep -q "Merlin AI core face" "$DASHBOARD_FILE" \
   || fail "dashboard missing centered Merlin AI core face"
 grep -q 'assets/merlin-orb.png' "$DASHBOARD_FILE" \
@@ -42,6 +42,14 @@ grep -q "@media (prefers-reduced-motion: reduce)" "$DASHBOARD_FILE" \
   || fail "dashboard Merlin orb motion must respect reduced-motion preference"
 grep -q "front-sidebar" "$DASHBOARD_FILE" \
   || fail "dashboard missing local chat sidebar"
+grep -q "toggleChatSidebar" "$DASHBOARD_FILE" \
+  || fail "dashboard missing collapsible chat sidebar handler"
+grep -q "sidebar-collapsed" "$DASHBOARD_FILE" \
+  || fail "dashboard missing desktop collapsed sidebar state"
+grep -q "sidebar-open" "$DASHBOARD_FILE" \
+  || fail "dashboard missing mobile expanded sidebar state"
+grep -q "chat-context-sidebar" "$DASHBOARD_FILE" \
+  || fail "dashboard missing accessible chat context sidebar id"
 grep -q "front-composer-wrap" "$DASHBOARD_FILE" \
   || fail "dashboard missing premium composer wrapper"
 grep -q "composer-tools" "$DASHBOARD_FILE" \
@@ -62,8 +70,11 @@ grep -q "Mode: " "$DASHBOARD_FILE" \
   || fail "dashboard response metadata must display selected UI mode"
 grep -q "UI mode" "$DASHBOARD_FILE" \
   || fail "dashboard route metadata must include UI mode"
-grep -q "Talk to Merlin first" "$DASHBOARD_FILE" \
-  || fail "dashboard missing clean Merlin-first chat copy"
+if grep -q "Talk to Merlin first" "$DASHBOARD_FILE"; then
+  fail "dashboard must not show the old Merlin-first intro block in the clean chat center"
+fi
+grep -q "placeholder=\"Ask Merlin...\"" "$DASHBOARD_FILE" \
+  || fail "dashboard missing clean Ask Merlin input"
 grep -q 'id="merlin-chat-input"' "$DASHBOARD_FILE" \
   || fail "dashboard missing Merlin Chat input"
 grep -q 'id="merlin-chat-submit"' "$DASHBOARD_FILE" \

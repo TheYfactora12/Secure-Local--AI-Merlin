@@ -45,10 +45,18 @@ grep -q "Where Merlin keeps its local brain is visible here" "$DASHBOARD_FILE" \
   || fail "dashboard must explain local brain storage visibility"
 grep -q "Storage location and inference location are different" "$DASHBOARD_FILE" \
   || fail "dashboard must distinguish storage from inference"
+grep -q "Storage vs inference" "$DASHBOARD_FILE" \
+  || fail "dashboard missing storage-vs-inference status row"
 grep -q "not yet configured / default location" "$DASHBOARD_FILE" \
   || fail "dashboard must show explicit default storage state"
 grep -q "locked until policy-gated migration" "$DASHBOARD_FILE" \
   || fail "dashboard must keep change-location locked"
+grep -q "AI Connector Setup" "$DASHBOARD_FILE" \
+  || fail "dashboard missing AI connector setup preview"
+grep -q "A saved API key does not turn on cloud routing by itself" "$DASHBOARD_FILE" \
+  || fail "dashboard must separate stored credential presence from cloud routing"
+grep -q "Secret presence only after save" "$DASHBOARD_FILE" \
+  || fail "connector setup must describe secret presence-only behavior"
 grep -q "data.storage" "$DASHBOARD_FILE" \
   || fail "dashboard must render storage manifest from settings endpoint"
 grep -q "Actions remain locked unless a backend policy gate exists" "$DASHBOARD_FILE" \

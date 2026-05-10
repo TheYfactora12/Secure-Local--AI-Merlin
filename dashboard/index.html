@@ -196,10 +196,14 @@ textarea {
   display: grid;
   grid-template-columns: 256px minmax(0, 1fr);
   overflow: hidden;
+  position: relative;
   border: 1px solid rgba(103, 232, 249, 0.10);
   border-radius: 12px;
   background: linear-gradient(180deg, rgba(15, 18, 17, 0.98), rgba(8, 11, 10, 0.98));
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+}
+.merlin-front-shell.sidebar-collapsed {
+  grid-template-columns: 0 minmax(0, 1fr);
 }
 .front-sidebar {
   display: flex;
@@ -208,6 +212,12 @@ textarea {
   padding: 0;
   border-right: 1px solid rgba(103, 232, 249, 0.08);
   background: rgba(15, 18, 17, 0.84);
+  overflow: hidden;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.merlin-front-shell.sidebar-collapsed .front-sidebar {
+  opacity: 0;
+  pointer-events: none;
 }
 .front-brand {
   display: flex;
@@ -216,6 +226,26 @@ textarea {
   min-width: 0;
   padding: 16px;
   border-bottom: 1px solid rgba(103, 232, 249, 0.08);
+}
+.front-brand > div {
+  min-width: 0;
+  flex: 1;
+}
+.sidebar-toggle-btn {
+  border: 1px solid rgba(103, 232, 249, 0.18);
+  border-radius: 8px;
+  min-width: 34px;
+  min-height: 32px;
+  padding: 5px 8px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.035);
+  cursor: pointer;
+}
+.sidebar-toggle-btn:hover,
+.sidebar-toggle-btn:focus {
+  color: var(--text);
+  border-color: rgba(103, 232, 249, 0.34);
+  background: rgba(103, 232, 249, 0.08);
 }
 .front-brand .ai-core {
   width: 38px;
@@ -840,6 +870,65 @@ button.mode-pill:hover {
   color: var(--muted);
   line-height: 1.45;
 }
+.mini-control-stack {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+.mini-control {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 9px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--muted);
+  text-align: left;
+}
+.mini-control strong {
+  color: var(--text);
+  font-size: 12px;
+}
+.mini-control span {
+  color: var(--dim);
+  font-size: 11px;
+}
+.mini-control.active {
+  border-color: rgba(103, 232, 249, 0.32);
+  background: rgba(103, 232, 249, 0.07);
+}
+.mini-control.locked {
+  border-color: rgba(243, 201, 105, 0.18);
+}
+.mode-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.mode-choice {
+  min-height: 118px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.025);
+}
+.mode-choice.active {
+  border-color: rgba(103, 232, 249, 0.36);
+  background: rgba(103, 232, 249, 0.07);
+}
+.mode-choice.locked {
+  border-color: rgba(243, 201, 105, 0.18);
+}
+.mode-choice strong {
+  display: block;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.mode-choice p {
+  margin: 0;
+  font-size: 12px;
+}
 .chat-output { display: grid; gap: 10px; }
 .room-save-panel {
   display: grid;
@@ -1206,7 +1295,24 @@ button.mode-pill:hover {
   .shell.tab-page { grid-template-columns: 1fr; padding: 12px; }
   .tab-page { padding: 12px; }
   .merlin-front-shell { grid-template-columns: 1fr; }
-  .front-sidebar { display: none; }
+  .merlin-front-shell.sidebar-collapsed { grid-template-columns: 1fr; }
+  .front-sidebar {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 20;
+    width: min(288px, 86vw);
+    max-width: 86vw;
+    border-right-color: rgba(103, 232, 249, 0.18);
+    transform: translateX(-105%);
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 24px 0 60px rgba(0, 0, 0, 0.46);
+  }
+  .merlin-front-shell.sidebar-open .front-sidebar {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
   .front-console-top { align-items: flex-start; flex-direction: column; }
   .mode-strip { justify-content: flex-start; }
   .page-head { grid-template-columns: 1fr; }
@@ -1263,19 +1369,30 @@ button.mode-pill:hover {
   </nav>
 
   <main class="chat-home tab-page active" data-tab-page="chat">
-    <section class="merlin-front-shell" aria-labelledby="merlin-chat-title">
-      <aside class="front-sidebar" aria-label="Merlin local chat context">
+    <section class="merlin-front-shell" aria-labelledby="merlin-brand-title">
+      <aside class="front-sidebar" id="chat-context-sidebar" aria-label="Merlin local chat context">
         <div class="front-brand">
           <img class="front-brand-orb" src="assets/merlin-orb.png" alt="" width="38" height="38" loading="eager">
           <div>
             <strong>Merlin</strong>
             <span>Private Intelligence</span>
           </div>
+          <button class="sidebar-toggle-btn" type="button" onclick="toggleChatSidebar()" aria-label="Collapse Merlin context panel">‹</button>
         </div>
         <button class="new-chat-btn" type="button" onclick="clearMerlinChat()">New conversation</button>
         <div class="front-sidebar-card">
           <h3>Current Room</h3>
           <p>No Room selected. Room context stays off until you explicitly choose it.</p>
+          <div class="mini-control-stack" aria-label="Read-only Room picker preview">
+            <button class="mini-control active" type="button" disabled>
+              <strong>Merlin Build</strong>
+              <span>default local Room · transcript save available after approval</span>
+            </button>
+            <button class="mini-control locked" type="button" disabled>
+              <strong>Choose another Room</strong>
+              <span>locked until Room picker and reference policy persistence are tested</span>
+            </button>
+          </div>
           <div class="model-readiness compact" id="chat-room-context">
             <span class="chip warn">Room context not active yet</span>
             <p>Current chat is not silently saved or promoted into memory.</p>
@@ -1305,6 +1422,7 @@ button.mode-pill:hover {
       <section class="front-main">
         <div class="front-console-top">
           <div class="front-console-title">
+            <button class="sidebar-toggle-btn" id="chat-sidebar-toggle" type="button" onclick="toggleChatSidebar()" aria-expanded="true" aria-controls="chat-context-sidebar" aria-label="Toggle Merlin context panel">☰</button>
             <span class="status-dot good" aria-hidden="true"></span>
             <div>
               <strong>Wizard HQ</strong>
@@ -1324,12 +1442,8 @@ button.mode-pill:hover {
               <img class="merlin-orb-image" src="assets/merlin-orb.png" alt="Merlin AI core face" width="210" height="210" loading="eager">
             </div>
             <div class="hero-title">
-              <h2>Merlin AI</h2>
+              <h2 id="merlin-brand-title">Merlin AI</h2>
               <p>Private Intelligence. Locally Owned.</p>
-            </div>
-            <div class="chat-intro">
-              <h2 id="merlin-chat-title">Ask Merlin</h2>
-              <p>Talk to Merlin first. Merlin chooses the local model path, checks policy, and shows the route before anything sensitive can run.</p>
             </div>
             <div class="suggestion-grid" aria-label="Safe Merlin starter prompts">
               <button class="suggestion-chip" type="button" onclick="setMerlinPrompt('Explain what Merlin can do locally right now.')">Explain local abilities</button>
@@ -1418,6 +1532,16 @@ button.mode-pill:hover {
       <article class="surface-card">
         <h3>Active Room</h3>
         <p>The default Room is Merlin Build. Room context stays off until you explicitly choose to reference it.</p>
+        <div class="mini-control-stack" aria-label="Room picker preview">
+          <button class="mini-control active" type="button" disabled>
+            <strong>Merlin Build</strong>
+            <span>current default Room · local Markdown transcripts</span>
+          </button>
+          <button class="mini-control locked" type="button" disabled>
+            <strong>New Room</strong>
+            <span>future policy-gated create flow</span>
+          </button>
+        </div>
         <div class="status-list">
           <div class="status-pill"><strong>Active Room</strong><span>merlin-build</span></div>
           <div class="status-pill"><strong>Reference policy</strong><span class="locked">no Room context</span></div>
@@ -1437,6 +1561,7 @@ button.mode-pill:hover {
         <p>Room files will live where the user chooses. A synced folder is treated as a local filesystem path, not cloud inference.</p>
         <div class="status-list">
           <div class="status-pill"><strong>Default path</strong><span>~/Merlin/brain/rooms</span></div>
+          <div class="status-pill"><strong>Storage is not inference</strong><span>files only</span></div>
           <div class="status-pill"><strong>User-selected path</strong><span class="locked">future policy gate</span></div>
           <div class="status-pill"><strong>Format</strong><span>human-readable markdown</span></div>
         </div>
@@ -1494,7 +1619,24 @@ button.mode-pill:hover {
       <article class="surface-card">
         <h3>Model Readiness</h3>
         <p id="brains-model-message">Merlin checks whether local chat models are installed. Embedding models support memory, but they cannot answer chat.</p>
+        <div class="mode-choice-grid" aria-label="Offline model selection preview">
+          <div class="mode-choice active">
+            <strong>Fast</strong>
+            <p>Default local path for 8GB/core systems. Quick answers, no surprise downloads.</p>
+          </div>
+          <div class="mode-choice">
+            <strong>Smart</strong>
+            <p>Better reasoning when hardware and installed local models support it.</p>
+          </div>
+          <div class="mode-choice locked">
+            <strong>Cloud Bridge</strong>
+            <p>Opt-in only. Requires explicit provider setup, API key presence, and approval.</p>
+          </div>
+        </div>
         <div class="status-list">
+          <div class="status-pill"><strong>Default mode</strong><span>Fast</span></div>
+          <div class="status-pill"><strong>Smart mode</strong><span>hardware aware</span></div>
+          <div class="status-pill"><strong>Cloud bridge</strong><span class="locked">off until allowed</span></div>
           <div class="status-pill"><strong>Chat models</strong><span id="brains-chat-models">checking</span></div>
           <div class="status-pill"><strong>Memory model</strong><span id="brains-embedding-models">checking</span></div>
           <div class="status-pill"><strong>Safe install</strong><span id="brains-safe-install">bash scripts/add-model.sh qwen2.5:7b</span></div>
@@ -1528,9 +1670,10 @@ button.mode-pill:hover {
       </article>
       <article class="surface-card">
         <h3>Cloud Providers</h3>
-        <p>External APIs remain not allowed until the user explicitly configures, allows, and approves them in a gated setup flow.</p>
+        <p>External APIs remain not allowed until the user explicitly configures, allows, and approves them in a gated setup flow. The UI shows presence only; Merlin never displays raw API keys.</p>
         <div id="brains-provider-catalog" class="status-list">
           <div class="status-pill"><strong>Cloud escalation</strong><span class="off">disabled</span></div>
+          <div class="status-pill"><strong>Allow switch</strong><span class="locked">prompt before enabling</span></div>
           <div class="status-pill"><strong>API keys</strong><span class="locked">not shown</span></div>
           <div class="status-pill"><strong>Telemetry</strong><span class="good">off</span></div>
         </div>
@@ -1637,9 +1780,20 @@ button.mode-pill:hover {
         <p>Where Merlin keeps its local brain is visible here. Storage location and inference location are different: a synced folder is still a file path choice, not cloud model use.</p>
         <div id="settings-storage-panel" class="status-list">
           <div class="status-pill"><strong>Brain root</strong><span>checking</span></div>
+          <div class="status-pill"><strong>Storage vs inference</strong><span>separate controls</span></div>
           <div class="status-pill"><strong>Change location</strong><span class="locked">locked until policy-gated migration</span></div>
         </div>
         <div class="boundary-note">Changing this location is disabled until #130 / #123 / #135 have backend validation, migration, rollback, and audit tests.</div>
+      </article>
+      <article class="surface-card wide">
+        <h3>AI Connector Setup</h3>
+        <p>Future setup will ask before enabling any external provider. Merlin can store credential presence through a backend gate, but the browser never receives the secret value.</p>
+        <div class="mode-choice-grid" aria-label="Connector setup preview">
+          <div class="mode-choice active"><strong>Local only</strong><p>Default. Owned hardware and local models first.</p></div>
+          <div class="mode-choice locked"><strong>Add provider key</strong><p>Future policy-gated setup. Secret presence only after save.</p></div>
+          <div class="mode-choice locked"><strong>Allow cloud bridge</strong><p>Separate opt-in from storing a key. Prompts before external use.</p></div>
+        </div>
+        <div class="boundary-note">A saved API key does not turn on cloud routing by itself. Cloud use remains explicit, visible, and approval-aware.</div>
       </article>
       <article class="surface-card"><h3>Provider Connectors</h3><p>External provider setup is deferred until safe secret storage, explicit allow/not-allow choices, and approval gates are implemented.</p><div class="status-list"><div class="status-pill"><strong>API key fields</strong><span class="locked">not available</span></div><div class="status-pill"><strong>Cloud default</strong><span class="off">off</span></div><div class="status-pill"><strong>Future path</strong><span>policy-gated</span></div></div></article>
       <article class="surface-card wide"><h3>Model Library</h3><p>Model additions stay explicit, visible, hardware-aware, and manual-only.</p><div id="settings-model-library" class="model-library-panel"><div class="model-warning">8GB/core warning: review hardware impact before adding chat models. Merlin will not download models from the browser.</div><div class="empty">Checking model library status.</div></div></article>
@@ -1848,6 +2002,46 @@ function selectChatMode(mode) {
   });
   text('chat-mode-note', CHAT_MODE_COPY[selectedChatMode]);
 }
+
+function toggleChatSidebar(forceOpen = null) {
+  const shell = document.querySelector('.merlin-front-shell');
+  const toggle = document.getElementById('chat-sidebar-toggle');
+  if (!shell) return;
+  const mobile = window.matchMedia('(max-width: 820px)').matches;
+  if (mobile) {
+    const open = forceOpen === null ? !shell.classList.contains('sidebar-open') : Boolean(forceOpen);
+    shell.classList.toggle('sidebar-open', open);
+    shell.classList.remove('sidebar-collapsed');
+    if (toggle) {
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.textContent = open ? '×' : '☰';
+    }
+    return;
+  }
+  const collapsed = forceOpen === null ? !shell.classList.contains('sidebar-collapsed') : !Boolean(forceOpen);
+  shell.classList.toggle('sidebar-collapsed', collapsed);
+  shell.classList.remove('sidebar-open');
+  if (toggle) {
+    toggle.setAttribute('aria-expanded', String(!collapsed));
+    toggle.textContent = collapsed ? '☰' : '‹';
+  }
+}
+
+window.addEventListener('resize', () => {
+  const shell = document.querySelector('.merlin-front-shell');
+  const toggle = document.getElementById('chat-sidebar-toggle');
+  if (!shell || !toggle) return;
+  const mobile = window.matchMedia('(max-width: 820px)').matches;
+  if (mobile) {
+    shell.classList.remove('sidebar-collapsed');
+    toggle.setAttribute('aria-expanded', String(shell.classList.contains('sidebar-open')));
+    toggle.textContent = shell.classList.contains('sidebar-open') ? '×' : '☰';
+  } else {
+    shell.classList.remove('sidebar-open');
+    toggle.setAttribute('aria-expanded', String(!shell.classList.contains('sidebar-collapsed')));
+    toggle.textContent = shell.classList.contains('sidebar-collapsed') ? '☰' : '‹';
+  }
+});
 
 function clearMerlinChat() {
   const input = document.getElementById('merlin-chat-input');
