@@ -20,6 +20,9 @@ Code/evidence commit under test:
 CI follow-up fix commit under test:
 `60687b0`
 
+CI pass recorded against commit:
+`473d001`
+
 ## Target issue(s)
 
 #37, #95, #134
@@ -62,6 +65,7 @@ build payload excludes.
 - `sed -n '1,180p' tests/pkg-readiness-smoke.sh`
 - `bash -n pkg/build-pkg.sh && bash -n pkg/scripts/uninstall.sh && bash -n tests/pkg-readiness-smoke.sh && bash -n tests/uninstall-smoke.sh`
 - `bash tests/pkg-readiness-smoke.sh`
+- `gh run watch 25684357190 --exit-status`
 - `bash tests/uninstall-smoke.sh`
 - `git diff --check`
 - `bash pkg/scripts/uninstall.sh --dry-run --yes --keep-files | rg -n "pkgutil --forget|package receipt"`
@@ -96,6 +100,8 @@ build payload excludes.
   expected for unsigned local build.
 - GitHub Actions run `25684032896`: FAIL in `tests/uninstall-smoke.sh` before
   the CI follow-up fix.
+- GitHub Actions run `25684357190`: PASS after the platform-neutral receipt
+  cleanup smoke fix.
 
 ## Tests skipped and why
 
@@ -165,6 +171,8 @@ build payload excludes.
 - Local retest after CI failure:
   - `bash tests/uninstall-smoke.sh`: PASS.
   - `bash tests/pkg-readiness-smoke.sh`: PASS.
+- CI retest after fix:
+  - `gh run watch 25684357190 --exit-status`: PASS.
 
 ## Regression test added or reason not added
 
