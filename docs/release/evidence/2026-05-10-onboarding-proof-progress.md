@@ -14,7 +14,8 @@
 
 ## Ending commit SHA
 
-`57419f5e15463d255f8f206b30d36588867e1d5c`
+Code/evidence commit under test:
+`319bd35d1754ea8acd7c0e64e5910c8fd4bcc050`
 
 ## Target issue(s)
 
