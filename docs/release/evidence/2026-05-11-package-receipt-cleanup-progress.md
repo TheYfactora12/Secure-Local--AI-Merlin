@@ -18,7 +18,7 @@ Code/evidence commit under test:
 `2cc0ad04865f2f9cfdc010b41bfbb6144475b23d`
 
 CI follow-up fix commit under test:
-pending
+`60687b0`
 
 ## Target issue(s)
 
