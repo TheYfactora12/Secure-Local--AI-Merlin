@@ -75,6 +75,8 @@ log path. The change only renames the install log to Merlin AI branding.
   - `http://localhost:8765/healthz`
   - `http://localhost:8766/status/routes`
 - `bash launchd/install-launchd.sh`
+- `bash launchd/install-launchd.sh && sleep 45` after smoke tests to restore
+  the local Merlin APIs
 - `.venv-test/bin/python scripts/dashboard-browser-qa.py --url http://localhost:8888/index.html --no-serve-static --output-dir docs/release/evidence/assets/2026-05-11-install-rehearsal-browser-qa`
 - `bash scripts/install-pkg-local.sh --help`
 - `bash scripts/install-pkg-local.sh`
@@ -99,6 +101,10 @@ log path. The change only renames the install log to Merlin AI branding.
 - Browser QA passed and generated desktop/mobile screenshots.
 - `bash tests/installer-branding-smoke.sh`: PASS.
 - `bash tests/pkg-readiness-smoke.sh`: PASS.
+- After smoke tests, launchd was re-registered and both local Merlin APIs were
+  restored:
+  - `http://localhost:8765/healthz`: OK.
+  - `http://localhost:8766/status/routes`: OK.
 
 ## Tests skipped and why
 
@@ -120,6 +126,10 @@ log path. The change only renames the install log to Merlin AI branding.
    `/tmp/homeai-*.log`.
 5. Core install intentionally skips model pulls, so chat is installed but no
    local chat model is loaded until the user pulls one.
+6. User expectation check: "full removal" should remove every Merlin-downloaded
+   piece. Current `--purge-all` removes Merlin Docker data/images and known
+   Merlin models, but intentionally keeps shared dependencies: Docker Desktop,
+   Homebrew, and the Ollama app/binary.
 
 ## Failure categories
 
@@ -128,6 +138,7 @@ log path. The change only renames the install log to Merlin AI branding.
 - Branding cleanup
 - Launchd migration
 - First-run model readiness
+- Full dependency removal UX
 
 ## Root cause or current hypothesis
 
@@ -139,6 +150,9 @@ log path. The change only renames the install log to Merlin AI branding.
    a migration that unloads/removes legacy agents before registering new labels.
 4. The v1.0 package path skips model downloads by design for install speed and
    disk control, but the user experience still needs a clear first-model prompt.
+5. The current installer does not track which shared dependencies were installed
+   by Merlin versus already present. Without that manifest, removing Docker,
+   Homebrew, or Ollama by default could break other apps on the user's Mac.
 
 ## Fix applied
 
@@ -186,6 +200,12 @@ Recommended:
 3. Run true `.pkg` double-click install with a human entering admin password.
 4. Add a clean receipt-forget verification step after an admin-authorized
    uninstall.
+5. Add a full-removal design issue:
+   - default: remove Merlin app/data only,
+   - full removal: remove Merlin downloads and optionally Docker Desktop,
+     Ollama, and Homebrew with explicit confirmation,
+   - installer should write a local dependency manifest so uninstall knows what
+     Merlin installed versus what existed before.
 
 ## Lesson learned
 
@@ -193,6 +213,9 @@ The core stack can come up cleanly after purge, but production smoothness is
 not just service health. The installer has to explain every privileged step in
 plain English, and old internal names in logs/agents reduce trust even when the
 services work.
+The uninstall promise must distinguish safe default removal from true full
+dependency purge. Users should feel in control, but Merlin must not silently
+remove shared tools that may belong to other workflows.
 
 ## What not to repeat next time
 
