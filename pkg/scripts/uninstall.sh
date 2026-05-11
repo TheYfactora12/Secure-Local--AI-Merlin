@@ -217,6 +217,18 @@ merlin_model_names() {
   ' "$tiers_file" | sort -u
 }
 
+ollama_model_is_installed() {
+  local model="$1"
+  local installed="$2"
+  local model_latest="${model}:latest"
+
+  printf '%s\n' "$installed" | awk '{print $1}' | grep -qx "$model" && return 0
+  if [[ "$model" != *:* ]]; then
+    printf '%s\n' "$installed" | awk '{print $1}' | grep -qx "$model_latest" && return 0
+  fi
+  return 1
+}
+
 remove_ollama_models() {
   [[ "$PURGE_OLLAMA_MODELS" == true ]] || return 0
 
@@ -236,10 +248,15 @@ remove_ollama_models() {
   fi
 
   log "Removing Merlin-recommended Ollama models"
+  local installed_models=""
+  if [[ "$DRY_RUN" != true ]]; then
+    installed_models="$(ollama list 2>/dev/null || true)"
+  fi
+
   for model in "${models[@]}"; do
     if [[ "$DRY_RUN" == true ]]; then
       run ollama rm "$model"
-    elif ollama list 2>/dev/null | awk 'NR > 1 {print $1}' | grep -qx "$model"; then
+    elif ollama_model_is_installed "$model" "$installed_models"; then
       run ollama rm "$model" >/dev/null 2>&1 || warn "Could not remove Ollama model ${model}"
     fi
   done

@@ -82,4 +82,47 @@ grep -q 'ollama rm qwen2.5:7b' <<< "$purge_dry_run_output" \
 grep -q 'ollama rm nomic-embed-text' <<< "$purge_dry_run_output" \
   || fail "purge-all dry-run does not remove embedding model"
 
+tmp_dir="$(mktemp -d)"
+cleanup() {
+  rm -rf "$tmp_dir"
+}
+trap cleanup EXIT
+
+mkdir -p "$tmp_dir/bin" "$tmp_dir/home"
+cat > "$tmp_dir/bin/docker" <<'SH'
+#!/usr/bin/env bash
+case "${1:-}" in
+  info) exit 0 ;;
+  compose) exit 0 ;;
+  *) exit 0 ;;
+esac
+SH
+cat > "$tmp_dir/bin/ollama" <<'SH'
+#!/usr/bin/env bash
+case "${1:-}" in
+  list)
+    cat <<'MODELS'
+NAME                       ID              SIZE      MODIFIED
+qwen2.5:7b                 fake            4.7 GB    now
+nomic-embed-text:latest    fake            274 MB    now
+MODELS
+    ;;
+  rm)
+    printf '%s\n' "${2:-}" >> "${OLLAMA_RM_LOG:?}"
+    ;;
+esac
+SH
+chmod +x "$tmp_dir/bin/docker" "$tmp_dir/bin/ollama"
+
+OLLAMA_RM_LOG="$tmp_dir/ollama-rm.log" \
+HOME="$tmp_dir/home" \
+PATH="$tmp_dir/bin:$PATH" \
+bash "$PKG_UNINSTALL" --yes --purge-models --keep-files --keep-receipt >/tmp/home-ai-uninstall-fake.out 2>&1 \
+  || fail "uninstaller should support fake local purge test"
+
+grep -qx 'qwen2.5:7b' "$tmp_dir/ollama-rm.log" \
+  || fail "uninstaller fake purge did not remove tagged qwen model"
+grep -qx 'nomic-embed-text' "$tmp_dir/ollama-rm.log" \
+  || fail "uninstaller fake purge did not remove untagged embedding model listed as :latest"
+
 echo "PASS: uninstaller is guarded and testable"
