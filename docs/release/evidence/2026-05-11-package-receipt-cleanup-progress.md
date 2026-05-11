@@ -17,6 +17,9 @@
 Code/evidence commit under test:
 `2cc0ad04865f2f9cfdc010b41bfbb6144475b23d`
 
+CI follow-up fix commit under test:
+pending
+
 ## Target issue(s)
 
 #37, #95, #134
@@ -70,6 +73,10 @@ build payload excludes.
 - `bash tests/installer-branding-smoke.sh`
 - `bash tests/pkg-local-sign-smoke.sh`
 - `bash pkg/release-preflight.sh`
+- `gh run view 25684032896 --log-failed`
+- `bash pkg/scripts/uninstall.sh --dry-run --yes --keep-files`
+- `bash tests/uninstall-smoke.sh`
+- `bash tests/pkg-readiness-smoke.sh`
 
 ## Test output summary
 
@@ -87,6 +94,8 @@ build payload excludes.
   `docs/release/evidence/assets` paths in the rebuilt package.
 - `pkgutil --check-signature merlin-ai-0.8.6.pkg`: `Status: no signature`,
   expected for unsigned local build.
+- GitHub Actions run `25684032896`: FAIL in `tests/uninstall-smoke.sh` before
+  the CI follow-up fix.
 
 ## Tests skipped and why
 
@@ -105,6 +114,8 @@ build payload excludes.
 3. The first generated package payload included local/generated artifacts:
    `.venv-test`, `.pytest_cache`, `.DS_Store`, and release evidence screenshots.
    The package was 136 MB before cleanup.
+4. CI failed `tests/uninstall-smoke.sh` with:
+   `FAIL: dry-run does not forget Merlin AI package receipt`.
 
 ## Failure category
 
@@ -124,6 +135,9 @@ build payload excludes.
    command line that expands `sign_args`.
 3. `pkg/build-pkg.sh` excluded some runtime artifacts but not test virtualenvs,
    pytest cache, Finder metadata, or generated evidence screenshot assets.
+4. The receipt cleanup smoke test depended on the host `pkgutil` command. It
+   passed on macOS but skipped receipt cleanup on the Linux GitHub Actions
+   runner, so the assertion was not platform-independent.
 
 ## Fix applied
 
@@ -135,6 +149,9 @@ build payload excludes.
   expand `sign_args`.
 - Excluded `.venv-test/`, `.pytest_cache/`, `.DS_Store`, and
   `docs/release/evidence/assets/` from package payload staging.
+- Updated `tests/uninstall-smoke.sh` to inject a fake `pkgutil` for receipt
+  dry-run coverage, so CI can validate the macOS receipt cleanup path without
+  requiring a macOS runner.
 
 ## Retest result
 
@@ -145,6 +162,9 @@ build payload excludes.
 - Rebuilt package size dropped from 136 MB to 7.3 MB.
 - Payload inspection found no generated test/evidence artifacts.
 - Package readiness and uninstall smoke tests pass.
+- Local retest after CI failure:
+  - `bash tests/uninstall-smoke.sh`: PASS.
+  - `bash tests/pkg-readiness-smoke.sh`: PASS.
 
 ## Regression test added or reason not added
 
@@ -154,7 +174,8 @@ Updated:
   builder id, verifies payload excludes, and guards unsigned `pkgbuild` from
   `sign_args` expansion.
 - `tests/uninstall-smoke.sh` verifies dry-run receipt cleanup covers both the
-  new Merlin AI receipt and the legacy Home AI receipt.
+  new Merlin AI receipt and the legacy Home AI receipt with a platform-neutral
+  fake `pkgutil` path for CI.
 
 ## Follow-up issues created or recommended
 
@@ -171,12 +192,16 @@ Recommended:
 Package build tests need at least one real local package build when package
 identity or payload rules change. Static checks caught intended text, but the
 real `pkgbuild` run exposed both the empty-array failure and payload bloat.
+CI parity matters too: tests that exercise macOS-specific utilities need fake
+tooling or a macOS runner, otherwise local proof can pass while Linux CI fails.
 
 ## What not to repeat next time
 
 Do not rely only on static package smokes for packaging changes. Rebuild the
 package and inspect both `distribution.xml` and `pkgutil --payload-files` before
 claiming package-path improvement.
+Do not add CI assertions around host-specific tools without checking whether the
+runner has those tools.
 
 ## Next recommended step
 

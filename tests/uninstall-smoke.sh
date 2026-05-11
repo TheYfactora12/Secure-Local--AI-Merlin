@@ -33,7 +33,24 @@ grep -q 'Keeping install directories because --keep-files was set' <<< "$dry_run
 grep -q 'Keeping pkgutil receipt because --keep-receipt was set' <<< "$dry_run_output" \
   || fail "dry-run does not honor --keep-receipt"
 
-receipt_dry_run_output="$(bash "$PKG_UNINSTALL" --dry-run --yes --keep-files 2>&1)"
+tmp_dir="$(mktemp -d)"
+cleanup() {
+  rm -rf "$tmp_dir"
+}
+trap cleanup EXIT
+
+mkdir -p "$tmp_dir/bin" "$tmp_dir/home"
+cat > "$tmp_dir/bin/pkgutil" <<'SH'
+#!/usr/bin/env bash
+exit 0
+SH
+chmod +x "$tmp_dir/bin/pkgutil"
+
+receipt_dry_run_output="$(
+  HOME="$tmp_dir/home" \
+  PATH="$tmp_dir/bin:$PATH" \
+  bash "$PKG_UNINSTALL" --dry-run --yes --keep-files 2>&1
+)"
 grep -q 'sudo pkgutil --forget com.merlin.ai' <<< "$receipt_dry_run_output" \
   || fail "dry-run does not forget Merlin AI package receipt"
 grep -q 'sudo pkgutil --forget com.homeai.elite' <<< "$receipt_dry_run_output" \
@@ -92,13 +109,6 @@ grep -q 'ollama rm qwen2.5:7b' <<< "$purge_dry_run_output" \
 grep -q 'ollama rm nomic-embed-text' <<< "$purge_dry_run_output" \
   || fail "purge-all dry-run does not remove embedding model"
 
-tmp_dir="$(mktemp -d)"
-cleanup() {
-  rm -rf "$tmp_dir"
-}
-trap cleanup EXIT
-
-mkdir -p "$tmp_dir/bin" "$tmp_dir/home"
 cat > "$tmp_dir/bin/docker" <<'SH'
 #!/usr/bin/env bash
 case "${1:-}" in
