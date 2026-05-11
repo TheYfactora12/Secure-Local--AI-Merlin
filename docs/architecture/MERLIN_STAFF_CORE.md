@@ -23,9 +23,9 @@ The coordinator is intentionally pure wiring. It performs no model calls, networ
 | `software_engineer` | Code, tests, CI, scripts | `qwen-coder` |
 | `security_reviewer` | Secrets, permissions, risk review | `deepseek` |
 | `product_designer` | Dashboard and user flows | `qwen7b` |
-| `operator` | Health, upgrades, logs, hardware tiers | `mistral` |
+| `operator` | Health, upgrades, logs, hardware tiers | `qwen7b` |
 
-Low-memory hardware falls back to `mistral` for heavy non-default staff models.
+Low-memory hardware falls back to `qwen7b` for heavy non-default staff models.
 
 ## Policy Gates
 

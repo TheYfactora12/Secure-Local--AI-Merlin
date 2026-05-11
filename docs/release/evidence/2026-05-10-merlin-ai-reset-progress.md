@@ -102,6 +102,11 @@ intentionally weakened.
 - `gh run view 25645601693 --job 75273796109 --log`
 - `bash tests/observability-design-smoke.sh` after CI exposed a stale roadmap
   reference requirement.
+- `HOME_AI_PROFILE=core bash scripts/merlin-dry-run.sh "plan a local install"`
+- `bash tests/merlin-dry-run-smoke.sh`
+- `bash tests/merlin-status-smoke.sh`
+- Full local static-smoke block from `.github/workflows/ci.yml` after fixing
+  stale route/model assertions.
 
 ## Test output summary
 
@@ -145,11 +150,16 @@ intentionally weakened.
    memory, release safety` because `tests/observability-design-smoke.sh`
    requires the roadmap to reference #36 Observability design and #8 optional
    Langfuse. The reset had moved too much history out of the active roadmap.
+7. GitHub Actions run `25646160080` failed later in the same static-smoke job:
+   `tests/merlin-dry-run-smoke.sh` expected the general route and low-memory
+   fallback to report `mistral`, but current routes intentionally report
+   `qwen7b`.
 
 ## Failure categories
 
 - Documentation mismatch
 - CI/static smoke gap
+- Route/model expectation drift
 - Test design gap
 - Roadmap/governance drift
 - Installer/support naming compatibility
@@ -174,6 +184,9 @@ brand/volume naming depend on clone directory instead of product identity.
 - Added a narrow deferred-roadmap note for #36 Observability design and #8
   optional Langfuse so local JSONL/no-telemetry guarantees remain discoverable
   without promoting observability to v1.0 scope.
+- Updated `tests/merlin-dry-run-smoke.sh`, `tests/merlin-status-smoke.sh`, and
+  `docs/architecture/MERLIN_STAFF_CORE.md` to match the current `qwen7b`
+  operator/fallback model contract in `configs/merlin/routes.yaml`.
 
 ## Retest result
 
@@ -182,6 +195,15 @@ All failed commands above passed after their scoped fixes.
 GitHub Actions failure `25645601693` was diagnosed. A follow-up commit repairs
 the roadmap smoke expectation and a fresh CI run must complete before calling CI
 green.
+
+GitHub Actions failure `25646160080` was also diagnosed. A follow-up commit
+repairs stale `mistral` expectations. A fresh CI run must complete before
+calling CI green.
+
+Local retest of the full static-smoke block from `.github/workflows/ci.yml`
+passed after the route/model assertion fix. `tests/sast-gitleaks-smoke.sh`
+skipped locally because gitleaks is not installed; GitHub Actions runs the
+containerized gitleaks gate.
 
 ## Regression test added or reason not added
 

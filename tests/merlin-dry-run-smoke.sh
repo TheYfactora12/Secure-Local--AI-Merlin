@@ -24,8 +24,8 @@ require_output "$GENERAL_OUTPUT" '^policy_decision: allow$' "general route shoul
 require_output "$GENERAL_OUTPUT" '^approval_required: false$' "general route should not require approval"
 require_output "$GENERAL_OUTPUT" '^approval_request_id: none$' "general route should not allocate approval id"
 require_output "$GENERAL_OUTPUT" '^staff_mode: operator$' "general route should report staff mode"
-require_output "$GENERAL_OUTPUT" '^preferred_model_alias: mistral$' "general route should report preferred staff model"
-require_output "$GENERAL_OUTPUT" '^selected_model_alias: mistral$' "general route should report selected staff model"
+require_output "$GENERAL_OUTPUT" '^preferred_model_alias: qwen7b$' "general route should report preferred staff model"
+require_output "$GENERAL_OUTPUT" '^selected_model_alias: qwen7b$' "general route should report selected staff model"
 require_output "$GENERAL_OUTPUT" '^model_fallback_applied: false$' "general route should report fallback status"
 require_output "$GENERAL_OUTPUT" '^audit_written: false$' "dry-run should not write audit"
 require_output "$GENERAL_OUTPUT" '^side_effects: none$' "dry-run should have no side effects"
@@ -43,7 +43,7 @@ require_output "$CODE_OUTPUT" '^approval_required: true$' "code task should requ
 require_output "$CODE_OUTPUT" '^approval_request_id: approval_dryrun_' "code task should allocate approval id"
 require_output "$CODE_OUTPUT" '^staff_mode: software_engineer$' "code route should report software engineer mode"
 require_output "$CODE_OUTPUT" '^preferred_model_alias: qwen-coder$' "code route should prefer qwen-coder"
-require_output "$CODE_OUTPUT" '^selected_model_alias: mistral$' "low-memory code route should select fallback model"
+require_output "$CODE_OUTPUT" '^selected_model_alias: qwen7b$' "low-memory code route should select fallback model"
 require_output "$CODE_OUTPUT" '^model_fallback_applied: true$' "low-memory code route should report fallback"
 require_output "$CODE_OUTPUT" '^approval_status: required_pending$' "code task should require pending approval"
 require_output "$CODE_OUTPUT" '^policy_decision: ask_to_start_profile$' "code route should not auto-start optional profile"
@@ -132,7 +132,7 @@ if record["staff_mode"] != "software_engineer":
     raise SystemExit("expected software engineer staff mode")
 if record["preferred_model_alias"] != "qwen-coder":
     raise SystemExit("expected qwen-coder preferred model")
-if record["selected_model_alias"] != "mistral":
+if record["selected_model_alias"] != "qwen7b":
     raise SystemExit("expected low-memory fallback model")
 if record["model_fallback_applied"] is not True:
     raise SystemExit("expected model fallback")
