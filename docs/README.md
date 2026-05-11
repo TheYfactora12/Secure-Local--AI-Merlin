@@ -1,4 +1,4 @@
-# docs/ — Home AI Elite Documentation
+# docs/ — Merlin AI Documentation
 
 > **Product team navigation index.** Read this first. Every file in this folder has a purpose — find it here.
 > Last updated: 2026-05-09
@@ -11,7 +11,7 @@
 |---|---|
 | New contributor or onboarding | [`ARCHITECTURE.md`](./ARCHITECTURE.md) → [`MASTER_CONTEXT.md`](./MASTER_CONTEXT.md) |
 | Starting a Codex session | [`CANONICAL_PROJECT_STATE.md`](./CANONICAL_PROJECT_STATE.md) → [`MASTER_CONTEXT.md`](./MASTER_CONTEXT.md) → [`MASTER_PROMPT.md`](./MASTER_PROMPT.md) |
-| Starting with the new Merlin product focus | [`CODEX_MASTER_PROMPT_V2.md`](./CODEX_MASTER_PROMPT_V2.md) → [`product/PRODUCT_NORTH_STAR.md`](./product/PRODUCT_NORTH_STAR.md) |
+| Starting with the new Merlin product focus | [`CODEX_MASTER_PROMPT_V3.md`](./CODEX_MASTER_PROMPT_V3.md) → [`product/PRODUCT_NORTH_STAR.md`](./product/PRODUCT_NORTH_STAR.md) |
 | Working on the current sprint | [`MERLIN_IMPLEMENTATION_ROADMAP.md`](./MERLIN_IMPLEMENTATION_ROADMAP.md) → [`MERLIN_STAFF_CORE.md`](./architecture/MERLIN_STAFF_CORE.md) |
 | Making a product decision | [`product/PRODUCT_NORTH_STAR.md`](./product/PRODUCT_NORTH_STAR.md) → [`product/DASHBOARD_PRODUCT_SPEC.md`](./product/DASHBOARD_PRODUCT_SPEC.md) |
 | Reviewing security posture | [`security/SECURITY_MODEL.md`](./security/SECURITY_MODEL.md) → [`security/SECURITY_REVIEW.md`](./security/SECURITY_REVIEW.md) |
@@ -25,8 +25,9 @@
 | File | Purpose |
 |---|---|
 | [`CANONICAL_PROJECT_STATE.md`](./CANONICAL_PROJECT_STATE.md) | GitHub-aligned project state, current queue, canonical docs, and drift rules |
-| [`product/PRODUCT_NORTH_STAR.md`](./product/PRODUCT_NORTH_STAR.md) | Product soul and focus filter: Merlin Chat, Rooms, memory, export/import brain, and supervised action |
-| [`CODEX_MASTER_PROMPT_V2.md`](./CODEX_MASTER_PROMPT_V2.md) | Current coding prompt for issue-driven Merlin Chat, Rooms, memory, and governed-action work |
+| [`product/PRODUCT_NORTH_STAR.md`](./product/PRODUCT_NORTH_STAR.md) | Product soul and v1.0 focus filter: install, onboarding, privacy, recovery, and uninstall |
+| [`product/FUTURE_IDEAS.md`](./product/FUTURE_IDEAS.md) | Parking lot for every good idea that is not part of the five v1.0 jobs |
+| [`CODEX_MASTER_PROMPT_V3.md`](./CODEX_MASTER_PROMPT_V3.md) | Current Merlin AI reset prompt for v1.0 cleanup, validation, and issue triage |
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Canonical system architecture — single source of truth |
 | [`MASTER_CONTEXT.md`](./MASTER_CONTEXT.md) | Full project context for Codex and team orientation |
 | [`MASTER_PROMPT.md`](./MASTER_PROMPT.md) | Active Codex agent config and rules |
@@ -39,8 +40,8 @@
 ### 📁 product/ — What we are building and why
 | File | Purpose |
 |---|---|
-| [`PRODUCT_NORTH_STAR.md`](./product/PRODUCT_NORTH_STAR.md) | Canonical product focus: Merlin as user-owned chat, Rooms, memory, export/import brain, and supervised action |
-| [`HOME_AI_ELITE_PRODUCT_PLAN.md`](./product/HOME_AI_ELITE_PRODUCT_PLAN.md) | Top-level product plan and vision |
+| [`PRODUCT_NORTH_STAR.md`](./product/PRODUCT_NORTH_STAR.md) | Canonical product focus: Merlin AI v1.0 must install, onboard, stay private, recover clearly, and uninstall cleanly |
+| [`MERLIN_AI_EXPANSION_BOUNDARIES.md`](./product/MERLIN_AI_EXPANSION_BOUNDARIES.md) | Product expansion guardrail and future-scope boundary |
 | [`MERLIN_V1_MVP.md`](./product/MERLIN_V1_MVP.md) | v1 MVP scope, constraints, and acceptance criteria |
 | [`DASHBOARD_PRODUCT_SPEC.md`](./product/DASHBOARD_PRODUCT_SPEC.md) | Dashboard product requirements |
 | [`DASHBOARD_UI_SPEC.md`](./product/DASHBOARD_UI_SPEC.md) | Dashboard UI and interaction spec |
@@ -107,6 +108,6 @@
 | **v1.6 — Pi Intelligence + Observability** | ✅ Complete — local JSONL observability, optional local Langfuse, memory/benchmark export, Qdrant retrieval hardening |
 | **v1.7 — Security Hardening** | ✅ Complete — #80 explicit `webhook_execution` gate added, fail-closed and off by default |
 | **v2.0 — Merlin Staff Core** | ✅ Complete — Phase 2 core, #53 session memory bridge, and #60 staff router integration closed with CI validation |
-| **v3.x — Native Automation Runtime** | ⏳ Future — last-mile commercial supplement/replacement for n8n after workflows prove the owned runtime shape |
+| **Future product backlog** | ⏳ Parked — see `product/FUTURE_IDEAS.md`; not v1.0 scope |
 
-See [GitHub Milestones](https://github.com/TheYfactora12/home-ai-elite/milestones) and [CHANGELOG.md](../CHANGELOG.md) for full release history.
+See [GitHub Milestones](https://github.com/TheYfactora12/Secure-Local--AI-Merlin/milestones) and [CHANGELOG.md](../CHANGELOG.md) for full release history.

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Home AI Elite — profile-aware backup of persistent Docker volumes.
-# Backups go to: ~/home-ai-elite-backups/<timestamp>/
+# Merlin AI — profile-aware backup of persistent Docker volumes.
+# Backups go to: ~/merlin-ai-backups/<timestamp>/
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_DIR="${HOME_AI_STACK_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 PROFILE_LIB="${STACK_DIR}/scripts/profile-lib.sh"
-BACKUP_DIR="${HOME_AI_BACKUP_DIR:-$HOME/home-ai-elite-backups}"
+BACKUP_DIR="${HOME_AI_BACKUP_DIR:-$HOME/merlin-ai-backups}"
 DATESTAMP="$(date +%Y%m%d_%H%M%S)"
 BACKUP_PATH="${BACKUP_DIR}/${DATESTAMP}"
 INSTALL_PROFILE="${HOME_AI_PROFILE:-${HOME_AI_INSTALL_PROFILE:-core}}"
@@ -88,7 +88,7 @@ compose_project_name() {
     return 0
   fi
 
-  printf '%s' "$(basename "$STACK_DIR")" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_-' '-'
+  echo "merlin-ai"
 }
 
 volume_name_for() {
@@ -139,7 +139,7 @@ while IFS= read -r volume; do
   [[ -n "$volume" ]] && VOLUMES+=("$volume")
 done < <(selected_volumes "$CAPABILITIES")
 
-echo "Home AI Elite backup"
+echo "Merlin AI backup"
 echo "Stack: ${STACK_DIR}"
 echo "Profile: ${INSTALL_PROFILE}; capabilities: ${CAPABILITIES:-none}"
 echo "Backup path: ${BACKUP_PATH}"

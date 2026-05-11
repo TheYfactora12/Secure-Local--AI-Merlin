@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# bootstrap.sh — Idempotent first-boot initializer for home-ai-elite
+# bootstrap.sh — Idempotent first-boot initializer for merlin-ai
 #
 # Safe to run multiple times. Each step checks if work is already done.
 #
@@ -92,7 +92,7 @@ qdrant_create_collection() {
 # ---------------------------------------------------------------------------
 echo -e "${CYAN}${BOLD}"
 echo "  ┌──────────────────────────────────────┐"
-echo "  │  home-ai-elite bootstrap           │"
+echo "  │  merlin-ai bootstrap           │"
 echo "  └──────────────────────────────────────┘"
 echo -e "${RESET}"
 
@@ -114,7 +114,7 @@ log "  ✅ Preflight passed"
 if [[ ! -f "$ENV_FILE" ]]; then
   cp "${STACK_DIR}/.env.example" "$ENV_FILE"
   log "  ✅ .env created from .env.example"
-  warn "  Edit ~/home-ai-elite/.env to add your API keys (optional)"
+  warn "  Edit ~/merlin-ai/.env to add your API keys (optional)"
 fi
 
 # Source .env so N8N_API_KEY and QDRANT_* overrides are picked up

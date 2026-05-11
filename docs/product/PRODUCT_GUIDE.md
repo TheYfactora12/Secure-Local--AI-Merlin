@@ -1,369 +1,90 @@
-# Home AI Elite — What It Is, What It Does, What's Coming
-**Merlin assistant inside | `TheYfactora12/home-ai-elite` | v1.0 Pre-Release**
-*Built from live repo source — 2026-05-06*
+# Merlin AI — Product Guide
 
----
+**Merlin assistant inside | `TheYfactora12/Secure-Local--AI-Merlin` | v1.0 focus**
 
-## The One-Sentence Version
+## One Sentence
 
-Home AI Elite is a **private local AI product** you install on your own Mac that
-gives you Merlin Chat, local Rooms, approved memory, model routing, and Wizard
-HQ visibility — with zero required subscriptions and zero data leaving your
-hardware unless you explicitly say so.
+Download one file, run it, and in 30 minutes you have a fully private AI running
+on your Mac that you own forever. If you ever want it gone, one click removes
+everything.
 
----
+## What This Product Is
 
-## The Problem It Solves
+Merlin AI is a local-first Mac product for people who want private AI at
+home without becoming local-AI operators.
 
-Every major AI tool — ChatGPT, Perplexity, Copilot, Zapier AI, Pinecone — runs on someone else's servers. Your prompts, your data, your context, your preferences are all sent to a cloud you don't control. You pay a monthly fee to rent intelligence you can never own.
+Merlin is the assistant inside Merlin AI. The user talks to Merlin. Under
+the hood, Merlin uses local services such as Ollama, Open WebUI, LiteLLM, and
+Qdrant, but v1.0 must not make the user understand those parts before they can
+get value.
 
-Home AI Elite flips that. The AI runs on your hardware, uses your GPU (Apple
-Silicon supported natively), stores memory in your local database, and routes
-tasks through a policy engine you can read and audit. You own every bit of it.
+## What v1.0 Must Do
 
----
+1. **Install everything in one shot.**
+   One command or one installer starts the local AI stack without Docker
+   expertise.
 
-## What the Product Is Made Of
+2. **Tell the user it worked.**
+   Wizard HQ opens to a clear first-run state: "Your private AI is ready," what
+   is running, and what to do first.
 
-Home AI Elite is not one app pretending the stack does not exist. It is a
-purpose-built local AI stack orchestrated by a single installer and presented to
-the user through Wizard HQ. **Merlin** is the assistant and control layer inside
-the product.
+3. **Keep everything private.**
+   No cloud account, no API key, no telemetry, no surprise model download, and
+   no data leaving the machine by default.
 
-### The Core Stack
+4. **Recover gracefully.**
+   If a service is degraded, the user sees plain English: what broke, why it
+   matters, and what to do next.
 
-| Component | What It Replaces | Port | Notes |
-|---|---|---|---|
-| **Wizard HQ Dashboard** | AI command center | 8888 | Primary Merlin product hub and readiness surface |
-| **Open WebUI** | ChatGPT-style workspace | 3000 | Current local chat bridge behind Merlin |
-| **Ollama** | OpenAI API | 11434 | Runs models locally; Apple Metal GPU on macOS |
-| **LiteLLM** | OpenAI API layer | 4000 | Routes model aliases to local or optional cloud |
-| **Qdrant** | Pinecone | 6333 | Local vector database — memory lives here |
-| **n8n** | Zapier | 5678 | Automation workflows; session memory bridge |
-| **Perplexica** | Perplexity AI | 3002 | Local AI-powered search |
-| **SearXNG** | Google (for AI) | 8080 | Privacy-first metasearch engine |
-| **OpenHands** | GitHub Copilot / Codex | 3003 | Autonomous coding agent (high-risk, opt-in profile) |
-| **Merlin Status API** | — | 8765 | Read-only status bridge, localhost only |
-| **Merlin Task API** | — | 8766 | FastAPI task routing and status surfaces |
+5. **Uninstall cleanly.**
+   One command or one click can remove the product. Full purge removes
+   containers, volumes, configs, launch agents, local app files, and downloaded
+   pieces when the user asks for that.
 
-### The Merlin Brain
+## Current Stack
 
-Merlin is the AI control plane that sits above all these services. It is not a chatbot. It is the decision layer that decides **which model runs, which staff mode activates, whether an action needs approval, and what gets written to memory**.
+| Component | Purpose | v1.0 User Framing |
+| --- | --- | --- |
+| Wizard HQ | Local dashboard | "Your private AI is ready / needs attention." |
+| Merlin | Assistant and internal brain | The thing the user talks to. |
+| Ollama | Local model runtime | Runs the AI model on owned hardware. |
+| Open WebUI | Local chat workspace | Current proven chat bridge under Merlin. |
+| LiteLLM | Local model route layer | Keeps model routing local-first. |
+| Qdrant | Local vector store | Stores approved memory/context locally. |
+| n8n | Optional workflows | Future/optional; not required for v1.0 value. |
+| Perplexica/SearXNG | Optional private search | Future/optional; not required for v1.0 value. |
+| OpenHands | Optional coding agent | Future/optional; high-risk and not v1.0 default. |
 
-The commercial direction is to first make Merlin a private AI workspace for
-sensitive work: Wizard HQ as the primary product shell, Chat as the user entry
-point, Rooms as local project/history containers, Brains as model and provider
-options, Memory as an approved vault, Security as policy/audit visibility, and
-System as honest local readiness. After this loop is useful, Merlin can evolve
-into a broader private AI control plane for owned AI infrastructure.
-Future milestones add AI asset inventory, identity/trust graph, access reviews,
-monitoring signals, DLP-style gates, governance evidence, and only later a
-Merlin-native workflow runtime. See
-`docs/product/MERLIN_CONTROL_PLANE_STRATEGY.md`.
+## What Is Future
 
-Current release language must stay precise: Merlin is not yet a completed AI
-firewall, IDS, IPS, DLP, or enterprise governance suite. Those are future
-roadmap outcomes that need their own issues, tests, and evidence.
+Rooms, export/import brain, voice, Home Assistant, Linux, provider connectors,
+professional evidence mode, supervised agents, native automation, and advanced
+governance live in [`FUTURE_IDEAS.md`](FUTURE_IDEAS.md). They are good ideas,
+but they are not v1.0 promises.
 
-Merlin is built on six Python modules:
+## Release Language
 
-| Module | What It Does |
-|---|---|
-| `merlin/config_loader.py` | Validates the YAML config set on startup |
-| `merlin/policy_engine.py` | Enforces 15 fail-closed approval gates |
-| `merlin/router.py` | Routes tasks to the right model, staff mode, and agent target |
-| `merlin/memory_manager.py` | Manages Qdrant reads/writes with dimension guards |
-| `merlin/persona_injector.py` | Builds system prompts with Merlin's ethos and Pi warmth |
-| `merlin/task_endpoint.py` | Exposes FastAPI on port 8766 for task routing |
+Allowed:
 
----
+- "Local Trusted Beta hardening."
+- "Your private AI."
+- "Cloud off by default."
+- "Merlin inside Merlin AI."
 
-## What Merlin Can Do Right Now
+Not allowed yet:
 
-### 1. Route Any Task to the Right AI
+- Public Beta ready.
+- Public Release ready.
+- Fully autonomous.
+- Compliance-ready.
+- Enterprise-ready.
 
-Merlin reads your request and decides: Is this a coding task? A memory search? An automation? A security review? A general question? Each type routes to a different **staff mode** with the right model and system prompt.
+## First User Journey
 
-**The 6 Staff Modes:**
-
-| Mode | What It's For | Default Model |
-|---|---|---|
-| **Architect** | System design, service boundaries, scalability | `deepseek` |
-| **AI Engineer** | Model routing, embeddings, RAG, evals | `qwen-coder` |
-| **Software Engineer** | Code, tests, CI, scripts | `qwen-coder` |
-| **Security Reviewer** | Secrets, permissions, threat modeling | `deepseek` |
-| **Product Designer** | Dashboard, user flows, UX | `qwen7b` |
-| **Operator** | Health checks, upgrades, logs, hardware tiers | `mistral` |
-
-### 2. Remember Things You've Approved
-
-Merlin has five canonical memory collections in Qdrant:
-
-| Collection | What It Stores | Dimensions |
-|---|---|---|
-| `merlin_session` | Working session context (4h TTL) | 768 |
-| `merlin_user` | Long-term user preferences (approved) | 768 |
-| `merlin_documents` | Ingested local documents | 768 |
-| `merlin_tools` | Tool/skill knowledge | 768 |
-| `merlin_audit` | Redacted execution audit trail | 768 |
-
-**Critical:** Nothing is written to memory without your explicit approval. Every write goes through the `memory_write` approval gate. Merlin never silently learns from your conversations.
-
-### 3. Preview Decisions Before Executing
-
-`wizard merlin dry-run "goal"` shows you exactly what Merlin would do — which route, which staff mode, which model, which approval gates trigger — without executing anything. No side effects. No surprises.
-
-### 4. Enforce a 15-Gate Approval Policy
-
-Before any risky action executes, Merlin's policy engine checks 15 gates. These fail closed — if there's no explicit approval, the action is blocked. The gates cover:
-
-- Shell command execution
-- File read/write
-- Network calls
-- Cloud/API calls
-- Memory writes
-- Service start/stop
-- Model downloads
-- OpenHands (autonomous code agent) access
-- Secret access
-- Webhook-triggered execution
-- And more
-
-### 5. Run Automation Workflows
-
-n8n workflows handle repeatable tasks: the session memory bridge (`swarm/session/memory`) bridges Merlin's working memory to n8n-triggered automations. All workflows ship inactive — you activate only what you've validated.
-
-### 6. Search the Web Privately
-
-Perplexica + SearXNG give you AI-powered search with no tracking. Your queries stay on your machine and hit open search engines directly, not a cloud intermediary.
-
-### 7. Write Code Autonomously (Opt-In)
-
-OpenHands, when enabled via the `coding` profile, can read your codebase, write files, and run terminal commands. It uses Docker socket access, which is why it's gated behind explicit profile selection and approval. It's the most powerful — and most dangerous — capability in the stack.
-
-### 8. Save Local Chat History Into Rooms
-
-Wizard HQ Merlin Chat now keeps bounded session context for the current chat
-and can save useful chat sessions to local Rooms under `~/Merlin/brain/rooms`
-after explicit approval. Saved Room transcripts can be reopened or deleted with
-one-time approvals. Whole Rooms can be archived, restored, or deleted through
-separate approval-gated paths.
-
-Room transcripts are local Markdown history. They are not approved memory, not
-automatically reused as model context across Rooms, and not synced to cloud by
-default.
-
-### 9. Show You Everything in Wizard HQ
-
-Wizard HQ at `localhost:8888` is the Merlin product hub. Today it opens the
-current local chat bridge at `localhost:3000`, while Merlin owns routing,
-policy, memory, approvals, audit, and readiness around that chat engine. Over
-time, the native chat and settings flows move into Wizard HQ behind explicit
-policy-gated backend APIs.
-
-Wizard HQ shows:
-- All running services and their status
-- Your hardware tier (low/base/mid/high)
-- Active staff mode and selected model
-- Privacy and cloud state
-- Approval queue
-- Memory status
-- Profile (core/search/automation/coding/full)
-
----
-
-## What Hardware You Need
-
-Home AI Elite is designed to run on **hardware you already own**. The entry point is an 8GB Mac.
-
-| Your RAM | Tier | What You Get |
-|---|---|---|
-| **8–15 GB** | `low` | Chat (qwen2.5:7b), local memory (nomic-embed-text), all core services |
-| **16–23 GB** | `base` | + coder model (qwen2.5-coder:7b) + reasoning model (deepseek-r1:7b) |
-| **24–47 GB** | `mid` | + 32B parameter models — significantly better reasoning |
-| **48+ GB** | `high` | + 70B models (llama3.3:70b) — near-cloud quality, fully local |
-
-**Apple Silicon note:** On Apple Silicon Macs, your RAM is shared between CPU and GPU (unified memory). Ollama uses Apple Metal for GPU acceleration — this is a first-class feature of the architecture, not an afterthought.
-
----
-
-## How You Install It
-
-One command:
-
-```bash
-bash install.sh
-```
-
-The installer:
-1. Detects your OS (macOS vs. Linux) and hardware tier
-2. Selects the right profile
-3. Rotates secrets and writes `.env`
-4. Starts Docker services for your profile
-5. Bootstraps Qdrant collections
-6. Imports n8n workflows (inactive by default)
-7. Registers launchd agents (macOS auto-start on login)
-
-**macOS:** Ollama runs natively via Homebrew for Apple Metal acceleration. Docker runs everything else.
-**Linux:** Ollama can run in Docker via `--profile docker-ollama`.
-
-After install, validate with:
-```bash
-bash scripts/doctor.sh
-# Expected: 43 passes, ≤2 warnings, 0 failures
-```
-
----
-
-## Install Profiles
-
-You don't have to run everything. Choose what you need:
-
-| Profile | Services | Best For |
-|---|---|---|
-| `core` | Chat, memory, dashboard | Daily AI use on any hardware |
-| `search` | + Perplexica + SearXNG | Private web research |
-| `automation` | + n8n | Workflow automation |
-| `coding` | + OpenHands | Autonomous coding agent |
-| `full` | Everything | Power users with 24GB+ RAM |
-
-```bash
-wizard start core        # Laptop-safe default
-wizard start search      # Add private search
-wizard start automation  # Add n8n automation
-wizard start coding      # Add OpenHands (high RAM/risk)
-```
-
----
-
-## The CLI — How You Talk to Merlin
-
-```bash
-# Preview any request — zero side effects
-wizard merlin dry-run "refactor my config loader"
-
-# Check system state
-wizard merlin status
-
-# Manage approvals
-wizard merlin approvals list
-wizard merlin approvals approve <id>
-wizard merlin approvals deny <id>
-
-# Memory — all approval-gated
-wizard merlin memory plan --memory-type preference --text "prefers local-first"
-wizard merlin memory write --memory-type preference --text "..." --approval-id <id>
-wizard merlin memory search --query "local-first preference" --memory-type preference
-
-# Staff mode visibility
-wizard mode status
-
-# Health
-bash scripts/doctor.sh
-wizard doctor
-```
-
----
-
-## What Is Coming Next (Phase 3 Learning)
-
-Phase 3 adds **review-first learning loops**. Merlin starts getting smarter about your preferences — but still never learns without your consent.
-
-| Phase | What It Adds |
-|---|---|
-| **3A — Outcome Observer** | Tracks task success/failure by route (hashed input only, no raw prompts) |
-| **3B — Retrieval Routing** | Blends keyword routing with approved outcome history for better route decisions |
-| **3C — Preference Extractor** | Surfaces explicit preferences for your review — never writes automatically |
-| **3D — Session Reflector** | Short-lived session summaries for continuity (expire by default) |
-| **3E — Skill Scores** | Routing confidence improves over time from your approved feedback |
-
-The routing formula for Phase 3B:
-```
-final_route_score = (0.6 × keyword_score) + (0.4 × retrieval_score)
-```
-
-Keyword matching stays dominant (60%) so Merlin's routing is always explainable, never a black box.
-
----
-
-## The Milestone Roadmap
-
-| Milestone | Status | What It Delivers |
-|---|---|---|
-| **v1.0 — Stable Installer** | ✅ Complete | Rock-solid install, package, backup, restore, upgrade, uninstall on 8GB Mac |
-| **v1.1 — Mobile Access** | ✅ Complete | Optional local-network entry point design (opt-in, no default LAN exposure) |
-| **v1.2 — Hardware Guide + Doc Ingestion** | ✅ Complete | 8GB-first hardware guide, free stack map, optional document ingestion planning |
-| **v1.3 — Reliability + Memory + Router** | 🔵 Active | Retry logic, memory reliability, router cleanup |
-| **v2.0 — Merlin Staff Core** | ✅ Complete | Full Python control plane, 6 staff modes, 15 policy gates, memory manager |
-| **v2.1 — Dashboard Command Center** | 📋 Planned | Read-only/user-facing Merlin control center |
-| **v2.2 — Magic Mode** | 📋 Planned | Supervised multi-step orchestration — plan-first, approval-gated |
-| **v3.0 — Public Release** | 📋 Planned | Public packaging, onboarding polish, signed installer |
-
----
-
-## What Makes This Different
-
-| Feature | Merlin AI | ChatGPT / Copilot / Perplexity |
-|---|---|---|
-| Data stays on your machine | ✅ Always | ❌ Sent to cloud |
-| Works offline | ✅ Core features | ❌ Requires internet |
-| You own the memory | ✅ Qdrant, local | ❌ Cloud provider owns it |
-| Monthly subscription | ❌ None required | ✅ Required |
-| Apple Silicon GPU acceleration | ✅ Native Metal | ❌ n/a |
-| Audit trail of every AI decision | ✅ JSONL, redacted | ❌ Not available |
-| Approval gates before risky actions | ✅ 15 fail-closed gates | ❌ None |
-| Runs on an 8GB laptop | ✅ Validated | ❌ n/a |
-| You can read the policy | ✅ `configs/merlin/policy.yaml` | ❌ Proprietary |
-
----
-
-## The Merlin Ethos
-
-> *"Merlin is here to help, protect, and improve. Merlin must be truthful, humble, protective, and guided by love, service, and care for humanity. Merlin must not lie, fabricate capability, hide uncertainty, or claim incomplete work is complete."*
-
-This is a literal constraint in `configs/merlin/persona.yaml` that governs every Merlin system prompt. The system implements Pi Emotional Intelligence — it asks follow-up questions, recalls within-session context, and communicates with warmth without pretending to be more capable than it is.
-
-Merlin is a **product assistant, not an authority**. It preserves consent, evidence, safety policy, and user control at every decision point.
-
----
-
-## Quick Start (30 Seconds)
-
-```bash
-# 1. Clone and install (macOS, 8GB+)
-git clone https://github.com/TheYfactora12/home-ai-elite
-cd home-ai-elite
-bash install.sh
-
-# 2. Verify
-bash scripts/doctor.sh
-
-# 3. Open Wizard HQ, the Merlin product hub
-open http://localhost:8888
-
-# 4. Open the current local chat bridge
-open http://localhost:3000
-
-# 5. Preview a task decision
-wizard merlin dry-run "help me write a Python script"
-```
-
----
-
-## Related Docs
-
-| If you want to... | Read this |
-|---|---|
-| Understand the full architecture | [`docs/MASTER_CONTEXT.md`](../MASTER_CONTEXT.md) |
-| Start a Codex session | [`docs/engineering/CODEX_MASTER_PROMPT.md`](../engineering/CODEX_MASTER_PROMPT.md) |
-| See the active build roadmap | [`docs/MERLIN_IMPLEMENTATION_ROADMAP.md`](../MERLIN_IMPLEMENTATION_ROADMAP.md) |
-| Understand the staff mode system | [`docs/architecture/MERLIN_STAFF_CORE.md`](../architecture/MERLIN_STAFF_CORE.md) |
-| Review the security model | [`docs/security/SECURITY_MODEL.md`](../security/SECURITY_MODEL.md) |
-| Debug a failure | [`docs/operations/FAILURE_MAP.md`](../operations/FAILURE_MAP.md) |
-| Understand hardware requirements | [`docs/hardware-guide.md`](../hardware-guide.md) |
-| See Phase 3 learning design | [`docs/MERLIN_PHASE3_LEARNING_PLAN.md`](../MERLIN_PHASE3_LEARNING_PLAN.md) |
-
----
-
-*Source: live repo read — `TheYfactora12/home-ai-elite` — 2026-05-06*
-*MASTER_PROMPT.md · MASTER_CONTEXT.md · MERLIN_STAFF_CORE.md · MERLIN_IMPLEMENTATION_ROADMAP.md · MERLIN_PHASE3_LEARNING_PLAN.md*
+1. User installs Merlin AI.
+2. Wizard HQ opens.
+3. User sees "Your private AI is ready" or a plain-English degraded state.
+4. User asks Merlin a local question.
+5. User sees that cloud is off by default.
+6. User can run doctor/recovery guidance if something is degraded.
+7. User can uninstall or purge everything if they choose.

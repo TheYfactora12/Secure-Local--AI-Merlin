@@ -2,7 +2,7 @@
 
 Last updated: 2026-05-06
 
-Home AI Elite is local-first. Merlin may use memory only when the memory path is local, auditable, reversible, and approval-gated.
+Merlin AI is local-first. Merlin may use memory only when the memory path is local, auditable, reversible, and approval-gated.
 
 ## Defaults
 

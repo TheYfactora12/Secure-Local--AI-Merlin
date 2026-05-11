@@ -1,4 +1,4 @@
-# SearXNG Settings — home-ai-elite
+# SearXNG Settings — merlin-ai
 # Privacy-first metasearch engine for local AI web search
 # Docs: https://docs.searxng.org/admin/settings/
 
@@ -6,7 +6,7 @@ use_default_settings: true
 
 general:
   debug: false
-  instance_name: "Home AI Search"
+  instance_name: "Merlin Search"
   privacypolicy_url: false
   contact_url: false
   enable_metrics: false

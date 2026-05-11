@@ -1,125 +1,61 @@
-# Merlin AI Brand + Wizard HQ UX Spec
+# Merlin AI / Merlin Brand + UX Spec
 
-Last updated: 2026-05-07
+Last updated: 2026-05-10
 
-## Product Position
+## Brand Rule
 
-Merlin AI is a sovereign, local-first personal intelligence system. It should
-feel like private cognitive infrastructure running on owned hardware, not a
-generic chatbot or cloud SaaS wrapper.
+Merlin AI is the product. Merlin is the assistant inside it.
 
-The product promise is:
+The user should never need to ask what the product is called. They installed
+Merlin AI. Merlin is the face and intelligence they talk to.
 
-> Private Intelligence. Locally Owned.
+## Product Promise
 
-## Experience Target
+> Your private AI. On your Mac. Forever.
 
-Wizard HQ is the Merlin-native command center. It combines a calm assistant
-surface with operational visibility for local models, memory, agents, approvals,
-and system health.
+## v1.0 Experience Target
 
-The emotional target is controlled power:
+The install experience is the product. The first run should feel calm and
+obvious:
 
-- intelligent but calm
-- powerful but permissioned
-- futuristic but trustworthy
-- secure without feeling militarized
-- premium without feeling corporate
+1. Merlin AI installed.
+2. Your private AI is ready.
+3. Cloud is off by default.
+4. Ask Merlin your first local question.
+5. If something is broken, here is how to fix it.
+6. If you want it gone, here is how to remove it.
 
 ## Visual Direction
 
-Use a luxury local-AI operating-system language:
+- Premium Mac utility, not fantasy game.
+- Merlin M mark and assistant face are allowed.
+- Dark surface, teal/cyan accent, clear health colors.
+- No cluttered engineering panels as the primary view.
+- Motion is subtle and respects reduced-motion settings.
 
-- obsidian black and midnight graphite surfaces
-- silver-titanium linework
-- restrained electric-blue glow
-- sparse deep-emerald health accents
-- compact executive-grade panels
-- subtle geometric intelligence core
+## Installer + Package Branding
 
-Avoid fantasy wizard tropes, cartoon mascots, gamer HUDs, generic AI brain
-icons, crypto-style clutter, or anything that implies autonomous execution.
+Installer and package surfaces should say Merlin AI with Merlin inside.
 
-## Wizard HQ MVP Modules
+Required surfaces:
 
-The v2.1 dashboard should make these modules visible without adding privileged
-actions:
+- terminal `install.sh` header,
+- package welcome,
+- package first-run readme,
+- postinstall Desktop next steps,
+- Merlin Dashboard first-run surface.
 
-- **Brain Status:** local model, Ollama native runtime, acceleration state,
-  local-first routing.
-- **Memory Vault:** private vector memory and collection health. Review/delete
-  interactions wait for policy-gated backend flows.
-- **Agent Control:** research, coding, and automation agents shown as guarded or
-  standby; no execution buttons in v1.
-- **Sovereignty Status:** air-gapped/local-only posture, cloud disabled,
-  telemetry off, protected values not displayed.
-- **Knowledge Graph:** concept placeholder for linked projects, documents,
-  goals, and decisions. Interactive graph work is post-MVP.
-- **System Doctor:** dashboard, Open WebUI, LiteLLM, Qdrant, Ollama, and Merlin
-  API health from localhost-only status checks.
+Required message:
 
-## Concept Asset
+- local-first,
+- no cloud account required by default,
+- no surprise model downloads,
+- Merlin Dashboard is the starting point,
+- doctor/recovery command is visible,
+- uninstall/purge path is visible.
 
-Reference image for the v2.1 visual north-star:
+## Future Brand Work
 
-![Wizard HQ product concept](assets/wizard-hq-concept.png)
-
-Logo concept for installer, downloader, dashboard header, app icon, and hardware
-badge exploration:
-
-![Merlin AI logo concept](assets/merlin-ai-logo-concept.png)
-
-This is product-direction evidence only. The launch dashboard must remain
-lightweight, static, and usable on 8 GB Macs.
-
-## Installer + Downloader Brand Requirement
-
-Tracked by GitHub issue #94 under `v3.0 — Public Product Release`.
-
-Before the first public launch test, the installer/downloader path should show
-the Merlin AI mark and product name so the user understands they are installing
-the sovereign local AI system, not a generic script bundle.
-
-This work belongs in the public-release packaging milestone, not in the
-dashboard/chat slice. The protected installer should only be changed through a
-dedicated packaging issue with tests for:
-
-- branded welcome/summary surface where the packaging format supports it
-- CLI downloader/banner fallback for terminal installs
-- no installer flow regressions
-- no extra network calls
-- no model downloads unless explicitly confirmed
-- uninstall path unaffected
-
-### Implemented Surface
-
-The #94 implementation keeps installer behavior unchanged and adds the Merlin
-brand only to user-facing package and terminal surfaces:
-
-- terminal `install.sh` header: Merlin AI name, tagline, and local-first
-  positioning
-- macOS package welcome screen: Merlin AI mark, tagline, Wizard HQ, and no-cloud
-  default language
-- macOS package readme: first-run Wizard HQ path, doctor/status commands, and
-  corrected local service map
-- postinstall Desktop next-steps file: Merlin completion heading and Wizard HQ
-  service URL
-- `pkg/resources/merlin-ai-logo.png`: package-local M logo resource derived from
-  the approved concept asset
-- `tests/installer-branding-smoke.sh`: static regression coverage wired into CI
-
-## Launch Guardrails
-
-- Wizard HQ status surfaces are read-only.
-- Merlin Chat may submit exactly one policy-gated request path through
-  `POST http://localhost:8766/task`.
-- No shell, file, memory-write, approval, model-download, or Magic Mode
-  execution controls appear in the browser.
-- The browser must not call LiteLLM, Ollama generation APIs, cloud providers,
-  approval endpoints, memory-write endpoints, or shell/file endpoints directly.
-- All risky actions stay behind Merlin policy gates and the CLI/API approval
-  model.
-- No raw prompts, model responses, or sensitive values are stored in browser
-  logs.
-- Port 8765 remains the legacy read-only status server; port 8766 remains the
-  execution-aware FastAPI status/task API.
+Animated orb, voice-reactive face, richer mythology, Rooms, Round Table,
+agents, and professional/security themes are future work. They go through
+`docs/product/FUTURE_IDEAS.md` and must not distract from v1.0 first-run trust.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Home AI Elite restore: dry-run by default is available with --dry-run.
+# Merlin AI restore: dry-run by default is available with --dry-run.
 set -euo pipefail
 
 usage() {

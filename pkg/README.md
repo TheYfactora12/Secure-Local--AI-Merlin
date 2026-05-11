@@ -1,6 +1,6 @@
 # pkg — macOS .pkg Installer
 
-Builds a double-click `.pkg` installer for home-ai-elite using Apple's native `pkgbuild` + `productbuild` toolchain.
+Builds a double-click `.pkg` installer for merlin-ai using Apple's native `pkgbuild` + `productbuild` toolchain.
 
 ## Structure
 
@@ -36,15 +36,15 @@ bash pkg/build-pkg.sh --sign
 bash pkg/build-pkg.sh --sign --notarize
 ```
 
-Output: `home-ai-elite-<version>.pkg` in the repo root.
+Output: `merlin-ai-<version>.pkg` in the repo root.
 
 ## Install Flow (what happens when user double-clicks)
 
 1. macOS Installer.app shows Welcome + Readme screens
 2. `preinstall` runs: checks macOS ≥13, RAM ≥8GB, disk ≥20GB, Docker Desktop installed, git installed
-3. If all checks pass: files copied to `/usr/local/home-ai-elite`
+3. If all checks pass: files copied to `/usr/local/merlin-ai`
 4. `postinstall` runs:
-   - Copies stack to `~/home-ai-elite`
+   - Copies stack to `~/merlin-ai`
    - Creates `.env` from `.env.example`
    - Opens Docker Desktop so the user can finish first-run setup
    - Launches `install.sh --profile core --skip-model-pulls --non-interactive` in background
@@ -55,7 +55,7 @@ Output: `home-ai-elite-<version>.pkg` in the repo root.
 ## Docker Desktop Caveat
 
 The package does not bundle Docker Desktop. Users should install and open Docker
-Desktop before running Home AI Elite. If Docker Desktop is installed without
+Desktop before running Merlin AI. If Docker Desktop is installed without
 shell symlinks, the installer uses Docker's bundled CLI at:
 
 ```bash
@@ -75,38 +75,38 @@ identity. A normal application Code Signing certificate is not enough for flat
 One working command-line path is:
 
 ```bash
-mkdir -p /private/tmp/home-ai-elite-installer-signing
+mkdir -p /private/tmp/merlin-ai-installer-signing
 
 openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
-  -keyout /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.key \
-  -out /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.crt \
-  -subj "/CN=Home AI Elite Local Signing/O=Home AI Elite/C=US" \
+  -keyout /private/tmp/merlin-ai-installer-signing/home-ai-installer-signing.key \
+  -out /private/tmp/merlin-ai-installer-signing/home-ai-installer-signing.crt \
+  -subj "/CN=Merlin AI Local Signing/O=Merlin AI/C=US" \
   -addext "basicConstraints=critical,CA:TRUE" \
   -addext "keyUsage=critical,digitalSignature" \
   -addext "extendedKeyUsage=1.2.840.113635.100.6.1.14"
 
 openssl pkcs12 -legacy -export \
-  -inkey /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.key \
-  -in /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.crt \
-  -out /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.p12 \
+  -inkey /private/tmp/merlin-ai-installer-signing/home-ai-installer-signing.key \
+  -in /private/tmp/merlin-ai-installer-signing/home-ai-installer-signing.crt \
+  -out /private/tmp/merlin-ai-installer-signing/home-ai-installer-signing.p12 \
   -passout pass:homeai-local-import
 
 security create-keychain -p homeai-build \
-  /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain
+  /private/tmp/merlin-ai-installer-signing/home-ai-installer-signing.keychain
 security unlock-keychain -p homeai-build \
-  /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain
-security import /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.p12 \
-  -k /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain \
+  /private/tmp/merlin-ai-installer-signing/home-ai-installer-signing.keychain
+security import /private/tmp/merlin-ai-installer-signing/home-ai-installer-signing.p12 \
+  -k /private/tmp/merlin-ai-installer-signing/home-ai-installer-signing.keychain \
   -P homeai-local-import \
   -T /usr/bin/productsign
 security add-trusted-cert -r trustRoot \
-  -k /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain \
-  /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.crt
+  -k /private/tmp/merlin-ai-installer-signing/home-ai-installer-signing.keychain \
+  /private/tmp/merlin-ai-installer-signing/home-ai-installer-signing.crt
 
 # Trust it for current-user package verification on this Mac.
 security add-trusted-cert -r trustRoot \
   -k "$HOME/Library/Keychains/login.keychain-db" \
-  /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.crt
+  /private/tmp/merlin-ai-installer-signing/home-ai-installer-signing.crt
 ```
 
 Then build and sign:
@@ -114,10 +114,10 @@ Then build and sign:
 ```bash
 bash pkg/build-pkg.sh
 security unlock-keychain -p homeai-build \
-  /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain
+  /private/tmp/merlin-ai-installer-signing/home-ai-installer-signing.keychain
 bash scripts/sign-pkg.sh --version <version> \
-  --keychain /private/tmp/home-ai-elite-installer-signing/home-ai-installer-signing.keychain
-pkgutil --check-signature home-ai-elite-v<version>.pkg
+  --keychain /private/tmp/merlin-ai-installer-signing/home-ai-installer-signing.keychain
+pkgutil --check-signature merlin-ai-v<version>.pkg
 ```
 
 macOS may still show an unidentified-developer warning for self-signed
@@ -145,7 +145,7 @@ environment variables.
 ## Uninstall
 
 ```bash
-bash ~/home-ai-elite/pkg/scripts/uninstall.sh
+bash ~/merlin-ai/pkg/scripts/uninstall.sh
 ```
 
 Default removes: containers, launchd agents, install directory, pkgutil receipt.
@@ -154,13 +154,13 @@ Default keeps: Docker Desktop, Homebrew, Ollama models, Docker volumes, and a ti
 Clean-reset uninstall:
 
 ```bash
-bash ~/home-ai-elite/pkg/scripts/uninstall.sh --remove-data
+bash ~/merlin-ai/pkg/scripts/uninstall.sh --remove-data
 ```
 
 Full Merlin purge for a clean reinstall test:
 
 ```bash
-bash ~/home-ai-elite/pkg/scripts/uninstall.sh --purge-all
+bash ~/merlin-ai/pkg/scripts/uninstall.sh --purge-all
 ```
 
 This removes Merlin app files, Docker containers, Docker volumes, Docker images
@@ -170,5 +170,5 @@ system dependencies: Docker Desktop, Homebrew, and the Ollama app/binary.
 Preview first:
 
 ```bash
-bash ~/home-ai-elite/pkg/scripts/uninstall.sh --dry-run
+bash ~/merlin-ai/pkg/scripts/uninstall.sh --dry-run
 ```

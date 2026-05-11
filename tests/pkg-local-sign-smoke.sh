@@ -15,7 +15,7 @@ fail() {
 bash -n "$SIGNER"
 
 HELP="$(bash "$SIGNER" --help)"
-echo "$HELP" | grep -q 'Home AI Elite Local Signing' \
+echo "$HELP" | grep -q 'Merlin AI Local Signing' \
   || fail "sign-pkg help does not document default local signing identity"
 echo "$HELP" | grep -q -- '--keychain <path>' \
   || fail "sign-pkg help does not document keychain override"

@@ -173,7 +173,7 @@ def _storage_manifest() -> dict[str, Any]:
     log_dir = Path(os.environ.get("MERLIN_LOG_DIR", data_root / "logs")).expanduser()
     trace_log = Path(os.environ.get("MERLIN_TRACE_LOG", log_dir / "merlin-route-decisions.jsonl")).expanduser()
     approval_log = Path(os.environ.get("MERLIN_APPROVAL_LOG", log_dir / "merlin-approvals.jsonl")).expanduser()
-    backup_root = Path(os.environ.get("HOME_AI_BACKUP_DIR", Path.home() / "home-ai-elite-backups")).expanduser()
+    backup_root = Path(os.environ.get("HOME_AI_BACKUP_DIR", Path.home() / "merlin-ai-backups")).expanduser()
     memory_collections_file = Path(
         os.environ.get("MERLIN_MEMORY_COLLECTIONS_FILE", data_root / "configs" / "merlin" / "memory-collections.env")
     ).expanduser()

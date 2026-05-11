@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# home-ai-elite — Generate self-signed TLS certificate for Nginx (v0.7)
+# merlin-ai — Generate self-signed TLS certificate for Nginx (v0.7)
 # Run once on first boot. Re-run to regenerate.
 # Output: <repo>/certs/selfsigned.crt + selfsigned.key
 

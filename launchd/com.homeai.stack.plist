@@ -5,7 +5,7 @@
   The 30s delay gives Docker Desktop time to fully initialize.
 
   Install:
-    cp ~/home-ai-elite/launchd/com.homeai.stack.plist ~/Library/LaunchAgents/
+    cp ~/merlin-ai/launchd/com.homeai.stack.plist ~/Library/LaunchAgents/
     launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.homeai.stack.plist
 -->
 <plist version="1.0">
@@ -18,7 +18,7 @@
     <string>/bin/bash</string>
     <string>-c</string>
     <!-- Wait 30s for Docker to be ready, then start only the core profile through wizard -->
-    <string>sleep 30 &amp;&amp; cd "$HOME/home-ai-elite" &amp;&amp; HOME_AI_PROFILE=core /bin/bash cli/wizard start core &gt;&gt; /tmp/homeai-stack.log 2&gt;&amp;1</string>
+    <string>sleep 30 &amp;&amp; cd "$HOME/merlin-ai" &amp;&amp; HOME_AI_PROFILE=core /bin/bash cli/wizard start core &gt;&gt; /tmp/homeai-stack.log 2&gt;&amp;1</string>
   </array>
 
   <key>RunAtLoad</key>

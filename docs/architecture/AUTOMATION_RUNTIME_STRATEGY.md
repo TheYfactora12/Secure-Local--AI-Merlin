@@ -1,6 +1,6 @@
 # Automation Runtime Strategy
 
-Home AI Elite uses n8n today because it is mature, self-hostable, and useful
+Merlin AI uses n8n today because it is mature, self-hostable, and useful
 immediately. That does not mean n8n is the long-term commercial runtime.
 
 ## Current Position
@@ -19,7 +19,7 @@ right workflow shape.
 
 ## Why We May Need Our Own Runtime
 
-A commercial Home AI Elite product may eventually need a native automation
+A commercial Merlin AI product may eventually need a native automation
 runtime because:
 
 - n8n is a separate product with its own licensing, UI, concepts, and upgrade
@@ -91,7 +91,7 @@ runtime is working:
 **v3.x — Native Automation Runtime**
 
 Goal: supplement or replace n8n for core Merlin workflows with a lightweight,
-policy-gated, local-first workflow runner that ships as part of Home AI Elite.
+policy-gated, local-first workflow runner that ships as part of Merlin AI.
 
 This milestone should not start until:
 

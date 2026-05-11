@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # =============================================================================
-# build-pkg.sh — Build the home-ai-elite macOS .pkg installer
+# build-pkg.sh — Build the merlin-ai macOS .pkg installer
 #
-# Produces: home-ai-elite-<version>.pkg
+# Produces: merlin-ai-<version>.pkg
 # Requires: macOS with Xcode Command Line Tools (pkgbuild + productbuild)
 #
 # Usage:
@@ -23,8 +23,8 @@ BUILD_DIR="${SCRIPT_DIR}/build"
 # Package identity
 PKG_ID="com.homeai.elite"
 PKG_VERSION="$(git -C "$ROOT_DIR" describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "0.5.0")"
-PKG_NAME="home-ai-elite-${PKG_VERSION}"
-INSTALL_DIR="/usr/local/home-ai-elite"
+PKG_NAME="merlin-ai-${PKG_VERSION}"
+INSTALL_DIR="/usr/local/merlin-ai"
 
 # Signing
 SIGN=false
@@ -290,14 +290,14 @@ notarize_pkg() {
   log "  (This can take 2-10 minutes)"
 
   # Store credentials in keychain profile (one-time setup)
-  xcrun notarytool store-credentials "home-ai-elite-notary" \
+  xcrun notarytool store-credentials "merlin-ai-notary" \
     --apple-id     "${APPLE_ID}" \
     --team-id      "${APPLE_TEAM_ID}" \
     --password     "${APPLE_APP_PASSWORD}" 2>/dev/null || true
 
   # Submit and wait
   xcrun notarytool submit "${pkg_path}" \
-    --keychain-profile "home-ai-elite-notary" \
+    --keychain-profile "merlin-ai-notary" \
     --wait
 
   # Staple the notarization ticket to the pkg
@@ -312,7 +312,7 @@ notarize_pkg() {
 main() {
   echo -e "${CYAN}${BOLD}"
   echo "  ┌──────────────────────────────────────┐"
-  echo "  │   home-ai-elite .pkg builder         │"
+  echo "  │   merlin-ai .pkg builder         │"
   echo "  │   version: ${PKG_VERSION}                       │"
   echo "  └──────────────────────────────────────┘"
   echo -e "${RESET}"

@@ -1,10 +1,13 @@
 # Merlin AI — Scrum & Management Reference
 
-**Last updated:** 2026-05-08  
-**Scrum cycle:** 2-week sprints, Thursday kick-off  
-**Current sprint:** v3.1 Product Shell + Policy-Gated Settings  
+**Last updated:** 2026-05-10
+**Scrum cycle:** 2-week sprints, Thursday kick-off
+**Current sprint:** v1.0 Focus Reset — five jobs only
 
-> This document governs how the Merlin AI / Home AI Elite project is run. It is subordinate only to GitHub issue and milestone state. All planning, prioritization, and sequencing decisions trace back to `docs/CANONICAL_PROJECT_STATE.md`.
+> This document governs how the Merlin AI / Merlin project is run. It is
+> subordinate only to GitHub issue and milestone state. All planning,
+> prioritization, and sequencing decisions trace back to
+> `docs/CANONICAL_PROJECT_STATE.md`.
 
 ---
 
@@ -36,16 +39,10 @@ When a lower source conflicts with a higher source, update the lower source or o
 | `v2.0 — Merlin Staff Core` | ✅ Mostly complete | #31, #32 memory follow-ups remain |
 | `v2.1 — Dashboard Command Center` | ✅ Closed | — |
 | `v2.2 — Magic Mode` | ✅ Closed | — |
-| `v3.0 — Public Product Release` | 🔄 Active | #37, #64, #95 |
-| `v3.1 — Wizard HQ Product Shell` | 🔄 Active | #106, #114, #117, #119, #120 |
-| `v3.2 — AI Asset Inventory` | ⏳ Sequenced | After #106 |
-| `v3.3 — Access Control + Reviews` | ⏳ Sequenced | After v3.2 |
-| `v3.4 — Monitoring / IDS` | ⏳ Sequenced | After v3.3 |
-| `v3.5 — DLP + Prevention Gates` | ⏳ Sequenced | After v3.4 |
-| `v3.6 — Governance Reporting` | ⏳ Sequenced | After v3.5 |
-| `v3.7 — Local Fallback + DR` | ⏳ Sequenced | After v3.6 |
-| `v3.x — Native Automation Runtime` | 🔮 Future | After control-plane evidence |
-| `v4.x — MerlinFlow Native Runtime` | 🔮 Future | After v3.x patterns proven |
+| `v3.0 — Local Trusted Beta Hardening` | 🔄 Active | #37, #95 |
+| `v3.1 — Wizard HQ Product Shell` | ⚠️ Conditional | Only onboarding/first-action work that supports v1.0 |
+| Future product backlog | 🔮 Future | See `docs/product/FUTURE_IDEAS.md` |
+| Future engineering/IP backlog | 🔮 Future | See `docs/product/FUTURE_IDEAS.md` |
 
 ---
 
@@ -53,30 +50,28 @@ When a lower source conflicts with a higher source, update the lower source or o
 
 > Pull from top. Do not skip ahead.
 
-1. **#106** — Wizard HQ Product Shell parent (high)
-2. **#114** — Policy-gated Settings backend parent (high)
-3. **#117** — Provider connector setup, secret presence-only (medium)
-4. **#119** — Startup and API service controls (medium)
-5. **#120** — Memory review and delete controls — blocked by #31+#32 (medium)
-6. **#83** — Alice §101 patent hardening (critical — unblock ASAP)
-7. **#82** — Negation suppression function, named + tested (critical)
-8. **#37** — Public onboarding hardening (v3.0)
-9. **#95** — Product push audit (v3.0)
-10. **#64** — Developer ID signing (v3.0, deferred until product-complete)
+1. **#37** — onboarding and packaging hardening.
+2. **#95** — product audit, release evidence, and installer retest discipline.
+3. **#134** — product value checkpoint, now judged by the five v1.0 jobs.
+4. **#123/#106** — only where they improve first local question, Wizard HQ
+   onboarding, privacy proof, or recovery clarity.
+5. **#64 and all other feature issues** — deferred until the five jobs are
+   evidenced.
 
 ---
 
 ## Do-Not-Build-Yet List
 
-These are explicitly deferred. Do not implement without a completed v3.1 control-plane foundation.
+These are explicitly deferred. Do not implement until v1.0 proves the five jobs.
 
 - Browser-side shell execution or privileged browser commands
 - Automatic cloud routing or cloud-by-default behavior
 - Silent model downloads
 - Autonomous execution without approval gate
 - Heavy default services (OpenHands, large model pre-pulls)
-- MerlinFlow native runtime before v3.x workflow patterns are proven
-- SOC 2 / HIPAA compliance claims before implemented controls are evidenced
+- MerlinFlow/native automation runtime
+- Deep Rooms, export/import, voice, Home Assistant, Linux, and provider setup
+- Professional/compliance claims before implemented controls are evidenced
 
 ---
 

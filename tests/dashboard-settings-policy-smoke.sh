@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Static smoke test for Wizard HQ policy-gated Settings contract.
+# Static smoke test for Merlin Dashboard policy-gated Settings contract.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -97,4 +97,4 @@ if grep -qiE 'OPENAI_API_KEY|ANTHROPIC_API_KEY|PERPLEXITY_API_KEY|sk-[A-Za-z0-9]
   fail "settings dashboard must not expose secret-like values or env key names"
 fi
 
-echo "PASS: Wizard HQ Settings is backend-manifested and policy-gated"
+echo "PASS: Merlin Dashboard Settings is backend-manifested and policy-gated"

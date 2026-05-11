@@ -1,4 +1,4 @@
-# home-ai-elite — optional observability profile
+# merlin-ai — optional observability profile
 # This file is intentionally not loaded by default.
 # Start explicitly:
 #   docker compose -f docker-compose.yml -f docker-compose.observability.yml --profile observability up -d

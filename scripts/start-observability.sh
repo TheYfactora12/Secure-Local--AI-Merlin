@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Home AI Elite — start optional observability profile intentionally.
+# Merlin AI — start optional observability profile intentionally.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

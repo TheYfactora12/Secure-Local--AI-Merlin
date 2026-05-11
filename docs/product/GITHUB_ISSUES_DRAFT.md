@@ -118,7 +118,7 @@ Status: implemented locally; ready for review once tests pass.
 
 ## Issue 5B: Add Wizard Theme Design System
 
-- Goal: Give Home AI Elite a strong, elegant Merlin visual identity.
+- Goal: Give Merlin AI a strong, elegant Merlin visual identity.
 - User value: Product feels distinct, trustworthy, and premium instead of a generic Docker status page.
 - Files likely touched: `dashboard/index.html`, future dashboard assets, docs.
 - Implementation notes: Dark mode first; restrained wizard motifs; no cartoon art, decorative orbs, or marketing hero sections. Use green/yellow/red operational states and clear status chips.

@@ -1,10 +1,10 @@
-# Home AI Elite Architecture
+# Merlin AI Architecture
 
-Home AI Elite, also called Merlin/Wizard in parts of the repo, is intended to be a local-first AI platform that can scale from a small laptop to a home server or workstation. The design goal is not "run every AI service all the time." The design goal is a flexible install that starts with a reliable core and enables heavier capabilities by profile.
+Merlin AI, also called Merlin/Wizard in parts of the repo, is intended to be a local-first AI platform that can scale from a small laptop to a home server or workstation. The design goal is not "run every AI service all the time." The design goal is a flexible install that starts with a reliable core and enables heavier capabilities by profile.
 
 ## Product Goal
 
-Home AI Elite should provide:
+Merlin AI should provide:
 
 - Local chat over user-owned models
 - A unified model gateway for local and optional cloud models
@@ -54,7 +54,7 @@ The installer should infer a safe default from RAM, OS, and Docker availability,
 
 ### 3. Model-Agnostic Routing
 
-Home AI Elite should not hardcode one model or provider as the system brain. LiteLLM is the current gateway and should be treated as the compatibility layer for:
+Merlin AI should not hardcode one model or provider as the system brain. LiteLLM is the current gateway and should be treated as the compatibility layer for:
 
 - Local Ollama models
 - OpenAI-compatible APIs
@@ -143,7 +143,7 @@ wizard upgrade
 
 ## Reference Projects to Study
 
-These projects are useful comparison points, but Home AI Elite should not copy their complexity blindly:
+These projects are useful comparison points, but Merlin AI should not copy their complexity blindly:
 
 - LocalAI: model-agnostic local inference and OpenAI-compatible APIs
 - Open WebUI: unified local/cloud model chat UI
@@ -158,7 +158,7 @@ These projects are useful comparison points, but Home AI Elite should not copy t
 Use this prompt when asking an AI coding assistant to review the repo:
 
 ```text
-You are reviewing Home AI Elite, a self-hosted local AI platform also called Merlin/Wizard. Treat the project as a scalable install system, not a single full-stack bundle.
+You are reviewing Merlin AI, a self-hosted local AI platform also called Merlin/Wizard. Treat the project as a scalable install system, not a single full-stack bundle.
 
 Review the repo as five specialists:
 

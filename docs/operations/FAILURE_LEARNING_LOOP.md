@@ -5,8 +5,8 @@ Last updated: 2026-05-08
 ## Purpose
 
 Every failed test, install, package run, service start, UI check, or confusing
-user experience must become reusable project knowledge. Merlin AI should get
-faster to diagnose and safer to release after every failure.
+user experience must become reusable project knowledge. Merlin AI and
+Merlin should get faster to diagnose and safer to release after every failure.
 
 This rule applies to Local Trusted Beta work, installer validation, dashboard
 readiness, package signing, CI, and all future release gates.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Static smoke test for Wizard HQ local model readiness UX.
+# Static smoke test for Merlin Dashboard local model readiness UX.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -74,4 +74,4 @@ grep -q "/approvals/room-transcript" "$DASHBOARD_FILE" \
 grep -q "/rooms/transcripts" "$DASHBOARD_FILE" \
   || fail "dashboard missing approved Room transcript save path"
 
-echo "PASS: Wizard HQ model readiness UX is explicit and no-download"
+echo "PASS: Merlin Dashboard model readiness UX is explicit and no-download"

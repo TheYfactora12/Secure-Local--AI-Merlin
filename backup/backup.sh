@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Home AI Elite backup: Qdrant memory, n8n workflows, and local config snapshot.
+# Merlin AI backup: Qdrant memory, n8n workflows, and local config snapshot.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

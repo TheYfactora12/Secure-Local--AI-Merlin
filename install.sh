@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════╗
-# ║        HOME AI ELITE / WIZARD AI — One-Shot Installer v1.6   ║
-# ║  Perplexity + Codex + Memory + Automation on your hardware  ║
-# ║  https://github.com/TheYfactora12/home-ai-elite             ║
+# ║        MERLIN AI — One-Shot Installer v1.6            ║
+# ║        Your private AI. On your Mac. Forever.             ║
+# ║        github.com/TheYfactora12/Secure-Local--AI-Merlin   ║
 # ╚══════════════════════════════════════════════════════════════╝
 # CHANGELOG v1.6 (2026-05-03):
 #   BUG-10 + BUG-15: Services no longer hard-depend on the Ollama Docker
@@ -130,7 +130,7 @@ generate_failure_report() {
   local REPORT
   REPORT="${SCRIPT_DIR:-$(pwd)}/wizard-failure-report-$(date +%Y%m%d-%H%M%S).txt"
   {
-    echo "=== WIZARD AI FAILURE REPORT ==="
+    echo "=== MERLIN AI FAILURE REPORT ==="
     echo "Date: $(date)"
     echo "OS: $(sw_vers 2>/dev/null || uname -a)"
     echo "RAM: ${TOTAL_RAM_GB:-unknown} GB"
@@ -266,9 +266,9 @@ header() {
   echo '  ██║ ╚═╝ ██║███████╗██║  ██║███████╗██║██║ ╚████║'
   echo '  ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═══╝'
   echo -e "${NC}"
-  echo -e "  ${BOLD}Merlin AI — Private Intelligence. Locally Owned.${NC}"
-  echo -e "  Sovereign local-first AI command center for owned hardware"
-  echo -e "  Version 1.6  |  github.com/TheYfactora12/home-ai-elite\n"
+  echo -e "  ${BOLD}Merlin AI — Your private AI. On your Mac. Forever.${NC}"
+  echo -e "  Local-first AI for owned hardware. Cloud off by default."
+  echo -e "  Version 1.6  |  github.com/TheYfactora12/Secure-Local--AI-Merlin\n"
 }
 
 header
@@ -490,7 +490,7 @@ rotate_secret() {
   local insecure_defaults=(
     "change-me-in-env"
     "change-me-run-openssl-rand-hex-32"
-    "sk-home-ai-elite"
+    "sk-merlin-ai"
     "changeme"
     ""
   )
@@ -606,7 +606,7 @@ prompt_api_key "GITHUB_TOKEN" \
 if [[ ! -f "configs/perplexica/config.toml" ]]; then
   err "configs/perplexica/config.toml not found. This file is required for Perplexica model configuration.
   → Run: cp configs/perplexica/config.toml.example configs/perplexica/config.toml
-  → Or re-clone the repo: git clone https://github.com/TheYfactora12/home-ai-elite"
+  → Or re-clone the repo: git clone https://github.com/TheYfactora12/Secure-Local--AI-Merlin"
 fi
 log "configs/perplexica/config.toml found ✔"
 
@@ -935,7 +935,7 @@ if [[ -f "${SCRIPT_DIR}/scripts/merlin-status-api.sh" ]]; then
   if [[ "$NON_INTERACTIVE" == true || ! -t 0 ]]; then
     warn "Skipped direct Merlin Status API background start in non-interactive mode"
     warn "Run manually: bash scripts/merlin-status-api.sh start"
-    warn "For persistent Wizard HQ panels on macOS: bash launchd/install-launchd.sh"
+    warn "For persistent Merlin Dashboard panels on macOS: bash launchd/install-launchd.sh"
     warn "Launchd starts Status API on :8765 after ~35s and Task API on :8766 after ~40s"
     log_to_file "[WARN] STEP 8B: Merlin status API start skipped in non-interactive mode"
   elif bash "${SCRIPT_DIR}/scripts/merlin-status-api.sh" start >/dev/null 2>&1; then
@@ -972,7 +972,7 @@ if [[ "$OS" == "Darwin" ]] && [[ -f "launchd/install-launchd.sh" ]]; then
   step "macOS Auto-Start (LaunchD)"
   if [[ "$NON_INTERACTIVE" == true ]]; then
     warn "Skipped launchd setup in non-interactive mode — run manually: bash launchd/install-launchd.sh"
-    warn "Wizard HQ status panels will show warming/degraded until launchd or manual API starts complete"
+    warn "Merlin Dashboard status panels will show warming/degraded until launchd or manual API starts complete"
   else
     echo -e "  ${YELLOW}Install launchd agents for auto-start on login? [y/N]${NC}"
     read -r INSTALL_LAUNCHD
@@ -993,7 +993,7 @@ SECURITY_PASS=true
 
 for key in WEBUI_SECRET_KEY LITELLM_MASTER_KEY N8N_PASSWORD SEARXNG_SECRET_KEY; do
   val=$(grep "^${key}=" .env | cut -d= -f2- || true)
-  for bad in "change-me-in-env" "change-me-run-openssl-rand-hex-32" "sk-home-ai-elite" "changeme" ""; do
+  for bad in "change-me-in-env" "change-me-run-openssl-rand-hex-32" "sk-merlin-ai" "changeme" ""; do
     if [[ "$val" == "$bad" ]]; then
       warn "SECURITY: ${key} is still at insecure default! Run: openssl rand -hex 32"
       SECURITY_PASS=false
@@ -1037,7 +1037,7 @@ log_to_file "[DONE] install.sh completed successfully"
 
 echo ""
 echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}${BOLD}║     MERLIN AI CORE INSTALLED  ✓  v1.6                   ║${NC}"
+echo -e "${GREEN}${BOLD}║     MERLIN AI INSTALLED  ✓  v1.6                    ║${NC}"
 echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  ${BOLD}Install Profile:${NC} ${INSTALL_PROFILE} (${INSTALL_CAPABILITIES:-core only})"
@@ -1045,7 +1045,7 @@ echo -e "  ${BOLD}Running Services:${NC}"
 echo -e "  ${CYAN}🧠 Chat (Open WebUI):${NC}       http://localhost:3000"
 echo -e "  ${CYAN}📦 Vector Memory (Qdrant):${NC}  http://localhost:6333"
 echo -e "  ${CYAN}🔀 Model Router (LiteLLM):${NC}  http://localhost:4000"
-echo -e "  ${CYAN}📊 Dashboard (Wizard HQ):${NC}   http://localhost:8888"
+echo -e "  ${CYAN}📊 Merlin Dashboard:${NC}        http://localhost:8888"
 if [[ "$MERLIN_STATUS_API_STARTED" == true ]]; then
   echo -e "  ${CYAN}🩺 Merlin Status API:${NC}       http://localhost:8765/status"
 else
@@ -1084,13 +1084,13 @@ echo -e "  ${BOLD}First commands to run:${NC}"
 if command -v wizard >/dev/null 2>&1; then
   echo -e "  ${CYAN}wizard status${NC}                    → full stack health check"
   echo -e "  ${CYAN}wizard merlin status-api status${NC}  → confirm read-only Merlin status API"
-  echo -e "  ${CYAN}bash launchd/install-launchd.sh${NC}  → persistent Wizard HQ status/task panels on macOS"
-  echo -e "  ${CYAN}wizard open${NC}                      → open Wizard HQ in browser"
+  echo -e "  ${CYAN}bash launchd/install-launchd.sh${NC}  → persistent Merlin Dashboard status/task panels on macOS"
+  echo -e "  ${CYAN}wizard open${NC}                      → open Merlin Dashboard in browser"
 else
   echo -e "  ${CYAN}${CLI_PATH} status${NC}               → full stack health check"
   echo -e "  ${CYAN}${CLI_PATH} merlin status-api status${NC} → confirm read-only Merlin status API"
-  echo -e "  ${CYAN}bash launchd/install-launchd.sh${NC}  → persistent Wizard HQ status/task panels on macOS"
-  echo -e "  ${CYAN}${CLI_PATH} open${NC}                 → open Wizard HQ in browser"
+  echo -e "  ${CYAN}bash launchd/install-launchd.sh${NC}  → persistent Merlin Dashboard status/task panels on macOS"
+  echo -e "  ${CYAN}${CLI_PATH} open${NC}                 → open Merlin Dashboard in browser"
 fi
 echo -e "  ${CYAN}bash scripts/merlin-task-api.sh start${NC}       → optional supervised Merlin Task API on :8766"
 echo -e "  ${CYAN}sleep 35 && bash scripts/doctor.sh${NC}          → verify launchd/API warmup"
@@ -1116,6 +1116,6 @@ echo -e "  bash scripts/backup.sh         → backup Qdrant memory + n8n workflo
 echo -e "  bash scripts/add-model.sh <m>  → pull additional models"
 echo -e "  bash scripts/healthcheck.sh    → deep health check with port scan"
 echo ""
-echo -e "  ${BOLD}Repo:${NC} https://github.com/TheYfactora12/home-ai-elite"
-echo -e "  ${BOLD}Docs:${NC} https://github.com/TheYfactora12/home-ai-elite/tree/main/docs"
+echo -e "  ${BOLD}Repo:${NC} https://github.com/TheYfactora12/Secure-Local--AI-Merlin"
+echo -e "  ${BOLD}Docs:${NC} https://github.com/TheYfactora12/Secure-Local--AI-Merlin/tree/main/docs"
 echo ""

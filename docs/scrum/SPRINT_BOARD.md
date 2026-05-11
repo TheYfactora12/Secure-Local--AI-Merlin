@@ -1,81 +1,60 @@
 # Merlin AI — Active Sprint Board
 
-**Sprint:** v3.1 Product Shell & Policy-Gated Settings  
-**Sprint Start:** 2026-05-08  
-**Sprint Goal:** Make Wizard HQ the Merlin-native product shell with policy-gated, safe Settings flows before any deeper governance features are built.
+**Sprint:** v1.0 Focus Reset — five jobs only
+**Sprint Start:** 2026-05-10
+**Sprint Goal:** Make Merlin AI install, explain itself, stay private,
+recover clearly, and uninstall cleanly for a nontechnical Mac user.
 
-> Source of truth: GitHub issues + `docs/CANONICAL_PROJECT_STATE.md`. This file is regenerated each sprint. Do not edit manually — open a GitHub issue to change scope.
-
----
-
-## 🔴 IN PROGRESS — Actively Being Built
-
-| # | Issue | Owner | Priority | Blocked By |
-|---|-------|-------|----------|------------|
-| [#106](https://github.com/TheYfactora12/home-ai-elite/issues/106) | v3.1: Wizard HQ Product Shell parent | Engineering | `priority: high` | #102 (status API persistence) |
-| [#114](https://github.com/TheYfactora12/home-ai-elite/issues/114) | v3.1: Policy-gated Wizard HQ Settings backend | Engineering | `priority: high` | #31, #32 (memory gates) |
-| [#117](https://github.com/TheYfactora12/home-ai-elite/issues/117) | v3.1 settings: provider connector + secret presence-only | Engineering | `priority: medium` | #114 |
-| [#95](https://github.com/TheYfactora12/home-ai-elite/issues/95) | Product Push audit — skill-team, installer retest, UX | All roles | `priority: high` | #106 findings |
+> Source of truth: GitHub issues + `docs/CANONICAL_PROJECT_STATE.md`. This file
+> is the execution filter, not a claim that every open GitHub issue is complete.
 
 ---
 
-## 🟡 READY — Scoped, Unblocked, Next Up
+## In Progress
 
-| # | Issue | Priority | Depends On |
-|---|-------|----------|------------|
-| [#119](https://github.com/TheYfactora12/home-ai-elite/issues/119) | v3.1 settings: startup and API service controls | `priority: medium` | #114, #116, #37 |
-| [#120](https://github.com/TheYfactora12/home-ai-elite/issues/120) | v3.1 settings: memory review and delete controls | `priority: medium` | #31, #32 |
-| [#83](https://github.com/TheYfactora12/home-ai-elite/issues/83) | PATENT: Alice §101 hardening — all anchor docstrings | `priority: critical` | None |
-| [#82](https://github.com/TheYfactora12/home-ai-elite/issues/82) | PATENT: Negation suppression function — named + tested | `priority: critical` | None |
+| # | Issue | Why It Stays Active |
+| --- | --- | --- |
+| [#37](https://github.com/TheYfactora12/Secure-Local--AI-Merlin/issues/37) | Public release onboarding and packaging hardening | Owns install, first-run, package, and user-facing release path. |
+| [#95](https://github.com/TheYfactora12/Secure-Local--AI-Merlin/issues/95) | Product push audit / release readiness | Owns evidence, audit discipline, installer retest trigger, and failure learning. |
+| [#134](https://github.com/TheYfactora12/Secure-Local--AI-Merlin/issues/134) | Product value checkpoint | Must be reinterpreted through the five v1.0 jobs. |
+| [#123](https://github.com/TheYfactora12/Secure-Local--AI-Merlin/issues/123) | Offline local brain + user-owned context | Active only where it supports first local question, privacy proof, or storage clarity. |
+| [#106](https://github.com/TheYfactora12/Secure-Local--AI-Merlin/issues/106) | Wizard HQ product shell | Active only for post-install onboarding and first safe action. |
 
----
+## Next Up
 
-## 🔵 BACKLOG — Sequenced, Not Yet Sprint
+| Work | Acceptance |
+| --- | --- |
+| First-run onboarding screen | User sees "Your private AI is ready" plus first safe action. |
+| Plain-English service map | User understands Ollama/Open WebUI/Qdrant/LiteLLM/etc. without Docker knowledge. |
+| Privacy proof | UI and docs show cloud/API/telemetry off by default; no key required. |
+| Recovery copy | Failed/degraded services show what broke and what to do. |
+| Full purge evidence | Uninstall removes product pieces when the user chooses purge-all. |
 
-| # | Issue | Milestone | Gate Condition |
-|---|-------|-----------|----------------|
-| [#84](https://github.com/TheYfactora12/home-ai-elite/issues/84) | PATENT: MerlinFlow self-generating workflow engine | `v4.x` | After #83 + #82 complete; inventor legal name in INVENTOR_RECORD |
-| [#105](https://github.com/TheYfactora12/home-ai-elite/issues/105) | v3.2: AI Asset Inventory + Identity Graph | `v3.2` | After #106 shell complete |
-| [#103](https://github.com/TheYfactora12/home-ai-elite/issues/103) | v3.3: Access Control + Reviews | `v3.3` | After #105 |
-| [#104](https://github.com/TheYfactora12/home-ai-elite/issues/104) | v3.4: Monitoring IDS Signals + Drift | `v3.4` | After #103 |
-| [#107](https://github.com/TheYfactora12/home-ai-elite/issues/107) | v3.5: DLP + Prevention Gates | `v3.5` | After #104 |
-| [#112](https://github.com/TheYfactora12/home-ai-elite/issues/112) | v3.6: Governance Reporting + Evidence | `v3.6` | After #107 |
-| [#108](https://github.com/TheYfactora12/home-ai-elite/issues/108) | v3.7: Local Fallback + DR | `v3.7` | After #112 |
-| [#92](https://github.com/TheYfactora12/home-ai-elite/issues/92) | v3.x: Native Automation Runtime (n8n supplement) | `v3.x` | After v3.1 control-plane evidence |
-| [#111](https://github.com/TheYfactora12/home-ai-elite/issues/111) | v4.x: MerlinFlow Native Runtime | `v4.x` | After v3.x runtime patterns proven |
-| [#64](https://github.com/TheYfactora12/home-ai-elite/issues/64) | Developer ID signing / notarization | `v3.0` | After installer + Wizard HQ product-complete |
+## Parked Until After v1.0 Proof
 
----
+These issues are not closed. They are future unless they directly improve one
+of the five jobs above.
 
-## ✅ DONE THIS SPRINT — Definition of Done Met
+| Issues | Parked Area |
+| --- | --- |
+| #114, #117, #119, #120 | Deep settings/backend controls. |
+| #124, #125 | Export/import brain. |
+| #126, #127, #128 | Connectors, PC task execution, saved agents. |
+| #129, #130, #135 | Model UI, storage UI, and Rooms beyond onboarding clarity. |
+| #136, #137, #138 | Orb animation and voice-reactive UI. |
+| #103, #104, #105, #107, #108, #112, #121 | Advanced governance/fallback/web-comprehension milestone parents. |
+| #64 | Developer ID signing/notarization after product surface is stable. |
+| #92, #111 | Native automation/MerlinFlow runtime. |
+| #81 through #84 | Patent/IP track, separate from product v1.0 execution. |
 
-| # | Issue | Closed | Evidence |
-|---|-------|--------|----------|
-| `v1.0–v2.2` | All prior milestones | Closed | See CANONICAL_PROJECT_STATE milestone table |
-| `INVENTOR_RECORD.md` | Patent conception date record | 2026-05-07 | `docs/ip/INVENTOR_RECORD.md` committed to main |
+## Definition Of Done
 
----
+1. Change supports install, onboarding, privacy, recovery, or uninstall.
+2. No cloud/API behavior is enabled by default.
+3. No surprise model downloads are introduced.
+4. No autonomous execution is introduced.
+5. Static tests pass.
+6. Evidence note is updated.
+7. Any failure becomes reusable project knowledge.
 
-## Definition of Done (applies to every issue)
-
-1. Acceptance criteria in the issue are all checked.
-2. Static tests pass — no unsafe browser execution, no secret values rendered, no direct unsafe POST.
-3. Manual test documented (screenshots or notes saved to release evidence path).
-4. Rollback path documented in the issue.
-5. No behavior changes outside the issue's stated scope.
-6. CI green on `main`.
-7. `docs/CANONICAL_PROJECT_STATE.md` updated if milestone state changes.
-
----
-
-## Blocked Issues Log
-
-| Issue | Blocker | Owner | ETA |
-|-------|---------|-------|-----|
-| #120 (memory delete controls) | Blocked by #31 and #32 | Backend / Memory | After #31+#32 |
-| #36 (observability design) | #8 must be scoped to optional-only profile | Scrum | Next grooming |
-| #84 (MerlinFlow patent) | Inventor legal name missing in INVENTOR_RECORD.md | Inventor | Immediate |
-
----
-
-*Last regenerated: 2026-05-08 by Scrum Master (AI). Verify against GitHub issue state before acting.*
+*Last regenerated: 2026-05-10 by Scrum Master (AI).*

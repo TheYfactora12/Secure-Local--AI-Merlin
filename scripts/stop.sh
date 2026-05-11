@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Home AI Elite — Stop all services
+# Merlin AI — Stop all services
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,7 +17,7 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "Stopping all Home AI Elite services..."
+echo "Stopping all Merlin AI services..."
 cd "$STACK_DIR"
 docker compose down
 echo "Done."

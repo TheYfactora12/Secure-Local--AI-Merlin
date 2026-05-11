@@ -10,23 +10,21 @@ fail() {
   exit 1
 }
 
-grep -q "Local Trusted Beta" "$README" \
-  || fail "README must state Local Trusted Beta positioning"
-grep -q "Home AI Elite" "$README" \
-  || fail "README must show Home AI Elite as product name"
-grep -q "Merlin.*assistant face" "$README" \
-  || fail "README must explain Merlin is the assistant face inside Home AI Elite"
-grep -q "internal brain inside the product" "$README" \
-  || fail "README must explain Merlin is the assistant face and internal brain inside Home AI Elite"
-grep -q "Private AI at home in 30 minutes" "$README" \
-  || fail "README must lead with the non-technical private home AI promise"
-grep -q "not being claimed as Public Beta ready" "$README" \
+grep -q "# Merlin AI — Your Private AI Stack for macOS" "$README" \
+  || fail "README must use the Merlin AI product heading"
+grep -q "Merlin AI" "$README" \
+  || fail "README must show Merlin AI as product name"
+grep -q "Your private AI. On your Mac. Forever." "$README" \
+  || fail "README must lead with the Merlin AI tagline"
+grep -q "Mac with Apple Silicon" "$README" \
+  || fail "README must explain Apple Silicon requirement"
+grep -q "Nothing leaves this Mac" "$README" \
+  || fail "README must state local privacy in plain English"
+grep -q "not public beta" "$README" \
   || fail "README must not overclaim Public Beta readiness"
 grep -q "TRUSTED_LOCAL_BETA_EVIDENCE.md" "$README" \
   || fail "README must link the beta evidence runbook"
-grep -q "tests/installer-branding-smoke.sh" "$README" \
-  || fail "README must mention installer branding smoke coverage"
-grep -q "Developer ID signing/notarization remains tracked in #64" "$README" \
-  || fail "README must keep signing/notarization scoped to #64"
+grep -q "bash pkg/scripts/uninstall.sh --purge-all" "$README" \
+  || fail "README must document full purge uninstall"
 
 echo "PASS: README release-readiness positioning is conservative"

@@ -3,8 +3,8 @@
 # install-launchd.sh — Install or uninstall macOS launchd auto-start agents
 #
 # Usage:
-#   bash ~/home-ai-elite/launchd/install-launchd.sh            # install
-#   bash ~/home-ai-elite/launchd/install-launchd.sh --uninstall
+#   bash ~/merlin-ai/launchd/install-launchd.sh            # install
+#   bash ~/merlin-ai/launchd/install-launchd.sh --uninstall
 #
 # What this does:
 #   1. Copies .plist files to ~/Library/LaunchAgents/
@@ -44,7 +44,7 @@ PLISTS=(
 )
 
 uninstall() {
-  log "Uninstalling home-ai-elite launchd agents..."
+  log "Uninstalling merlin-ai launchd agents..."
   for plist in "${PLISTS[@]}"; do
     local label="${plist%.plist}"
     local dest="${LAUNCH_AGENTS_DIR}/${plist}"
@@ -103,9 +103,9 @@ install_plist() {
 
   # Patch the install path into repo-local plists
   if [[ "$plist" == "com.homeai.stack.plist" || "$plist" == "com.homeai.merlin-status-api.plist" || "$plist" == "com.homeai.merlin-task-api.plist" ]]; then
-    sed "s|\$HOME/home-ai-elite|${INSTALL_DIR}|g" "$src" > "$dest"
+    sed "s|\$HOME/merlin-ai|${INSTALL_DIR}|g" "$src" > "$dest"
     # Also fix ProgramArguments paths.
-    sed -i '' "s|cd \"\$HOME/home-ai-elite\"|cd \"${INSTALL_DIR}\"|g" "$dest" 2>/dev/null || true
+    sed -i '' "s|cd \"\$HOME/merlin-ai\"|cd \"${INSTALL_DIR}\"|g" "$dest" 2>/dev/null || true
   else
     cp "$src" "$dest"
   fi
@@ -133,7 +133,7 @@ install_plist() {
 # Main
 # ---------------------------------------------------------------------------
 main() {
-  log "Installing home-ai-elite launchd agents..."
+  log "Installing merlin-ai launchd agents..."
   log "  Install dir:  $INSTALL_DIR"
   log "  LaunchAgents: $LAUNCH_AGENTS_DIR"
   log ""

@@ -1,16 +1,16 @@
-# Home AI Elite / Merlin Mythology Brand System
+# Merlin AI / Merlin Mythology Brand System
 
 Last updated: 2026-05-10
 Status: Product naming and UX architecture
 
 ## Purpose
 
-This document defines the Merlin mythology-based product language inside Home AI
-Elite. The goal is not to add gimmicky names. The goal is to make a complex
+This document defines the Merlin mythology-based product language inside Merlin
+AI. The goal is not to add gimmicky names. The goal is to make a complex
 local AI security/control system intuitive, memorable, and aligned to the actual
 architecture.
 
-Home AI Elite is the product the user installs. Merlin is the visible assistant
+Merlin AI is the product the user installs. Merlin is the visible assistant
 face and internal brain inside it: chat, voice, memory, routing, safety, and
 approval-aware action. Merlin protects the user's private AI home, stores
 approved context in a user-controlled Vault, governs agents through explicit
@@ -19,7 +19,7 @@ authority.
 
 ## Core Brand Thesis
 
-> Home AI Elite is the private AI home. Merlin protects the realm. The Round
+> Merlin AI is the private AI home. Merlin protects the realm. The Round
 > Table governs the Knights. Excalibur represents powerful action. The Vault
 > stores what matters. The Chronicle records what happened.
 
@@ -195,7 +195,7 @@ Use **Project** for plain-language clarity and **Realm** as the branded metaphor
 Example:
 
 ```text
-Project Realm: Home AI Elite Build
+Project Realm: Merlin AI Build
 Brain Location: /Users/Kevin/HomeAIElite/Rooms/Home-AI-Elite-Build
 Vault: Active
 Knights: Scribe, Smith, Sentinel
@@ -220,7 +220,7 @@ Chronicle: 14 recent events
 
 Primary product sentence:
 
-> Home AI Elite gives you a private AI home. Merlin is the assistant face and
+> Merlin AI gives you a private AI home. Merlin is the assistant face and
 > brain that protects it.
 
 Expanded sentence:
@@ -230,7 +230,7 @@ Expanded sentence:
 
 Plain-language alternative:
 
-> Home AI Elite is private AI on hardware you own. Merlin remembers approved
+> Merlin AI is private AI on hardware you own. Merlin remembers approved
 > context where you choose, shows what agents can do, and blocks powerful
 > actions until you approve them.
 
@@ -258,5 +258,5 @@ Priority order:
 - #122 — Product Focus Cut
 - #123 — Offline Local Brain + User-Owned Context Store
 - #130 — Brain/context storage location
-- #131 — Brand direction: Home AI Elite product, Merlin assistant face and brain
+- #131 — Brand direction: Merlin AI product, Merlin assistant face and brain
 - #132 — Mythology brand architecture

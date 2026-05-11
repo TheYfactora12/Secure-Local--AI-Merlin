@@ -128,7 +128,9 @@ jobs:
           bash tests/merlin-persona-smoke.sh
           bash tests/merlin-staff-skills-smoke.sh
           bash tests/master-prompt-smoke.sh
-          bash tests/codex-master-prompt-v2-smoke.sh
+          bash tests/codex-master-prompt-v3-smoke.sh
+          bash tests/product-north-star-smoke.sh
+          bash tests/future-ideas-smoke.sh
           bash tests/mythology-brand-smoke.sh
           bash tests/merlin-policy-smoke.sh
           bash tests/merlin-routing-smoke.sh
@@ -167,7 +169,7 @@ jobs:
           bash tests/sast-gitleaks-smoke.sh
           bash tests/container-image-policy-smoke.sh
           bash tests/installer-branding-smoke.sh
-          bash tests/control-plane-strategy-smoke.sh
+          bash tests/merlin-ai-expansion-boundaries-smoke.sh
           bash tests/closclaw-design-smoke.sh
           bash tests/beta-readiness-evidence-smoke.sh
           bash tests/release-readiness-readme-smoke.sh
@@ -342,4 +344,4 @@ jobs:
       - merlin-staff-core-pytest
     runs-on: ubuntu-latest
     steps:
-      - run: echo "✅ All CI checks passed — home-ai-elite installer is valid"
+      - run: echo "✅ All CI checks passed — Merlin AI installer is valid"

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sign a locally built Home AI Elite .pkg with a local/self-signed identity.
+# Sign a locally built Merlin AI .pkg with a local/self-signed identity.
 #
 # This is for trusted local/test distribution. It does not notarize and it does
 # not remove Gatekeeper warnings for broad public distribution.
@@ -8,7 +8,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_DIR="${HOME_AI_STACK_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 
-IDENTITY="${HOME_AI_LOCAL_SIGNING_IDENTITY:-Home AI Elite Local Signing}"
+IDENTITY="${HOME_AI_LOCAL_SIGNING_IDENTITY:-Merlin AI Local Signing}"
 KEYCHAIN="${HOME_AI_LOCAL_SIGNING_KEYCHAIN:-}"
 VERSION=""
 INPUT_PKG=""
@@ -20,15 +20,15 @@ Usage: bash scripts/sign-pkg.sh [options]
 
 Options:
   --version <version>   Package version, for example 1.0.0 or 0.8.6.
-  --input <path>        Unsigned input .pkg. Defaults to home-ai-elite-<version>.pkg.
-  --output <path>       Signed output .pkg. Defaults to home-ai-elite-v<version>.pkg.
-  --identity <name>     Signing identity name. Defaults to "Home AI Elite Local Signing".
+  --input <path>        Unsigned input .pkg. Defaults to merlin-ai-<version>.pkg.
+  --output <path>       Signed output .pkg. Defaults to merlin-ai-v<version>.pkg.
+  --identity <name>     Signing identity name. Defaults to "Merlin AI Local Signing".
   --keychain <path>     Optional keychain containing the local signing identity.
   -h, --help            Show this help.
 
 Create the local signing identity first:
   Keychain Access -> Certificate Assistant -> Create a Certificate
-  Name: Home AI Elite Local Signing
+  Name: Merlin AI Local Signing
   Identity Type: Self Signed Root
   The identity must be usable by productsign as an installer-signing identity.
   If a command-line identity is used, trust the self-signed certificate in the
@@ -91,8 +91,8 @@ if [[ -z "$VERSION" ]]; then
   exit 1
 fi
 
-INPUT_PKG="${INPUT_PKG:-${STACK_DIR}/home-ai-elite-${VERSION}.pkg}"
-OUTPUT_PKG="${OUTPUT_PKG:-${STACK_DIR}/home-ai-elite-v${VERSION}.pkg}"
+INPUT_PKG="${INPUT_PKG:-${STACK_DIR}/merlin-ai-${VERSION}.pkg}"
+OUTPUT_PKG="${OUTPUT_PKG:-${STACK_DIR}/merlin-ai-v${VERSION}.pkg}"
 
 for tool in productsign pkgutil security; do
   command -v "$tool" >/dev/null 2>&1 || {

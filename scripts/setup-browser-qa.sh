@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install optional local browser QA dependencies for Wizard HQ screenshots.
+# Install optional local browser QA dependencies for Merlin Dashboard screenshots.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

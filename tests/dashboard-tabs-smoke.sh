@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Static smoke test for the Merlin-native Wizard HQ tab shell.
+# Static smoke test for the Merlin-native Merlin Dashboard tab shell.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -12,7 +12,7 @@ fail() {
 
 [[ -f "$DASHBOARD_FILE" ]] || fail "dashboard file missing"
 
-grep -q 'aria-label="Wizard HQ product tabs"' "$DASHBOARD_FILE" \
+grep -q 'aria-label="Merlin Dashboard product tabs"' "$DASHBOARD_FILE" \
   || fail "dashboard missing product tab navigation"
 grep -q 'function selectTab' "$DASHBOARD_FILE" \
   || fail "dashboard tabs are not wired"
@@ -57,7 +57,7 @@ grep -q "Open WebUI runs the chat engine today; Merlin owns routing, policy, mem
   || fail "dashboard missing honest chat bridge boundary"
 grep -q "Merlin Chat" "$DASHBOARD_FILE" \
   || fail "dashboard missing native Merlin Chat surface"
-grep -q "Merlin AI core face" "$DASHBOARD_FILE" \
+grep -q "Merlin assistant face" "$DASHBOARD_FILE" \
   || fail "dashboard missing Merlin product face in hero"
 grep -q "submitMerlinChat" "$DASHBOARD_FILE" \
   || fail "dashboard missing Merlin Chat submit handler"
@@ -103,7 +103,7 @@ for setting in \
   "Brain Storage Location" \
   "Model Library" \
   "Memory Controls" \
-  "Privacy & Sovereignty" \
+  "Privacy & Local Control" \
   "Startup & APIs" \
   "Backup & Recovery"; do
   grep -q "${setting}" "$DASHBOARD_FILE" \
@@ -145,4 +145,4 @@ if grep -qiE 'sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|password[[:space:]]*[:=]|toke
   fail "dashboard must not contain secret-like values"
 fi
 
-echo "PASS: Wizard HQ tab shell is Merlin-native and read-only"
+echo "PASS: Merlin Dashboard tab shell is Merlin-native and read-only"

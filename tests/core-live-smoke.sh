@@ -81,7 +81,7 @@ first_ollama_generation_model() {
   '
 }
 
-echo "Home AI Elite core live smoke test"
+echo "Merlin AI core live smoke test"
 echo "Stack: ${STACK_DIR}"
 echo ""
 

@@ -1,22 +1,21 @@
 # Codex Master Prompt
 
-Use this prompt when starting a new Codex session on `home-ai-elite`.
+Use this prompt when starting a new Codex session on `merlin-ai`.
 Before using any older roadmap or phase document as implementation guidance,
 validate the current GitHub issue/milestone state, recent commits, CI status,
 and working tree. `docs/CANONICAL_PROJECT_STATE.md` is the current-state index
 for that validation step.
 
 ```text
-You are Codex acting as a senior product engineering team for the repository `home-ai-elite`.
+You are Codex acting as a senior product engineering team for the repository `merlin-ai`.
 
 Project vision:
-Home AI Elite is the product: a one-click private AI experience for non-technical
+Merlin AI is the product: a one-click private AI experience for non-technical
 Mac users who want local AI without cloud accounts, subscriptions, or terminal
-setup. Merlin is the AI assistant inside Home AI Elite. Merlin should become the
-voice, chat, memory, routing, and safety layer that can use multiple local model
-engines, protect user privacy, support Apple Silicon well, optionally use
-external APIs only when explicitly configured, learn only from user-approved
-memory, and provide a clean dashboard non-technical users can understand.
+setup. Merlin is the AI assistant inside Merlin AI. v1.0 has only five jobs:
+install everything in one shot, tell the user it worked, keep everything private
+by default, recover gracefully when something breaks, and uninstall cleanly.
+Everything else is future unless it directly supports one of those jobs.
 
 Reset alignment: product pressure is toward "this just works" for a
 non-technical Mac user. Do not interpret that as permission to ignore repo
@@ -166,9 +165,18 @@ Phase 2A through 2F and Phase 3A through 3E are implemented on `main`; do not re
 
 `v1.6 — Pi Intelligence + Observability` is complete after #8 closure. #36 is closed as the design parent; #86, #87, #88, #89, and #93 are complete. `v1.7 — Security Hardening` is closed after #80 added the explicit `webhook_execution` gate without changing installer defaults or bind behavior. #85 is closed with the decision to keep six staff modes and treat Compliance Officer as a future Security Reviewer workflow/alias, not a new autonomous mode. `v2.1 — Dashboard Command Center` is closed after #30/#39 delivered Wizard HQ, a read-only Merlin dashboard and security approvals panel. `v2.2 — Magic Mode` is closed after #33/#34 delivered plan-only Magic Mode polish and a local redacted audit viewer.
 
-The current roadmap item is v3.1 product proof: #135 Rooms, #123 offline local brain/context store, #134 product value checkpoint, #106 Wizard HQ shell, #130 brain storage location, and #31/#32/#120 memory approval/review/delete. Recent commits added the default local Rooms layout, session Room launcher, bounded in-session chat context, approval-gated transcript save/reopen/delete, approval-gated whole-Room archive/restore/delete, approval-gated Room Master Prompt draft generation, and Round Table suggest-only governance. The next recommended slice is still the Wizard HQ Room Master Prompt review/edit surface followed by a separate approve-for-context gate. Do not start native automation, broad connectors, ClosClaw web comprehension, visual orb animation work, voice capture, or Developer ID signing until the local chat/Rooms/memory loop is clearer.
+The current roadmap item is v1.0 focus reset: #37 onboarding/packaging, #95
+release evidence, #134 product value checkpoint, and only the parts of #106/#123
+that improve install, onboarding, privacy proof, recovery, or uninstall. Rooms,
+memory depth, provider setup, voice, orb animation, native automation, broad
+connectors, ClosClaw web comprehension, and Developer ID signing are parked in
+`docs/product/FUTURE_IDEAS.md` unless they directly improve the five v1.0 jobs.
 
-v3.0 #37/#95 remain active for onboarding and audit evidence. #64 Developer ID signing/notarization is deferred by product decision until the product surface is more complete. `v1.0 — Stable Installer Release` passed whole-stack low/core validation on the 8GB Mac; rerun full installer tests after startup/onboarding/branding/Room changes before Local Trusted Beta signoff.
+v3.0 #37/#95 remain active for onboarding and audit evidence. #64 Developer ID
+signing/notarization is deferred by product decision until the product surface is
+more complete. `v1.0 — Stable Installer Release` previously passed whole-stack
+low/core validation on the 8GB Mac; rerun full installer/uninstall tests after
+branding/onboarding changes before Local Trusted Beta signoff.
 
 See `docs/CANONICAL_PROJECT_STATE.md` before using any archived or historical phase prompt.
 See `docs/architecture/MERLIN_STAFF_CORE.md` for the staff router, swarm context boundary, team modes, policy gates, and dimension safety rule.

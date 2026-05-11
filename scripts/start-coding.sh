@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Home AI Elite — start optional coding profile
+# Merlin AI — start optional coding profile
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

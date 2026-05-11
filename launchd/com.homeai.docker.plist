@@ -4,7 +4,7 @@
   Starts Docker Desktop on macOS login.
 
   Install:
-    cp ~/home-ai-elite/launchd/com.homeai.docker.plist ~/Library/LaunchAgents/
+    cp ~/merlin-ai/launchd/com.homeai.docker.plist ~/Library/LaunchAgents/
     launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.homeai.docker.plist
 
   Docs: https://stackoverflow.com/questions/42637339/how-to-start-docker-for-mac-daemon-on-boot

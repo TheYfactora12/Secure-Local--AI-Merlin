@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Static checks for the Home AI Elite uninstaller.
+# Static checks for the Merlin AI uninstaller.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

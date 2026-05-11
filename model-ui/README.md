@@ -1,4 +1,4 @@
-# Model Manager UI — home-ai-elite v0.8
+# Model Manager UI — merlin-ai v0.8
 
 A local web dashboard for managing your Ollama models.
 Connects directly to your local Ollama instance — no cloud, no telemetry.
@@ -9,10 +9,10 @@ Connects directly to your local Ollama instance — no cloud, no telemetry.
 
 ```bash
 # Option 1 — open directly in browser
-open ~/home-ai-elite/model-ui/index.html
+open ~/merlin-ai/model-ui/index.html
 
 # Option 2 — serve via Python (avoids browser CORS restrictions for API calls)
-cd ~/home-ai-elite/model-ui && python3 -m http.server 8181
+cd ~/merlin-ai/model-ui && python3 -m http.server 8181
 # Then open: http://localhost:8181
 
 # Option 3 — it will be added as a route in Nginx in v0.9

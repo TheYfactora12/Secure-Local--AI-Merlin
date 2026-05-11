@@ -1,5 +1,5 @@
 # Patent Claim 2 — Consent-Gated Vector Memory Write System
-**Wizard AI / Merlin Platform | TheYfactora12 | Priority Date Target: File within 30 days of 2026-05-06**
+**Merlin AI / Merlin Platform | TheYfactora12 | Priority Date Target: File within 30 days of 2026-05-06**
 **Classification: CONFIDENTIAL — Attorney-Client Privileged upon engagement**
 
 ---
@@ -84,7 +84,7 @@ Dashboard showing all stored memories (summarized), consent timestamps, individu
 - GDPR/CCPA: Consent-stamped audit trail = right-to-forget compliance artifact
 
 **Regulatory sales language (use after filing):**
-> "Wizard AI is the only AI system that requires explicit user approval before any information is permanently stored — making it structurally compliant with HIPAA, GLBA, and FERPA data retention requirements."
+> "Merlin AI is the only AI system that requires explicit user approval before any information is permanently stored — making it structurally compliant with HIPAA, GLBA, and FERPA data retention requirements."
 
 ---
 
@@ -93,4 +93,4 @@ Dashboard showing all stored memories (summarized), consent timestamps, individu
 ---
 
 *Confidential invention disclosure. Attorney-client privileged upon attorney engagement.*
-*Prepared: 2026-05-06 | TheYfactora12/home-ai-elite*
+*Prepared: 2026-05-06 | TheYfactora12/Secure-Local--AI-Merlin*

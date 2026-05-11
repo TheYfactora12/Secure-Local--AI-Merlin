@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# wizard — Wizard AI Stack CLI  v5
+# wizard — Merlin AI Stack CLI  v5
 # Usage: wizard <command> [args]
 # ============================================================
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -934,7 +934,7 @@ for m in d.get('models',[]): print(f\"  {m['name']:40} {m.get('size',0)//1024//1
     REPORT="$HOME/.wizard-debug-$(date +%Y-%m-%d).txt"
     echo -e "${CYAN}  Generating debug report...${NC}"
     {
-      echo "WIZARD AI DEBUG REPORT"
+      echo "MERLIN AI DEBUG REPORT"
       echo "Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
       echo "========================================"
       echo ""

@@ -208,7 +208,7 @@
     "errorWorkflow": ""
   },
   "versionId": "1.0.0",
-  "meta": { "instanceId": "home-ai-elite-session-memory-v1" },
+  "meta": { "instanceId": "merlin-ai-session-memory-v1" },
   "tags": [
     { "name": "session" },
     { "name": "memory" },

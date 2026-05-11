@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Home AI Elite uninstaller.
+# Merlin AI uninstaller.
 #
 # Safe defaults:
-# - stops Home AI Elite services
+# - stops Merlin AI services
 # - removes launchd agents
 # - backs up .env before deleting files
 # - keeps Docker Desktop, Homebrew, and Ollama models
@@ -10,8 +10,8 @@
 # - removes Merlin-managed downloads only with explicit purge options
 set -euo pipefail
 
-INSTALL_DIR="${HOME}/home-ai-elite"
-SYSTEM_DIR="/usr/local/home-ai-elite"
+INSTALL_DIR="${HOME}/merlin-ai"
+SYSTEM_DIR="/usr/local/merlin-ai"
 PKG_ID="com.homeai.elite"
 MODEL_TIERS_FILE="${INSTALL_DIR}/configs/merlin/model-tiers.env"
 FALLBACK_MODEL_TIERS_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/configs/merlin/model-tiers.env"
@@ -39,7 +39,7 @@ Options:
   --keep-receipt    Do not forget the macOS pkgutil receipt.
   -h, --help        Show this help.
 
-Default behavior removes Home AI Elite app files after confirmation, but keeps
+Default behavior removes Merlin AI app files after confirmation, but keeps
 Docker Desktop, Homebrew, Ollama, and Ollama models. Docker volumes are kept
 unless --remove-data is provided.
 
@@ -117,7 +117,7 @@ run() {
 confirm() {
   [[ "$YES" == true || "$DRY_RUN" == true ]] && return 0
 
-  echo "This will uninstall Home AI Elite from this Mac."
+  echo "This will uninstall Merlin AI from this Mac."
   echo "Kept: Docker Desktop, Homebrew, and the Ollama app/binary."
   if [[ "$REMOVE_DATA" == true ]]; then
     echo "Removed: app files, launchd agents, Docker containers, Docker volumes."
@@ -273,7 +273,7 @@ remove_launchd_agents() {
 backup_env() {
   [[ -f "${INSTALL_DIR}/.env" ]] || return 0
   local backup_path
-  backup_path="${HOME}/home-ai-elite-env-backup-$(date +%Y%m%d_%H%M%S).env"
+  backup_path="${HOME}/merlin-ai-env-backup-$(date +%Y%m%d_%H%M%S).env"
   log "Backing up .env to ${backup_path}"
   run cp "${INSTALL_DIR}/.env" "$backup_path"
   run chmod 600 "$backup_path" 2>/dev/null || true

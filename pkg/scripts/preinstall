@@ -15,7 +15,7 @@ set -euo pipefail
 log()  { echo "[preinstall] $*"; }
 fail() { echo "[preinstall] ERROR: $*" >&2; exit 1; }
 
-log "Starting home-ai-elite preflight checks..."
+log "Starting merlin-ai preflight checks..."
 
 # ---------------------------------------------------------------------------
 # 1. macOS version check (>= 13.0 Ventura)

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Static smoke test for native Merlin Chat in Wizard HQ.
+# Static smoke test for native Merlin Chat in Merlin Dashboard.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -10,10 +10,10 @@ fail() {
   exit 1
 }
 
-grep -q "Merlin AI" "$DASHBOARD_FILE" \
-  || fail "dashboard missing Merlin AI chat brand"
-grep -q "Merlin AI core face" "$DASHBOARD_FILE" \
-  || fail "dashboard missing centered Merlin AI core face"
+grep -q "Your private AI. On your Mac. Forever." "$DASHBOARD_FILE" \
+  || fail "dashboard missing Merlin AI product framing"
+grep -q "Merlin assistant face" "$DASHBOARD_FILE" \
+  || fail "dashboard missing centered Merlin assistant face"
 grep -q 'assets/merlin-orb.png' "$DASHBOARD_FILE" \
   || fail "dashboard missing local Merlin orb image asset reference"
 [[ -f "${ROOT_DIR}/dashboard/assets/merlin-orb.png" ]] \
@@ -223,4 +223,4 @@ if grep -qiE 'sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|password[[:space:]]*[:=]|toke
   fail "native chat must not expose secret-like values"
 fi
 
-echo "PASS: Wizard HQ native Merlin Chat is policy-gated through Task API"
+echo "PASS: Merlin Dashboard native Merlin Chat is policy-gated through Task API"

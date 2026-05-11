@@ -7,9 +7,10 @@ Milestone: `v3.0 — Public Product Release`
 
 ## Purpose
 
-Merlin AI is not beta-ready until the local-first install, uninstall, reinstall,
-upgrade, dashboard readiness, and privacy behavior are proven with repeatable
-evidence. This document is the runbook and evidence checklist for that signoff.
+Merlin AI is not beta-ready until the local-first install, uninstall,
+reinstall, upgrade, dashboard readiness, and privacy behavior are proven with
+repeatable evidence. Merlin is the assistant inside the product; the product
+signoff belongs to Merlin AI.
 
 The first target is the 8GB Mac low/core path. Higher-memory validation follows
 after the low/core path is green.

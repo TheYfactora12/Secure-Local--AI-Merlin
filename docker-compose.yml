@@ -1,4 +1,4 @@
-# home-ai-elite — Full Stack Docker Compose v1.1
+# merlin-ai — Full Stack Docker Compose v1.1
 # Services: Open WebUI, Perplexica, SearXNG, OpenHands, Qdrant, n8n, LiteLLM
 #           + Nginx (TLS reverse proxy), Watchtower (auto-updates), Fail2ban (brute-force)
 # Start core: docker compose up -d dashboard qdrant litellm open-webui
@@ -208,7 +208,7 @@ services:
       - OPENAI_API_KEY=${LITELLM_MASTER_KEY:-REQUIRED_CHANGE_ME}
       # REQUIRED: set WEBUI_SECRET_KEY in .env (install.sh auto-generates it)
       - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY:-REQUIRED_CHANGE_ME}
-      - WEBUI_NAME=Wizard AI
+      - WEBUI_NAME=Merlin AI
       # Set ENABLE_SIGNUP=false in .env after creating your admin account
       - ENABLE_SIGNUP=${ENABLE_SIGNUP:-true}
       - ENABLE_COMMUNITY_SHARING=false

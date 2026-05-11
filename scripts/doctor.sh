@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Home AI Elite — read-only environment and safety diagnostic
+# Merlin AI — read-only environment and safety diagnostic
 # Usage: bash scripts/doctor.sh
 set -euo pipefail
 
@@ -109,7 +109,7 @@ secret_status() {
     "" )
       fail "$key is missing or empty"
       ;;
-    change-me-*|changeme|sk-home-ai-elite|REQUIRED_CHANGE_ME )
+    change-me-*|changeme|sk-merlin-ai|REQUIRED_CHANGE_ME )
       fail "$key appears to be an insecure default"
       ;;
     * )
@@ -199,7 +199,7 @@ else
   MERLIN_UNKNOWN_MODELS=("qwen2.5:7b" "nomic-embed-text")
 fi
 
-echo -e "\n${CYAN}${BOLD}HOME AI ELITE — Merlin Doctor${NC}"
+echo -e "\n${CYAN}${BOLD}MERLIN AI — Merlin Doctor${NC}"
 echo -e "$(date)\n"
 
 echo -e "${BOLD}Repository${NC}"

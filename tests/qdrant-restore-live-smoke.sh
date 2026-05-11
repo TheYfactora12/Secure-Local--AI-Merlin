@@ -78,7 +78,7 @@ if not vector:
 ' <<<"$result"
 }
 
-echo "Home AI Elite live Qdrant restore smoke test"
+echo "Merlin AI live Qdrant restore smoke test"
 echo "Collection: ${COLLECTION}"
 echo ""
 

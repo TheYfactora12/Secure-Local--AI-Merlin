@@ -2,7 +2,7 @@
 
 Status: v1.1 design. No runtime behavior changes are included in this issue.
 
-Home AI Elite remains localhost-only by default. Mobile, LAN, and remote access
+Merlin AI remains localhost-only by default. Mobile, LAN, and remote access
 are optional modes that must be explicitly enabled by the user after install.
 The installer must not expose Merlin, Open WebUI, n8n, LiteLLM, Ollama, Qdrant,
 OpenHands, or the dashboard to the LAN by default.

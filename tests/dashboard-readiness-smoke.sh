@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Static smoke test for Wizard HQ startup/readiness UX.
+# Static smoke test for Merlin Dashboard startup/readiness UX.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -76,4 +76,4 @@ if grep -q "approveGate\\|denyGate\\|data-action=\"approve\"\\|data-action=\"den
   fail "dashboard readiness must not introduce approval controls"
 fi
 
-echo "PASS: Wizard HQ readiness surface is honest and read-only"
+echo "PASS: Merlin Dashboard readiness surface is honest and read-only"

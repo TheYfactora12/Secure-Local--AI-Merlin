@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Home AI Elite — Pull latest Docker images and restart
+# Merlin AI — Pull latest Docker images and restart
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

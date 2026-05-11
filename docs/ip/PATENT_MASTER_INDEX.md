@@ -1,5 +1,5 @@
 # Patent Portfolio Master Index
-**Wizard AI / Merlin Platform | TheYfactora12**
+**Merlin AI / Merlin Platform | TheYfactora12**
 **Created: 2026-05-06 | STATUS: PRE-PROVISIONAL — CONFIDENTIAL**
 
 ---
@@ -100,4 +100,4 @@ embeddings are unavailable.
 ---
 
 *Confidential invention disclosure. Attorney-client privileged upon attorney engagement.*
-*Prepared: 2026-05-06 | TheYfactora12/home-ai-elite*
+*Prepared: 2026-05-06 | TheYfactora12/Secure-Local--AI-Merlin*

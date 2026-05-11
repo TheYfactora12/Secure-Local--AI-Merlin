@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wizard HQ — Merlin AI</title>
+<title>Merlin Dashboard — Merlin AI</title>
 <link rel="icon" type="image/png" href="assets/merlin-m-sigil.png">
 <link rel="apple-touch-icon" href="assets/merlin-m-sigil.png">
 <style>
@@ -1875,12 +1875,12 @@ button.mode-pill:hover {
         <img src="assets/merlin-m-sigil.png" alt="" width="34" height="34" loading="eager">
       </div>
       <div>
-        <h1>Wizard HQ</h1>
-        <p>Merlin AI · Private Intelligence. Locally Owned.</p>
+        <h1>Merlin Dashboard</h1>
+        <p>Your private AI. On your Mac. Forever.</p>
       </div>
     </div>
-    <div class="top-actions" aria-label="Wizard HQ actions">
-      <nav class="tabbar" aria-label="Wizard HQ product tabs">
+    <div class="top-actions" aria-label="Merlin Dashboard actions">
+      <nav class="tabbar" aria-label="Merlin Dashboard product tabs">
         <button class="tab-button active" type="button" data-tab-target="chat" onclick="selectTab('chat')" title="Chat with Merlin through the local policy-gated route.">Chat</button>
         <button class="tab-button" type="button" data-tab-target="rooms" onclick="selectTab('rooms')" title="Local project spaces for saved transcripts and scoped context.">Rooms</button>
         <button class="tab-button" type="button" data-tab-target="brains" onclick="selectTab('brains')" title="Local model, router, and optional provider connector status.">Brains</button>
@@ -1901,9 +1901,30 @@ button.mode-pill:hover {
           <img class="front-brand-orb" src="assets/merlin-orb.png" alt="" width="38" height="38" loading="eager">
           <div>
             <strong>Merlin</strong>
-            <span>Private Intelligence</span>
+            <span>Your private AI</span>
           </div>
           <button class="sidebar-toggle-btn" type="button" onclick="toggleChatSidebar()" aria-label="Collapse Merlin context panel">‹</button>
+        </div>
+        <div class="front-sidebar-card" aria-label="Merlin AI first-run onboarding">
+          <h3>Merlin AI is running</h3>
+          <p>Your AI is private. Nothing leaves this Mac unless you explicitly enable a cloud provider later.</p>
+          <div class="mini-control-stack" aria-label="First-run actions">
+            <button class="mini-control active" type="button" onclick="selectTab('chat')"><strong>Start Chatting</strong><span>Ask Merlin a local question.</span></button>
+            <button class="mini-control" type="button" onclick="window.open('http://localhost:5678', '_blank', 'noopener')"><strong>Automate</strong><span>Open optional local n8n workflows.</span></button>
+            <button class="mini-control" type="button" onclick="selectTab('system')"><strong>Dashboard</strong><span>Check all local service status.</span></button>
+          </div>
+          <div class="chip-row compact" aria-label="Included service status summary">
+            <span class="chip warn">Dashboard: checking</span>
+            <span class="chip warn">Open WebUI: checking</span>
+            <span class="chip warn">Ollama: checking</span>
+            <span class="chip warn">LiteLLM: checking</span>
+            <span class="chip warn">Qdrant: checking</span>
+            <span class="chip warn">n8n: optional</span>
+            <span class="chip warn">OpenHands: optional</span>
+            <span class="chip warn">MCP: checking</span>
+            <span class="chip warn">Perplexica: optional</span>
+            <span class="chip warn">SearXNG: optional</span>
+          </div>
         </div>
         <button class="new-chat-btn" type="button" onclick="clearMerlinChat()">New conversation</button>
         <div class="front-sidebar-card">
@@ -1983,7 +2004,7 @@ button.mode-pill:hover {
             <button class="sidebar-toggle-btn" id="chat-sidebar-toggle" type="button" onclick="toggleChatSidebar()" aria-expanded="true" aria-controls="chat-context-sidebar" aria-label="Toggle Merlin context panel">☰</button>
             <span class="status-dot good" aria-hidden="true"></span>
             <div>
-              <strong>Wizard HQ</strong>
+              <strong>Merlin Dashboard</strong>
               <span>Merlin Chat runs through the policy-gated Task API.</span>
             </div>
           </div>
@@ -1997,11 +2018,11 @@ button.mode-pill:hover {
         <div class="front-chat-scroll">
           <div class="front-empty">
             <div class="merlin-orb-stage">
-              <img class="merlin-orb-image" src="assets/merlin-orb.png" alt="Merlin AI core face" width="210" height="210" loading="eager">
+              <img class="merlin-orb-image" src="assets/merlin-orb.png" alt="Merlin assistant face" width="210" height="210" loading="eager">
             </div>
             <div class="hero-title">
-              <h2 id="merlin-brand-title">Merlin AI</h2>
-              <p>Private Intelligence. Locally Owned.</p>
+              <h2 id="merlin-brand-title">Merlin</h2>
+              <p>Your private AI. Local by default.</p>
               <span class="voice-future-note">Voice mode later. Local audio consent required.</span>
             </div>
             <div class="suggestion-grid" aria-label="Safe Merlin starter prompts">
@@ -2246,7 +2267,7 @@ button.mode-pill:hover {
         <div class="status-list">
           <div class="status-pill"><strong>Workspace</strong><span id="brains-openwebui">checking</span></div>
           <div class="status-pill"><strong>Role</strong><span>local chat bridge</span></div>
-          <div class="status-pill"><strong>Brand surface</strong><span>Wizard HQ</span></div>
+          <div class="status-pill"><strong>Brand surface</strong><span>Merlin Dashboard</span></div>
         </div>
       </article>
       <article class="surface-card">
@@ -2299,7 +2320,7 @@ button.mode-pill:hover {
     <div class="page-head">
       <div>
         <h2>Agents</h2>
-        <p>Agents are supervised capabilities behind policy gates. Wizard HQ displays status; it does not execute agent actions.</p>
+        <p>Agents are supervised capabilities behind policy gates. Merlin Dashboard displays status; it does not execute agent actions.</p>
       </div>
       <span class="chip warn">approval required for actions</span>
     </div>
@@ -2314,7 +2335,7 @@ button.mode-pill:hover {
     <div class="page-head">
       <div>
         <h2>Security</h2>
-        <p>Sovereignty is visible: local-only defaults, telemetry off, secrets hidden, and approvals fail closed.</p>
+        <p>Privacy is visible: local-only defaults, telemetry off, secrets hidden, and approvals fail closed.</p>
       </div>
       <span class="chip good">secrets protected</span>
     </div>
@@ -2322,7 +2343,7 @@ button.mode-pill:hover {
       <article class="surface-card"><h3>Privacy Mode</h3><p>Merlin defaults to owned hardware and localhost services.</p><div class="status-list"><div class="status-pill"><strong>Local-only</strong><span class="good">enabled</span></div><div class="status-pill"><strong>Cloud escalation</strong><span class="off">disabled</span></div></div></article>
       <article class="surface-card"><h3>Approval Gates</h3><p>Approval is temporary by default: allow once for this action, ask again next time. Permanent allow belongs in the full Security Settings page after policy-backed controls exist.</p><div class="status-list"><div class="status-pill"><strong>Gates</strong><span id="tab-security-gates">checking</span></div><div class="status-pill"><strong>Default approval</strong><span class="good">allow once</span></div><div class="status-pill"><strong>Permanent allow</strong><span class="locked">off / future settings</span></div><div class="status-pill"><strong>Approve buttons</strong><span class="locked">not present here</span></div></div></article>
       <article class="surface-card" id="security-permanent-approvals" tabindex="-1"><h3>Permanent Approvals</h3><p>Future full security settings will let you review, scope, revoke, and audit persistent approvals. This build keeps permanent approvals off.</p><div class="status-list"><div class="status-pill"><strong>Don't ask again</strong><span class="locked">disabled</span></div><div class="status-pill"><strong>Scope controls</strong><span class="locked">planned</span></div><div class="status-pill"><strong>Revoke/audit</strong><span class="locked">required before enable</span></div></div><div class="security-toggle-row"><div><strong>Don't ask again for this action type</strong><p>Locked until backend policy scopes, expiration, revoke, and audit controls are implemented.</p></div><button class="security-toggle locked" type="button" aria-label="Permanent approvals are locked off" aria-pressed="false" onclick="explainPermanentApprovalsLocked()"></button></div><p id="permanent-approval-note">Permanent approvals are off. Use one-time approval for now.</p></article>
-      <article class="surface-card"><h3>Telemetry</h3><p>Wizard HQ does not add analytics, tracking pixels, or external telemetry.</p><div class="status-list"><div class="status-pill"><strong>Telemetry</strong><span class="good">off</span></div><div class="status-pill"><strong>Protected values</strong><span class="locked">not displayed</span></div></div></article>
+      <article class="surface-card"><h3>Telemetry</h3><p>Merlin Dashboard does not add analytics, tracking pixels, or external telemetry.</p><div class="status-list"><div class="status-pill"><strong>Telemetry</strong><span class="good">off</span></div><div class="status-pill"><strong>Protected values</strong><span class="locked">not displayed</span></div></div></article>
     </section>
   </main>
 
@@ -2352,7 +2373,7 @@ button.mode-pill:hover {
     <section class="surface-grid">
       <article class="surface-card">
         <h3>Policy-Gated Settings</h3>
-        <p>Wizard HQ loads the settings action map from Merlin. Actions remain locked unless a backend policy gate exists.</p>
+        <p>Merlin Dashboard loads the settings action map from Merlin. Actions remain locked unless a backend policy gate exists.</p>
         <div id="settings-policy-panel" class="status-list">
           <div class="status-pill"><strong>Settings backend</strong><span>checking</span></div>
         </div>
@@ -2380,10 +2401,10 @@ button.mode-pill:hover {
       <article class="surface-card"><h3>Provider Connectors</h3><p>External provider setup is deferred until safe secret storage, explicit allow/not-allow choices, and approval gates are implemented.</p><div class="status-list"><div class="status-pill"><strong>API key fields</strong><span class="locked">not available</span></div><div class="status-pill"><strong>Cloud default</strong><span class="off">off</span></div><div class="status-pill"><strong>Future path</strong><span>policy-gated</span></div></div></article>
       <article class="surface-card wide"><h3>Model Library</h3><p>Model additions stay explicit, visible, hardware-aware, and manual-only.</p><div id="settings-model-library" class="model-library-panel"><div class="model-warning">8GB/core warning: review hardware impact before adding chat models. Merlin will not download models from the browser.</div><div class="empty">Checking model library status.</div></div></article>
       <article class="surface-card"><h3>Memory Controls</h3><p>Remembering, deleting, and exporting memory need dedicated approval and review UX.</p><div class="status-list"><div class="status-pill"><strong>Auto-write</strong><span class="off">disabled</span></div><div class="status-pill"><strong>Review/delete</strong><span>#31 / #32</span></div><div class="status-pill"><strong>Raw memory</strong><span class="locked">not shown</span></div></div></article>
-      <article class="surface-card"><h3>Privacy & Sovereignty</h3><p>Local-first defaults stay visible before advanced configuration exists.</p><div class="status-list"><div class="status-pill"><strong>Telemetry</strong><span class="good">off</span></div><div class="status-pill"><strong>Cloud escalation</strong><span class="off">disabled</span></div><div class="status-pill"><strong>Secrets</strong><span class="locked">protected</span></div></div></article>
+      <article class="surface-card"><h3>Privacy & Local Control</h3><p>Local-first defaults stay visible before advanced configuration exists.</p><div class="status-list"><div class="status-pill"><strong>Telemetry</strong><span class="good">off</span></div><div class="status-pill"><strong>Cloud escalation</strong><span class="off">disabled</span></div><div class="status-pill"><strong>Secrets</strong><span class="locked">protected</span></div></div></article>
       <article class="surface-card wide">
         <h3>Startup & APIs</h3>
-        <p>Wizard HQ shows service state and recovery commands. It does not start, stop, or restart services from the browser.</p>
+        <p>Merlin Dashboard shows service state and recovery commands. It does not start, stop, or restart services from the browser.</p>
         <div class="recovery-panel">
           <div class="status-list">
             <div class="status-pill"><strong>Status API 8765</strong><span id="settings-status-api">checking</span></div>

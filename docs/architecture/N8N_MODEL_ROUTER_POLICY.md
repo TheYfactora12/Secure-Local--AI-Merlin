@@ -27,7 +27,7 @@ approves the required gates:
 ## Why Cloud Branches Are Metadata Only
 
 The stale #6 design allowed automatic cloud escalation when local routing failed.
-That conflicts with the current Home AI Elite policy: local-first by default,
+That conflicts with the current Merlin AI policy: local-first by default,
 cloud optional, and cloud use gated by explicit user approval. A workflow JSON
 that contains direct OpenAI, Perplexity, Anthropic, or Google API HTTP nodes can
 be imported and accidentally activated. The safer v1.3 contract is to block the

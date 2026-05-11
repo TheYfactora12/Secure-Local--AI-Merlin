@@ -14,10 +14,14 @@ require() {
   grep -q "$1" "$DASHBOARD_FILE" || fail "$2"
 }
 
-require "Wizard HQ" "dashboard missing Wizard HQ title"
-require "Merlin AI" "dashboard missing Merlin AI brand"
-require "Private Intelligence. Locally Owned." "dashboard missing local-owned tagline"
-require "Merlin AI core face" "dashboard missing Merlin core face asset label"
+require "Merlin Dashboard" "dashboard missing Merlin Dashboard title"
+require "Your private AI. On your Mac. Forever." "dashboard missing Merlin AI product framing"
+require "Your private AI. Local by default." "dashboard missing local-by-default tagline"
+require "Merlin AI is running" "dashboard missing first-run onboarding statement"
+require "Nothing leaves this Mac" "dashboard missing plain-English privacy promise"
+require "Start Chatting" "dashboard missing first-run chat action"
+require "Automate" "dashboard missing first-run automation action"
+require "Merlin assistant face" "dashboard missing Merlin face asset label"
 require "placeholder=\"Ask Merlin...\"" "dashboard missing clean Ask Merlin input"
 if grep -q "Talk to Merlin first" "$DASHBOARD_FILE"; then
   fail "dashboard must not show the removed Merlin chat intro block"

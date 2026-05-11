@@ -1,8 +1,8 @@
-# gitleaks config for home-ai-elite
+# gitleaks config for merlin-ai
 # Prevents real secrets from being committed.
 # Allowlists: .env.example (placeholder values only), test fixtures.
 
-title = "home-ai-elite gitleaks config"
+title = "merlin-ai gitleaks config"
 
 [extend]
   useDefault = true

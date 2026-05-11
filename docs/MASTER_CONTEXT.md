@@ -1,7 +1,7 @@
-# Wizard AI Master Context
+# Merlin AI Master Context
 
 Last verified: 2026-05-10
-Repo: `TheYfactora12/home-ai-elite`
+Repo: `TheYfactora12/Secure-Local--AI-Merlin`
 Branch: `main`
 Installer: `install.sh` v1.6
 
@@ -94,7 +94,7 @@ Current milestone position:
 
 ## Decision
 
-Wizard AI is a local-first AI platform: own Perplexity + Codex + Memory on user-owned hardware with zero required subscriptions.
+Merlin AI is a local-first AI platform: own Perplexity + Codex + Memory on user-owned hardware with zero required subscriptions.
 
 Hardware principle: 8GB Macs are the entry point in low/core mode. The system scales upward by profile and hardware tier; the full stack is not expected to run on 8GB.
 
@@ -216,25 +216,19 @@ Recently verified closures:
 
 ## Open Work, Priority Order
 
-1. Continue #135/#123/#134: prove the Merlin local brain loop in Wizard HQ.
-   The current path is Rooms -> transcript history -> Room Master Prompt draft
-   -> review/edit -> separate approve-for-context gate.
-2. Continue #31/#32/#120: memory approval, review, and delete. Merlin cannot
-   honestly claim durable learning until approved memory can be reviewed and
-   deleted by the user.
-3. Continue #130: show where Merlin keeps its brain and Room artifacts, read-only
-   first.
-4. Continue #106/#114: keep Wizard HQ shell and policy-gated Settings aligned
-   around the local chat/Rooms/memory loop.
-5. Continue #37/#95: public onboarding hardening and product audit evidence
-   collection without claiming Public Beta readiness.
-6. Defer #64 Developer ID signing/notarization until the product surface is more
+1. Continue #37/#95: onboarding, packaging hardening, evidence, and installer
+   retest discipline.
+2. Continue #134: judge product value by the five v1.0 jobs, not by feature
+   count.
+3. Continue only the #106/#123 slices that improve first-run Wizard HQ,
+   local-only proof, first local question, recovery, or uninstall.
+4. Defer #64 Developer ID signing/notarization until the product surface is more
    complete. The user explicitly accepted skipping Developer ID for now.
-7. Run the full Local Trusted Beta evidence pack on the 8GB low/core Mac after
-   installer, loading, onboarding, or Room/context changes that affect first-run
-   behavior.
-8. Continue optional live tests for search, automation, coding, and upgrade
-   profiles on hardware with enough memory.
+5. Park Rooms depth, memory depth, providers, voice, orb animation, native
+   automation, agents, Linux, Home Assistant, and professional mode in
+   `docs/product/FUTURE_IDEAS.md`.
+6. Run the full Local Trusted Beta evidence pack on the 8GB low/core Mac after
+   branding/onboarding changes that affect first-run behavior.
 
 ## Reasoning Summary
 
@@ -293,16 +287,15 @@ The next engineering priority is supportability: diagnostics, sanitized bug repo
 
 ## Next Actions
 
-1. Build the Wizard HQ Room Master Prompt review/edit surface. It should show the
-   local draft path and metadata, keep raw content controlled, and make context
-   reuse unavailable until a separate backend approval gate exists.
-2. Add the approve-for-Room-context contract after review/edit, without writing
-   approved memory or sharing across Rooms by default.
-3. Add a read-only Round Table panel only after the Room review path is clear.
-   It should show suggest-only roles and no execution controls.
-4. Keep release evidence updated for every test/failure. Full installer retest
-   remains required before Local Trusted Beta signoff because installer behavior
-   changed earlier in the v3.1 push.
+1. Build/verify the post-install Wizard HQ onboarding state: "Your private AI is
+   ready."
+2. Add/verify plain-English service explanations and the first safe local
+   question.
+3. Keep cloud/API/telemetry off by default and visible.
+4. Improve degraded-service recovery copy and failure-report guidance.
+5. Validate full uninstall/purge and record evidence.
+6. Keep release evidence updated for every test/failure. Full installer retest
+   remains required before Local Trusted Beta signoff.
 
 ## Validation
 
@@ -330,9 +323,9 @@ Last verified: 2026-05-10.
 - Live backup/restore verification passed on the package-installed stack with `bash tests/qdrant-restore-live-smoke.sh`: disposable Qdrant collection backed up, deleted, restored, and vector payload verified with 8 checks and 0 failures.
 - Live core upgrade verification passed after #61. The first run exposed optional `searxng` startup in core mode; #61 profile-gated optional Compose services, removed the hard `open-webui` to `searxng` dependency, added `tests/compose-profile-gating-smoke.sh`, and closed with CI run `25468170156` passing. Rerun of `bash scripts/upgrade.sh --profile core` completed and kept running services core-only: `litellm`, `open-webui`, `qdrant`, and `dashboard`.
 - Live launchd persistence validation passed: `bash launchd/install-launchd.sh` registered `com.homeai.docker`, `com.homeai.stack`, and `com.homeai.merlin-status-api`; after the timers, `launchctl print gui/501/com.homeai.merlin-status-api` reported `state = running`, `GET /healthz` returned `execution_allowed=false`, and running Docker services remained core-only.
-- Live clean uninstall/reinstall validation passed from source snapshot `/private/tmp/home-ai-elite-source-20260506_202108`: `pkg/scripts/uninstall.sh --yes --remove-data` removed `~/home-ai-elite`, backed up `.env`, and preserved Docker Desktop/Homebrew/Ollama. Docker cleanup initially skipped because the engine was not visible, so old Compose volumes were removed explicitly before reinstall. Fresh non-interactive core reinstall then passed with local-first defaults, no cloud keys, no model pulls, and core-only running services.
+- Live clean uninstall/reinstall validation passed from source snapshot `/private/tmp/merlin-ai-source-20260506_202108`: `pkg/scripts/uninstall.sh --yes --remove-data` removed `~/merlin-ai`, backed up `.env`, and preserved Docker Desktop/Homebrew/Ollama. Docker cleanup initially skipped because the engine was not visible, so old Compose volumes were removed explicitly before reinstall. Fresh non-interactive core reinstall then passed with local-first defaults, no cloud keys, no model pulls, and core-only running services.
 - Uninstaller validation found one release-quality follow-up: launchd `bootout` failures were previously suppressed, which could leave an already-loaded status API agent alive even after the plist was removed. The uninstaller now warns with the exact manual `launchctl bootout gui/<uid>/<label>` command when unload fails, and `tests/uninstall-smoke.sh` covers that behavior.
-- Local self-signed package signing is now wrapped by `scripts/sign-pkg.sh`. It expects a Keychain identity named `Home AI Elite Local Signing`, signs an existing unsigned package with `productsign`, verifies with `pkgutil --check-signature`, and is covered by `tests/pkg-local-sign-smoke.sh`.
+- Local self-signed package signing is now wrapped by `scripts/sign-pkg.sh`. It expects a Keychain identity named `Merlin AI Local Signing`, signs an existing unsigned package with `productsign`, verifies with `pkgutil --check-signature`, and is covered by `tests/pkg-local-sign-smoke.sh`.
 - Issue #22 support tooling is merged and pushed at `47f30df`: additive doctor checks, redaction helper, sanitized report generator, wizard wiring, and doctor/report-bug/redaction smokes.
 - Issue #24 CI gate is merged and pushed at `c6f6652`; GitHub Actions run `25451110988` passed.
 - Issue #25 Layer 1 is merged and pushed at `d4ece3d`; GitHub Actions run `25454666989` passed with `gitleaks-scan` and `merlin-staff-core-pytest` both required by `ci-success`.
@@ -386,7 +379,7 @@ Earlier live validation on 2026-05-05:
 - Ollama local generation returned `Merlin core online`.
 - LiteLLM `/v1/models` listed configured aliases and `/v1/chat/completions` with `qwen7b` returned `Merlin gateway online`.
 - `scripts/doctor.sh` completed with 43 passes, 2 warnings, and 0 failures.
-- Unsigned local package build produced `home-ai-elite-0.6.1.pkg`; payload check found no `.env` or generated certs. Package is not signed/notarized.
+- Unsigned local package build produced `merlin-ai-0.6.1.pkg`; payload check found no `.env` or generated certs. Package is not signed/notarized.
 - `pkg/release-preflight.sh` confirms package tools are installed, but this Mac has no Developer ID Installer identity and no Apple notarization environment set.
 
 Earlier validation on 2026-05-04:

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Home AI Elite — Service Health Dashboard
+# Merlin AI — Service Health Dashboard
 # Usage: bash scripts/status.sh
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -43,11 +43,11 @@ has_capability() {
   [[ " ${CAPABILITIES} " == *" ${needle} "* ]]
 }
 
-echo -e "\n${CYAN}${BOLD}HOME AI ELITE — Service Status${NC}"
+echo -e "\n${CYAN}${BOLD}MERLIN AI — Service Status${NC}"
 echo -e "Profile: ${INSTALL_PROFILE}${CAPABILITIES:+ (${CAPABILITIES})}"
 echo -e "$(date)\n"
 
-check "Dashboard   (Wizard HQ)    " "http://localhost:8888"           8888
+check "Merlin Dashboard       " "http://localhost:8888"           8888
 check "Open WebUI  (Chat UI)       " "http://localhost:3000"           3000
 if has_capability search; then
   check "Perplexica  (Search AI)     " "http://localhost:3002"           3002

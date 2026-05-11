@@ -1,6 +1,6 @@
 # launchd — macOS Auto-Start Agents
 
-These `.plist` files make your home-ai-elite stack **start automatically on macOS login** — no manual Docker Desktop launch, no terminal commands.
+These `.plist` files make your merlin-ai stack **start automatically on macOS login** — no manual Docker Desktop launch, no terminal commands.
 
 ## How launchd Works
 
@@ -21,7 +21,7 @@ These `.plist` files make your home-ai-elite stack **start automatically on macO
 ## Install (run once)
 
 ```bash
-bash ~/home-ai-elite/launchd/install-launchd.sh
+bash ~/merlin-ai/launchd/install-launchd.sh
 ```
 
 This installs only the Docker Desktop opener, the core-profile stack starter,
@@ -33,7 +33,7 @@ manual start commands.
 ## Uninstall
 
 ```bash
-bash ~/home-ai-elite/launchd/install-launchd.sh --uninstall
+bash ~/merlin-ai/launchd/install-launchd.sh --uninstall
 ```
 
 ## Verify

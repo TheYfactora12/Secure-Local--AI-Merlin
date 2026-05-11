@@ -320,7 +320,7 @@
   "versionId": "3.0.0",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "home-ai-elite-swarm-v3"
+    "instanceId": "merlin-ai-swarm-v3"
   },
   "tags": [
     { "name": "swarm",   "createdAt": "2026-05-03" },

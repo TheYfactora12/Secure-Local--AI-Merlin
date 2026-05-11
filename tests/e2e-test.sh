@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# e2e-test.sh — End-to-end smoke test for home-ai-elite
+# e2e-test.sh — End-to-end smoke test for merlin-ai
 #
 # Verifies:
 #   1. Docker engine is running
@@ -65,7 +65,7 @@ check_http() {
 
 echo -e "${CYAN}${BOLD}"
 echo " ┌────────────────────────────────────────┐"
-echo " │  home-ai-elite end-to-end test suite │"
+echo " │  merlin-ai end-to-end test suite │"
 echo " └────────────────────────────────────────┘"
 echo -e "${RESET}"
 
@@ -131,7 +131,7 @@ if [[ -f "${STACK_DIR}/docker-compose.yml" ]]; then
   if [[ "$RUNNING" -gt 0 ]]; then
     pass "$RUNNING stack service(s) running"
   else
-    warn "No stack services running — run: bash ~/home-ai-elite/scripts/bootstrap.sh"
+    warn "No stack services running — run: bash ~/merlin-ai/scripts/bootstrap.sh"
   fi
 else
   fail "docker-compose.yml not found at $STACK_DIR"

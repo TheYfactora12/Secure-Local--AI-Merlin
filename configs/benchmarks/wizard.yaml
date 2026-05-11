@@ -1,7 +1,7 @@
 # Offline benchmark defaults for Merlin memory evaluation.
 #
 # This file intentionally lives under configs/, not root config/, because
-# configs/ is the canonical configuration root for Home AI Elite.
+# configs/ is the canonical configuration root for Merlin AI.
 
 schema_version: 1
 profile: offline

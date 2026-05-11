@@ -16,17 +16,18 @@
 </head>
 <body>
 <h1>Merlin AI — First Run</h1>
-<p><strong>Private Intelligence. Locally Owned.</strong></p>
-<p>Start in Wizard HQ, then run the doctor check. Cloud/API providers are
+<p><strong>Your private AI. On your Mac. Forever.</strong></p>
+<p>Start in the Merlin Dashboard, then run the doctor check. Cloud/API providers are
 optional and disabled by default.</p>
 
-<h2>1. Open Wizard HQ</h2>
+<h2>1. Open Merlin Dashboard</h2>
 <pre>http://localhost:8888</pre>
-<p>Wizard HQ is the read-only Merlin command center for local service readiness,
-privacy status, model routing, memory, approvals, and system health.</p>
+<p>The Merlin Dashboard is the read-only Merlin AI command center for local chat,
+local service readiness, privacy status, model routing, memory, approvals, and
+system health.</p>
 
 <h2>2. Check local readiness</h2>
-<pre>cd ~/home-ai-elite
+<pre>cd ~/merlin-ai
 bash scripts/doctor.sh
 wizard merlin status</pre>
 <p>Merlin should report local-first mode, service health, and any degraded
@@ -43,7 +44,7 @@ No cloud calls are enabled unless you configure them explicitly.</p>
 
 <h2>Local service map</h2>
 <ul>
-  <li><strong>Wizard HQ</strong> — <code>http://localhost:8888</code></li>
+  <li><strong>Merlin Dashboard</strong> — <code>http://localhost:8888</code></li>
   <li><strong>Open WebUI</strong> — <code>http://localhost:3000</code></li>
   <li><strong>Merlin Status API</strong> — <code>http://localhost:8765</code></li>
   <li><strong>Merlin Task API</strong> — <code>http://localhost:8766</code></li>
@@ -55,29 +56,29 @@ No cloud calls are enabled unless you configure them explicitly.</p>
 </ul>
 
 <h2>Useful commands</h2>
-<pre># Open Wizard HQ
+<pre># Open Merlin Dashboard
 wizard open
 
 # Check all services
-bash ~/home-ai-elite/scripts/doctor.sh
+bash ~/merlin-ai/scripts/doctor.sh
 
 # Safe upgrade (with auto-rollback)
-bash ~/home-ai-elite/scripts/upgrade.sh
+bash ~/merlin-ai/scripts/upgrade.sh
 
 # Stop everything
-bash ~/home-ai-elite/scripts/stop.sh
+bash ~/merlin-ai/scripts/stop.sh
 
 # Uninstall
-bash ~/home-ai-elite/pkg/scripts/uninstall.sh
+bash ~/merlin-ai/pkg/scripts/uninstall.sh
 
 # Full Merlin purge before a clean reinstall test
-bash ~/home-ai-elite/pkg/scripts/uninstall.sh --purge-all</pre>
+bash ~/merlin-ai/pkg/scripts/uninstall.sh --purge-all</pre>
 
 <h2>Troubleshooting</h2>
 <ul>
   <li>Install log: <code>/tmp/homeai-install.log</code></li>
   <li>Service logs: <code>docker compose logs [service-name]</code></li>
-  <li>Repo: <code>https://github.com/TheYfactora12/home-ai-elite</code></li>
+  <li>Repo: <code>https://github.com/TheYfactora12/Secure-Local--AI-Merlin</code></li>
 </ul>
 </body>
 </html>

@@ -1,6 +1,6 @@
 # Container Image Policy
 
-Home AI Elite is local-first software. Container updates must not silently change
+Merlin AI is local-first software. Container updates must not silently change
 the laptop-safe core in a way that breaks first boot, exposes ports, or starts
 heavy services.
 

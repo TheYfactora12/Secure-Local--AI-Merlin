@@ -2,7 +2,7 @@
 cat <<'TXT'
 
 ========================================
-  Home AI Elite — Manual Setup Checklist
+  Merlin AI — Manual Setup Checklist
 ========================================
 
 1. Open WebUI first account

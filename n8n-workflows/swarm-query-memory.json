@@ -121,6 +121,6 @@
     "saveManualExecutions": true
   },
   "versionId": "1.0.0",
-  "meta": { "instanceId": "home-ai-elite-swarm-recall-v1" },
+  "meta": { "instanceId": "merlin-ai-swarm-recall-v1" },
   "tags": [{ "name": "swarm" }, { "name": "memory" }, { "name": "phase-2" }]
 }

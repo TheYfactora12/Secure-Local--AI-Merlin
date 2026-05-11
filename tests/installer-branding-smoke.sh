@@ -15,31 +15,36 @@ fail() {
 
 grep -q 'Merlin AI' "${STACK_DIR}/install.sh" \
   || fail "terminal installer header does not show Merlin AI"
-grep -q 'Private Intelligence. Locally Owned.' "${STACK_DIR}/install.sh" \
-  || fail "terminal installer header missing Merlin tagline"
-grep -q 'Sovereign local-first AI command center' "${STACK_DIR}/install.sh" \
+grep -q 'Your private AI. On your Mac. Forever.' "${STACK_DIR}/install.sh" \
+  || fail "terminal installer header missing Merlin AI tagline"
+grep -q 'Local-first AI for owned hardware. Cloud off by default.' "${STACK_DIR}/install.sh" \
   || fail "terminal installer header missing local-first positioning"
-grep -q 'MERLIN AI CORE INSTALLED' "${STACK_DIR}/install.sh" \
-  || fail "terminal installer final banner does not use Merlin core installed language"
-if grep -q 'WIZARD AI IS READY' "${STACK_DIR}/install.sh"; then
-  fail "installer still contains stale Wizard AI ready banner"
+grep -q 'MERLIN AI INSTALLED' "${STACK_DIR}/install.sh" \
+  || fail "terminal installer final banner does not use Merlin AI installed language"
+old_home="Home"
+old_product="${old_home} AI ""Elite"
+old_upper="HOME AI ""ELITE"
+old_wizard="Wizard ""AI"
+old_wizard_upper="WIZARD ""AI"
+if grep -Eq "${old_product}|${old_upper}|${old_wizard}|${old_wizard_upper}" "${STACK_DIR}/install.sh"; then
+  fail "installer still contains stale retired branding"
 fi
 
 grep -q 'Merlin AI' "${STACK_DIR}/pkg/resources/welcome.html" \
   || fail "package welcome missing Merlin AI brand"
-grep -q 'Private Intelligence. Locally Owned.' "${STACK_DIR}/pkg/resources/welcome.html" \
-  || fail "package welcome missing Merlin tagline"
+grep -q 'Your private AI. On your Mac. Forever.' "${STACK_DIR}/pkg/resources/welcome.html" \
+  || fail "package welcome missing Merlin AI tagline"
 grep -q 'merlin-ai-logo.png' "${STACK_DIR}/pkg/resources/welcome.html" \
   || fail "package welcome does not reference Merlin logo resource"
 grep -q 'No cloud' "${STACK_DIR}/pkg/resources/welcome.html" \
   || fail "package welcome does not communicate no-cloud default"
 
 grep -q 'Merlin AI — First Run' "${STACK_DIR}/pkg/resources/readme.html" \
-  || fail "package readme missing Merlin first-run heading"
-grep -q 'Wizard HQ' "${STACK_DIR}/pkg/resources/readme.html" \
-  || fail "package readme does not point users to Wizard HQ"
+  || fail "package readme missing Merlin AI first-run heading"
+grep -q 'Merlin Dashboard' "${STACK_DIR}/pkg/resources/readme.html" \
+  || fail "package readme does not point users to Merlin Dashboard"
 grep -q 'http://localhost:8888' "${STACK_DIR}/pkg/resources/readme.html" \
-  || fail "package readme missing Wizard HQ URL"
+  || fail "package readme missing Merlin Dashboard URL"
 grep -q 'wizard merlin status' "${STACK_DIR}/pkg/resources/readme.html" \
   || fail "package readme missing first readiness command"
 
@@ -51,14 +56,14 @@ if grep -q 'Perplexica Search.*http://localhost:3000' "${STACK_DIR}/pkg/resource
 fi
 
 grep -q 'Merlin AI — Installation Complete!' "${STACK_DIR}/pkg/scripts/postinstall" \
-  || fail "postinstall next steps missing Merlin completion heading"
-grep -q 'Private Intelligence. Locally Owned.' "${STACK_DIR}/pkg/scripts/postinstall" \
-  || fail "postinstall next steps missing Merlin tagline"
-grep -q 'Wizard HQ   → http://localhost:8888' "${STACK_DIR}/pkg/scripts/postinstall" \
-  || fail "postinstall next steps missing Wizard HQ service"
+  || fail "postinstall next steps missing Merlin AI completion heading"
+grep -q 'Your private AI. On your Mac. Forever.' "${STACK_DIR}/pkg/scripts/postinstall" \
+  || fail "postinstall next steps missing Merlin AI tagline"
+grep -q 'Dashboard   → http://localhost:8888' "${STACK_DIR}/pkg/scripts/postinstall" \
+  || fail "postinstall next steps missing Merlin Dashboard service"
 grep -q 'HOME_AI_SKIP_MODEL_PULLS=true' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall no longer disables model pulls"
 grep -q 'bash install.sh --profile core --skip-model-pulls --non-interactive' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall no longer uses protected core installer path"
 
-echo "PASS: Merlin installer branding surface is valid"
+echo "PASS: Merlin AI installer branding surface is valid"

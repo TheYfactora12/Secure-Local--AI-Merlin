@@ -1,5 +1,5 @@
 # Patent Claim 3 — Air-Gapped AI OS with Profile-Based Capability Isolation
-**Wizard AI / Merlin Platform | TheYfactora12 | Priority Date Target: File within 30 days of 2026-05-06**
+**Merlin AI / Merlin Platform | TheYfactora12 | Priority Date Target: File within 30 days of 2026-05-06**
 **Classification: CONFIDENTIAL — Attorney-Client Privileged upon engagement**
 
 ---
@@ -75,4 +75,4 @@ This log is the compliance artifact for regulators.
 ---
 
 *Confidential invention disclosure. Attorney-client privileged upon attorney engagement.*
-*Prepared: 2026-05-06 | TheYfactora12/home-ai-elite*
+*Prepared: 2026-05-06 | TheYfactora12/Secure-Local--AI-Merlin*

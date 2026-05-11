@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Static smoke for the optional Wizard HQ browser QA harness.
+# Static smoke for the optional Merlin Dashboard browser QA harness.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -55,4 +55,4 @@ if grep -Fq 'exec(' "$QA_SCRIPT" "$SETUP_SCRIPT"; then
   fail "browser QA scripts must not expose unsafe execution/model/secret behavior"
 fi
 
-echo "PASS: Wizard HQ browser QA harness is present and safe"
+echo "PASS: Merlin Dashboard browser QA harness is present and safe"

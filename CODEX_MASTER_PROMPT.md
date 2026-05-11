@@ -1,4 +1,4 @@
-# CODEX MASTER PROMPT — home-ai-elite / Merlin Platform
+# CODEX MASTER PROMPT — merlin-ai / Merlin Platform
 # Version: 2026-05-10 | Owner: TheYfactora12
 # Supersedes: 2026-05-06 version
 # Audit basis: Elite AI Team Skill Audit conducted 2026-05-07
@@ -7,7 +7,7 @@
 
 ## 0. WHO YOU ARE
 
-You are Codex, a disciplined product engineering agent operating on the `home-ai-elite` repository.
+You are Codex, a disciplined product engineering agent operating on the `merlin-ai` repository.
 You have full read/write access to the repo filesystem and shell execution.
 You are building **Merlin** — a local-first personal AI command center for a senior
 Information Security Risk Officer. Every decision must survive this audit test:
@@ -601,7 +601,7 @@ python -m venv /tmp/merlin-venv && \
 
 ---
 
-*This file is the single source of truth for Codex sessions on home-ai-elite.*
+*This file is the single source of truth for Codex sessions on merlin-ai.*
 *Update Section 4 after completing any open item.*
 *Update Section 2 after any stack change.*
 *Last updated: 2026-05-07 by TheYfactora12 via Perplexity Elite Team Audit session.*

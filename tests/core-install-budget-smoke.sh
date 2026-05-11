@@ -21,7 +21,7 @@ fail() {
 [[ -f "${STACK_DIR}/install.sh" ]] || fail "Missing install.sh"
 [[ -x "${SCRIPT_DIR}/core-live-smoke.sh" ]] || fail "Missing executable tests/core-live-smoke.sh"
 
-echo "Home AI Elite core install budget smoke test"
+echo "Merlin AI core install budget smoke test"
 echo "Budget: ${BUDGET_SECONDS}s"
 echo ""
 

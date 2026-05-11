@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Home AI Elite — Pull a new Ollama model
+# Merlin AI — Pull a new Ollama model
 # Usage: bash scripts/add-model.sh <model-name>
 # Browse: https://ollama.com/library
 

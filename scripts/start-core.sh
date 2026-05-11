@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Home AI Elite — start laptop-safe core profile
+# Merlin AI — start laptop-safe core profile
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -54,7 +54,7 @@ docker info >/dev/null 2>&1 || {
   exit 1
 }
 
-echo "Starting Home AI Elite core profile..."
+echo "Starting Merlin AI core profile..."
 
 if [[ "$(uname -s)" == "Darwin" ]]; then
   start_native_ollama

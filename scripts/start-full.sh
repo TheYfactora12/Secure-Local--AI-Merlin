@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Home AI Elite — start full profile intentionally
+# Merlin AI — start full profile intentionally
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

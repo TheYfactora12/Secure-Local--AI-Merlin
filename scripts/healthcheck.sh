@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# home-ai-elite — Healthcheck + uptime webhook ping (v0.7)
+# merlin-ai — Healthcheck + uptime webhook ping (v0.7)
 # Run by launchd or manually. Checks all services and pings
 # a webhook URL if everything is healthy.
 # Set HEALTHCHECK_WEBHOOK_URL in .env to enable pinging.
@@ -29,7 +29,7 @@ check_http() {
 
 # ───────────────────────
 echo ""
-echo "📊 home-ai-elite healthcheck — $(date)"
+echo "📊 merlin-ai healthcheck — $(date)"
 echo "──────────────────────────────"
 
 check_http "Ollama"       "http://localhost:11434"

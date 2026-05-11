@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Static smoke test for Wizard HQ Chat home product clarity.
+# Static smoke test for Merlin Dashboard Chat home product clarity.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -12,7 +12,7 @@ fail() {
 
 grep -q 'class="chat-home tab-page active"' "$DASHBOARD_FILE" \
   || fail "Chat tab must be the primary product home"
-grep -q "Merlin AI core face" "$DASHBOARD_FILE" \
+grep -q "Merlin assistant face" "$DASHBOARD_FILE" \
   || fail "Chat home missing centered Merlin face"
 grep -q 'assets/merlin-orb.png' "$DASHBOARD_FILE" \
   || fail "Chat home missing local Merlin orb asset"
@@ -48,11 +48,21 @@ grep -q "Smart mode. Merlin routes to the best available model." "$DASHBOARD_FIL
   || fail "Chat home missing confident mode-to-router copy"
 grep -q "New conversation" "$DASHBOARD_FILE" \
   || fail "Chat home missing local chat workspace affordance"
-grep -q "Merlin AI" "$DASHBOARD_FILE" \
-  || fail "Chat home missing Merlin AI center brand"
-grep -q "Future talk mode: this is the Merlin presence you speak with" "$DASHBOARD_FILE" \
+grep -q "Your private AI. On your Mac. Forever." "$DASHBOARD_FILE" \
+  || fail "Chat home missing Merlin AI product framing"
+grep -q "Merlin AI is running" "$DASHBOARD_FILE" \
+  || fail "Chat home missing first-run onboarding statement"
+grep -q "Nothing leaves this Mac" "$DASHBOARD_FILE" \
+  || fail "Chat home missing plain-English privacy promise"
+grep -q "Start Chatting" "$DASHBOARD_FILE" \
+  || fail "Chat home missing first-run chat action"
+grep -q "Automate" "$DASHBOARD_FILE" \
+  || fail "Chat home missing first-run automation action"
+grep -q "<h2 id=\"merlin-brand-title\">Merlin</h2>" "$DASHBOARD_FILE" \
+  || fail "Chat home missing Merlin center brand"
+grep -q "Voice mode later. Local audio consent required." "$DASHBOARD_FILE" \
   || fail "Chat home missing future Merlin talk-mode presence note"
-grep -q "voice capture, consent, and local audio privacy checks" "$DASHBOARD_FILE" \
+grep -q "Local audio consent required" "$DASHBOARD_FILE" \
   || fail "future talk-mode note must stay privacy/consent gated"
 grep -q "placeholder=\"Ask Merlin...\"" "$DASHBOARD_FILE" \
   || fail "Chat home missing clean Ask Merlin input"
@@ -79,7 +89,7 @@ grep -q ".topbar {" "$DASHBOARD_FILE" \
   || fail "dashboard missing sticky top bar styles"
 grep -q "position: sticky" "$DASHBOARD_FILE" \
   || fail "top bar must stay locked while scrolling"
-grep -q '<nav class="tabbar" aria-label="Wizard HQ product tabs">' "$DASHBOARD_FILE" \
+grep -q '<nav class="tabbar" aria-label="Merlin Dashboard product tabs">' "$DASHBOARD_FILE" \
   || fail "product tabs must live in the locked top bar"
 grep -q "Sovereignty Indicator: Local Mode" "$DASHBOARD_FILE" \
   || fail "Sovereignty Indicator must default to Local Mode"
@@ -125,4 +135,4 @@ if grep -qiE '<button[^>]*>[^<]*(download|pull|approve|run|write|configure)|down
   fail "dashboard first-run must not imply unsafe setup actions are available"
 fi
 
-echo "PASS: Wizard HQ Chat home product clarity is safe and read-only"
+echo "PASS: Merlin Dashboard Chat home product clarity is safe and read-only"

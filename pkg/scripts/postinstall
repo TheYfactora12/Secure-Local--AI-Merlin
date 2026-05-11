@@ -12,7 +12,7 @@
 # =============================================================================
 set -euo pipefail
 
-INSTALL_DIR="/usr/local/home-ai-elite"
+INSTALL_DIR="/usr/local/merlin-ai"
 LOG_FILE="/tmp/homeai-install.log"
 
 log() { echo "[postinstall] $*" | tee -a "$LOG_FILE"; }
@@ -51,7 +51,7 @@ log "  ✅ Ownership set to $INSTALLING_USER"
 # ---------------------------------------------------------------------------
 # 2. Copy install dir to user home (so it's writable for git)
 # ---------------------------------------------------------------------------
-USER_INSTALL_DIR="${INSTALLING_HOME}/home-ai-elite"
+USER_INSTALL_DIR="${INSTALLING_HOME}/merlin-ai"
 if [[ ! -d "$USER_INSTALL_DIR" ]]; then
   mkdir -p "$USER_INSTALL_DIR"
   rsync -a \
@@ -91,7 +91,7 @@ DOCKER_APP_CLI="/Applications/Docker.app/Contents/Resources/bin"
 if [[ -x "${DOCKER_APP_CLI}/docker" ]]; then
   log "  ✅ Docker CLI available at ${DOCKER_APP_CLI}/docker"
 else
-  log "  ⚠ Docker CLI missing. Install Docker Desktop, then run: cd ~/home-ai-elite && bash install.sh"
+  log "  ⚠ Docker CLI missing. Install Docker Desktop, then run: cd ~/merlin-ai && bash install.sh"
 fi
 
 # ---------------------------------------------------------------------------
@@ -119,23 +119,23 @@ run_as_user \
 # ---------------------------------------------------------------------------
 # 9. Write post-install instructions
 # ---------------------------------------------------------------------------
-cat > "${INSTALLING_HOME}/Desktop/home-ai-elite-next-steps.txt" << 'INSTRUCTIONS'
+cat > "${INSTALLING_HOME}/Desktop/merlin-ai-next-steps.txt" << 'INSTRUCTIONS'
 ┌────────────────────────────────────────────────┐
-│  Merlin AI — Installation Complete!        │
-│  Private Intelligence. Locally Owned.      │
+│  Merlin AI — Installation Complete!    │
+│  Your private AI. On your Mac. Forever. │
 │                                            │
 │  NEXT STEPS:                               │
 │                                            │
 │  1. Open Docker Desktop and finish setup   │
 │  2. Open Terminal                          │
-│  3. cd ~/home-ai-elite                     │
+│  3. cd ~/merlin-ai                     │
 │  4. bash scripts/doctor.sh                 │
 │  5. bash tests/core-live-smoke.sh          │
 │  6. Optional: bash scripts/add-model.sh    │
 │     qwen2.5:7b                             │
 │                                            │
 │  CORE SERVICES:                            │
-│   Wizard HQ   → http://localhost:8888      │
+│   Dashboard   → http://localhost:8888      │
 │   Open WebUI  → http://localhost:3000      │
 │   LiteLLM     → http://localhost:4000      │
 │   Qdrant      → http://localhost:6333      │
@@ -146,13 +146,13 @@ cat > "${INSTALLING_HOME}/Desktop/home-ai-elite-next-steps.txt" << 'INSTRUCTIONS
 │   wizard start coding                      │
 │                                            │
 │  Install log: /tmp/homeai-install.log      │
-│  Uninstall:   bash ~/home-ai-elite/        │
+│  Uninstall:   bash ~/merlin-ai/        │
 │              pkg/scripts/uninstall.sh     │
 └────────────────────────────────────────────────┘
 INSTRUCTIONS
 
 chown "${INSTALLING_USER}:staff" \
-  "${INSTALLING_HOME}/Desktop/home-ai-elite-next-steps.txt" 2>/dev/null || true
+  "${INSTALLING_HOME}/Desktop/merlin-ai-next-steps.txt" 2>/dev/null || true
 
 log "  ✅ Next-steps file written to Desktop"
 log "  ✅ postinstall complete. Full log: $LOG_FILE"

@@ -1,9 +1,9 @@
-# Home AI Elite Hardware Guide
+# Merlin AI Hardware Guide
 
 Status: v1.2 planning baseline. This guide documents buying and setup choices;
 it does not change installer behavior.
 
-Home AI Elite starts at 8GB RAM in low/core mode and scales upward by profile.
+Merlin AI starts at 8GB RAM in low/core mode and scales upward by profile.
 The entry point is intentionally modest: one small local chat model, local
 embeddings, Qdrant memory, dashboard, and health tooling. The full stack is not
 expected to run well on 8GB.

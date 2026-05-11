@@ -312,7 +312,7 @@ def event_for(source: str, record: dict[str, Any], payload: dict[str, Any], inde
             "name": f"merlin.{source}.{route_id}",
             "metadata": {
                 "source": source,
-                "origin": "home-ai-elite-jsonl-export",
+                "origin": "merlin-ai-jsonl-export",
                 "redacted": True,
                 "payload": payload,
             },
@@ -376,7 +376,7 @@ def post_ingestion(base_url: str, public_key: str, secret_key: str, events: list
         headers={
             "Authorization": f"Basic {token}",
             "Content-Type": "application/json",
-            "User-Agent": "home-ai-elite-jsonl-exporter",
+            "User-Agent": "merlin-ai-jsonl-exporter",
         },
     )
     try:

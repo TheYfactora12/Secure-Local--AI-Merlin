@@ -1,9 +1,9 @@
-# Inventor Record — home-ai-elite
+# Inventor Record — merlin-ai
 
 **Document Version:** 2.1
 **Inventor:** Kevin Paul Medeiros Jr
 **GitHub Username:** TheYfactora12
-**Repository:** [TheYfactora12/home-ai-elite](https://github.com/TheYfactora12/home-ai-elite)
+**Repository:** [TheYfactora12/Secure-Local--AI-Merlin](https://github.com/TheYfactora12/Secure-Local--AI-Merlin)
 **Jurisdiction:** United States (USPTO)
 **Date of Initial Conception:** 2026-04-30 (first public commit establishing core architecture)
 **Date of Formal Inventor Record Creation:** 2026-05-07

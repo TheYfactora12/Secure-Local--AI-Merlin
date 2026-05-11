@@ -1,5 +1,5 @@
 # Patent Claim 1 — Hardware-Tier-Aware AI Policy Router
-**Wizard AI / Merlin Platform | TheYfactora12 | Priority Date Target: File within 30 days of 2026-05-06**
+**Merlin AI / Merlin Platform | TheYfactora12 | Priority Date Target: File within 30 days of 2026-05-06**
 **Classification: CONFIDENTIAL — Attorney-Client Privileged upon engagement**
 
 ---
@@ -92,4 +92,4 @@ Every RouteDecision, approval event, and execution outcome written to local appe
 ---
 
 *Confidential invention disclosure. Attorney-client privileged upon attorney engagement.*
-*Prepared: 2026-05-06 | TheYfactora12/home-ai-elite*
+*Prepared: 2026-05-06 | TheYfactora12/Secure-Local--AI-Merlin*

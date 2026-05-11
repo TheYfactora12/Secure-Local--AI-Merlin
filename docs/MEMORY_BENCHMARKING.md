@@ -1,6 +1,6 @@
 # Memory Benchmarking
 
-Home AI Elite memory must be measurable before it becomes more autonomous.
+Merlin AI memory must be measurable before it becomes more autonomous.
 The v1.5 benchmark harness starts with deterministic offline fixtures so CI can
 gate memory changes without live Qdrant, Ollama, LiteLLM, n8n, Docker, cloud
 credentials, or network access.

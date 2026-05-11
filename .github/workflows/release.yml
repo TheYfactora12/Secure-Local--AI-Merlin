@@ -50,7 +50,7 @@ jobs:
       - name: Locate package
         id: pkg
         run: |
-          PKG="$(ls -1 home-ai-elite-*.pkg | head -n 1)"
+          PKG="$(ls -1 merlin-ai-*.pkg | head -n 1)"
           [ -n "$PKG" ] || { echo "Package artifact missing" >&2; exit 1; }
           echo "pkg_name=$PKG" >> "$GITHUB_OUTPUT"
 
@@ -58,7 +58,7 @@ jobs:
         run: |
           PKG="${{ steps.pkg.outputs.pkg_name }}"
           pkgutil --payload-files "$PKG" > package-payload.txt
-          if rg '(^|/)\.env$|certs/|pkg/build/|home-ai-elite-.*\.pkg' package-payload.txt; then
+          if rg '(^|/)\.env$|certs/|pkg/build/|merlin-ai-.*\.pkg' package-payload.txt; then
             echo "Package payload contains forbidden local/build artifacts" >&2
             exit 1
           fi
@@ -113,7 +113,7 @@ jobs:
           fi
           {
             echo "body<<EOF"
-            echo "## Home AI Elite ${{ needs.package.outputs.tag }}"
+            echo "## Merlin AI ${{ needs.package.outputs.tag }}"
             echo ""
             echo "### Tested Artifact"
             echo "- macOS package: \`${{ needs.package.outputs.pkg_name }}\`"
@@ -123,8 +123,8 @@ jobs:
             echo ""
             echo "### Install"
             echo '```bash'
-            echo "git clone https://github.com/TheYfactora12/home-ai-elite.git"
-            echo "cd home-ai-elite"
+            echo "git clone https://github.com/TheYfactora12/Secure-Local--AI-Merlin.git"
+            echo "cd Secure-Local--AI-Merlin"
             echo "bash install.sh --profile core"
             echo '```'
             echo ""
@@ -144,7 +144,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.package.outputs.tag }}
-          name: "Home AI Elite ${{ needs.package.outputs.tag }}"
+          name: "Merlin AI ${{ needs.package.outputs.tag }}"
           body: ${{ steps.notes.outputs.body }}
           files: |
             ${{ needs.package.outputs.pkg_name }}

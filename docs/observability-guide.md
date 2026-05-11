@@ -1,6 +1,6 @@
 # Observability Guide
 
-Home AI Elite observability starts with local, redacted JSONL files. A heavier
+Merlin AI observability starts with local, redacted JSONL files. A heavier
 trace UI such as self-hosted Langfuse is optional future work and must stay
 profile-gated, off by default, and local-only.
 

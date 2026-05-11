@@ -1,6 +1,6 @@
-# Tests — home-ai-elite
+# Tests — merlin-ai
 
-This folder contains end-to-end validation scripts for the home-ai-elite stack.  
+This folder contains end-to-end validation scripts for the merlin-ai stack.
 Run these **after** `bootstrap.sh` completes to confirm all services are healthy.
 
 ---
@@ -24,7 +24,7 @@ Run these **after** `bootstrap.sh` completes to confirm all services are healthy
 ### How to run
 
 ```bash
-bash ~/home-ai-elite/tests/e2e-test.sh
+bash ~/merlin-ai/tests/e2e-test.sh
 ```
 
 ### Expected output (all passing)
@@ -40,7 +40,7 @@ bash ~/home-ai-elite/tests/e2e-test.sh
 ✅ SearXNG healthy
 ✅ LiteLLM healthy
 
-🎉 All checks passed — home-ai-elite stack is healthy
+🎉 All checks passed — merlin-ai stack is healthy
 ```
 
 ### Interpreting failures
@@ -58,10 +58,10 @@ bash ~/home-ai-elite/tests/e2e-test.sh
 
 ```bash
 # Restart the full stack first
-bash ~/home-ai-elite/scripts/restart.sh
+bash ~/merlin-ai/scripts/restart.sh
 
 # Then re-test
-bash ~/home-ai-elite/tests/e2e-test.sh
+bash ~/merlin-ai/tests/e2e-test.sh
 ```
 
 ---
@@ -82,8 +82,8 @@ bash ~/home-ai-elite/tests/e2e-test.sh
 
 ## Running tests in CI
 
-The CI pipeline (`ci.yml`) checks all `tests/*.sh` files for syntax errors using `bash -n`.  
-Full service-level tests require a running Docker environment and are run **locally** only.  
+The CI pipeline (`ci.yml`) checks all `tests/*.sh` files for syntax errors using `bash -n`.
+Full service-level tests require a running Docker environment and are run **locally** only.
 Full integration testing in CI (via Docker Compose) is planned for v0.9.
 
 ---

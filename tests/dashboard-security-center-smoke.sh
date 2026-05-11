@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DASHBOARD_FILE="${ROOT_DIR}/dashboard/index.html"
 
 grep -q ">Security<" "$DASHBOARD_FILE"
-grep -q "Sovereignty is visible" "$DASHBOARD_FILE"
+grep -q "Privacy is visible" "$DASHBOARD_FILE"
 grep -q "Approval Gates" "$DASHBOARD_FILE"
 grep -q "Approval is temporary by default" "$DASHBOARD_FILE"
 grep -q "allow once" "$DASHBOARD_FILE"

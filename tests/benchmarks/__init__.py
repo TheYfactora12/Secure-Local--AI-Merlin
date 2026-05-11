@@ -1,2 +1,2 @@
-"""Offline memory benchmark harness for Home AI Elite."""
+"""Offline memory benchmark harness for Merlin AI."""
 

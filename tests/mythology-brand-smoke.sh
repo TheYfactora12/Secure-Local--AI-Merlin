@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Static smoke test for Home AI Elite / Merlin mythology brand boundaries.
+# Static smoke test for Merlin AI / Merlin mythology brand boundaries.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -13,8 +13,8 @@ fail() {
 [[ -f "$DOC" ]] || fail "mythology brand doc missing"
 
 for required in \
-  "Home AI Elite / Merlin Mythology Brand System" \
-  "Home AI Elite is the product the user installs" \
+  "Merlin AI / Merlin Mythology Brand System" \
+  "Merlin AI is the product the user installs" \
   "Merlin is the visible assistant" \
   "internal brain inside it" \
   "Round Table" \
@@ -23,7 +23,7 @@ for required in \
   "stores what matters" \
   "Plain-Language Support Text" \
   "Excalibur must be reserved for high-risk execution authority" \
-  "Brand direction: Home AI Elite product"; do
+  "Brand direction: Merlin AI product"; do
   grep -Fq "$required" "$DOC" || fail "mythology brand doc missing: $required"
 done
 
@@ -31,4 +31,4 @@ if grep -Fq "#131 — Rename product/repo to Merlin AI" "$DOC"; then
   fail "mythology brand doc still references stale Merlin AI rename issue"
 fi
 
-echo "PASS: mythology brand system matches Home AI Elite / Merlin direction"
+echo "PASS: mythology brand system matches Merlin AI / Merlin direction"
