@@ -14,7 +14,8 @@
 
 ## Ending commit SHA
 
-Pending commit.
+Code/evidence commit under test:
+`2cc0ad04865f2f9cfdc010b41bfbb6144475b23d`
 
 ## Target issue(s)
 
