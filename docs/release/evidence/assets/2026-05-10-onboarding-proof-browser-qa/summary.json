@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-05-11T02:45:50.976102+00:00",
+  "url": "http://127.0.0.1:8899/index.html",
+  "output_dir": "docs/release/evidence/assets/2026-05-10-onboarding-proof-browser-qa",
+  "checks": [
+    {
+      "viewport": "desktop-1280",
+      "width": 1280,
+      "height": 900,
+      "screenshots": [
+        "desktop-1280-empty.png",
+        "desktop-1280-typed.png",
+        "desktop-1280-rooms.png",
+        "desktop-1280-rooms-guard.png"
+      ]
+    },
+    {
+      "viewport": "mobile-375",
+      "width": 375,
+      "height": 812,
+      "screenshots": [
+        "mobile-375-empty.png",
+        "mobile-375-typed.png",
+        "mobile-375-rooms.png",
+        "mobile-375-rooms-guard.png"
+      ]
+    }
+  ],
+  "cloud_calls_expected": false,
+  "browser_shell_execution": false
+}

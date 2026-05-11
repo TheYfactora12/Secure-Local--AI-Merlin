@@ -176,6 +176,15 @@ textarea {
   font-size: 12px;
   white-space: nowrap;
 }
+.chip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.chip-row.compact {
+  margin-top: 10px;
+}
 .chip.good { color: var(--green); border-color: rgba(66, 211, 146, 0.35); background: rgba(66, 211, 146, 0.08); }
 .chip.warn { color: var(--yellow); border-color: rgba(243, 201, 105, 0.35); background: rgba(243, 201, 105, 0.08); }
 .chip.bad { color: var(--red); border-color: rgba(255, 107, 107, 0.35); background: rgba(255, 107, 107, 0.08); }
@@ -545,6 +554,26 @@ button.mode-pill:hover {
 .front-chat-scroll {
   overflow: auto;
   padding: 24px 22px 18px;
+}
+.mobile-first-run {
+  display: none;
+  max-width: 720px;
+  margin: 0 auto 16px;
+  border: 1px solid rgba(103, 232, 249, 0.14);
+  border-radius: 12px;
+  padding: 14px;
+  background: rgba(15, 18, 17, 0.76);
+}
+.mobile-first-run h3 {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 14px;
+}
+.mobile-first-run p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 .front-empty {
   max-width: 720px;
@@ -1182,6 +1211,15 @@ button.mode-pill:hover {
   }
   .rooms-review-table {
     min-width: 760px;
+  }
+}
+@media (max-width: 760px) {
+  .mobile-first-run {
+    display: grid;
+    gap: 10px;
+  }
+  .mobile-first-run .mini-control-stack {
+    margin-top: 0;
   }
 }
 .mode-choice-grid {
@@ -1909,21 +1947,21 @@ button.mode-pill:hover {
           <h3>Merlin AI is running</h3>
           <p>Your AI is private. Nothing leaves this Mac unless you explicitly enable a cloud provider later.</p>
           <div class="mini-control-stack" aria-label="First-run actions">
-            <button class="mini-control active" type="button" onclick="selectTab('chat')"><strong>Start Chatting</strong><span>Ask Merlin a local question.</span></button>
+            <button class="mini-control active" type="button" onclick="window.open('http://localhost:3000', '_blank', 'noopener')"><strong>Start Chatting</strong><span>Open the local chat workspace.</span></button>
             <button class="mini-control" type="button" onclick="window.open('http://localhost:5678', '_blank', 'noopener')"><strong>Automate</strong><span>Open optional local n8n workflows.</span></button>
             <button class="mini-control" type="button" onclick="selectTab('system')"><strong>Dashboard</strong><span>Check all local service status.</span></button>
           </div>
           <div class="chip-row compact" aria-label="Included service status summary">
-            <span class="chip warn">Dashboard: checking</span>
-            <span class="chip warn">Open WebUI: checking</span>
-            <span class="chip warn">Ollama: checking</span>
-            <span class="chip warn">LiteLLM: checking</span>
-            <span class="chip warn">Qdrant: checking</span>
-            <span class="chip warn">n8n: optional</span>
-            <span class="chip warn">OpenHands: optional</span>
-            <span class="chip warn">MCP: checking</span>
-            <span class="chip warn">Perplexica: optional</span>
-            <span class="chip warn">SearXNG: optional</span>
+            <span class="chip warn" id="first-run-dashboard">Dashboard: checking</span>
+            <span class="chip warn" id="first-run-chat">Chat: checking</span>
+            <span class="chip warn" id="first-run-ollama">Local model: checking</span>
+            <span class="chip warn" id="first-run-router">Router: checking</span>
+            <span class="chip warn" id="first-run-memory">Memory: checking</span>
+            <span class="chip neutral" id="first-run-automation">Automation: optional off</span>
+            <span class="chip neutral" id="first-run-coding">Coding agent: optional off</span>
+            <span class="chip info" id="first-run-mcp">MCP config: included</span>
+            <span class="chip neutral" id="first-run-search">Private search: optional off</span>
+            <span class="chip neutral" id="first-run-web-search">Web search: optional off</span>
           </div>
         </div>
         <button class="new-chat-btn" type="button" onclick="clearMerlinChat()">New conversation</button>
@@ -2016,6 +2054,15 @@ button.mode-pill:hover {
         </div>
 
         <div class="front-chat-scroll">
+          <section class="mobile-first-run" aria-label="Merlin AI mobile first-run onboarding">
+            <h3>Merlin AI is running</h3>
+            <p>Your private AI is on this Mac. Nothing leaves unless you enable a cloud provider later.</p>
+            <div class="mini-control-stack" aria-label="Mobile first-run actions">
+              <button class="mini-control active" type="button" onclick="window.open('http://localhost:3000', '_blank', 'noopener')"><strong>Start Chatting</strong><span>Open the local chat workspace.</span></button>
+              <button class="mini-control" type="button" onclick="window.open('http://localhost:5678', '_blank', 'noopener')"><strong>Automate</strong><span>Open optional local workflows.</span></button>
+              <button class="mini-control" type="button" onclick="selectTab('system')"><strong>Dashboard</strong><span>Check local service status.</span></button>
+            </div>
+          </section>
           <div class="front-empty">
             <div class="merlin-orb-stage">
               <img class="merlin-orb-image" src="assets/merlin-orb.png" alt="Merlin assistant face" width="210" height="210" loading="eager">
@@ -2448,12 +2495,29 @@ const CHAT_MODE_COPY = {
 const DEFAULT_ROOM_ID = 'merlin-build';
 const DEFAULT_ROOM_NAME = 'Merlin Build';
 const SERVICE_CHECKS = [
+  ['8888', window.location.origin || 'http://localhost:8888'],
   ['8765', `${STATUS_API}/healthz`],
   ['8766', `${TASK_API}/status/routes`],
   ['3000', 'http://localhost:3000'],
   ['4000', 'http://localhost:4000/health/readiness'],
   ['6333', 'http://localhost:6333/healthz'],
   ['11434', 'http://localhost:11434/api/tags'],
+  ['5678', 'http://localhost:5678/healthz'],
+  ['3003', 'http://localhost:3003'],
+  ['3002', 'http://localhost:3002'],
+  ['8080', 'http://localhost:8080'],
+];
+const FIRST_RUN_SERVICES = [
+  { element: 'first-run-dashboard', label: 'Dashboard', service: '8888', required: true },
+  { element: 'first-run-chat', label: 'Chat', service: '3000', required: true },
+  { element: 'first-run-ollama', label: 'Local model', service: '11434', required: true },
+  { element: 'first-run-router', label: 'Router', service: '4000', required: true },
+  { element: 'first-run-memory', label: 'Memory', service: '6333', required: true },
+  { element: 'first-run-automation', label: 'Automation', service: '5678', required: false },
+  { element: 'first-run-coding', label: 'Coding agent', service: '3003', required: false },
+  { element: 'first-run-mcp', label: 'MCP config', configOnly: true },
+  { element: 'first-run-search', label: 'Private search', service: '3002', required: false },
+  { element: 'first-run-web-search', label: 'Web search', service: '8080', required: false },
 ];
 const readinessState = {
   services: {},
@@ -2543,6 +2607,25 @@ function setSovereignty(state, label) {
 function dot(id, state) {
   const el = document.getElementById(`dot-${id}`);
   if (el) el.className = `status-dot ${state || ''}`.trim();
+}
+
+function renderFirstRunServices() {
+  FIRST_RUN_SERVICES.forEach(item => {
+    if (item.configOnly) {
+      setChip(item.element, `${item.label}: included`, 'info');
+      return;
+    }
+    const isReady = Boolean(readinessState.services[item.service]);
+    if (isReady) {
+      setChip(item.element, `${item.label}: ready`, 'good');
+      return;
+    }
+    if (item.required) {
+      setChip(item.element, `${item.label}: warming`, 'warn');
+      return;
+    }
+    setChip(item.element, `${item.label}: optional off`, 'neutral');
+  });
 }
 
 function metricState(id, state, value) {
@@ -4259,6 +4342,7 @@ async function checkServices() {
   text('tab-memory-qdrant', readinessState.services['6333'] ? 'ready' : 'warming');
   text('settings-status-api', readinessState.services['8765'] ? 'ready' : 'warming');
   text('settings-task-api', readinessState.services['8766'] ? 'ready' : 'warming');
+  renderFirstRunServices();
   readinessState.probesComplete = true;
 }
 

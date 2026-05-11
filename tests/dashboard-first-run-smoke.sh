@@ -52,12 +52,40 @@ grep -q "Your private AI. On your Mac. Forever." "$DASHBOARD_FILE" \
   || fail "Chat home missing Merlin AI product framing"
 grep -q "Merlin AI is running" "$DASHBOARD_FILE" \
   || fail "Chat home missing first-run onboarding statement"
+grep -q "mobile-first-run" "$DASHBOARD_FILE" \
+  || fail "Chat home missing mobile first-run onboarding banner"
 grep -q "Nothing leaves this Mac" "$DASHBOARD_FILE" \
   || fail "Chat home missing plain-English privacy promise"
 grep -q "Start Chatting" "$DASHBOARD_FILE" \
   || fail "Chat home missing first-run chat action"
+grep -q "window.open('http://localhost:3000'" "$DASHBOARD_FILE" \
+  || fail "Start Chatting must open the local chat workspace"
 grep -q "Automate" "$DASHBOARD_FILE" \
   || fail "Chat home missing first-run automation action"
+grep -q "window.open('http://localhost:5678'" "$DASHBOARD_FILE" \
+  || fail "Automate must open optional local n8n workflows"
+grep -q 'id="first-run-dashboard"' "$DASHBOARD_FILE" \
+  || fail "first-run onboarding must include dashboard status"
+grep -q 'id="first-run-chat"' "$DASHBOARD_FILE" \
+  || fail "first-run onboarding must include chat status"
+grep -q 'id="first-run-ollama"' "$DASHBOARD_FILE" \
+  || fail "first-run onboarding must include local model status"
+grep -q 'id="first-run-router"' "$DASHBOARD_FILE" \
+  || fail "first-run onboarding must include router status"
+grep -q 'id="first-run-memory"' "$DASHBOARD_FILE" \
+  || fail "first-run onboarding must include memory status"
+grep -q 'id="first-run-automation"' "$DASHBOARD_FILE" \
+  || fail "first-run onboarding must include automation status"
+grep -q 'id="first-run-coding"' "$DASHBOARD_FILE" \
+  || fail "first-run onboarding must include coding agent status"
+grep -q 'id="first-run-mcp"' "$DASHBOARD_FILE" \
+  || fail "first-run onboarding must include MCP config status"
+grep -q 'id="first-run-search"' "$DASHBOARD_FILE" \
+  || fail "first-run onboarding must include private search status"
+grep -q 'id="first-run-web-search"' "$DASHBOARD_FILE" \
+  || fail "first-run onboarding must include web search status"
+grep -q "optional off" "$DASHBOARD_FILE" \
+  || fail "optional services must be clearly marked optional/off instead of failed"
 grep -q "<h2 id=\"merlin-brand-title\">Merlin</h2>" "$DASHBOARD_FILE" \
   || fail "Chat home missing Merlin center brand"
 grep -q "Voice mode later. Local audio consent required." "$DASHBOARD_FILE" \
