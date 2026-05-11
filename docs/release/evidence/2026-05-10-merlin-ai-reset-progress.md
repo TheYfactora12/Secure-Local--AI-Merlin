@@ -107,6 +107,7 @@ intentionally weakened.
 - `bash tests/merlin-status-smoke.sh`
 - Full local static-smoke block from `.github/workflows/ci.yml` after fixing
   stale route/model assertions.
+- `gh run watch 25646281419 --exit-status`
 
 ## Test output summary
 
@@ -197,13 +198,24 @@ the roadmap smoke expectation and a fresh CI run must complete before calling CI
 green.
 
 GitHub Actions failure `25646160080` was also diagnosed. A follow-up commit
-repairs stale `mistral` expectations. A fresh CI run must complete before
-calling CI green.
+repairs stale `mistral` expectations.
 
 Local retest of the full static-smoke block from `.github/workflows/ci.yml`
 passed after the route/model assertion fix. `tests/sast-gitleaks-smoke.sh`
 skipped locally because gitleaks is not installed; GitHub Actions runs the
 containerized gitleaks gate.
+
+GitHub Actions run `25646281419` on commit
+`06ad911fcc1fa659d04aa35f6fcf3393433be00d` passed:
+
+- Static smoke tests passed.
+- ShellCheck passed.
+- Docker Compose config validation passed.
+- install.sh syntax/dry-run passed.
+- YAML/PLIST validation passed.
+- Secret pattern scan passed.
+- gitleaks secret scan passed.
+- Merlin Staff Core offline Python tests passed.
 
 ## Regression test added or reason not added
 
