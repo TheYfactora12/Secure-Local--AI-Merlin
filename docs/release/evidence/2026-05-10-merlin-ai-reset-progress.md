@@ -14,7 +14,7 @@
 
 ## Ending commit SHA
 
-Not committed yet at time of note.
+`1b552f6e3f4af75fb9008da0f51258b6e19e35b6`
 
 ## Target issues
 
@@ -97,6 +97,7 @@ intentionally weakened.
 - `bash tests/launchd-core-smoke.sh`
 - `bash tests/wizard-start-status-api-smoke.sh`
 - `bash tests/core-install-budget-smoke.sh`
+- `bash tests/future-ideas-smoke.sh` after adding the Rooms future backlog.
 
 ## Test output summary
 
@@ -199,6 +200,13 @@ and only update active source/docs unless explicitly rewriting history.
 
 Triage open GitHub issues against the five v1.0 focus areas, then push a focused
 cleanup commit once the user approves the issue actions.
+
+Update after issue triage: 8 open issues remain. #37, #95, #106, and #134 are
+active v1.0/release-readiness items. #81 through #84 remain open but deferred
+for patent/IP governance. Rooms architecture was captured in
+`docs/product/FUTURE_IDEAS.md` as issue-ready future backlog, not opened as
+active issues, to protect the reset goal of fewer than 10 open issues and no
+new feature work before v1.0 proof.
 
 ## Local Trusted Beta impact
 
