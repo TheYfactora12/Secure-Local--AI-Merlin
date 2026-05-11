@@ -65,5 +65,18 @@ grep -q 'HOME_AI_SKIP_MODEL_PULLS=true' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall no longer disables model pulls"
 grep -q 'bash install.sh --profile core --skip-model-pulls --non-interactive' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall no longer uses protected core installer path"
+grep -q '/tmp/merlin-ai-install.log' "${STACK_DIR}/pkg/scripts/postinstall" \
+  || fail "postinstall install log path does not use Merlin AI branding"
+grep -q '/tmp/merlin-ai-install.log' "${STACK_DIR}/pkg/resources/readme.html" \
+  || fail "package readme install log path does not use Merlin AI branding"
+
+[[ -x "${STACK_DIR}/scripts/install-pkg-local.sh" ]] \
+  || fail "local package install helper is missing or not executable"
+bash -n "${STACK_DIR}/scripts/install-pkg-local.sh" \
+  || fail "local package install helper has shell syntax errors"
+grep -q 'Merlin AI needs your Mac administrator password' "${STACK_DIR}/scripts/install-pkg-local.sh" \
+  || fail "local package install helper does not explain admin password prompt"
+grep -q 'Merlin does not store it' "${STACK_DIR}/scripts/install-pkg-local.sh" \
+  || fail "local package install helper does not reassure password handling"
 
 echo "PASS: Merlin AI installer branding surface is valid"

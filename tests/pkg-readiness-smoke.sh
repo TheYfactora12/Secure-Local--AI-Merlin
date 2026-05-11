@@ -12,6 +12,7 @@ fail() {
 
 for file in \
   "${STACK_DIR}/pkg/build-pkg.sh" \
+  "${STACK_DIR}/scripts/install-pkg-local.sh" \
   "${STACK_DIR}/pkg/scripts/preinstall" \
   "${STACK_DIR}/pkg/scripts/postinstall" \
   "${STACK_DIR}/pkg/scripts/uninstall.sh"; do
@@ -49,6 +50,12 @@ if grep -q 'DOCKER_CONFIG=' "${STACK_DIR}/pkg/scripts/postinstall"; then
 fi
 grep -q 'tests/core-live-smoke.sh' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall next steps do not point to core live smoke"
+grep -q '/tmp/merlin-ai-install.log' "${STACK_DIR}/pkg/scripts/postinstall" \
+  || fail "postinstall install log path is not Merlin-branded"
+grep -q 'sudo -p "Merlin AI admin password: "' "${STACK_DIR}/scripts/install-pkg-local.sh" \
+  || fail "local package installer does not use a clear Merlin password prompt"
+grep -q 'Cannot ask for a password because this is not an interactive Terminal' "${STACK_DIR}/scripts/install-pkg-local.sh" \
+  || fail "local package installer does not explain non-interactive admin prompt failure"
 
 if grep -q 'Perplexica  → http://localhost:3002' "${STACK_DIR}/pkg/scripts/postinstall"; then
   fail "postinstall still advertises optional search as default service"

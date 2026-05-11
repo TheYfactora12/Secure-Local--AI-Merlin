@@ -8,12 +8,12 @@
 #   2. Install Homebrew if missing (as the user, not root)
 #   3. Run install.sh in background as the installing user
 #   4. Install launchd agents for auto-start
-#   5. Print instructions to /tmp/homeai-install.log
+#   5. Print instructions to /tmp/merlin-ai-install.log
 # =============================================================================
 set -euo pipefail
 
 INSTALL_DIR="/usr/local/merlin-ai"
-LOG_FILE="/tmp/homeai-install.log"
+LOG_FILE="/tmp/merlin-ai-install.log"
 
 log() { echo "[postinstall] $*" | tee -a "$LOG_FILE"; }
 
@@ -145,7 +145,7 @@ cat > "${INSTALLING_HOME}/Desktop/merlin-ai-next-steps.txt" << 'INSTRUCTIONS'
 │   wizard start automation                  │
 │   wizard start coding                      │
 │                                            │
-│  Install log: /tmp/homeai-install.log      │
+│  Install log: /tmp/merlin-ai-install.log   │
 │  Uninstall:   bash ~/merlin-ai/        │
 │              pkg/scripts/uninstall.sh     │
 └────────────────────────────────────────────────┘

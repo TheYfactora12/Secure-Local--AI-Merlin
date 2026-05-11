@@ -26,6 +26,9 @@ bash pkg/release-preflight.sh
 # Unsigned (local testing)
 bash pkg/build-pkg.sh
 
+# Install locally from Terminal with a clear macOS password prompt
+bash scripts/install-pkg-local.sh
+
 # Local self-signed package (trusted/private testing)
 bash scripts/sign-pkg.sh --version <version>
 
