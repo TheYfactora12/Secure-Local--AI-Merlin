@@ -14,7 +14,7 @@
 
 ## Ending commit SHA
 
-Not committed yet at time of note.
+`3e2756a48f5505bfbec9933125b42bf2a0c10a4d`
 
 ## Target issue(s)
 
@@ -81,6 +81,7 @@ scoped to Ollama model-name matching during explicit `--purge-models` /
 - `bash -n scripts/uninstall.sh`
 - `bash tests/pkg-readiness-smoke.sh`
 - `bash tests/installer-model-pull-policy-smoke.sh`
+- `gh run watch 25647208534 --exit-status`
 
 ## Test output summary
 
@@ -110,6 +111,8 @@ scoped to Ollama model-name matching during explicit `--purge-models` /
 - `bash tests/pkg-readiness-smoke.sh`: PASS.
 - `bash tests/installer-model-pull-policy-smoke.sh`: PASS.
 - `git diff --check`: PASS.
+- GitHub Actions run `25647208534` on
+  `3e2756a48f5505bfbec9933125b42bf2a0c10a4d`: PASS.
 
 ## Tests skipped and why
 
