@@ -98,6 +98,10 @@ intentionally weakened.
 - `bash tests/wizard-start-status-api-smoke.sh`
 - `bash tests/core-install-budget-smoke.sh`
 - `bash tests/future-ideas-smoke.sh` after adding the Rooms future backlog.
+- `gh run view 25645601693 --json conclusion,status,url,jobs`
+- `gh run view 25645601693 --job 75273796109 --log`
+- `bash tests/observability-design-smoke.sh` after CI exposed a stale roadmap
+  reference requirement.
 
 ## Test output summary
 
@@ -137,6 +141,10 @@ intentionally weakened.
 5. `tests/backup-profile-smoke.sh` failed because backup volume naming derived
    from the local checkout folder, which still produced old stack prefixes in a
    renamed product pass.
+6. GitHub Actions run `25645601693` failed in `Static smoke tests — profiles,
+   memory, release safety` because `tests/observability-design-smoke.sh`
+   requires the roadmap to reference #36 Observability design and #8 optional
+   Langfuse. The reset had moved too much history out of the active roadmap.
 
 ## Failure categories
 
@@ -145,6 +153,7 @@ intentionally weakened.
 - Test design gap
 - Roadmap/governance drift
 - Installer/support naming compatibility
+- CI/static smoke gap
 
 ## Root cause or current hypothesis
 
@@ -162,10 +171,17 @@ brand/volume naming depend on clone directory instead of product identity.
   sentence.
 - Changed `scripts/backup.sh` default Compose project name to `merlin-ai` unless
   `COMPOSE_PROJECT_NAME` is explicitly set.
+- Added a narrow deferred-roadmap note for #36 Observability design and #8
+  optional Langfuse so local JSONL/no-telemetry guarantees remain discoverable
+  without promoting observability to v1.0 scope.
 
 ## Retest result
 
 All failed commands above passed after their scoped fixes.
+
+GitHub Actions failure `25645601693` was diagnosed. A follow-up commit repairs
+the roadmap smoke expectation and a fresh CI run must complete before calling CI
+green.
 
 ## Regression test added or reason not added
 

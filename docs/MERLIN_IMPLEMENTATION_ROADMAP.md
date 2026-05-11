@@ -54,6 +54,11 @@ Deferred ideas live in:
 - [`docs/product/FUTURE_IDEAS.md`](product/FUTURE_IDEAS.md)
 - [`docs/product/MERLIN_AI_EXPANSION_BOUNDARIES.md`](product/MERLIN_AI_EXPANSION_BOUNDARIES.md)
 
+Legacy observability design remains documented for safety, but it is not a v1.0
+product expansion. #36 Observability design keeps local JSONL audit files as the
+baseline. #8 Langfuse remains optional, profile-gated, and deferred behind the
+default no-telemetry install path.
+
 Do not sell or build Merlin AI as an enterprise governance suite, autonomous
 execution engine, browser automation product, provider marketplace, or public
 release until v1.0 evidence proves the core local product.
