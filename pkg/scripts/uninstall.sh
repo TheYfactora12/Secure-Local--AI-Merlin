@@ -12,7 +12,10 @@ set -euo pipefail
 
 INSTALL_DIR="${HOME}/merlin-ai"
 SYSTEM_DIR="/usr/local/merlin-ai"
-PKG_ID="com.homeai.elite"
+PKG_ID="com.merlin.ai"
+LEGACY_PKG_IDS=(
+  "com.homeai.elite"
+)
 MODEL_TIERS_FILE="${INSTALL_DIR}/configs/merlin/model-tiers.env"
 FALLBACK_MODEL_TIERS_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/configs/merlin/model-tiers.env"
 
@@ -324,14 +327,18 @@ forget_receipt() {
     return 0
   fi
 
-  log "Forgetting package receipt ${PKG_ID}"
-  if [[ "$DRY_RUN" == true ]]; then
-    printf '[dry-run] sudo pkgutil --forget %s\n' "$PKG_ID"
-  elif sudo_noninteractive_available; then
-    sudo pkgutil --forget "$PKG_ID" >/dev/null 2>&1 || warn "No package receipt found for ${PKG_ID}"
-  else
-    manual_admin_cleanup_hint "package receipt ${PKG_ID}" "sudo pkgutil --forget ${PKG_ID}"
-  fi
+  local receipt_id
+  local receipt_ids=("$PKG_ID" "${LEGACY_PKG_IDS[@]}")
+  for receipt_id in "${receipt_ids[@]}"; do
+    log "Forgetting package receipt ${receipt_id}"
+    if [[ "$DRY_RUN" == true ]]; then
+      printf '[dry-run] sudo pkgutil --forget %s\n' "$receipt_id"
+    elif sudo_noninteractive_available; then
+      sudo pkgutil --forget "$receipt_id" >/dev/null 2>&1 || warn "No package receipt found for ${receipt_id}"
+    else
+      manual_admin_cleanup_hint "package receipt ${receipt_id}" "sudo pkgutil --forget ${receipt_id}"
+    fi
+  done
 }
 
 confirm

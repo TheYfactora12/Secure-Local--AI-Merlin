@@ -33,6 +33,12 @@ grep -q 'Keeping install directories because --keep-files was set' <<< "$dry_run
 grep -q 'Keeping pkgutil receipt because --keep-receipt was set' <<< "$dry_run_output" \
   || fail "dry-run does not honor --keep-receipt"
 
+receipt_dry_run_output="$(bash "$PKG_UNINSTALL" --dry-run --yes --keep-files 2>&1)"
+grep -q 'sudo pkgutil --forget com.merlin.ai' <<< "$receipt_dry_run_output" \
+  || fail "dry-run does not forget Merlin AI package receipt"
+grep -q 'sudo pkgutil --forget com.homeai.elite' <<< "$receipt_dry_run_output" \
+  || fail "dry-run does not forget legacy Home AI package receipt"
+
 grep -q -- '--remove-data' "$PKG_UNINSTALL" \
   || fail "uninstaller does not expose explicit data removal"
 grep -q -- '--purge-all' "$PKG_UNINSTALL" \
@@ -57,6 +63,10 @@ grep -q 'Skipped .*admin privileges are required' "$PKG_UNINSTALL" \
   || fail "uninstaller does not warn instead of hard-failing on sudo cleanup"
 grep -q 'Run manually if needed' "$PKG_UNINSTALL" \
   || fail "uninstaller does not print manual admin cleanup commands"
+grep -q 'PKG_ID="com.merlin.ai"' "$PKG_UNINSTALL" \
+  || fail "uninstaller must use Merlin AI package receipt as current identifier"
+grep -q 'LEGACY_PKG_IDS' "$PKG_UNINSTALL" \
+  || fail "uninstaller must keep a legacy package receipt cleanup list"
 grep -q 'launchctl print' "$PKG_UNINSTALL" \
   || fail "uninstaller does not detect loaded launchd agents before bootout"
 grep -q 'Could not unload launchd agent' "$PKG_UNINSTALL" \

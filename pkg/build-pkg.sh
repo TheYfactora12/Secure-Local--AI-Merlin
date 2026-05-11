@@ -21,7 +21,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 BUILD_DIR="${SCRIPT_DIR}/build"
 
 # Package identity
-PKG_ID="com.homeai.elite"
+PKG_ID="com.merlin.ai"
 PKG_VERSION="$(git -C "$ROOT_DIR" describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "0.5.0")"
 PKG_NAME="merlin-ai-${PKG_VERSION}"
 INSTALL_DIR="/usr/local/merlin-ai"
@@ -153,10 +153,14 @@ stage_payload() {
     --exclude='.git' \
     --exclude='.env' \
     --exclude='.venv/' \
+    --exclude='.venv-test/' \
+    --exclude='.pytest_cache/' \
     --exclude='.wizard-bootstrapped' \
+    --exclude='.DS_Store' \
     --exclude='certs/' \
     --exclude='logs/' \
     --exclude='backups/' \
+    --exclude='docs/release/evidence/assets/' \
     --exclude='pkg/build/' \
     --exclude='*.pkg' \
     --exclude='node_modules/' \
@@ -212,14 +216,24 @@ build_component_pkg() {
     log "  Signing component with: ${DEVELOPER_ID_INSTALLER}"
   fi
 
-  pkgbuild \
-    --root     "${BUILD_DIR}/payload" \
-    --scripts  "${BUILD_DIR}/scripts" \
-    --identifier "${PKG_ID}" \
-    --version    "${PKG_VERSION}" \
-    --install-location "/" \
-    "${sign_args[@]}" \
-    "${component_pkg}" >&2
+  if [[ "$SIGN" == true ]]; then
+    pkgbuild \
+      --root     "${BUILD_DIR}/payload" \
+      --scripts  "${BUILD_DIR}/scripts" \
+      --identifier "${PKG_ID}" \
+      --version    "${PKG_VERSION}" \
+      --install-location "/" \
+      "${sign_args[@]}" \
+      "${component_pkg}" >&2
+  else
+    pkgbuild \
+      --root     "${BUILD_DIR}/payload" \
+      --scripts  "${BUILD_DIR}/scripts" \
+      --identifier "${PKG_ID}" \
+      --version    "${PKG_VERSION}" \
+      --install-location "/" \
+      "${component_pkg}" >&2
+  fi
 
   [[ -f "$component_pkg" ]] || return 1
 
