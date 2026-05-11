@@ -129,6 +129,7 @@ jobs:
           bash tests/merlin-staff-skills-smoke.sh
           bash tests/master-prompt-smoke.sh
           bash tests/codex-master-prompt-v2-smoke.sh
+          bash tests/mythology-brand-smoke.sh
           bash tests/merlin-policy-smoke.sh
           bash tests/merlin-routing-smoke.sh
           bash tests/merlin-orchestration-smoke.sh

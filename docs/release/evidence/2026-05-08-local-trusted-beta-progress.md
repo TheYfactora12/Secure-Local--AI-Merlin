@@ -11969,3 +11969,145 @@ meaning.
 No direct release impact. Public Beta still requires installer/dashboard brand
 cleanup, full installer retest, onboarding evidence, memory review/delete,
 storage visibility, export/import readiness, and 10-user validation.
+
+## 2026-05-11 - Issue Closure Validation And Mythology Brand Cleanup
+
+### Date/time
+
+2026-05-11T00:03:32Z
+
+### Branch
+
+main
+
+### Starting Commit SHA
+
+`1888af5` - `docs: clarify Merlin as face and brain`
+
+### Target Issues
+
+- #131 Brand direction cleanup.
+- #132 Merlin mythology brand architecture.
+- #133 Round Table agent governance and brain roles.
+
+### Scope
+
+Validate and close only issues that are actually satisfied by repo evidence.
+Closed #131 and #133 after verification. Updated the mythology brand document
+and added CI-backed smoke coverage so #132 can be closed after commit.
+
+### Files Changed
+
+- `.github/workflows/ci.yml`
+- `docs/product/MERLIN_MYTHOLOGY_BRAND_SYSTEM.md`
+- `tests/mythology-brand-smoke.sh`
+- `docs/release/evidence/2026-05-08-local-trusted-beta-progress.md`
+
+### Protected Files Touched
+
+No installer, package, runtime API, policy, memory, router, compose, launchd, or
+dashboard files were touched.
+
+### Commands Run
+
+- `gh issue view 131 --json number,title,state,body,comments,labels`
+- `gh issue list --state open --limit 80 --json number,title,state,labels,milestone`
+- `gh issue view 132 --json number,title,state,body,labels`
+- `gh issue view 133 --json number,title,state,body,labels`
+- `bash tests/round-table-agent-governance-smoke.sh`
+- `gh issue close 131 --comment ...`
+- `gh issue close 133 --comment ...`
+- `gh issue view 131 --json number,title,state,closedAt`
+- `gh issue view 133 --json number,title,state,closedAt`
+- `gh issue list --state open --limit 80 --json number,title --jq '.[] | select(.number==131 or .number==133)'`
+- `bash tests/mythology-brand-smoke.sh`
+- `bash tests/release-readiness-readme-smoke.sh`
+- `bash tests/round-table-agent-governance-smoke.sh`
+- `bash tests/beta-readiness-evidence-smoke.sh`
+- `git diff --check`
+
+### Test Output Summary
+
+Final focused tests passed:
+
+- Mythology brand smoke.
+- README release-readiness positioning smoke.
+- Round Table governance smoke.
+- Trusted local beta evidence smoke.
+- Whitespace check.
+
+GitHub validation confirmed:
+
+- #131 state: CLOSED.
+- #133 state: CLOSED.
+- The open-issue query returned no #131 or #133 entries.
+
+### Tests Skipped And Why
+
+Installer, package, dashboard, browser, API, and live service tests were skipped
+because this slice changes docs/CI smoke only and closes verified documentation
+issues.
+
+### Failures Found
+
+The new mythology smoke failed twice before passing:
+
+1. The test looked for `Vault stores what matters`, but the doc wording wraps
+   that phrase as `The Vault ... stores what matters`.
+2. The test looked for `Plain-language Support Text`, but the table header uses
+   `Plain-Language Support Text`.
+
+### Failure Category
+
+- Test design gap
+- Documentation mismatch
+
+### Root Cause Or Current Hypothesis
+
+The first smoke version asserted brittle exact phrases instead of durable
+meaning and exact existing heading capitalization.
+
+### Fix Applied
+
+Updated `tests/mythology-brand-smoke.sh` to check stable pieces of meaning and
+the exact current table heading.
+
+### Retest Result
+
+PASS after updating the smoke.
+
+### Regression Test Added Or Updated
+
+- Added `tests/mythology-brand-smoke.sh`.
+- Wired it into `.github/workflows/ci.yml`.
+
+### Follow-Up Issues Created Or Recommended
+
+No new issue created. Remaining open issues should stay open unless their
+acceptance criteria are satisfied by tested repo evidence.
+
+### Lesson Learned
+
+Closing issues safely requires both acceptance evidence and post-close GitHub
+validation. Brand tests should guard meaning without depending on fragile line
+wrapping.
+
+### What Not To Repeat Next Time
+
+Do not close a brand/design issue while its owning doc still carries stale
+product-name direction. Update the doc and add a smoke first.
+
+### Next Recommended Step
+
+Close #132 after this commit is created and the GitHub state is revalidated.
+
+### Local Trusted Beta Impact
+
+Positive. The open issue board is cleaner and brand architecture has smoke
+coverage.
+
+### Public Beta Impact
+
+Positive for governance, but Public Beta remains blocked by installer/dashboard
+brand cleanup, full installer retest, onboarding evidence, memory review/delete,
+storage visibility, export/import readiness, and 10-user validation.

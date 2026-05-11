@@ -1,17 +1,27 @@
-# Merlin AI Mythology Brand System
+# Home AI Elite / Merlin Mythology Brand System
 
-Last updated: 2026-05-09
+Last updated: 2026-05-10
 Status: Product naming and UX architecture
 
 ## Purpose
 
-This document defines the Merlin AI mythology-based product language. The goal is not to add gimmicky names. The goal is to make a complex local AI security/control system intuitive, memorable, and aligned to the actual architecture.
+This document defines the Merlin mythology-based product language inside Home AI
+Elite. The goal is not to add gimmicky names. The goal is to make a complex
+local AI security/control system intuitive, memorable, and aligned to the actual
+architecture.
 
-Merlin AI is a secure local AI brain for projects. It protects the user's AI realm, stores approved context in a user-controlled vault, governs agents through explicit approvals, and only allows powerful actions when the user grants scoped authority.
+Home AI Elite is the product the user installs. Merlin is the visible assistant
+face and internal brain inside it: chat, voice, memory, routing, safety, and
+approval-aware action. Merlin protects the user's private AI home, stores
+approved context in a user-controlled Vault, governs agents through explicit
+approvals, and only allows powerful actions when the user grants scoped
+authority.
 
 ## Core Brand Thesis
 
-> Merlin AI protects the realm. The Round Table governs the Knights. Excalibur represents powerful action. The Vault stores what matters. The Chronicle records what happened.
+> Home AI Elite is the private AI home. Merlin protects the realm. The Round
+> Table governs the Knights. Excalibur represents powerful action. The Vault
+> stores what matters. The Chronicle records what happened.
 
 This maps directly to the product architecture:
 
@@ -28,7 +38,7 @@ This maps directly to the product architecture:
 
 | Myth Name | Product Meaning | Plain-Language Support Text |
 | --- | --- | --- |
-| Merlin | Local AI brain / primary assistant | The intelligence layer that helps reason over your projects. |
+| Merlin | Visible assistant face and internal AI brain | The assistant you talk to and the intelligence layer that helps reason over your projects. |
 | Realm | Protected local AI stack, projects, data, and tools | Your secure AI workspace and environment. |
 | Project Realm | A secure project workspace | A project with its own context, memory, files, agents, approvals, and evidence. |
 | Round Table | Governance and approvals | Where you approve, deny, revoke, or review agent actions. |
@@ -185,8 +195,8 @@ Use **Project** for plain-language clarity and **Realm** as the branded metaphor
 Example:
 
 ```text
-Project Realm: Merlin AI Build
-Brain Location: /Users/Kevin/Merlin/Realms/Merlin-AI-Build
+Project Realm: Home AI Elite Build
+Brain Location: /Users/Kevin/HomeAIElite/Rooms/Home-AI-Elite-Build
 Vault: Active
 Knights: Scribe, Smith, Sentinel
 Round Table: 2 approvals pending
@@ -210,15 +220,19 @@ Chronicle: 14 recent events
 
 Primary product sentence:
 
-> Merlin AI is the secure local brain that protects your AI realm.
+> Home AI Elite gives you a private AI home. Merlin is the assistant face and
+> brain that protects it.
 
 Expanded sentence:
 
-> Merlin AI stores project context in your Vault, governs agents through the Round Table, and only unsheathes Excalibur when you approve powerful actions.
+> Merlin stores project context in your Vault, governs agents through the Round
+> Table, and only unsheathes Excalibur when you approve powerful actions.
 
 Plain-language alternative:
 
-> Merlin AI is a secure local AI brain for projects. It remembers approved context where you choose, shows what your agents can do, and blocks powerful actions until you approve them.
+> Home AI Elite is private AI on hardware you own. Merlin remembers approved
+> context where you choose, shows what agents can do, and blocks powerful
+> actions until you approve them.
 
 ## Implementation Guidance
 
@@ -244,5 +258,5 @@ Priority order:
 - #122 — Product Focus Cut
 - #123 — Offline Local Brain + User-Owned Context Store
 - #130 — Brain/context storage location
-- #131 — Rename product/repo to Merlin AI
+- #131 — Brand direction: Home AI Elite product, Merlin assistant face and brain
 - #132 — Mythology brand architecture
