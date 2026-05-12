@@ -13,6 +13,7 @@ fail() {
 for file in \
   "${STACK_DIR}/pkg/build-pkg.sh" \
   "${STACK_DIR}/scripts/install-pkg-local.sh" \
+  "${STACK_DIR}/scripts/run-pkg-install-verification.sh" \
   "${STACK_DIR}/scripts/verify-pkg-install.sh" \
   "${STACK_DIR}/pkg/scripts/preinstall" \
   "${STACK_DIR}/pkg/scripts/postinstall" \
@@ -67,6 +68,16 @@ grep -q 'http://localhost:8766/status/routes' "${STACK_DIR}/scripts/verify-pkg-i
   || fail "package verification script does not check Merlin task API"
 grep -q 'This command only checks local state' "${STACK_DIR}/scripts/verify-pkg-install.sh" \
   || fail "package verification script does not explain non-destructive behavior"
+grep -q 'Cannot run package install verification without an interactive Terminal' "${STACK_DIR}/scripts/run-pkg-install-verification.sh" \
+  || fail "package install runner does not guard non-interactive password prompts"
+grep -q 'scripts/install-pkg-local.sh' "${STACK_DIR}/scripts/run-pkg-install-verification.sh" \
+  || fail "package install runner does not call the local package helper"
+grep -q 'scripts/verify-pkg-install.sh' "${STACK_DIR}/scripts/run-pkg-install-verification.sh" \
+  || fail "package install runner does not call the post-install verifier"
+grep -q 'docs/release/evidence/local' "${STACK_DIR}/scripts/run-pkg-install-verification.sh" \
+  || fail "package install runner does not write local evidence logs"
+grep -q 'run-pkg-install-verification.sh merlin-ai-0.8.6.pkg' "${STACK_DIR}/pkg/README.md" \
+  || fail "pkg README does not document guided package verification"
 
 if grep -q 'Perplexica  → http://localhost:3002' "${STACK_DIR}/pkg/scripts/postinstall"; then
   fail "postinstall still advertises optional search as default service"
