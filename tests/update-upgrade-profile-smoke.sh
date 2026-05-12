@@ -45,7 +45,7 @@ if [[ " \$* " == *" rev-parse HEAD "* ]]; then
   [[ -f "\$COUNT_FILE" ]] && count="\$(cat "\$COUNT_FILE")"
   count=\$((count + 1))
   echo "\$count" > "\$COUNT_FILE"
-  if [[ "\$count" -eq 1 ]]; then
+  if (( count % 2 == 1 )); then
     echo "1111111111111111111111111111111111111111"
   else
     echo "2222222222222222222222222222222222222222"
@@ -56,12 +56,16 @@ exit 0
 SH
 chmod +x "${TMP}/bin/git"
 
-PATH="${TMP}/bin:${PATH}" HOME_AI_INSTALL_PROFILE=core bash "${STACK_DIR}/scripts/update.sh" >/dev/null
+PATH="${TMP}/bin:${PATH}" HOME_AI_INSTALL_PROFILE=core bash "${STACK_DIR}/scripts/update.sh" --dry-run >> "$LOG"
 
-grep -q "docker compose pull dashboard qdrant litellm open-webui" "$LOG" \
-  || fail "update.sh did not pull only core macOS services"
-grep -q "docker compose up -d dashboard qdrant litellm open-webui" "$LOG" \
-  || fail "update.sh did not restart only core macOS services"
+grep -q 'exec bash "$UPGRADE_SCRIPT" "$@"' "${STACK_DIR}/scripts/update.sh" \
+  || fail "update.sh must delegate to rollback-aware upgrade.sh"
+grep -q 'rollback-aware upgrade path' "${STACK_DIR}/scripts/update.sh" \
+  || fail "update.sh must explain rollback-aware update behavior"
+grep -q "pull --quiet dashboard qdrant litellm open-webui" "$LOG" \
+  || fail "update.sh wrapper did not route core pull through upgrade.sh"
+grep -q "up -d --remove-orphans dashboard qdrant litellm open-webui" "$LOG" \
+  || fail "update.sh wrapper did not route core up through upgrade.sh"
 if grep -Eq "docker compose (pull|up).* (ollama|n8n|openhands|searxng|perplexica|watchtower|fail2ban)" "$LOG"; then
   fail "update.sh included non-core services for macOS core profile"
 fi

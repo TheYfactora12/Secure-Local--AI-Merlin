@@ -201,3 +201,6 @@ The upgrade path backs up `.env`, `docker-compose.yml`, the Merlin install
 manifest, and current image digests before pulling updates. It restarts only the
 selected profile and checks Dashboard, Open WebUI, LiteLLM, Qdrant, and local
 Ollama before declaring success. It does not pull AI models silently.
+
+`bash ~/merlin-ai/scripts/update.sh` is kept as a compatibility command and
+delegates to the same rollback-aware upgrade path.
