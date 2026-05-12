@@ -1,6 +1,6 @@
 # Trusted Local Beta Evidence Pack
 
-Last updated: 2026-05-08
+Last updated: 2026-05-12
 
 GitHub issue: #97
 Milestone: `v3.0 — Public Product Release`
@@ -59,6 +59,31 @@ Fill this block for each beta validation run:
 | Model pulls | `HOME_AI_SKIP_MODEL_PULLS=true` |
 | Network state | TODO: online for dependency install / offline launch test |
 | Result | TODO: pass / fail / blocked |
+
+## Current Evidence Rollup - 2026-05-12
+
+This rollup records what has evidence today. It does not declare Local Trusted
+Beta, Public Beta, or Public Release readiness.
+
+| Area | Current evidence | Status |
+|---|---|---|
+| Latest CI on `main` | GitHub Actions run `25712920056` on commit `744f739` | Pass |
+| Package install verification | `docs/release/evidence/2026-05-12-package-check-system-recovery-install.md` | Pass: 17 pass, 0 warn, 0 fail |
+| Installed first-run onboarding | `docs/release/evidence/2026-05-12-package-check-system-recovery-install.md` | Pass: installed dashboard includes `Check System`, `Service details`, `Startup checks`, and recovery guidance |
+| Package uninstall / reinstall loop | `docs/release/evidence/2026-05-11-package-uninstall-verification.md` | Pass for keep-files uninstall plus package reinstall; full destructive purge still needs explicit validation |
+| Upgrade / rollback path | `docs/release/evidence/2026-05-11-safe-upgrade-progress.md` | Documented and tested for the safe upgrade path |
+| Privacy / no surprise model pulls | README, installer policy smokes, and package evidence keep cloud/model pulls opt-in | Pass for documented/default posture; continue log review in release candidate runs |
+| Developer ID signing / notarization | Deferred by product decision; tracked separately in #64 | Not part of #37 closure; still required before broad public release |
+
+Remaining release-signoff gaps:
+
+- Run the full evidence table below as a named release candidate run on the
+  target low/core Mac and record tester, machine, OS, RAM, commit, CI URL, and
+  result.
+- Run a full destructive purge validation only after explicit approval because
+  it can remove shared tools such as Docker Desktop, Ollama, and Homebrew.
+- Keep Developer ID signing/notarization deferred until #64 is intentionally
+  resumed.
 
 ## CI Baseline
 

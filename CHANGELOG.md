@@ -15,6 +15,8 @@ All notable changes to Merlin AI are documented here.
 - Added future-scope parking docs for non-v1.0 ideas.
 - Updated installer, package welcome/readme, postinstall next steps, dashboard,
   workflow, and smoke-test copy to the Merlin AI naming.
+- Added a 2026-05-12 #95 product-push evidence rollup and refreshed the Trusted
+  Local Beta evidence pack with current package/onboarding verification status.
 
 ### Notes
 
