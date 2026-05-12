@@ -13,6 +13,7 @@ fail() {
 for file in \
   "${STACK_DIR}/pkg/build-pkg.sh" \
   "${STACK_DIR}/scripts/install-pkg-local.sh" \
+  "${STACK_DIR}/scripts/verify-pkg-install.sh" \
   "${STACK_DIR}/pkg/scripts/preinstall" \
   "${STACK_DIR}/pkg/scripts/postinstall" \
   "${STACK_DIR}/pkg/scripts/uninstall.sh"; do
@@ -56,6 +57,16 @@ grep -q 'sudo -p "Merlin AI admin password: "' "${STACK_DIR}/scripts/install-pkg
   || fail "local package installer does not use a clear Merlin password prompt"
 grep -q 'Cannot ask for a password because this is not an interactive Terminal' "${STACK_DIR}/scripts/install-pkg-local.sh" \
   || fail "local package installer does not explain non-interactive admin prompt failure"
+grep -Fq 'package receipt found: $PKG_ID' "${STACK_DIR}/scripts/verify-pkg-install.sh" \
+  || fail "package verification script does not check package receipt"
+grep -Fq 'launchd agent registered: $label' "${STACK_DIR}/scripts/verify-pkg-install.sh" \
+  || fail "package verification script does not check launchd agents"
+grep -q 'http://localhost:8765/healthz' "${STACK_DIR}/scripts/verify-pkg-install.sh" \
+  || fail "package verification script does not check Merlin status API"
+grep -q 'http://localhost:8766/status/routes' "${STACK_DIR}/scripts/verify-pkg-install.sh" \
+  || fail "package verification script does not check Merlin task API"
+grep -q 'This command only checks local state' "${STACK_DIR}/scripts/verify-pkg-install.sh" \
+  || fail "package verification script does not explain non-destructive behavior"
 
 if grep -q 'Perplexica  → http://localhost:3002' "${STACK_DIR}/pkg/scripts/postinstall"; then
   fail "postinstall still advertises optional search as default service"

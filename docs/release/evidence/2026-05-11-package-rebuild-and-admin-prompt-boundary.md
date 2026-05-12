@@ -38,6 +38,7 @@ sed -n '1,120p' /tmp/merlin-pkg-expand-70766/merlin-ai-0.8.6-component.pkg/Packa
 bash tests/pkg-readiness-smoke.sh
 bash tests/installer-branding-smoke.sh
 bash scripts/install-pkg-local.sh merlin-ai-0.8.6.pkg
+bash scripts/verify-pkg-install.sh
 ```
 
 ## Results
@@ -67,12 +68,29 @@ bash scripts/install-pkg-local.sh merlin-ai-0.8.6.pkg
   - "Merlin does not store it."
   - "Cannot ask for a password because this is not an interactive Terminal."
   - Suggested Terminal helper command or double-click package path.
+- Added `scripts/verify-pkg-install.sh` as a non-destructive post-package
+  verification command. It checks:
+  - macOS package receipt `com.merlin.ai`
+  - system payload `/usr/local/merlin-ai`
+  - user runtime `~/merlin-ai`
+  - `/tmp/merlin-ai-install.log`
+  - `~/.merlin/install-manifest.json`
+  - `com.merlin.*` launchd agents
+  - Dashboard, Open WebUI, LiteLLM, Qdrant, Ollama, Merlin status API, and
+    Merlin task API health endpoints.
+- Running `bash scripts/verify-pkg-install.sh` before a true package install
+  correctly reports missing package receipt, missing `/usr/local/merlin-ai`,
+  missing `~/merlin-ai`, and missing `/tmp/merlin-ai-install.log`, while showing
+  currently running source-installed services as reachable. This is expected and
+  documents the exact post-install verification gap.
 
 ## Failures Found
 
 - The true `.pkg` install still cannot be completed from this Codex shell
   because macOS admin password entry requires an interactive Terminal or Finder
   installer session.
+- The new verification script reports package-level failures until the package
+  has actually been installed through the admin-password path.
 
 ## Failure Category
 
@@ -105,4 +123,3 @@ ignored package artifact if needed:
 rm -f merlin-ai-0.8.6.pkg
 rm -rf pkg/build
 ```
-

@@ -29,6 +29,9 @@ bash pkg/build-pkg.sh
 # Install locally from Terminal with a clear macOS password prompt
 bash scripts/install-pkg-local.sh
 
+# After installing, verify receipt, files, launchd, logs, and services
+bash scripts/verify-pkg-install.sh
+
 # Local self-signed package (trusted/private testing)
 bash scripts/sign-pkg.sh --version <version>
 
@@ -53,7 +56,9 @@ Output: `merlin-ai-<version>.pkg` in the repo root.
    - Launches `install.sh --profile core --skip-model-pulls --non-interactive` in background
    - Installs launchd auto-start agents
    - Drops a **Next Steps** file on the Desktop
-5. Done — services start automatically after Docker Desktop is running, user opens `http://localhost:3000`
+5. Done — services start automatically after Docker Desktop is running.
+6. Verify with `bash scripts/verify-pkg-install.sh`, then open
+   `http://localhost:8888` or `http://localhost:3000`.
 
 ## Docker Desktop Caveat
 
