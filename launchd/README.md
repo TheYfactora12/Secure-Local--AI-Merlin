@@ -13,10 +13,10 @@ These `.plist` files make your merlin-ai stack **start automatically on macOS lo
 
 | File | What it starts | Delay |
 |------|---------------|-------|
-| `com.homeai.docker.plist` | Docker Desktop | 5s after login |
-| `com.homeai.stack.plist` | Laptop-safe core profile (`wizard start core`) | 30s after login (waits for Docker) |
-| `com.homeai.merlin-status-api.plist` | Read-only Merlin status API (`scripts/merlin-status-api.sh run`) | 35s after login |
-| `com.homeai.merlin-task-api.plist` | Merlin task API (`scripts/merlin-task-api.sh run`) | 40s after login |
+| `com.merlin.docker.plist` | Docker Desktop | 5s after login |
+| `com.merlin.stack.plist` | Laptop-safe core profile (`wizard start core`) | 30s after login (waits for Docker) |
+| `com.merlin.status-api.plist` | Read-only Merlin status API (`scripts/merlin-status-api.sh run`) | 35s after login |
+| `com.merlin.task-api.plist` | Merlin task API (`scripts/merlin-task-api.sh run`) | 40s after login |
 
 ## Install (run once)
 
@@ -40,13 +40,13 @@ bash ~/merlin-ai/launchd/install-launchd.sh --uninstall
 
 ```bash
 # Check agents are loaded
-launchctl list | grep homeai
+launchctl list | grep merlin
 
 # Check logs
-tail -f /tmp/homeai-docker.log
-tail -f /tmp/homeai-stack.log
-tail -f /tmp/homeai-merlin-status-api.log
-tail -f /tmp/homeai-merlin-task-api.log
+tail -f /tmp/merlin-docker.log
+tail -f /tmp/merlin-stack.log
+tail -f /tmp/merlin-status-api.log
+tail -f /tmp/merlin-task-api.log
 
 # Check the read-only Merlin status API
 wizard merlin status-api status

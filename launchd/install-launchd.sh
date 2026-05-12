@@ -37,15 +37,23 @@ warn() { echo -e "${COLOR_YELLOW}[launchd]${COLOR_RESET} $*"; }
 fail() { echo -e "${COLOR_RED}[launchd]${COLOR_RESET} $*" >&2; exit 1; }
 
 PLISTS=(
+  "com.merlin.docker.plist"
+  "com.merlin.stack.plist"
+  "com.merlin.status-api.plist"
+  "com.merlin.task-api.plist"
+)
+
+LEGACY_PLISTS=(
   "com.homeai.docker.plist"
   "com.homeai.stack.plist"
   "com.homeai.merlin-status-api.plist"
   "com.homeai.merlin-task-api.plist"
+  "com.homeai.backup.plist"
 )
 
 uninstall() {
   log "Uninstalling merlin-ai launchd agents..."
-  for plist in "${PLISTS[@]}"; do
+  for plist in "${PLISTS[@]}" "${LEGACY_PLISTS[@]}"; do
     local label="${plist%.plist}"
     local dest="${LAUNCH_AGENTS_DIR}/${plist}"
     if launchctl list "$label" &>/dev/null; then
@@ -81,7 +89,7 @@ preflight() {
   if [[ ! -d "/Applications/Docker.app" ]]; then
     warn "Docker Desktop not found at /Applications/Docker.app"
     warn "Install it from: https://www.docker.com/products/docker-desktop/"
-    warn "Continuing anyway — fix the path in com.homeai.docker.plist if needed."
+    warn "Continuing anyway — fix the path in com.merlin.docker.plist if needed."
   fi
 
   mkdir -p "$LAUNCH_AGENTS_DIR"
@@ -102,7 +110,7 @@ install_plist() {
   fi
 
   # Patch the install path into repo-local plists
-  if [[ "$plist" == "com.homeai.stack.plist" || "$plist" == "com.homeai.merlin-status-api.plist" || "$plist" == "com.homeai.merlin-task-api.plist" ]]; then
+  if [[ "$plist" == "com.merlin.stack.plist" || "$plist" == "com.merlin.status-api.plist" || "$plist" == "com.merlin.task-api.plist" ]]; then
     sed "s|\$HOME/merlin-ai|${INSTALL_DIR}|g" "$src" > "$dest"
     # Also fix ProgramArguments paths.
     sed -i '' "s|cd \"\$HOME/merlin-ai\"|cd \"${INSTALL_DIR}\"|g" "$dest" 2>/dev/null || true
@@ -140,6 +148,22 @@ main() {
 
   preflight
 
+  # Retired Home AI labels can keep stale processes alive or collide with the
+  # Merlin API ports. Remove them before registering the current agents.
+  for plist in "${LEGACY_PLISTS[@]}"; do
+    local legacy_label="${plist%.plist}"
+    local legacy_dest="${LAUNCH_AGENTS_DIR}/${plist}"
+    if launchctl list "$legacy_label" &>/dev/null; then
+      launchctl bootout "gui/${UID_NUM}/${legacy_label}" 2>/dev/null || \
+      launchctl unload "${legacy_dest}" 2>/dev/null || true
+      warn "  Removed legacy registration: $legacy_label"
+    fi
+    if [[ -f "$legacy_dest" ]]; then
+      rm -f "$legacy_dest"
+      warn "  Removed legacy plist: $legacy_dest"
+    fi
+  done
+
   for plist in "${PLISTS[@]}"; do
     install_plist "$plist"
   done
@@ -153,10 +177,10 @@ main() {
   log "   4. The Merlin task API will run under its own LaunchAgent (40s after login)"
   log ""
   log "Verify:"
-  log "   launchctl list | grep homeai"
-  log "   tail -f /tmp/homeai-stack.log"
-  log "   tail -f /tmp/homeai-merlin-status-api.log"
-  log "   tail -f /tmp/homeai-merlin-task-api.log"
+  log "   launchctl list | grep merlin"
+  log "   tail -f /tmp/merlin-stack.log"
+  log "   tail -f /tmp/merlin-status-api.log"
+  log "   tail -f /tmp/merlin-task-api.log"
   log "   wizard merlin status-api status"
   log "   wizard merlin task-api status"
   log ""

@@ -3,9 +3,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-STACK_PLIST="${ROOT_DIR}/launchd/com.homeai.stack.plist"
-STATUS_API_PLIST="${ROOT_DIR}/launchd/com.homeai.merlin-status-api.plist"
-TASK_API_PLIST="${ROOT_DIR}/launchd/com.homeai.merlin-task-api.plist"
+STACK_PLIST="${ROOT_DIR}/launchd/com.merlin.stack.plist"
+STATUS_API_PLIST="${ROOT_DIR}/launchd/com.merlin.status-api.plist"
+TASK_API_PLIST="${ROOT_DIR}/launchd/com.merlin.task-api.plist"
 INSTALLER="${ROOT_DIR}/launchd/install-launchd.sh"
 
 fail() {
@@ -26,17 +26,17 @@ grep -q 'HOME_AI_PROFILE=core' "$STACK_PLIST" \
   || fail "stack launchd agent does not pin HOME_AI_PROFILE=core"
 grep -q 'read-only Merlin status API' "$INSTALLER" \
   || fail "launchd installer does not document status API autostart"
-grep -q 'com.homeai.merlin-status-api.plist' "$INSTALLER" \
+grep -q 'com.merlin.status-api.plist' "$INSTALLER" \
   || fail "launchd installer does not register status API plist"
-grep -q 'com.homeai.merlin-task-api.plist' "$INSTALLER" \
+grep -q 'com.merlin.task-api.plist' "$INSTALLER" \
   || fail "launchd installer does not register task API plist"
 grep -q 'scripts/merlin-status-api.sh run' "$STATUS_API_PLIST" \
   || fail "status API launchd agent must run the API in foreground mode"
 grep -q 'scripts/merlin-task-api.sh run' "$TASK_API_PLIST" \
   || fail "task API launchd agent must run the API in foreground mode"
-grep -q '<string>com.homeai.merlin-status-api</string>' "$STATUS_API_PLIST" \
+grep -q '<string>com.merlin.status-api</string>' "$STATUS_API_PLIST" \
   || fail "status API launchd agent has the wrong label"
-grep -q '<string>com.homeai.merlin-task-api</string>' "$TASK_API_PLIST" \
+grep -q '<string>com.merlin.task-api</string>' "$TASK_API_PLIST" \
   || fail "task API launchd agent has the wrong label"
 grep -q '<key>KeepAlive</key>' "$STATUS_API_PLIST" \
   || fail "status API launchd agent must be restartable"

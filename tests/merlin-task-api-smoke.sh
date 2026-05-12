@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STACK_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 TASK_MANAGER="${STACK_DIR}/scripts/merlin-task-api.sh"
-TASK_PLIST="${STACK_DIR}/launchd/com.homeai.merlin-task-api.plist"
+TASK_PLIST="${STACK_DIR}/launchd/com.merlin.task-api.plist"
 WIZARD_FILE="${STACK_DIR}/cli/wizard"
 
 fail() {
@@ -48,7 +48,7 @@ grep -A12 'restart_api()' "$TASK_MANAGER" | grep -q 'start_api' \
 
 grep -q 'scripts/merlin-task-api.sh run' "$TASK_PLIST" \
   || fail "launchd plist must run task API manager in foreground"
-grep -q '<string>com.homeai.merlin-task-api</string>' "$TASK_PLIST" \
+grep -q '<string>com.merlin.task-api</string>' "$TASK_PLIST" \
   || fail "launchd plist has wrong label"
 grep -q '<key>KeepAlive</key>' "$TASK_PLIST" \
   || fail "launchd task API must be restartable"

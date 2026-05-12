@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WIZARD_FILE="${ROOT_DIR}/cli/wizard"
-LAUNCHD_STACK_FILE="${ROOT_DIR}/launchd/com.homeai.stack.plist"
+LAUNCHD_STACK_FILE="${ROOT_DIR}/launchd/com.merlin.stack.plist"
 
 grep -q 'start_merlin_status_api()' "$WIZARD_FILE"
 grep -q 'stop_merlin_status_api()' "$WIZARD_FILE"

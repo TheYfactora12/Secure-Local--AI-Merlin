@@ -328,6 +328,11 @@ remove_launchd_agents() {
   local uid
   uid="$(id -u)"
   local labels=(
+    com.merlin.docker
+    com.merlin.stack
+    com.merlin.status-api
+    com.merlin.task-api
+    com.merlin.backup
     com.homeai.docker
     com.homeai.stack
     com.homeai.merlin-status-api

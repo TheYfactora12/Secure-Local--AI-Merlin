@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  com.homeai.merlin-status-api.plist
+  com.merlin.status-api.plist
   Runs the read-only Merlin status API as its own foreground launchd job.
 
   Install:
-    cp ~/merlin-ai/launchd/com.homeai.merlin-status-api.plist ~/Library/LaunchAgents/
-    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.homeai.merlin-status-api.plist
+    cp ~/merlin-ai/launchd/com.merlin.status-api.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.merlin.status-api.plist
 -->
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.homeai.merlin-status-api</string>
+  <string>com.merlin.status-api</string>
 
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
     <string>-c</string>
     <!-- Run in foreground so launchd owns and restarts the read-only API directly. -->
-    <string>sleep 35 &amp;&amp; cd "$HOME/merlin-ai" &amp;&amp; /bin/bash scripts/merlin-status-api.sh run &gt;&gt; /tmp/homeai-merlin-status-api.log 2&gt;&amp;1</string>
+    <string>sleep 35 &amp;&amp; cd "$HOME/merlin-ai" &amp;&amp; /bin/bash scripts/merlin-status-api.sh run &gt;&gt; /tmp/merlin-status-api.log 2&gt;&amp;1</string>
   </array>
 
   <key>RunAtLoad</key>
@@ -27,9 +27,9 @@
   <true/>
 
   <key>StandardOutPath</key>
-  <string>/tmp/homeai-merlin-status-api.log</string>
+  <string>/tmp/merlin-status-api.log</string>
   <key>StandardErrorPath</key>
-  <string>/tmp/homeai-merlin-status-api.log</string>
+  <string>/tmp/merlin-status-api.log</string>
 
   <key>WorkingDirectory</key>
   <string>/Users/Shared</string>

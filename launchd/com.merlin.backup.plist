@@ -2,7 +2,7 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.homeai.backup</string>
+  <string>com.merlin.backup</string>
 
   <key>ProgramArguments</key>
   <array>
@@ -19,10 +19,10 @@
   </dict>
 
   <key>StandardOutPath</key>
-  <string>/tmp/homeai-backup.log</string>
+  <string>/tmp/merlin-backup.log</string>
 
   <key>StandardErrorPath</key>
-  <string>/tmp/homeai-backup.err</string>
+  <string>/tmp/merlin-backup.err</string>
 
   <key>RunAtLoad</key>
   <false/>

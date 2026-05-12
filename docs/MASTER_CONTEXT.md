@@ -155,7 +155,7 @@ Merlin control-plane status:
 - `wizard start` starts the selected profile, then starts the read-only Merlin status API if profile startup succeeds.
 - `wizard stop` stops the status API before stopping Docker services.
 - `wizard restart` stops and restarts the status API around Docker restart.
-- launchd runs the read-only Merlin status API as its own foreground job: `com.homeai.merlin-status-api`.
+- launchd runs the read-only Merlin status API as its own foreground job: `com.merlin.status-api`.
 - Dashboard reads `http://localhost:8765/status` when the status API is running.
 - The status API is read-only: `GET /healthz`, `GET /status`, mutation methods rejected, `execution_allowed=false`.
 - Canonical config root is `configs/`; root `config/` is forbidden. Merlin config lives in `configs/merlin/`.
@@ -315,14 +315,14 @@ Last verified: 2026-05-10.
 - Phase 2F merged at `b4f35c8`; local Phase 2 Python suite reported 58 passing tests.
 - CI was green for the Phase 2F merge run.
 - Phase 3 live end-to-end validation is documented in `docs/archive/PHASE3_LIVE_E2E_VALIDATION_2026-05-07.md`: core stack, task API, local LiteLLM/Ollama `/task`, approval-gated memory skip, explicit approved `skill_outcomes` write, and `wizard skills` readback all passed.
-- launchd persistence validation is documented in `docs/archive/LAUNCHD_PERSISTENCE_VALIDATION_2026-05-07.md`: `com.homeai.stack` starts the core profile, `com.homeai.merlin-status-api` remains running on port 8765 with `execution_allowed=false`, `com.homeai.merlin-task-api` remains running on port 8766, and `tests/core-live-smoke.sh` passed with 18 checks and 0 failures.
+- launchd persistence validation is documented in `docs/archive/LAUNCHD_PERSISTENCE_VALIDATION_2026-05-07.md`: legacy `com.homeai.stack`, `com.homeai.merlin-status-api`, and `com.homeai.merlin-task-api` were the labels validated at that time. Current labels are `com.merlin.stack`, `com.merlin.status-api`, and `com.merlin.task-api`.
 - Issue #75 added a separate Merlin Task API LaunchAgent and lifecycle manager. Port 8766 is now launchd-managed without merging execution-aware behavior into the read-only status API on port 8765.
 - Fresh 8GB Mac core reinstall is green after #48; #48 fixed non-interactive status API startup messaging so the installer no longer implies persistent port 8765 without launchd or manual start.
 - Unsigned `.pkg` install is green after #49; #49 filtered package runtime copy so stale `.wizard-bootstrapped`, logs, caches, `.venv`, and build artifacts are not copied into the user runtime.
 - GitHub Actions run `25467394670` passed for commit `88d4f96`.
 - Live backup/restore verification passed on the package-installed stack with `bash tests/qdrant-restore-live-smoke.sh`: disposable Qdrant collection backed up, deleted, restored, and vector payload verified with 8 checks and 0 failures.
 - Live core upgrade verification passed after #61. The first run exposed optional `searxng` startup in core mode; #61 profile-gated optional Compose services, removed the hard `open-webui` to `searxng` dependency, added `tests/compose-profile-gating-smoke.sh`, and closed with CI run `25468170156` passing. Rerun of `bash scripts/upgrade.sh --profile core` completed and kept running services core-only: `litellm`, `open-webui`, `qdrant`, and `dashboard`.
-- Live launchd persistence validation passed: `bash launchd/install-launchd.sh` registered `com.homeai.docker`, `com.homeai.stack`, and `com.homeai.merlin-status-api`; after the timers, `launchctl print gui/501/com.homeai.merlin-status-api` reported `state = running`, `GET /healthz` returned `execution_allowed=false`, and running Docker services remained core-only.
+- Historical live launchd persistence validation passed with legacy `com.homeai.*` labels; current source now registers `com.merlin.docker`, `com.merlin.stack`, `com.merlin.status-api`, and `com.merlin.task-api`, while the installer and uninstaller still remove legacy labels.
 - Live clean uninstall/reinstall validation passed from source snapshot `/private/tmp/merlin-ai-source-20260506_202108`: `pkg/scripts/uninstall.sh --yes --remove-data` removed `~/merlin-ai`, backed up `.env`, and preserved Docker Desktop/Homebrew/Ollama. Docker cleanup initially skipped because the engine was not visible, so old Compose volumes were removed explicitly before reinstall. Fresh non-interactive core reinstall then passed with local-first defaults, no cloud keys, no model pulls, and core-only running services.
 - Uninstaller validation found one release-quality follow-up: launchd `bootout` failures were previously suppressed, which could leave an already-loaded status API agent alive even after the plist was removed. The uninstaller now warns with the exact manual `launchctl bootout gui/<uid>/<label>` command when unload fails, and `tests/uninstall-smoke.sh` covers that behavior.
 - Local self-signed package signing is now wrapped by `scripts/sign-pkg.sh`. It expects a Keychain identity named `Merlin AI Local Signing`, signs an existing unsigned package with `productsign`, verifies with `pkgutil --check-signature`, and is covered by `tests/pkg-local-sign-smoke.sh`.
@@ -343,8 +343,7 @@ Last verified: 2026-05-10.
 - `tests/merlin-status-api-smoke.sh` passed with localhost-bind permission.
 - Full local static smoke suite passed.
 - Dashboard contains the read-only Merlin Control Status panel and points to `wizard merlin status-api start`.
-- Live launchd reinstall registered `com.homeai.docker`, `com.homeai.stack`, and `com.homeai.merlin-status-api`.
-- `launchctl print gui/501/com.homeai.merlin-status-api` reported `state = running` and `last exit code = (never exited)`.
+- Historical live launchd reinstall registered legacy `com.homeai.*` labels. Current source registers `com.merlin.*` labels and keeps legacy cleanup for older installs.
 - `wizard merlin status-api status`, `GET /healthz`, and `GET /status` passed against `http://127.0.0.1:8765`.
 - `GET /status` reported profile `core`, hardware tier `low`, RAM `8`, privacy `local_only`, cloud disabled, all core services running, and `execution_allowed=false`.
 - `bash tests/core-live-smoke.sh` passed with 18 checks, 0 warnings, and 0 failures.

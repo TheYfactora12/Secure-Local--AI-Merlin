@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  com.homeai.merlin-task-api.plist
+  com.merlin.task-api.plist
   Runs the Merlin FastAPI task API as its own foreground launchd job.
 
   Install:
-    cp ~/merlin-ai/launchd/com.homeai.merlin-task-api.plist ~/Library/LaunchAgents/
-    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.homeai.merlin-task-api.plist
+    cp ~/merlin-ai/launchd/com.merlin.task-api.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.merlin.task-api.plist
 -->
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.homeai.merlin-task-api</string>
+  <string>com.merlin.task-api</string>
 
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
     <string>-c</string>
     <!-- Run in foreground so launchd owns and restarts the task API directly. -->
-    <string>sleep 40 &amp;&amp; cd "$HOME/merlin-ai" &amp;&amp; /bin/bash scripts/merlin-task-api.sh run &gt;&gt; /tmp/homeai-merlin-task-api.log 2&gt;&amp;1</string>
+    <string>sleep 40 &amp;&amp; cd "$HOME/merlin-ai" &amp;&amp; /bin/bash scripts/merlin-task-api.sh run &gt;&gt; /tmp/merlin-task-api.log 2&gt;&amp;1</string>
   </array>
 
   <key>RunAtLoad</key>
@@ -27,9 +27,9 @@
   <true/>
 
   <key>StandardOutPath</key>
-  <string>/tmp/homeai-merlin-task-api.log</string>
+  <string>/tmp/merlin-task-api.log</string>
   <key>StandardErrorPath</key>
-  <string>/tmp/homeai-merlin-task-api.log</string>
+  <string>/tmp/merlin-task-api.log</string>
 
   <key>WorkingDirectory</key>
   <string>/Users/Shared</string>

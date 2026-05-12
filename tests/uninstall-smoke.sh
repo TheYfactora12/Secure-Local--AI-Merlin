@@ -94,12 +94,18 @@ grep -q 'installed_by_merlin' "$PKG_UNINSTALL" \
   || fail "uninstaller dependency purge is not manifest-gated"
 grep -q 'refusing to remove shared dependencies' "$PKG_UNINSTALL" \
   || fail "uninstaller does not fail closed when dependency manifest is missing"
+grep -q 'com.merlin.backup' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not remove current backup launchd agent"
 grep -q 'com.homeai.backup' "$PKG_UNINSTALL" \
-  || fail "uninstaller does not remove backup launchd agent"
+  || fail "uninstaller does not remove legacy backup launchd agent"
+grep -q 'com.merlin.status-api' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not remove current Merlin status API launchd agent"
+grep -q 'com.merlin.task-api' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not remove current Merlin task API launchd agent"
 grep -q 'com.homeai.merlin-status-api' "$PKG_UNINSTALL" \
-  || fail "uninstaller does not remove Merlin status API launchd agent"
+  || fail "uninstaller does not remove legacy Merlin status API launchd agent"
 grep -q 'com.homeai.merlin-task-api' "$PKG_UNINSTALL" \
-  || fail "uninstaller does not remove Merlin task API launchd agent"
+  || fail "uninstaller does not remove legacy Merlin task API launchd agent"
 grep -q 'sudo -n true' "$PKG_UNINSTALL" \
   || fail "uninstaller does not check sudo availability non-interactively"
 grep -q 'Skipped .*admin privileges are required' "$PKG_UNINSTALL" \

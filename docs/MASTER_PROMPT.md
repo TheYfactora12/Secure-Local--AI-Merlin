@@ -68,7 +68,7 @@ Current Merlin control-plane state:
 - `wizard stop` stops the status API before stopping Docker services.
 - `wizard restart` stops and restarts the status API around Docker restart.
 - launchd starts the laptop-safe core profile through `wizard start core`.
-- launchd runs the read-only status API as its own foreground job: `com.homeai.merlin-status-api`.
+- launchd runs the read-only status API as its own foreground job: `com.merlin.status-api`.
 - The dashboard reads `http://localhost:8765/status` when the status API is running.
 - No Merlin endpoint may execute approvals, shell commands, file writes, model downloads, service controls, Magic Mode steps, or cloud calls. The CLI-only `merlin_status` allowlist action is the only general execution path. Memory write and memory search are separate local-only adapters that must fail closed and never log raw memory text.
 
