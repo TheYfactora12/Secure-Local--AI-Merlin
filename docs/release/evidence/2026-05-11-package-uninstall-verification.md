@@ -123,3 +123,48 @@ This run intentionally did not remove:
 
 Full purge remains a separate destructive validation pass and should only run
 after explicit approval.
+
+## Reinstall After Keep-Files Uninstall
+
+Command launched in Terminal so macOS could prompt for the administrator
+password:
+
+```bash
+bash scripts/run-pkg-install-verification.sh merlin-ai-0.8.6.pkg
+```
+
+Local ignored log:
+
+- `docs/release/evidence/local/pkg-install-verification-2026-05-12-014710Z.log`
+
+Result:
+
+- `.pkg` upgrade/install succeeded after admin authentication.
+- Package receipt was present.
+- System package payload existed at `/usr/local/merlin-ai`.
+- User runtime folder existed at `~/merlin-ai`.
+- Dependency install manifest existed at `~/.merlin/install-manifest.json`.
+- Launchd agents registered:
+  - `com.merlin.docker`
+  - `com.merlin.stack`
+  - `com.merlin.status-api`
+  - `com.merlin.task-api`
+- Verification required four attempts while services warmed.
+- Final verification result:
+  - `Summary: 17 pass, 0 warn, 0 fail`
+
+Final verified endpoints:
+
+| Endpoint | Result |
+| --- | --- |
+| `http://localhost:8888` | pass |
+| `http://localhost:3000` | pass |
+| `http://localhost:4000/health/readiness` | pass |
+| `http://localhost:6333/healthz` | pass |
+| `http://localhost:11434/api/tags` | pass |
+| `http://localhost:8765/healthz` | pass |
+| `http://localhost:8766/status/routes` | pass |
+
+The keep-files uninstall followed by package reinstall/verification loop is now
+covered by local evidence. This is not a full purge reinstall; preserved runtime
+files remained in place by design.
