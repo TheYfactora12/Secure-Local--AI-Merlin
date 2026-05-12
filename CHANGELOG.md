@@ -23,6 +23,9 @@ All notable changes to Merlin AI are documented here.
   while keeping true network-disconnected launch as a beta-signoff blocker.
 - Added Magic Mode and audit validation evidence showing plan-only behavior,
   local redacted audit output, and no model/memory/service/tool/cloud execution.
+- Added network-disconnected launch validation evidence showing core services
+  restart from local images with Wi-Fi off, plus the remaining no-local-model UX
+  gap.
 
 ### Notes
 

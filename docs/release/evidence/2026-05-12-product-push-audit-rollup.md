@@ -51,11 +51,15 @@ marked as blocked for beta signoff rather than left as TODO.
 ## Remaining Gaps
 
 - Fill `docs/operations/TRUSTED_LOCAL_BETA_EVIDENCE.md` as a named release
-  candidate run after running the remaining blocked row: true
-  network-disconnected launch.
+  candidate run after resolving the remaining model-readiness UX gap found
+  during network-disconnected launch.
 - Local-image restart has supporting evidence in
   `docs/release/evidence/2026-05-12-local-image-restart-validation.md`, but it
   is not a substitute for pulling the network and proving air-gapped startup.
+- Network-disconnected core launch has supporting evidence in
+  `docs/release/evidence/2026-05-12-network-disconnected-launch-validation.md`;
+  it passed for core startup, with a beta-facing gap that no chat-capable local
+  model was installed.
 - Magic Mode/audit validation has supporting evidence in
   `docs/release/evidence/2026-05-12-magic-mode-audit-validation.md`.
 - Run or explicitly defer destructive purge validation. This must remain
