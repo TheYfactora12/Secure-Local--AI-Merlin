@@ -46,9 +46,15 @@ grep -q 'run_as_user' "${STACK_DIR}/pkg/scripts/postinstall" \
 grep -q 'run_as_user_gui' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall does not use a GUI-session user command runner"
 grep -q 'launchctl asuser' "${STACK_DIR}/pkg/scripts/postinstall" \
-  || fail "postinstall launchd setup must run inside the installing user's GUI session"
-grep -q 'Installing launchd auto-start agents through user GUI session' "${STACK_DIR}/pkg/scripts/postinstall" \
-  || fail "postinstall does not document GUI-session launchd setup"
+  || fail "postinstall must use GUI-session runner for GUI operations"
+grep -q 'install_launchd_for_user' "${STACK_DIR}/pkg/scripts/postinstall" \
+  || fail "postinstall does not use explicit target-user launchd setup"
+grep -q 'launchctl asuser "$INSTALLING_UID"' "${STACK_DIR}/pkg/scripts/postinstall" \
+  || fail "postinstall launchd setup must enter the installing user's GUI session"
+grep -q 'MERLIN_LAUNCHD_UID' "${STACK_DIR}/pkg/scripts/postinstall" \
+  || fail "postinstall launchd setup must pass the installing user's uid"
+grep -q 'Installing launchd auto-start agents into user GUI domain' "${STACK_DIR}/pkg/scripts/postinstall" \
+  || fail "postinstall does not document target-user launchd setup"
 grep -q 'rsync -a' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall must use filtered rsync copy, not raw cp -R"
 grep -q -- "--exclude='.wizard-bootstrapped'" "${STACK_DIR}/pkg/scripts/postinstall" \

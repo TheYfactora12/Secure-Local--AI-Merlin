@@ -26,6 +26,14 @@ grep -q 'HOME_AI_PROFILE=core' "$STACK_PLIST" \
   || fail "stack launchd agent does not pin HOME_AI_PROFILE=core"
 grep -q 'read-only Merlin status API' "$INSTALLER" \
   || fail "launchd installer does not document status API autostart"
+grep -q 'MERLIN_LAUNCHD_HOME' "$INSTALLER" \
+  || fail "launchd installer cannot target the installing user's LaunchAgents dir"
+grep -q 'MERLIN_LAUNCHD_UID' "$INSTALLER" \
+  || fail "launchd installer cannot target the installing user's launchd gui domain"
+grep -q 'MERLIN_LAUNCHD_USER' "$INSTALLER" \
+  || fail "launchd installer cannot target the installing user"
+grep -q 'chown "${TARGET_USER}:staff"' "$INSTALLER" \
+  || fail "launchd installer does not fix LaunchAgent ownership for package installs"
 grep -q 'com.merlin.status-api.plist' "$INSTALLER" \
   || fail "launchd installer does not register status API plist"
 grep -q 'com.merlin.task-api.plist' "$INSTALLER" \

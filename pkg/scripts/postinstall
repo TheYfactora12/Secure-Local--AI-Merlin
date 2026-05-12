@@ -34,6 +34,18 @@ run_as_user_gui() {
       /bin/bash -lc "$1"
 }
 
+install_launchd_for_user() {
+  /bin/launchctl asuser "$INSTALLING_UID" \
+    /usr/bin/sudo -u "$INSTALLING_USER" \
+      HOME="$INSTALLING_HOME" \
+      USER="$INSTALLING_USER" \
+      LOGNAME="$INSTALLING_USER" \
+      MERLIN_LAUNCHD_HOME="$INSTALLING_HOME" \
+      MERLIN_LAUNCHD_USER="$INSTALLING_USER" \
+      MERLIN_LAUNCHD_UID="$INSTALLING_UID" \
+      /bin/bash "$1"
+}
+
 # ---------------------------------------------------------------------------
 # Detect the installing user (not root)
 # ---------------------------------------------------------------------------
@@ -118,9 +130,8 @@ run_as_user \
 # ---------------------------------------------------------------------------
 # 8. Install launchd agents for auto-start
 # ---------------------------------------------------------------------------
-log "  Installing launchd auto-start agents through user GUI session..."
-run_as_user_gui \
-  "bash '${USER_INSTALL_DIR}/launchd/install-launchd.sh' >> '${LOG_FILE}' 2>&1" || true
+log "  Installing launchd auto-start agents into user GUI domain..."
+install_launchd_for_user "${USER_INSTALL_DIR}/launchd/install-launchd.sh" >> "$LOG_FILE" 2>&1 || true
 
 # ---------------------------------------------------------------------------
 # 9. Write post-install instructions

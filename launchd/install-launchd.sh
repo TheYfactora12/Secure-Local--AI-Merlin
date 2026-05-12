@@ -24,8 +24,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-LAUNCH_AGENTS_DIR="${HOME}/Library/LaunchAgents"
-UID_NUM=$(id -u)
+TARGET_HOME="${MERLIN_LAUNCHD_HOME:-$HOME}"
+TARGET_USER="${MERLIN_LAUNCHD_USER:-$(id -un)}"
+LAUNCH_AGENTS_DIR="${TARGET_HOME}/Library/LaunchAgents"
+UID_NUM="${MERLIN_LAUNCHD_UID:-$(id -u "$TARGET_USER")}"
 
 COLOR_GREEN="\033[0;32m"
 COLOR_YELLOW="\033[1;33m"
@@ -119,6 +121,7 @@ install_plist() {
   fi
 
   chmod 644 "$dest"
+  chown "${TARGET_USER}:staff" "$dest" 2>/dev/null || true
 
   # Unload first if already registered (idempotent)
   if launchctl list "$label" &>/dev/null; then
