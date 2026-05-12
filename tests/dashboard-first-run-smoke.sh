@@ -76,6 +76,10 @@ grep -q "renderStartupWarming" "$DASHBOARD_FILE" \
   || fail "startup warming card must bind to live readiness state"
 grep -q "setStartChatActions" "$DASHBOARD_FILE" \
   || fail "Start Chatting action must reflect readiness"
+grep -q "Service details" "$DASHBOARD_FILE" \
+  || fail "first-run service details must be tucked behind disclosure"
+grep -q "Startup checks" "$DASHBOARD_FILE" \
+  || fail "startup checks must be available behind disclosure"
 grep -q "mobile-first-run" "$DASHBOARD_FILE" \
   || fail "Chat home missing mobile first-run onboarding banner"
 grep -q "Nothing leaves this Mac" "$DASHBOARD_FILE" \

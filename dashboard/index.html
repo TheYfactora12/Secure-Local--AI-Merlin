@@ -658,6 +658,25 @@ button.mode-pill:hover {
   width: auto;
   min-width: 170px;
 }
+.startup-details,
+.service-details {
+  margin-top: 12px;
+}
+.startup-details summary,
+.service-details summary {
+  width: fit-content;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 12px;
+}
+.startup-details summary:hover,
+.service-details summary:hover {
+  color: var(--text);
+}
+.startup-details .startup-check-list,
+.service-details .chip-row {
+  margin-top: 9px;
+}
 .mini-control:disabled,
 .mini-control.disabled {
   cursor: not-allowed;
@@ -2147,18 +2166,21 @@ button.mode-pill:hover {
             <button class="mini-control" type="button" onclick="window.open('http://localhost:5678', '_blank', 'noopener')"><strong>Automate</strong><span>Open optional local n8n workflows.</span></button>
             <button class="mini-control" type="button" onclick="selectTab('system')"><strong>Dashboard</strong><span>Check all local service status.</span></button>
           </div>
-          <div class="chip-row compact" aria-label="Included service status summary">
-            <span class="chip warn" id="first-run-dashboard">Dashboard: checking</span>
-            <span class="chip warn" id="first-run-chat">Chat: checking</span>
-            <span class="chip warn" id="first-run-ollama">Local model: checking</span>
-            <span class="chip warn" id="first-run-router">Router: checking</span>
-            <span class="chip warn" id="first-run-memory">Memory: checking</span>
-            <span class="chip neutral" id="first-run-automation">Automation: optional off</span>
-            <span class="chip neutral" id="first-run-coding">Coding agent: optional off</span>
-            <span class="chip info" id="first-run-mcp">MCP config: included</span>
-            <span class="chip neutral" id="first-run-search">Private search: optional off</span>
-            <span class="chip neutral" id="first-run-web-search">Web search: optional off</span>
-          </div>
+          <details class="service-details">
+            <summary>Service details</summary>
+            <div class="chip-row compact" aria-label="Included service status summary">
+              <span class="chip warn" id="first-run-dashboard">Dashboard: checking</span>
+              <span class="chip warn" id="first-run-chat">Chat: checking</span>
+              <span class="chip warn" id="first-run-ollama">Local model: checking</span>
+              <span class="chip warn" id="first-run-router">Router: checking</span>
+              <span class="chip warn" id="first-run-memory">Memory: checking</span>
+              <span class="chip neutral" id="first-run-automation">Automation: optional off</span>
+              <span class="chip neutral" id="first-run-coding">Coding agent: optional off</span>
+              <span class="chip info" id="first-run-mcp">MCP config: included</span>
+              <span class="chip neutral" id="first-run-search">Private search: optional off</span>
+              <span class="chip neutral" id="first-run-web-search">Web search: optional off</span>
+            </div>
+          </details>
         </div>
         <button class="new-chat-btn" type="button" onclick="clearMerlinChat()">New conversation</button>
         <div class="front-sidebar-card">
@@ -2258,14 +2280,17 @@ button.mode-pill:hover {
               </div>
               <div class="startup-progress" id="startup-progress">0 / 6</div>
             </div>
-            <div class="startup-check-list" aria-label="Local startup checks">
-              <span class="startup-check warn" id="startup-check-dashboard"><span class="status-dot warn" aria-hidden="true"></span>Dashboard</span>
-              <span class="startup-check warn" id="startup-check-chat"><span class="status-dot warn" aria-hidden="true"></span>Chat</span>
-              <span class="startup-check warn" id="startup-check-brain"><span class="status-dot warn" aria-hidden="true"></span>Local brain</span>
-              <span class="startup-check warn" id="startup-check-router"><span class="status-dot warn" aria-hidden="true"></span>Router</span>
-              <span class="startup-check warn" id="startup-check-memory"><span class="status-dot warn" aria-hidden="true"></span>Memory</span>
-              <span class="startup-check warn" id="startup-check-privacy"><span class="status-dot warn" aria-hidden="true"></span>Privacy</span>
-            </div>
+            <details class="startup-details">
+              <summary>Startup checks</summary>
+              <div class="startup-check-list" aria-label="Local startup checks">
+                <span class="startup-check warn" id="startup-check-dashboard"><span class="status-dot warn" aria-hidden="true"></span>Dashboard</span>
+                <span class="startup-check warn" id="startup-check-chat"><span class="status-dot warn" aria-hidden="true"></span>Chat</span>
+                <span class="startup-check warn" id="startup-check-brain"><span class="status-dot warn" aria-hidden="true"></span>Local brain</span>
+                <span class="startup-check warn" id="startup-check-router"><span class="status-dot warn" aria-hidden="true"></span>Router</span>
+                <span class="startup-check warn" id="startup-check-memory"><span class="status-dot warn" aria-hidden="true"></span>Memory</span>
+                <span class="startup-check warn" id="startup-check-privacy"><span class="status-dot warn" aria-hidden="true"></span>Privacy</span>
+              </div>
+            </details>
             <div class="startup-action-row">
               <button class="mini-control active" type="button" data-start-chat-action onclick="window.open('http://localhost:3000', '_blank', 'noopener')"><strong>Start Chatting</strong><span>Available when local chat is reachable.</span></button>
               <button class="mini-control" type="button" onclick="selectTab('system')"><strong>See Details</strong><span>Open service health and recovery steps.</span></button>
