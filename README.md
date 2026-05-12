@@ -76,6 +76,17 @@ For a full purge, including local Merlin data the user confirms removing:
 bash pkg/scripts/uninstall.sh --purge-all
 ```
 
+For the strongest removal path, Merlin records a local install manifest at
+`~/.merlin/install-manifest.json`. A future UI should expose this as a plain
+English choice. From Terminal, preview dependency removal first:
+
+```bash
+bash pkg/scripts/uninstall.sh --dry-run --purge-dependencies
+```
+
+Real dependency removal requires an explicit shared-tool confirmation because
+Docker Desktop, Ollama, and Homebrew may be used by other apps.
+
 Uninstall is a product trust feature. The user must always be able to remove
 Merlin and its downloaded pieces intentionally.
 

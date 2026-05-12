@@ -121,8 +121,59 @@ source "$PROFILE_LIB"
 LOGFILE="${HOME}/.wizard/install.log"
 mkdir -p "$(dirname "$LOGFILE")"
 
+MERLIN_STATE_DIR="${HOME}/.merlin"
+MERLIN_INSTALL_MANIFEST="${MERLIN_STATE_DIR}/install-manifest.json"
+BREW_PREEXISTING=false
+DOCKER_PREEXISTING=false
+OLLAMA_PREEXISTING=false
+BREW_INSTALLED_BY_MERLIN=false
+OLLAMA_INSTALLED_BY_MERLIN=false
+
 log_to_file() {
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*" >> "$LOGFILE"
+}
+
+json_bool() {
+  [[ "${1:-false}" == true ]] && printf 'true' || printf 'false'
+}
+
+write_install_manifest() {
+  mkdir -p "$MERLIN_STATE_DIR"
+  chmod 700 "$MERLIN_STATE_DIR" 2>/dev/null || true
+  cat > "$MERLIN_INSTALL_MANIFEST" <<EOF
+{
+  "product": "Merlin AI",
+  "manifest_version": 1,
+  "installed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "install_dir": "${SCRIPT_DIR}",
+  "profile": "${INSTALL_PROFILE:-core}",
+  "capabilities": "${INSTALL_CAPABILITIES_CSV:-}",
+  "dependencies": {
+    "homebrew": {
+      "present_before_install": $(json_bool "$BREW_PREEXISTING"),
+      "installed_by_merlin": $(json_bool "$BREW_INSTALLED_BY_MERLIN"),
+      "command": "$(command -v brew 2>/dev/null || true)"
+    },
+    "docker_desktop": {
+      "present_before_install": $(json_bool "$DOCKER_PREEXISTING"),
+      "installed_by_merlin": false,
+      "app_path": "/Applications/Docker.app"
+    },
+    "ollama": {
+      "present_before_install": $(json_bool "$OLLAMA_PREEXISTING"),
+      "installed_by_merlin": $(json_bool "$OLLAMA_INSTALLED_BY_MERLIN"),
+      "command": "$(command -v ollama 2>/dev/null || true)"
+    }
+  },
+  "privacy": {
+    "cloud_keys_required": false,
+    "model_pulls_skipped": $(json_bool "$SKIP_MODEL_PULLS")
+  }
+}
+EOF
+  chmod 600 "$MERLIN_INSTALL_MANIFEST" 2>/dev/null || true
+  log "Install manifest written to ${MERLIN_INSTALL_MANIFEST}"
+  log_to_file "[INFO] install_manifest=${MERLIN_INSTALL_MANIFEST}"
 }
 
 generate_failure_report() {
@@ -278,6 +329,10 @@ step "Preflight Checks"
 log_to_file "[STEP 1] Preflight Checks"
 
 OS=$(uname -s)
+command -v brew >/dev/null 2>&1 && BREW_PREEXISTING=true
+[[ -d "/Applications/Docker.app" ]] && DOCKER_PREEXISTING=true
+command -v ollama >/dev/null 2>&1 && OLLAMA_PREEXISTING=true
+
 if [[ "$OS" == "Darwin" ]]; then
   log "macOS detected"
 elif [[ "$OS" == "Linux" ]]; then
@@ -376,6 +431,7 @@ if [[ "$OS" == "Darwin" ]]; then
   if ! command -v brew &>/dev/null; then
     warn "Homebrew not found. Installing..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    BREW_INSTALLED_BY_MERLIN=true
   fi
   log "Homebrew ready"
   for pkg in git curl jq python3; do
@@ -405,6 +461,7 @@ if [[ "$OS" == "Darwin" ]]; then
   if ! command -v ollama &>/dev/null; then
     log "Installing Ollama natively (required for Apple Metal GPU acceleration)..."
     brew install ollama
+    OLLAMA_INSTALLED_BY_MERLIN=true
   else
     log "Ollama already installed natively ✔"
   fi
@@ -429,6 +486,7 @@ if [[ "$OS" == "Darwin" ]]; then
 fi
 
 log_to_file "[PASS] STEP 2: Dependencies installed"
+write_install_manifest
 
 # ── STEP 2B: Merlin Python Runtime ────────────────────────────────────
 step "Installing Merlin Python Runtime"

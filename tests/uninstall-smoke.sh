@@ -5,6 +5,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ROOT_UNINSTALL="${ROOT_DIR}/scripts/uninstall.sh"
 PKG_UNINSTALL="${ROOT_DIR}/pkg/scripts/uninstall.sh"
+INSTALLER="${ROOT_DIR}/install.sh"
+README="${ROOT_DIR}/README.md"
+PKG_README="${ROOT_DIR}/pkg/README.md"
 
 fail() {
   echo "FAIL: $*" >&2
@@ -15,6 +18,19 @@ for file in "$ROOT_UNINSTALL" "$PKG_UNINSTALL"; do
   [[ -f "$file" ]] || fail "missing uninstaller: $file"
   bash -n "$file" || fail "shell syntax failed: $file"
 done
+
+grep -q 'MERLIN_INSTALL_MANIFEST=' "$INSTALLER" \
+  || fail "installer does not define Merlin install manifest path"
+grep -q 'write_install_manifest' "$INSTALLER" \
+  || fail "installer does not write dependency manifest"
+grep -q 'installed_by_merlin' "$INSTALLER" \
+  || fail "installer manifest does not record Merlin-installed dependencies"
+grep -q '~/.merlin/install-manifest.json' "$README" \
+  || fail "README does not document install manifest"
+grep -q -- '--purge-dependencies' "$README" \
+  || fail "README does not document dependency purge preview"
+grep -q '~/.merlin/install-manifest.json' "$PKG_README" \
+  || fail "pkg README does not document install manifest"
 
 bash "$PKG_UNINSTALL" --help >/dev/null \
   || fail "uninstaller help failed"
@@ -64,10 +80,20 @@ grep -q -- '--purge-models' "$PKG_UNINSTALL" \
   || fail "uninstaller does not expose Merlin model purge mode"
 grep -q -- '--purge-images' "$PKG_UNINSTALL" \
   || fail "uninstaller does not expose Docker image purge mode"
+grep -q -- '--purge-dependencies' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not expose explicit dependency purge mode"
+grep -q -- '--i-understand-shared-tools' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not require shared-tool confirmation"
 grep -q 'known Merlin-recommended Ollama models' "$PKG_UNINSTALL" \
   || fail "uninstaller does not document Merlin-managed model cleanup"
 grep -q 'Docker Desktop, Homebrew, and the Ollama app/binary were not removed' "$PKG_UNINSTALL" \
   || fail "uninstaller does not clearly separate app purge from dependency removal"
+grep -q 'INSTALL_MANIFEST=' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not read Merlin install manifest"
+grep -q 'installed_by_merlin' "$PKG_UNINSTALL" \
+  || fail "uninstaller dependency purge is not manifest-gated"
+grep -q 'refusing to remove shared dependencies' "$PKG_UNINSTALL" \
+  || fail "uninstaller does not fail closed when dependency manifest is missing"
 grep -q 'com.homeai.backup' "$PKG_UNINSTALL" \
   || fail "uninstaller does not remove backup launchd agent"
 grep -q 'com.homeai.merlin-status-api' "$PKG_UNINSTALL" \
@@ -109,6 +135,17 @@ grep -q 'ollama rm qwen2.5:7b' <<< "$purge_dry_run_output" \
 grep -q 'ollama rm nomic-embed-text' <<< "$purge_dry_run_output" \
   || fail "purge-all dry-run does not remove embedding model"
 
+missing_manifest_home="$tmp_dir/missing-manifest-home"
+mkdir -p "$missing_manifest_home"
+dependency_dry_run_output="$(
+  HOME="$missing_manifest_home" \
+  bash "$PKG_UNINSTALL" --dry-run --yes --purge-dependencies --keep-files --keep-receipt 2>&1
+)"
+grep -q 'Evaluating dependency purge' <<< "$dependency_dry_run_output" \
+  || fail "dependency purge dry-run does not evaluate manifest"
+grep -q 'refusing to remove shared dependencies' <<< "$dependency_dry_run_output" \
+  || fail "dependency purge dry-run does not fail closed without manifest"
+
 cat > "$tmp_dir/bin/docker" <<'SH'
 #!/usr/bin/env bash
 case "${1:-}" in
@@ -133,6 +170,31 @@ MODELS
 esac
 SH
 chmod +x "$tmp_dir/bin/docker" "$tmp_dir/bin/ollama"
+
+mkdir -p "$tmp_dir/home/.merlin"
+cat > "$tmp_dir/home/.merlin/install-manifest.json" <<'JSON'
+{
+  "product": "Merlin AI",
+  "manifest_version": 1,
+  "dependencies": {
+    "homebrew": {"installed_by_merlin": false},
+    "docker_desktop": {"installed_by_merlin": false},
+    "ollama": {"installed_by_merlin": true}
+  }
+}
+JSON
+
+manifest_dependency_output="$(
+  HOME="$tmp_dir/home" \
+  PATH="$tmp_dir/bin:$PATH" \
+  bash "$PKG_UNINSTALL" --dry-run --yes --purge-dependencies --keep-files --keep-receipt 2>&1
+)"
+grep -q 'brew uninstall ollama' <<< "$manifest_dependency_output" \
+  || fail "manifest-gated dependency dry-run does not remove Merlin-installed Ollama"
+grep -q 'Keeping Docker Desktop; manifest does not mark it installed by Merlin' <<< "$manifest_dependency_output" \
+  || fail "manifest-gated dependency dry-run does not keep pre-existing Docker"
+grep -q 'Keeping Homebrew; manifest does not mark it installed by Merlin' <<< "$manifest_dependency_output" \
+  || fail "manifest-gated dependency dry-run does not keep pre-existing Homebrew"
 
 OLLAMA_RM_LOG="$tmp_dir/ollama-rm.log" \
 HOME="$tmp_dir/home" \

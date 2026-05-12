@@ -170,6 +170,18 @@ This removes Merlin app files, Docker containers, Docker volumes, Docker images
 used by the stack, and known Merlin-recommended Ollama models. It still keeps
 system dependencies: Docker Desktop, Homebrew, and the Ollama app/binary.
 
+Dependency-aware removal:
+
+```bash
+bash ~/merlin-ai/pkg/scripts/uninstall.sh --dry-run --purge-dependencies
+bash ~/merlin-ai/pkg/scripts/uninstall.sh --purge-dependencies --i-understand-shared-tools
+```
+
+Merlin writes `~/.merlin/install-manifest.json` during install. Dependency
+purge uses that manifest and only removes shared tools marked as installed by
+Merlin. Docker Desktop, Ollama, and Homebrew may be used by other apps, so this
+path is intentionally explicit and should be previewed first.
+
 Preview first:
 
 ```bash
