@@ -58,7 +58,7 @@ grep -q "Merlin is warming up" "$DASHBOARD_FILE" \
   || fail "startup card must tell the user Merlin is warming up"
 grep -q "Merlin is checking your Mac" "$DASHBOARD_FILE" \
   || fail "startup card must explain local checks in plain English"
-grep -q "Merlin is ready to chat" "$DASHBOARD_FILE" \
+grep -q "Merlin can start chat" "$DASHBOARD_FILE" \
   || fail "startup card must transition to clear chat readiness"
 grep -q "startup-check-dashboard" "$DASHBOARD_FILE" \
   || fail "startup card missing dashboard check"

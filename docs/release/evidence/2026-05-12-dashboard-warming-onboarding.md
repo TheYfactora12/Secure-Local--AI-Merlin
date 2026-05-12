@@ -48,4 +48,5 @@ git diff --check
 
 - Rebuild and reinstall the package before claiming this change is present in the installed runtime at `localhost:8888`.
 - Installer retest is required because the package artifact must include the updated dashboard files.
+- The startup copy avoids static "ready" claims; the success state is phrased as "Merlin can start chat" after checks pass.
 - Wizard-hat/orb animation can be improved later, but no animation is required for this readiness hardening slice.

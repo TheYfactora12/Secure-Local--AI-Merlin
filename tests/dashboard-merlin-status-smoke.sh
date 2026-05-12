@@ -20,7 +20,7 @@ require "Your private AI. Local by default." "dashboard missing local-by-default
 require "Merlin AI is running" "dashboard missing first-run onboarding statement"
 require "startup-warming-card" "dashboard missing calm startup warming card"
 require "Merlin is warming up" "dashboard missing warming startup copy"
-require "Merlin is ready to chat" "dashboard missing ready startup copy"
+require "Merlin can start chat" "dashboard missing chat-start startup copy"
 require "renderStartupWarming" "dashboard missing startup readiness renderer"
 require "Nothing leaves this Mac" "dashboard missing plain-English privacy promise"
 require "Start Chatting" "dashboard missing first-run chat action"
