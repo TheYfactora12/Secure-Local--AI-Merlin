@@ -74,7 +74,7 @@ The first screen has three jobs:
 
 - **Start Chatting** opens the local chat workspace.
 - **Automate** opens optional local workflows.
-- **Dashboard / See Details** shows service status and recovery guidance.
+- **Check System / See Details** shows service status and recovery guidance.
 
 Merlin is private by default. Nothing leaves this Mac unless you explicitly add
 and enable a cloud provider later.

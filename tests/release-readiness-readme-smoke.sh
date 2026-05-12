@@ -26,6 +26,8 @@ grep -q "Wait for the warming card" "$README" \
   || fail "README must match dashboard warming onboarding"
 grep -q "See Details" "$README" \
   || fail "README must explain the System recovery path"
+grep -q "Check System / See Details" "$README" \
+  || fail "README first-run actions must use Check System label"
 grep -q "tail -n 120 /tmp/merlin-ai-install.log" "$README" \
   || fail "README must include plain-English install log recovery evidence"
 grep -q "not public beta" "$README" \

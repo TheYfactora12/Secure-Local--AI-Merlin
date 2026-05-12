@@ -92,6 +92,8 @@ grep -q "Automate" "$DASHBOARD_FILE" \
   || fail "Chat home missing first-run automation action"
 grep -q "window.open('http://localhost:5678'" "$DASHBOARD_FILE" \
   || fail "Automate must open optional local n8n workflows"
+grep -q "Check System" "$DASHBOARD_FILE" \
+  || fail "first-run System action must use human-readable Check System label"
 grep -q 'id="first-run-dashboard"' "$DASHBOARD_FILE" \
   || fail "first-run onboarding must include dashboard status"
 grep -q 'id="first-run-chat"' "$DASHBOARD_FILE" \
