@@ -51,8 +51,11 @@ marked as blocked for beta signoff rather than left as TODO.
 ## Remaining Gaps
 
 - Fill `docs/operations/TRUSTED_LOCAL_BETA_EVIDENCE.md` as a named release
-  candidate run after running the remaining blocked rows: offline launch and
-  Magic Mode/audit validation.
+  candidate run after running the remaining blocked rows: true
+  network-disconnected launch and Magic Mode/audit validation.
+- Local-image restart has supporting evidence in
+  `docs/release/evidence/2026-05-12-local-image-restart-validation.md`, but it
+  is not a substitute for pulling the network and proving air-gapped startup.
 - Run or explicitly defer destructive purge validation. This must remain
   opt-in because Docker Desktop, Ollama, and Homebrew may be shared tools.
 - Keep #64 open/deferred for Developer ID signing and notarization.

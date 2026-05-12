@@ -19,6 +19,8 @@ All notable changes to Merlin AI are documented here.
   Local Beta evidence pack with current package/onboarding verification status.
 - Filled the release evidence table with the current named package/onboarding
   verification run and marked remaining beta-signoff gaps explicitly.
+- Added local-image restart validation evidence for the offline-launch row,
+  while keeping true network-disconnected launch as a beta-signoff blocker.
 
 ### Notes
 
