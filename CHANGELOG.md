@@ -17,6 +17,8 @@ All notable changes to Merlin AI are documented here.
   workflow, and smoke-test copy to the Merlin AI naming.
 - Added a 2026-05-12 #95 product-push evidence rollup and refreshed the Trusted
   Local Beta evidence pack with current package/onboarding verification status.
+- Filled the release evidence table with the current named package/onboarding
+  verification run and marked remaining beta-signoff gaps explicitly.
 
 ### Notes
 

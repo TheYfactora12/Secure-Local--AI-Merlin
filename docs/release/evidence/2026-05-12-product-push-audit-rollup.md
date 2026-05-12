@@ -17,6 +17,11 @@ onboarding copy, recovery guidance, package uninstall/reinstall loop, and green
 CI on the current head. The remaining #95 work is to keep the evidence pack
 current and run a named release-candidate validation pass before any beta claim.
 
+Update after this rollup: the release evidence table in
+`docs/operations/TRUSTED_LOCAL_BETA_EVIDENCE.md` is now filled with the current
+May 12 package/onboarding verification result. Rows without May 12 evidence are
+marked as blocked for beta signoff rather than left as TODO.
+
 ## Evidence Confirmed
 
 | Area | Evidence | Result |
@@ -46,8 +51,8 @@ current and run a named release-candidate validation pass before any beta claim.
 ## Remaining Gaps
 
 - Fill `docs/operations/TRUSTED_LOCAL_BETA_EVIDENCE.md` as a named release
-  candidate run with machine, OS, RAM, commit, CI URL, network state, and pass
-  or fail result.
+  candidate run after running the remaining blocked rows: offline launch and
+  Magic Mode/audit validation.
 - Run or explicitly defer destructive purge validation. This must remain
   opt-in because Docker Desktop, Ollama, and Homebrew may be shared tools.
 - Keep #64 open/deferred for Developer ID signing and notarization.

@@ -44,21 +44,22 @@ Run this full evidence pack whenever any of these change:
 
 ## Release Candidate Metadata
 
-Fill this block for each beta validation run:
+Fill this block for each beta validation run. The current entry is a named
+package/onboarding verification run, not a full beta signoff.
 
 | Field | Value |
 |---|---|
-| Date | TODO |
-| Tester | TODO |
-| Machine | TODO |
-| OS version | TODO |
-| RAM / hardware tier | TODO |
-| Commit SHA | TODO |
-| CI run URL | TODO |
+| Date | 2026-05-12 |
+| Tester | Kevin Medeiros with Codex-assisted verification |
+| Machine | `Kevins-MBP`, Apple M2 |
+| OS version | macOS 26.4.1, build 25E253 |
+| RAM / hardware tier | 8 GB / low-core target |
+| Commit SHA | Package verification: `744f739`; evidence rollup: `e28640a` |
+| CI run URL | `https://github.com/TheYfactora12/Secure-Local--AI-Merlin/actions/runs/25713160707` |
 | Profile | `core` |
 | Model pulls | `HOME_AI_SKIP_MODEL_PULLS=true` |
-| Network state | TODO: online for dependency install / offline launch test |
-| Result | TODO: pass / fail / blocked |
+| Network state | Online for package install verification; offline launch not rerun in this entry |
+| Result | Package/onboarding verification passed; full beta signoff still blocked pending the remaining table rows below |
 
 ## Current Evidence Rollup - 2026-05-12
 
@@ -324,18 +325,18 @@ Look for:
 
 | Area | Command / artifact | Expected | Actual | Pass? | Issue |
 |---|---|---|---|---|---|
-| CI baseline | `gh run list --branch main --limit 3` | latest run green | TODO | TODO | TODO |
-| Clean install | install command above | exit 0 | TODO | TODO | TODO |
-| Uninstall | `pkg/scripts/uninstall.sh --yes --keep-files` | exit 0 | TODO | TODO | TODO |
-| Reinstall | install command above | exit 0 | TODO | TODO | TODO |
-| Upgrade | `bash scripts/upgrade.sh --profile core` | exit 0 | TODO | TODO | TODO |
-| Offline launch | offline commands above | local services start or degrade honestly | TODO | TODO | TODO |
-| Service health | doctor + curl checks | 0 failures | TODO | TODO | TODO |
-| Dashboard readiness | screenshots + smokes | no fake ready | TODO | TODO | TODO |
-| Privacy defaults | policy/log review | no cloud, no telemetry | TODO | TODO | TODO |
-| Model downloads | installer policy smoke | no surprise pulls | TODO | TODO | TODO |
-| Magic Mode | plan/audit smokes | plan-only | TODO | TODO | TODO |
-| Startup logs | log review | no release-blocking errors | TODO | TODO | TODO |
+| CI baseline | `gh run list --branch main --limit 3` | latest run green | Run `25713160707` passed on `e28640a` | Pass | None |
+| Clean install | `scripts/run-pkg-install-verification.sh ./merlin-ai-0.8.6.pkg` | exit 0 and core endpoints green | Package install verification passed with 17 pass, 0 warn, 0 fail; see `docs/release/evidence/2026-05-12-package-check-system-recovery-install.md` | Pass | None |
+| Uninstall | `pkg/scripts/uninstall.sh --yes --keep-files` | exit 0 | Keep-files uninstall verified; endpoints stopped as expected except native Ollama preserved by design | Pass | None |
+| Reinstall | package verification after keep-files uninstall | exit 0 | Package reinstall verification passed with 17 pass, 0 warn, 0 fail; see `docs/release/evidence/2026-05-11-package-uninstall-verification.md` | Pass | None |
+| Upgrade | `bash scripts/upgrade.sh --profile core` | exit 0 | Safe upgrade/rollback path documented and tested; see `docs/release/evidence/2026-05-11-safe-upgrade-progress.md` | Pass | None |
+| Offline launch | offline commands above | local services start or degrade honestly | Not rerun in the 2026-05-12 package/onboarding verification entry | Blocked for beta signoff | Needs named offline validation |
+| Service health | package verification endpoint checks | 0 failures | Dashboard, Open WebUI, LiteLLM, Qdrant, Ollama, status API, and task API checks passed in package verification | Pass | None |
+| Dashboard readiness | installed dashboard copy checks and smokes | no fake ready | Installed dashboard includes `Check System`, `Service details`, `Startup checks`, warming/recovery copy; dashboard/readme smokes passed | Pass | None |
+| Privacy defaults | policy/log review | no cloud, no telemetry | README and dashboard preserve local-first/no-cloud guidance; no cloud-provider setup required for package verification | Pass with continued log review required | None |
+| Model downloads | installer policy smoke/package run | no surprise pulls | Model pulls remain explicit; no package evidence indicates surprise model download | Pass with continued log review required | None |
+| Magic Mode | plan/audit smokes | plan-only | Not rerun in the 2026-05-12 package/onboarding verification entry | Blocked for beta signoff | Needs named Magic Mode/audit validation |
+| Startup logs | package verification log | no release-blocking errors | Local package verification log recorded; final result was 17 pass, 0 warn, 0 fail after expected warmup attempts | Pass | None |
 
 ## Blocker Rule
 
