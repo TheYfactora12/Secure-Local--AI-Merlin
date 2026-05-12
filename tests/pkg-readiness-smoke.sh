@@ -43,6 +43,12 @@ grep -q 'Install log writable by' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall does not hand log ownership to the installing user"
 grep -q 'run_as_user' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall does not use a dedicated user command runner"
+grep -q 'run_as_user_gui' "${STACK_DIR}/pkg/scripts/postinstall" \
+  || fail "postinstall does not use a GUI-session user command runner"
+grep -q 'launchctl asuser' "${STACK_DIR}/pkg/scripts/postinstall" \
+  || fail "postinstall launchd setup must run inside the installing user's GUI session"
+grep -q 'Installing launchd auto-start agents through user GUI session' "${STACK_DIR}/pkg/scripts/postinstall" \
+  || fail "postinstall does not document GUI-session launchd setup"
 grep -q 'rsync -a' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall must use filtered rsync copy, not raw cp -R"
 grep -q -- "--exclude='.wizard-bootstrapped'" "${STACK_DIR}/pkg/scripts/postinstall" \

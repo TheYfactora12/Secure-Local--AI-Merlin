@@ -25,12 +25,22 @@ run_as_user() {
     /bin/bash -lc "$1"
 }
 
+run_as_user_gui() {
+  /bin/launchctl asuser "$INSTALLING_UID" \
+    /usr/bin/sudo -u "$INSTALLING_USER" \
+      HOME="$INSTALLING_HOME" \
+      USER="$INSTALLING_USER" \
+      LOGNAME="$INSTALLING_USER" \
+      /bin/bash -lc "$1"
+}
+
 # ---------------------------------------------------------------------------
 # Detect the installing user (not root)
 # ---------------------------------------------------------------------------
 INSTALLING_USER=$(stat -f '%Su' /dev/console 2>/dev/null || echo "$USER")
 INSTALLING_HOME=$(dscl . -read "/Users/${INSTALLING_USER}" NFSHomeDirectory 2>/dev/null \
   | awk '{print $2}' || echo "/Users/${INSTALLING_USER}")
+INSTALLING_UID=$(id -u "$INSTALLING_USER")
 
 log "Installing for user: $INSTALLING_USER ($INSTALLING_HOME)"
 
@@ -95,7 +105,7 @@ fi
 # ---------------------------------------------------------------------------
 if [[ -d "/Applications/Docker.app" ]]; then
   log "  Opening Docker Desktop for first-run setup..."
-  run_as_user "open -a Docker" >> "$LOG_FILE" 2>&1 || true
+  run_as_user_gui "open -a Docker" >> "$LOG_FILE" 2>&1 || true
 fi
 
 # ---------------------------------------------------------------------------
@@ -108,8 +118,8 @@ run_as_user \
 # ---------------------------------------------------------------------------
 # 8. Install launchd agents for auto-start
 # ---------------------------------------------------------------------------
-log "  Installing launchd auto-start agents..."
-run_as_user \
+log "  Installing launchd auto-start agents through user GUI session..."
+run_as_user_gui \
   "bash '${USER_INSTALL_DIR}/launchd/install-launchd.sh' >> '${LOG_FILE}' 2>&1" || true
 
 # ---------------------------------------------------------------------------
