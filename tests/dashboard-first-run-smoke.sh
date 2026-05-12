@@ -52,6 +52,30 @@ grep -q "Your private AI. On your Mac. Forever." "$DASHBOARD_FILE" \
   || fail "Chat home missing Merlin AI product framing"
 grep -q "Merlin AI is running" "$DASHBOARD_FILE" \
   || fail "Chat home missing first-run onboarding statement"
+grep -q "startup-warming-card" "$DASHBOARD_FILE" \
+  || fail "Chat home missing calm startup warming card"
+grep -q "Merlin is warming up" "$DASHBOARD_FILE" \
+  || fail "startup card must tell the user Merlin is warming up"
+grep -q "Merlin is checking your Mac" "$DASHBOARD_FILE" \
+  || fail "startup card must explain local checks in plain English"
+grep -q "Merlin is ready to chat" "$DASHBOARD_FILE" \
+  || fail "startup card must transition to clear chat readiness"
+grep -q "startup-check-dashboard" "$DASHBOARD_FILE" \
+  || fail "startup card missing dashboard check"
+grep -q "startup-check-chat" "$DASHBOARD_FILE" \
+  || fail "startup card missing chat check"
+grep -q "startup-check-brain" "$DASHBOARD_FILE" \
+  || fail "startup card missing local brain check"
+grep -q "startup-check-router" "$DASHBOARD_FILE" \
+  || fail "startup card missing router check"
+grep -q "startup-check-memory" "$DASHBOARD_FILE" \
+  || fail "startup card missing memory check"
+grep -q "startup-check-privacy" "$DASHBOARD_FILE" \
+  || fail "startup card missing privacy check"
+grep -q "renderStartupWarming" "$DASHBOARD_FILE" \
+  || fail "startup warming card must bind to live readiness state"
+grep -q "setStartChatActions" "$DASHBOARD_FILE" \
+  || fail "Start Chatting action must reflect readiness"
 grep -q "mobile-first-run" "$DASHBOARD_FILE" \
   || fail "Chat home missing mobile first-run onboarding banner"
 grep -q "Nothing leaves this Mac" "$DASHBOARD_FILE" \

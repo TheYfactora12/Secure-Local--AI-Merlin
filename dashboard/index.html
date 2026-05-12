@@ -28,7 +28,7 @@
 }
 
 * { box-sizing: border-box; }
-html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); }
+html, body { margin: 0; min-height: 100%; overflow-x: hidden; background: var(--bg); color: var(--text); font-family: var(--sans); }
 body { font-size: 14px; line-height: 1.45; }
 button, input, textarea { font: inherit; }
 button,
@@ -518,12 +518,16 @@ textarea {
   gap: 8px;
   min-width: 0;
 }
+.front-console-title > div {
+  min-width: 0;
+}
 .front-console-title strong {
   font-size: 14px;
 }
 .front-console-title span {
   color: var(--muted);
   font-size: 12px;
+  overflow-wrap: anywhere;
 }
 .mode-strip {
   display: flex;
@@ -574,6 +578,91 @@ button.mode-pill:hover {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.5;
+}
+.startup-warming-card {
+  max-width: 720px;
+  margin: 0 auto 16px;
+  border: 1px solid rgba(103, 232, 249, 0.18);
+  border-radius: 14px;
+  padding: 16px;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(103, 232, 249, 0.12), transparent 34%),
+    rgba(15, 18, 17, 0.82);
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.28);
+}
+.startup-warming-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.startup-warming-title {
+  display: grid;
+  gap: 5px;
+}
+.startup-warming-title h3 {
+  margin: 0;
+  font-size: 17px;
+  color: var(--text);
+}
+.startup-warming-title p {
+  margin: 0;
+  max-width: 56ch;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.startup-progress {
+  min-width: 66px;
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-align: right;
+}
+.startup-check-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 13px;
+}
+.startup-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 7px 9px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.025);
+  font-size: 12px;
+}
+.startup-check.good {
+  color: var(--green);
+  border-color: rgba(66, 211, 146, 0.26);
+  background: rgba(66, 211, 146, 0.06);
+}
+.startup-check.warn {
+  color: var(--yellow);
+  border-color: rgba(243, 201, 105, 0.24);
+  background: rgba(243, 201, 105, 0.06);
+}
+.startup-action-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 13px;
+}
+.startup-action-row .mini-control {
+  width: auto;
+  min-width: 170px;
+}
+.mini-control:disabled,
+.mini-control.disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
 }
 .front-empty {
   max-width: 720px;
@@ -909,6 +998,7 @@ button.mode-pill:hover {
 .chat-form {
   display: grid;
   gap: 0;
+  min-width: 0;
   border: 1px solid rgba(103, 232, 249, 0.26);
   border-radius: 20px;
   padding: 0;
@@ -1220,6 +1310,15 @@ button.mode-pill:hover {
   }
   .mobile-first-run .mini-control-stack {
     margin-top: 0;
+  }
+  .startup-check-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .startup-warming-head {
+    display: grid;
+  }
+  .startup-progress {
+    text-align: left;
   }
 }
 .mode-choice-grid {
@@ -1769,6 +1868,39 @@ button.mode-pill:hover {
   .surface-card.wide { grid-column: auto; }
   .route-table { display: block; overflow-x: auto; }
   .model-table { display: block; overflow-x: auto; }
+  .topbar {
+    padding: 12px;
+  }
+  .tab-button {
+    padding-inline: 10px;
+  }
+  .chat-home.tab-page,
+  .tab-page {
+    padding: 10px;
+  }
+  .front-console-top {
+    padding: 10px;
+  }
+  .front-console-title {
+    width: 100%;
+  }
+  .front-console-title span {
+    display: block;
+    max-width: 100%;
+  }
+  .front-chat-scroll {
+    padding: 14px 10px 12px;
+  }
+  .front-composer-wrap {
+    padding: 0 10px 12px;
+  }
+  .startup-warming-card {
+    padding: 14px;
+  }
+  .startup-action-row .mini-control {
+    width: 100%;
+    min-width: 0;
+  }
 }
 /* Merlin composer polish: scoped to composer/status row only. */
 .composer-tools .tool-chip {
@@ -1903,6 +2035,70 @@ button.mode-pill:hover {
     font-size: 14px;
   }
 }
+@media (max-width: 820px) {
+  .app,
+  .topbar,
+  .chat-home.tab-page,
+  .merlin-front-shell,
+  .front-main,
+  .front-console-top,
+  .front-chat-scroll,
+  .front-composer-wrap,
+  .front-composer-wrap .chat-form,
+  .startup-warming-card {
+    width: 100%;
+    max-width: 100vw;
+    min-width: 0;
+  }
+  .app,
+  .topbar,
+  .chat-home.tab-page,
+  .merlin-front-shell,
+  .front-main {
+    overflow-x: hidden;
+  }
+  .topbar {
+    align-items: stretch;
+  }
+  .top-actions {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .tabbar {
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .tabbar::-webkit-scrollbar {
+    display: none;
+  }
+  .front-console-title,
+  .startup-warming-title,
+  .startup-warming-message,
+  .startup-progress {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+@media (max-width: 560px) {
+  .startup-warming-head {
+    display: grid;
+  }
+  .startup-progress {
+    text-align: left;
+  }
+  .startup-check-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 360px) {
+  .startup-check-list {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
 </head>
 <body>
@@ -1947,7 +2143,7 @@ button.mode-pill:hover {
           <h3>Merlin AI is running</h3>
           <p>Your AI is private. Nothing leaves this Mac unless you explicitly enable a cloud provider later.</p>
           <div class="mini-control-stack" aria-label="First-run actions">
-            <button class="mini-control active" type="button" onclick="window.open('http://localhost:3000', '_blank', 'noopener')"><strong>Start Chatting</strong><span>Open the local chat workspace.</span></button>
+            <button class="mini-control active" type="button" data-start-chat-action onclick="window.open('http://localhost:3000', '_blank', 'noopener')"><strong>Start Chatting</strong><span>Open the local chat workspace.</span></button>
             <button class="mini-control" type="button" onclick="window.open('http://localhost:5678', '_blank', 'noopener')"><strong>Automate</strong><span>Open optional local n8n workflows.</span></button>
             <button class="mini-control" type="button" onclick="selectTab('system')"><strong>Dashboard</strong><span>Check all local service status.</span></button>
           </div>
@@ -2054,11 +2250,32 @@ button.mode-pill:hover {
         </div>
 
         <div class="front-chat-scroll">
+          <section class="startup-warming-card" id="startup-warming-card" aria-live="polite" aria-label="Merlin startup readiness">
+            <div class="startup-warming-head">
+              <div class="startup-warming-title">
+                <h3 id="startup-warming-title">Merlin is warming up</h3>
+                <p id="startup-warming-message">I am checking the private local stack. Nothing leaves this Mac while Merlin starts.</p>
+              </div>
+              <div class="startup-progress" id="startup-progress">0 / 6</div>
+            </div>
+            <div class="startup-check-list" aria-label="Local startup checks">
+              <span class="startup-check warn" id="startup-check-dashboard"><span class="status-dot warn" aria-hidden="true"></span>Dashboard</span>
+              <span class="startup-check warn" id="startup-check-chat"><span class="status-dot warn" aria-hidden="true"></span>Chat</span>
+              <span class="startup-check warn" id="startup-check-brain"><span class="status-dot warn" aria-hidden="true"></span>Local brain</span>
+              <span class="startup-check warn" id="startup-check-router"><span class="status-dot warn" aria-hidden="true"></span>Router</span>
+              <span class="startup-check warn" id="startup-check-memory"><span class="status-dot warn" aria-hidden="true"></span>Memory</span>
+              <span class="startup-check warn" id="startup-check-privacy"><span class="status-dot warn" aria-hidden="true"></span>Privacy</span>
+            </div>
+            <div class="startup-action-row">
+              <button class="mini-control active" type="button" data-start-chat-action onclick="window.open('http://localhost:3000', '_blank', 'noopener')"><strong>Start Chatting</strong><span>Available when local chat is reachable.</span></button>
+              <button class="mini-control" type="button" onclick="selectTab('system')"><strong>See Details</strong><span>Open service health and recovery steps.</span></button>
+            </div>
+          </section>
           <section class="mobile-first-run" aria-label="Merlin AI mobile first-run onboarding">
             <h3>Merlin AI is running</h3>
             <p>Your private AI is on this Mac. Nothing leaves unless you enable a cloud provider later.</p>
             <div class="mini-control-stack" aria-label="Mobile first-run actions">
-              <button class="mini-control active" type="button" onclick="window.open('http://localhost:3000', '_blank', 'noopener')"><strong>Start Chatting</strong><span>Open the local chat workspace.</span></button>
+              <button class="mini-control active" type="button" data-start-chat-action onclick="window.open('http://localhost:3000', '_blank', 'noopener')"><strong>Start Chatting</strong><span>Open the local chat workspace.</span></button>
               <button class="mini-control" type="button" onclick="window.open('http://localhost:5678', '_blank', 'noopener')"><strong>Automate</strong><span>Open optional local workflows.</span></button>
               <button class="mini-control" type="button" onclick="selectTab('system')"><strong>Dashboard</strong><span>Check local service status.</span></button>
             </div>
@@ -2646,6 +2863,82 @@ function setStage(id, state, label, detail) {
   if (stateEl) stateEl.textContent = label;
   const detailEl = el.querySelector('span:not(.status-dot)');
   if (detailEl && detail) detailEl.textContent = detail;
+}
+
+function setStartupCheck(id, ready, label) {
+  const el = document.getElementById(`startup-check-${id}`);
+  if (!el) return;
+  const state = ready ? 'good' : 'warn';
+  el.className = `startup-check ${state}`;
+  const dotEl = el.querySelector('.status-dot');
+  if (dotEl) dotEl.className = `status-dot ${state}`;
+  const labelNode = Array.from(el.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+  if (labelNode) labelNode.textContent = label;
+}
+
+function setStartChatActions(enabled, detail) {
+  document.querySelectorAll('[data-start-chat-action]').forEach(button => {
+    button.disabled = !enabled;
+    button.classList.toggle('disabled', !enabled);
+    const span = button.querySelector('span');
+    if (span) span.textContent = detail;
+    button.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+  });
+}
+
+function renderStartupWarming() {
+  const service = id => Boolean(readinessState.services[id]);
+  const status = readinessState.status;
+  const models = readinessState.models;
+  const privacyReady = Boolean(status && status.cloud_allowed === false && status.online_mode === false);
+  const checks = {
+    dashboard: service('8888'),
+    chat: service('3000'),
+    brain: service('11434'),
+    router: service('4000') && service('8766'),
+    memory: service('6333'),
+    privacy: privacyReady,
+  };
+  const readyCount = Object.values(checks).filter(Boolean).length;
+  const totalCount = Object.keys(checks).length;
+  const chatCanOpen = checks.chat && checks.brain;
+  const coreReady = readyCount === totalCount;
+  const modelReady = Boolean(models && models.chat_ready);
+
+  setStartupCheck('dashboard', checks.dashboard, checks.dashboard ? 'Dashboard ready' : 'Dashboard warming');
+  setStartupCheck('chat', checks.chat, checks.chat ? 'Chat ready' : 'Chat warming');
+  setStartupCheck('brain', checks.brain, checks.brain ? 'Local brain online' : 'Local brain warming');
+  setStartupCheck('router', checks.router, checks.router ? 'Router ready' : 'Router warming');
+  setStartupCheck('memory', checks.memory, checks.memory ? 'Memory ready' : 'Memory warming');
+  setStartupCheck('privacy', checks.privacy, checks.privacy ? 'Privacy verified' : 'Privacy checking');
+  text('startup-progress', `${readyCount} / ${totalCount}`);
+
+  if (!readinessState.probesComplete) {
+    text('startup-warming-title', 'Merlin is checking your Mac');
+    text('startup-warming-message', 'I am finding each local service now. Nothing leaves this Mac while Merlin starts.');
+    setStartChatActions(false, 'Waiting for local chat to answer.');
+    return;
+  }
+
+  if (coreReady && modelReady) {
+    text('startup-warming-title', 'Merlin is ready to chat');
+    text('startup-warming-message', 'Your private local AI stack is responding, privacy mode is verified, and a local chat model is available.');
+    setStartChatActions(true, 'Open the local chat workspace.');
+    return;
+  }
+
+  if (chatCanOpen) {
+    text('startup-warming-title', modelReady ? 'Merlin is almost ready' : 'Merlin is running; local model setup may be needed');
+    text('startup-warming-message', modelReady
+      ? 'The local chat workspace can open now while a few background checks finish.'
+      : 'The local chat workspace can open now. If it asks for a model, use Brains or the installer guidance before sending private work.');
+    setStartChatActions(true, 'Open local chat while Merlin finishes checks.');
+    return;
+  }
+
+  text('startup-warming-title', 'Merlin is warming up');
+  text('startup-warming-message', `${WARMING_COPY} If this does not clear, open System for plain-English recovery steps.`);
+  setStartChatActions(false, 'Waiting for local chat to answer.');
 }
 
 function safe(value, fallback = '—') {
@@ -4819,6 +5112,7 @@ function renderReadiness() {
   metricState('brain-runtime', service('11434') ? 'good' : 'warn', service('11434') ? 'Ollama Native' : 'unavailable');
   metricState('brain-acceleration', status && status.hardware_tier === 'low' ? 'warn' : 'info', status && status.hardware_tier ? `${status.hardware_tier} tier` : 'checking');
   metricState('brain-routing', service('4000') && service('8766') ? 'good' : 'warn', service('4000') && service('8766') ? 'Local-First' : 'degraded');
+  renderStartupWarming();
 }
 
 async function refreshAll() {
@@ -4844,6 +5138,7 @@ selectInitialTab();
 renderRoomPicker();
 updateRoomSaveMeter();
 updateChatRouteDetail(null);
+renderStartupWarming();
 updateComposerState();
 document.getElementById('merlin-chat-input')?.addEventListener('input', updateComposerState);
 window.addEventListener('hashchange', selectInitialTab);
