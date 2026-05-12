@@ -25,11 +25,11 @@ grep -q 'write_install_manifest' "$INSTALLER" \
   || fail "installer does not write dependency manifest"
 grep -q 'installed_by_merlin' "$INSTALLER" \
   || fail "installer manifest does not record Merlin-installed dependencies"
-grep -q '~/.merlin/install-manifest.json' "$README" \
+grep -q '\.merlin/install-manifest\.json' "$README" \
   || fail "README does not document install manifest"
 grep -q -- '--purge-dependencies' "$README" \
   || fail "README does not document dependency purge preview"
-grep -q '~/.merlin/install-manifest.json' "$PKG_README" \
+grep -q '\.merlin/install-manifest\.json' "$PKG_README" \
   || fail "pkg README does not document install manifest"
 
 bash "$PKG_UNINSTALL" --help >/dev/null \
