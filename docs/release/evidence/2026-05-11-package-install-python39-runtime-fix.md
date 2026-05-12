@@ -100,3 +100,59 @@ Rebuild `merlin-ai-0.8.6.pkg`, reinstall with
 `bash scripts/run-pkg-install-verification.sh merlin-ai-0.8.6.pkg`, and verify
 the task API now passes from the package-installed runtime.
 
+## Follow-Up Package Verification
+
+After applying the fix, the package was rebuilt and reinstalled through the
+guided runner:
+
+```bash
+bash pkg/build-pkg.sh
+bash scripts/run-pkg-install-verification.sh merlin-ai-0.8.6.pkg
+```
+
+Evidence log:
+
+```text
+docs/release/evidence/local/pkg-install-verification-2026-05-12-013812Z.log
+```
+
+Installer result:
+
+```text
+installer: The upgrade was successful.
+```
+
+Final verifier result:
+
+```text
+Summary: 17 pass, 0 warn, 0 fail
+Merlin package install verification passed.
+Finished: 2026-05-12T01:39:22Z
+```
+
+Services verified by the guided runner:
+
+- Package receipt: `com.merlin.ai`
+- System payload: `/usr/local/merlin-ai`
+- User runtime: `~/merlin-ai`
+- Install log: `/tmp/merlin-ai-install.log`
+- Dependency manifest: `~/.merlin/install-manifest.json`
+- Launchd agents:
+  - `com.merlin.docker`
+  - `com.merlin.stack`
+  - `com.merlin.status-api`
+  - `com.merlin.task-api`
+- Local endpoints:
+  - Dashboard `http://localhost:8888`
+  - Open WebUI `http://localhost:3000`
+  - LiteLLM `http://localhost:4000/health/readiness`
+  - Qdrant `http://localhost:6333/healthz`
+  - Ollama `http://localhost:11434/api/tags`
+  - Merlin status API `http://localhost:8765/healthz`
+  - Merlin task API `http://localhost:8766/status/routes`
+
+CI:
+
+```text
+25707902971 - success
+```
