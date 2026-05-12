@@ -6,13 +6,14 @@ import hashlib
 import json
 import os
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
+UTC = timezone.utc
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_APPROVAL_LOG = REPO_ROOT / "logs" / "merlin-approvals.jsonl"
 APPROVABLE_STATUSES = {"required_pending", "approved"}

@@ -11,7 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from merlin.config_loader import REPO_ROOT
 
 
+UTC = timezone.utc
 DEFAULT_CONNECTOR_STORE = REPO_ROOT / "logs" / "provider-connectors.json"
 
 

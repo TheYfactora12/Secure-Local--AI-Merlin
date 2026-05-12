@@ -8,7 +8,7 @@ import logging
 import os
 import platform
 import subprocess
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
@@ -20,6 +20,7 @@ from merlin.router import RouteDecision
 
 logger = logging.getLogger(__name__)
 
+UTC = timezone.utc
 OutcomeStatus = Literal["success", "failure", "timeout", "rejected", "degraded"]
 UserFeedback = Literal["positive", "negative", "none"]
 OutcomeRating = Literal["approved", "corrected", "rejected", "none"]

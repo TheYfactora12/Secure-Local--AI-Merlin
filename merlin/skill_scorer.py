@@ -9,12 +9,13 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from merlin.memory_manager import MemoryManager
 
 
+UTC = timezone.utc
 RECENCY_HALF_LIFE_DAYS = 30
 MIN_OUTCOMES_FOR_SCORE = 3
 CONFIDENCE_SCALE_FACTOR = 10

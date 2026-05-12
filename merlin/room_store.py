@@ -11,13 +11,14 @@ import os
 import re
 import shutil
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
+UTC = timezone.utc
 DEFAULT_BRAIN_ROOT = Path.home() / "Merlin" / "brain"
 ROOM_SLUG_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$")
 

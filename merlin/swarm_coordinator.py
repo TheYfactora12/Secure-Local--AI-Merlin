@@ -8,9 +8,12 @@ prompt construction. It performs no model calls, network calls, or I/O.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from merlin.router import RouteDecision
+
+
+UTC = timezone.utc
 
 
 @dataclass(frozen=True)

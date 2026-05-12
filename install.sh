@@ -503,7 +503,7 @@ if [[ -f "$MERLIN_REQUIREMENTS" ]]; then
     log "Merlin Python virtual environment already exists"
   fi
 
-  if "${MERLIN_VENV}/bin/python" -c 'import yaml, pydantic, fastapi, httpx' >/dev/null 2>&1; then
+  if "${MERLIN_VENV}/bin/python" -c 'import yaml, pydantic, fastapi, httpx, eval_type_backport, typing_extensions' >/dev/null 2>&1; then
     log "Merlin Python dependencies already installed"
   else
     log "Installing Merlin Python dependencies..."

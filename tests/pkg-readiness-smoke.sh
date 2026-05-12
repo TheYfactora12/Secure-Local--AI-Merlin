@@ -29,6 +29,14 @@ head -n 1 "${STACK_DIR}/pkg/scripts/postinstall" | grep -q '^#!/usr/bin/env bash
 
 grep -q 'HOME_AI_SKIP_MODEL_PULLS=true' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall does not disable model pulls"
+grep -q 'eval_type_backport' "${STACK_DIR}/requirements-merlin.txt" \
+  || fail "Merlin runtime requirements must support Pydantic typing on Python 3.9"
+grep -q 'typing_extensions' "${STACK_DIR}/requirements-merlin.txt" \
+  || fail "Merlin runtime requirements must support ParamSpec on Python 3.9"
+grep -q 'from typing_extensions import ParamSpec' "${STACK_DIR}/merlin/policy_engine.py" \
+  || fail "policy engine must import ParamSpec from typing_extensions for Python 3.9"
+grep -q 'eval_type_backport' "${STACK_DIR}/install.sh" \
+  || fail "installer dependency check must detect missing Python 3.9 typing backport"
 grep -q 'bash install.sh --profile core --skip-model-pulls --non-interactive' "${STACK_DIR}/pkg/scripts/postinstall" \
   || fail "postinstall does not run the core installer path"
 grep -q 'Install log writable by' "${STACK_DIR}/pkg/scripts/postinstall" \
@@ -46,6 +54,9 @@ if grep -q 'su -' "${STACK_DIR}/pkg/scripts/postinstall"; then
 fi
 if grep -q 'cp -R "$INSTALL_DIR" "$USER_INSTALL_DIR"' "${STACK_DIR}/pkg/scripts/postinstall"; then
   fail "postinstall still uses raw cp -R for user install copy"
+fi
+if grep -q 'skipping copy' "${STACK_DIR}/pkg/scripts/postinstall"; then
+  fail "postinstall must sync package code on reinstall, not skip existing runtime"
 fi
 if grep -q 'DOCKER_CONFIG=' "${STACK_DIR}/pkg/scripts/postinstall"; then
   fail "postinstall should not override Docker Desktop config"
@@ -127,6 +138,9 @@ awk '
   || fail "package builder unsigned component path must not expand sign_args under set -u"
 if grep -q 'PKG_ID="com.homeai.elite"' "${STACK_DIR}/pkg/build-pkg.sh"; then
   fail "package builder still uses retired Home AI package identifier"
+fi
+if rg -q '^from datetime import UTC' "${STACK_DIR}/merlin"; then
+  fail "Merlin runtime modules must not import datetime.UTC; package runtime may use Python 3.9"
 fi
 grep -q -- '--dry-run' "${STACK_DIR}/pkg/scripts/uninstall.sh" \
   || fail "package uninstaller does not support dry-run"

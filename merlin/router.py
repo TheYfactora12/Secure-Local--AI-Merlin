@@ -16,7 +16,7 @@ import os
 import platform
 import subprocess
 from contextlib import redirect_stdout
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Literal
 
@@ -28,6 +28,7 @@ from merlin.skill_scorer import compute_skill_report
 
 
 logger = logging.getLogger(__name__)
+UTC = timezone.utc
 OUTCOME_LOG_PATH = Path("logs/merlin-outcomes.jsonl")
 OUTCOME_SAMPLE_LIMIT = 50
 

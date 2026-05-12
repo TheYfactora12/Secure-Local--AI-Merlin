@@ -8,7 +8,7 @@ import os
 import time
 import uuid
 from collections import deque
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -67,6 +67,8 @@ from merlin.router import RouteDecision, route_task
 
 
 logger = logging.getLogger(__name__)
+
+UTC = timezone.utc
 
 LITELLM_CHAT_COMPLETIONS_URL = "http://localhost:4000/v1/chat/completions"
 LITELLM_TIMEOUT_SECONDS = 90

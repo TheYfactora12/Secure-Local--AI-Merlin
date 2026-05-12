@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable, Sequence
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Literal
 from uuid import uuid4
@@ -20,6 +20,7 @@ from merlin.outcome_observer import TaskOutcome
 from merlin.preference_extractor import PreferenceCandidate, redact_sensitive_text
 
 
+UTC = timezone.utc
 LOW_CONFIDENCE_THRESHOLD = 0.6
 SESSION_TTL_DAYS = 90
 DEFAULT_REFLECTION_LOG = "merlin-session-reflections.jsonl"

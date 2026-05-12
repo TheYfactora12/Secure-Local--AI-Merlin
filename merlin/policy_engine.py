@@ -5,7 +5,9 @@ from __future__ import annotations
 import functools
 import logging
 from collections.abc import Callable
-from typing import Any, ParamSpec, TypeVar
+from typing import Any, TypeVar
+
+from typing_extensions import ParamSpec
 
 from merlin import config_loader
 from merlin.config_loader import ConfigValidationError

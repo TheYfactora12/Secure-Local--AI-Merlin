@@ -52,28 +52,24 @@ log "  ✅ Ownership set to $INSTALLING_USER"
 # 2. Copy install dir to user home (so it's writable for git)
 # ---------------------------------------------------------------------------
 USER_INSTALL_DIR="${INSTALLING_HOME}/merlin-ai"
-if [[ ! -d "$USER_INSTALL_DIR" ]]; then
-  mkdir -p "$USER_INSTALL_DIR"
-  rsync -a \
-    --exclude='.git' \
-    --exclude='.env' \
-    --exclude='.venv/' \
-    --exclude='.wizard-bootstrapped' \
-    --exclude='certs/' \
-    --exclude='logs/' \
-    --exclude='backups/' \
-    --exclude='pkg/build/' \
-    --exclude='*.pkg' \
-    --exclude='node_modules/' \
-    --exclude='__pycache__/' \
-    --exclude='*.log' \
-    "${INSTALL_DIR}/" \
-    "$USER_INSTALL_DIR/"
-  chown -R "${INSTALLING_USER}:staff" "$USER_INSTALL_DIR"
-  log "  ✅ Copied clean runtime template to: $USER_INSTALL_DIR"
-else
-  log "  Already exists: $USER_INSTALL_DIR (skipping copy)"
-fi
+mkdir -p "$USER_INSTALL_DIR"
+rsync -a \
+  --exclude='.git' \
+  --exclude='.env' \
+  --exclude='.venv/' \
+  --exclude='.wizard-bootstrapped' \
+  --exclude='certs/' \
+  --exclude='logs/' \
+  --exclude='backups/' \
+  --exclude='pkg/build/' \
+  --exclude='*.pkg' \
+  --exclude='node_modules/' \
+  --exclude='__pycache__/' \
+  --exclude='*.log' \
+  "${INSTALL_DIR}/" \
+  "$USER_INSTALL_DIR/"
+chown -R "${INSTALLING_USER}:staff" "$USER_INSTALL_DIR"
+log "  ✅ Synced clean runtime template to: $USER_INSTALL_DIR"
 
 # ---------------------------------------------------------------------------
 # 3. Create .env from .env.example if not already present
