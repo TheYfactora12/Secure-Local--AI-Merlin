@@ -73,6 +73,12 @@ git diff --check
 - Live API check after warmup:
   - `200 http://localhost:8765/healthz`
   - `200 http://localhost:8766/status/routes`
+- Post-push final verification initially found `8765` and `8766` unavailable
+  after the local test sequence. Re-running `bash launchd/install-launchd.sh`
+  restored the current `com.merlin.*` agents, and a 60-second dwell check kept
+  both APIs healthy:
+  - `200 http://localhost:8765/healthz`
+  - `200 http://localhost:8766/status/routes`
 
 ## Failures Found
 
@@ -93,6 +99,8 @@ agent collision risk.
   migration code so older installs can be cleaned.
 - Historical docs and evidence may still mention Home AI / `com.homeai.*` as
   past state; they were not rewritten as current truth.
+- A longer launchd dwell test after the full local smoke-test sequence should
+  be added before treating API persistence as fully release-settled.
 
 ## Rollback
 
