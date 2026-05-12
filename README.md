@@ -109,10 +109,22 @@ unless they directly support those five jobs.
 ```bash
 bash scripts/status.sh
 bash scripts/doctor.sh
+bash scripts/upgrade.sh --dry-run --profile core
+bash scripts/upgrade.sh --profile core
 bash tests/installer-branding-smoke.sh
 bash tests/pkg-readiness-smoke.sh
 bash tests/uninstall-smoke.sh
 ```
+
+## Update Safely
+
+Use `scripts/upgrade.sh` for rollback-aware updates. It backs up local config,
+the Merlin install manifest, and current image digests before pulling updates.
+After restart, it checks the local core services. If the health check fails, it
+rolls back to the previous git revision and preserved compose config.
+
+Merlin updates do not pull AI models silently. Local model downloads remain an
+explicit user choice.
 
 ## Release State
 

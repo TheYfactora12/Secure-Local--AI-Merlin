@@ -87,6 +87,8 @@ grep -q "docker compose -f ${STACK_DIR}/docker-compose.yml up -d --remove-orphan
   || fail "rollback did not restart core profile services"
 grep -q "docker compose -f ${STACK_DIR}/docker-compose.yml images --format json" "$LOG" \
   || fail "upgrade did not snapshot image digests before rollback"
+grep -q "install-manifest.json" "${STACK_DIR}/scripts/upgrade.sh" \
+  || fail "upgrade did not include install manifest in backup"
 grep -q "Rollback complete" "${TMP}/upgrade.out" \
   || fail "rollback completion message missing"
 

@@ -187,3 +187,17 @@ Preview first:
 ```bash
 bash ~/merlin-ai/pkg/scripts/uninstall.sh --dry-run
 ```
+
+## Update Safely
+
+Use the rollback-aware upgrade path:
+
+```bash
+bash ~/merlin-ai/scripts/upgrade.sh --dry-run --profile core
+bash ~/merlin-ai/scripts/upgrade.sh --profile core
+```
+
+The upgrade path backs up `.env`, `docker-compose.yml`, the Merlin install
+manifest, and current image digests before pulling updates. It restarts only the
+selected profile and checks Dashboard, Open WebUI, LiteLLM, Qdrant, and local
+Ollama before declaring success. It does not pull AI models silently.

@@ -94,6 +94,7 @@ run() {
 
 BACKUP_ROOT="${HOME_AI_UPGRADE_BACKUP_ROOT:-${ROOT_DIR}/backups}"
 BACKUP_DIR="${BACKUP_ROOT}/$(date +%Y%m%d_%H%M%S)"
+INSTALL_MANIFEST="${HOME}/.merlin/install-manifest.json"
 GIT_SHA_BEFORE=$(git -C "$ROOT_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
 UP_TO_DATE=false
 
@@ -117,6 +118,7 @@ backup() {
   run "echo '${GIT_SHA_BEFORE}' > '${BACKUP_DIR}/git-sha.txt'"
   run "cp '${ROOT_DIR}/docker-compose.yml' '${BACKUP_DIR}/'"
   run "cp '${ROOT_DIR}/.env' '${BACKUP_DIR}/.env.backup' 2>/dev/null || true"
+  run "cp '${INSTALL_MANIFEST}' '${BACKUP_DIR}/install-manifest.json' 2>/dev/null || true"
   run "docker compose -f '${ROOT_DIR}/docker-compose.yml' images --format json > '${BACKUP_DIR}/image-digests.json' 2>/dev/null || true"
   log "  ✅ Backup saved: $BACKUP_DIR"
 }
@@ -174,8 +176,14 @@ health_check() {
   local max_wait="${HOME_AI_UPGRADE_HEALTH_MAX_WAIT:-60}"
   local interval="${HOME_AI_UPGRADE_HEALTH_INTERVAL:-5}"
   local elapsed=0 all_healthy=true
-  local labels=("Open WebUI" "Qdrant")
-  local urls=("http://localhost:3000" "http://localhost:6333/healthz")
+  local labels=("Merlin Dashboard" "Open WebUI" "LiteLLM" "Qdrant" "Ollama")
+  local urls=(
+    "http://localhost:8888"
+    "http://localhost:3000"
+    "http://localhost:4000/health/readiness"
+    "http://localhost:6333/healthz"
+    "http://localhost:11434/api/tags"
+  )
 
   if [[ " ${CAPABILITIES} " == *" search "* ]]; then
     labels+=("SearXNG")

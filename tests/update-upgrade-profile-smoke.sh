@@ -72,6 +72,17 @@ grep -q "pull --quiet dashboard qdrant litellm open-webui" "$LOG" \
   || fail "upgrade.sh dry-run did not target core pull services"
 grep -q "up -d --remove-orphans dashboard qdrant litellm open-webui" "$LOG" \
   || fail "upgrade.sh dry-run did not target core up services"
+grep -q 'install-manifest.json' "${STACK_DIR}/scripts/upgrade.sh" \
+  || fail "upgrade.sh must back up the Merlin install manifest"
+grep -q 'http://localhost:8888' "${STACK_DIR}/scripts/upgrade.sh" \
+  || fail "upgrade.sh health check must include Merlin Dashboard"
+grep -q 'http://localhost:4000/health/readiness' "${STACK_DIR}/scripts/upgrade.sh" \
+  || fail "upgrade.sh health check must include LiteLLM readiness"
+grep -q 'http://localhost:11434/api/tags' "${STACK_DIR}/scripts/upgrade.sh" \
+  || fail "upgrade.sh health check must include local Ollama"
+if grep -q 'ollama pull' "${STACK_DIR}/scripts/update.sh" "${STACK_DIR}/scripts/upgrade.sh"; then
+  fail "update/upgrade must not pull models silently"
+fi
 if grep -q "n8n         → http://localhost:5678" "$LOG"; then
   fail "upgrade.sh advertised n8n for core profile"
 fi
