@@ -55,11 +55,26 @@ Merlin opens the local dashboard at:
 http://localhost:8888
 ```
 
-Start here:
+## First 5 Minutes
 
-1. **Start Chatting** opens the local chat workspace.
-2. **Automate** opens optional local workflows.
-3. **Dashboard** shows service status and recovery guidance.
+Start here after install:
+
+1. Open **Merlin Dashboard** at `http://localhost:8888`.
+2. Wait for the warming card to finish checking local services.
+3. Click **Start Chatting** to open the local chat workspace.
+4. If Merlin stays warming, click **See Details** and open the **System** tab.
+5. If System says a service needs attention, run:
+
+```bash
+cd ~/merlin-ai && bash scripts/doctor.sh
+tail -n 120 /tmp/merlin-ai-install.log
+```
+
+The first screen has three jobs:
+
+- **Start Chatting** opens the local chat workspace.
+- **Automate** opens optional local workflows.
+- **Dashboard / See Details** shows service status and recovery guidance.
 
 Merlin is private by default. Nothing leaves this Mac unless you explicitly add
 and enable a cloud provider later.
