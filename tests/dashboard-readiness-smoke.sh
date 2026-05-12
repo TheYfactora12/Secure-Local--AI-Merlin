@@ -42,6 +42,14 @@ grep -q "STATUS_PANEL_TIMEOUT_MS = 7000" "$DASHBOARD_FILE" \
   || fail "dashboard status panel timeout is too short for 8GB warmup"
 grep -q "35-40 seconds after launchd registration" "$DASHBOARD_FILE" \
   || fail "dashboard missing launchd warmup guidance"
+grep -q "If Merlin stays warming" "$DASHBOARD_FILE" \
+  || fail "dashboard missing plain-English System recovery heading"
+grep -q "Do not add API keys or cloud providers to fix startup" "$DASHBOARD_FILE" \
+  || fail "dashboard recovery must preserve local-first privacy guidance"
+grep -q "tail -n 120 /tmp/merlin-ai-install.log" "$DASHBOARD_FILE" \
+  || fail "dashboard recovery missing install log evidence command"
+grep -q "What to send us" "$DASHBOARD_FILE" \
+  || fail "dashboard missing support evidence guidance"
 grep -q "fix needed" "$DASHBOARD_FILE" \
   || fail "dashboard missing fix-needed wording"
 grep -q "warming" "$DASHBOARD_FILE" \

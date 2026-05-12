@@ -1780,6 +1780,25 @@ button.mode-pill:hover {
   color: var(--cyan);
   overflow-wrap: anywhere;
 }
+.recovery-step-list {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.recovery-step-list li {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(5, 6, 7, 0.18);
+  color: var(--muted);
+}
+.recovery-step-list strong {
+  display: block;
+  color: var(--text);
+  margin-bottom: 3px;
+}
 .boundary-note {
   border-left: 3px solid var(--yellow);
   border-radius: 6px;
@@ -2647,6 +2666,24 @@ button.mode-pill:hover {
     <section class="surface-grid">
       <article class="surface-card"><h3>Core APIs</h3><p>Status and task APIs stay separate.</p><div class="status-list"><div class="status-pill"><strong>Status API 8765</strong><span id="system-8765">checking</span></div><div class="status-pill"><strong>Task API 8766</strong><span id="system-8766">checking</span></div></div></article>
       <article class="surface-card"><h3>Local Services</h3><p>Local model, memory, router, and chat services report as ready, warming, or degraded.</p><div class="status-list"><div class="status-pill"><strong>Ollama</strong><span id="system-11434">checking</span></div><div class="status-pill"><strong>Qdrant</strong><span id="system-6333">checking</span></div><div class="status-pill"><strong>LiteLLM</strong><span id="system-4000">checking</span></div><div class="status-pill"><strong>Chat model</strong><span id="system-chat-model">checking</span></div></div></article>
+      <article class="surface-card wide">
+        <h3>If Merlin stays warming</h3>
+        <p>Wait about one minute after install or upgrade. If the warning does not clear, use these plain-English checks before changing anything.</p>
+        <ul class="recovery-step-list" aria-label="Plain-English service recovery steps">
+          <li><strong>1. Check the local stack.</strong> Open Terminal and run <code>cd ~/merlin-ai &amp;&amp; bash scripts/doctor.sh</code>. This tells you which local service needs attention.</li>
+          <li><strong>2. Check install evidence.</strong> Run <code>tail -n 120 /tmp/merlin-ai-install.log</code>. Send this if Merlin asks for a support report.</li>
+          <li><strong>3. Keep privacy intact.</strong> Do not add API keys or cloud providers to fix startup. Merlin should work locally first.</li>
+        </ul>
+      </article>
+      <article class="surface-card">
+        <h3>What to send us</h3>
+        <p>If a non-technical user needs help, we need a short local report, not screenshots of secrets.</p>
+        <div class="status-list">
+          <div class="status-pill"><strong>Doctor</strong><span>bash scripts/doctor.sh</span></div>
+          <div class="status-pill"><strong>Install log</strong><span>/tmp/merlin-ai-install.log</span></div>
+          <div class="status-pill"><strong>Package check</strong><span>scripts/verify-pkg-install.sh</span></div>
+        </div>
+      </article>
       <article class="surface-card"><h3>Release Diagnostics</h3><p>Use CLI commands for authoritative install and health checks.</p><div class="status-list"><div class="status-pill"><strong>Doctor</strong><span>wizard merlin status</span></div><div class="status-pill"><strong>Clean install</strong><span>evidence required</span></div></div></article>
     </section>
   </main>
