@@ -21,6 +21,8 @@ All notable changes to Merlin AI are documented here.
   verification run and marked remaining beta-signoff gaps explicitly.
 - Added local-image restart validation evidence for the offline-launch row,
   while keeping true network-disconnected launch as a beta-signoff blocker.
+- Added Magic Mode and audit validation evidence showing plan-only behavior,
+  local redacted audit output, and no model/memory/service/tool/cloud execution.
 
 ### Notes
 

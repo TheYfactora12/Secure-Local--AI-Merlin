@@ -335,7 +335,7 @@ Look for:
 | Dashboard readiness | installed dashboard copy checks and smokes | no fake ready | Installed dashboard includes `Check System`, `Service details`, `Startup checks`, warming/recovery copy; dashboard/readme smokes passed | Pass | None |
 | Privacy defaults | policy/log review | no cloud, no telemetry | README and dashboard preserve local-first/no-cloud guidance; no cloud-provider setup required for package verification | Pass with continued log review required | None |
 | Model downloads | installer policy smoke/package run | no surprise pulls | Model pulls remain explicit; no package evidence indicates surprise model download | Pass with continued log review required | None |
-| Magic Mode | plan/audit smokes | plan-only | Not rerun in the 2026-05-12 package/onboarding verification entry | Blocked for beta signoff | Needs named Magic Mode/audit validation |
+| Magic Mode | plan/audit smokes and live CLI plan/list | plan-only | Magic Mode and audit validation passed; live CLI showed `plan_only`, `execution_allowed: false`, no model calls, no memory writes, no service starts, no tool execution, no cloud calls, and local redacted audit output; see `docs/release/evidence/2026-05-12-magic-mode-audit-validation.md` | Pass | None |
 | Startup logs | package verification log | no release-blocking errors | Local package verification log recorded; final result was 17 pass, 0 warn, 0 fail after expected warmup attempts | Pass | None |
 
 ## Blocker Rule
