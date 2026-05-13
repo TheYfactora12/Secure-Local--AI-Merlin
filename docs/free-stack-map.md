@@ -18,6 +18,8 @@ dashboard visibility.
 | Private web search | SearXNG + Perplexica | Perplexity, Google AI search | Optional `search` profile |
 | Automation | n8n | Zapier, Make | Optional `automation` profile |
 | Coding agent | OpenHands | Copilot Workspace/Codex-style agent | Optional `coding` profile |
+| **Local Claude Code CLI** | Claude Code CLI + Ollama (loopback only) | Anthropic Claude Code cloud billing | **Future** — after `coding` profile is stable; see `FUTURE_IDEAS.md` |
+| **AI design/artifact generator** | Open Design (nexu-io/open-design) | Claude Design (Anthropic Labs) | **Future** — after `coding` profile is stable; see `FUTURE_IDEAS.md` |
 | Policy-gated AI brain | Merlin Core | Local assistant safety layer | Built in Phase 2 |
 | Session memory bridge | n8n session memory workflow | Hosted agent memory | Importable, inactive by default |
 | Magic Mode | Merlin plan-first orchestration | Autonomous agent platforms | Plan-only today |
@@ -30,6 +32,8 @@ dashboard visibility.
 - Search stack.
 - n8n automation.
 - OpenHands coding profile.
+- Claude Code local CLI adapter.
+- Open Design artifact generator.
 - Voice.
 - Image generation.
 - Large document ingestion.
@@ -51,6 +55,16 @@ Optional means:
 - Qdrant for vector memory.
 - n8n for importable automation workflows.
 - OpenHands for high-risk supervised coding workflows.
+- Claude Code CLI (future) pointed at Ollama loopback — zero cloud egress.
+- Open Design (future) using the user's own coding agent CLI — BYOK, local-first, Apache-2.0.
 
 Merlin adds the product layer above them: policy gates, route decisions, local
 memory rules, audit traces, hardware-tier warnings, and a clean command center.
+
+## Platform Notes
+
+- **Primary target: Apple Silicon Mac (2020+).** The Claude Code local stack
+  (nicedreamzapp/claude-code-local) uses MLX and is Apple Silicon native.
+  Open Design auto-detects Claude Code, Cursor, Codex, and 13 other CLI agents.
+- **Windows / Linux:** Deferred to v2.0/v2.5 per the milestone ladder. The
+  Ollama+Claude Code CLI path works cross-platform once those installers exist.
