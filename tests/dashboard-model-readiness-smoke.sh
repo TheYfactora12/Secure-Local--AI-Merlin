@@ -22,8 +22,12 @@ grep -q "modelReadinessCopy" "$DASHBOARD_FILE" \
   || fail "dashboard missing user-facing model readiness copy"
 grep -q "chat model needed" "$DASHBOARD_FILE" \
   || fail "dashboard missing missing-chat-model state"
-grep -q "Only nomic-embed-text is installed" "$DASHBOARD_FILE" \
-  || fail "dashboard must explain embedding-only is not chat"
+grep -q "Memory embeddings are installed, but chat still needs a local chat model" "$DASHBOARD_FILE" \
+  || fail "dashboard must explain embedding-only is not chat without making terminal the primary action"
+grep -q "Open Brains to review the safe manual setup path" "$DASHBOARD_FILE" \
+  || fail "dashboard must guide users to Brains before manual model setup"
+grep -q "No browser download will run" "$DASHBOARD_FILE" \
+  || fail "dashboard must reassure users that the Brains path does not trigger browser downloads"
 grep -q "Embedding models support memory, but they cannot answer chat" "$DASHBOARD_FILE" \
   || fail "Brains tab must distinguish embedding models from chat models"
 grep -q "bash scripts/add-model.sh qwen2.5:7b" "$DASHBOARD_FILE" \

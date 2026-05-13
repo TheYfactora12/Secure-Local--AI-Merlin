@@ -26,6 +26,8 @@ All notable changes to Merlin AI are documented here.
 - Added network-disconnected launch validation evidence showing core services
   restart from local images with Wi-Fi off, plus the remaining no-local-model UX
   gap.
+- Polished no-model dashboard guidance so chat points users to Brains for
+  reviewed manual setup instead of making a terminal command the primary path.
 
 ### Notes
 

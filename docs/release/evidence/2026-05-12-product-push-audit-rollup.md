@@ -60,6 +60,10 @@ marked as blocked for beta signoff rather than left as TODO.
   `docs/release/evidence/2026-05-12-network-disconnected-launch-validation.md`;
   it passed for core startup, with a beta-facing gap that no chat-capable local
   model was installed.
+- The no-model UX gap has a first mitigation in
+  `docs/release/evidence/2026-05-12-model-readiness-ux-polish.md`: the chat
+  sidebar now points users to Brains for reviewed setup and states that no
+  browser download will run.
 - Magic Mode/audit validation has supporting evidence in
   `docs/release/evidence/2026-05-12-magic-mode-audit-validation.md`.
 - Run or explicitly defer destructive purge validation. This must remain

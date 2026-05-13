@@ -1116,6 +1116,29 @@ button.mode-pill:hover {
   color: var(--muted);
   line-height: 1.45;
 }
+.model-readiness-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.model-readiness-actions button {
+  min-height: 30px;
+  border: 1px solid rgba(103, 232, 249, 0.30);
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: rgba(103, 232, 249, 0.08);
+  color: var(--cyan);
+  cursor: pointer;
+}
+.model-readiness-actions button:hover {
+  border-color: rgba(103, 232, 249, 0.55);
+  background: rgba(103, 232, 249, 0.13);
+}
+.model-readiness-actions span {
+  color: var(--dim);
+  font-size: 11px;
+}
 .mini-control-stack {
   display: grid;
   gap: 8px;
@@ -4482,9 +4505,27 @@ function modelReadinessCopy() {
     return 'Local chat model is installed. Merlin can route safe requests through the local brain connector.';
   }
   if (models.embedding_only_installed) {
-    return 'Only nomic-embed-text is installed. That model powers memory embeddings, but it cannot answer chat. Install a chat model manually with bash scripts/add-model.sh qwen2.5:7b.';
+    return 'Memory embeddings are installed, but chat still needs a local chat model. Open Brains to review the safe manual setup path.';
   }
-  return 'No chat-capable local model is installed. Install one manually with bash scripts/add-model.sh qwen2.5:7b. Merlin will not download models from the browser.';
+  return 'Merlin needs a local chat model before offline chat can answer. Open Brains to review the safe manual setup path.';
+}
+
+function modelReadinessDisplayCopy(data) {
+  if (!data) return modelReadinessCopy();
+  if (data.chat_ready) {
+    return data.message || modelReadinessCopy();
+  }
+  return modelReadinessCopy();
+}
+
+function modelReadinessActions(data) {
+  if (data && data.chat_ready) return '';
+  return `
+    <div class="model-readiness-actions">
+      <button type="button" onclick="selectTab('brains')">Open Brains</button>
+      <span>No browser download will run.</span>
+    </div>
+  `;
 }
 
 function modelRole(model) {
@@ -4716,14 +4757,15 @@ function renderModelReadiness(data) {
   if (chatPanel) {
     chatPanel.innerHTML = `
       <span class="chip ${chatClass}">${escapeHtml(title)}</span>
-      <p>${escapeHtml(data.message || modelReadinessCopy())}</p>
+      <p>${escapeHtml(modelReadinessDisplayCopy(data))}</p>
+      ${modelReadinessActions(data)}
     `;
   }
   text('brains-chat-ready', data.chat_ready ? 'ready' : 'missing chat model');
   text('brains-chat-models', chatModels);
   text('brains-embedding-models', embeddingModels);
   text('brains-safe-install', data.safe_install_guidance || 'manual model install required');
-  text('brains-model-message', data.message || modelReadinessCopy());
+  text('brains-model-message', modelReadinessDisplayCopy(data));
   text('system-chat-model', data.chat_ready ? 'ready' : state);
   renderModelLibrary(data);
 }
