@@ -1,6 +1,6 @@
 # Merlin AI Future Ideas
 
-Last updated: 2026-05-10
+Last updated: 2026-05-13
 Status: Parking lot, not v1.0 scope
 
 This file is where good ideas wait. Nothing here is dead. Nothing here is a
@@ -34,6 +34,119 @@ the clean Mac install and first-run experience are proven.
 | Native automation runtime | After real user workflows prove what Merlin should own |
 | Professional evidence mode | After consumer install/onboarding/recovery are solid |
 | Multi-user administration | After single-user owner flow is polished |
+| **Claude Code local CLI adapter** | After `coding` profile (OpenHands) is stable and hardware-tier routing is live |
+| **Open Design local artifact generator** | After `coding` profile is stable and Claude Code local adapter is validated |
+
+## Claude Code Local CLI Adapter
+
+Phase: v1.5 / `coding` profile extension
+Earliest condition: `coding` profile (OpenHands) stable + `hardware_probe` tier routing live (PR #139)
+
+### What it is
+
+Claude Code is Anthropic's agentic coding CLI. A local adapter points it at
+Ollama's OpenAI-compatible loopback endpoint instead of Anthropic's cloud API.
+Zero tokens leave the machine. Zero billing. The user gets Claude Code's full
+file-editing, test-running, and Git-aware workflow powered by a local model.
+
+Validated open-source pattern: [nicedreamzapp/claude-code-local](https://github.com/nicedreamzapp/claude-code-local)
+— MLX server (Apple Silicon) or Ollama loopback (cross-platform). MIT license.
+
+### Hardware fit (from `hardware_probe` tier map)
+
+| Tier | RAM | Recommended model | Claude Code usability |
+|---|---|---|---|
+| high | 48GB+ | Qwen 2.5 Coder 32B / Llama 3.3 70B | Full agentic, multi-file refactor |
+| mid | 24–47GB | Qwen 2.5 Coder 14B | Single-file edits, code review |
+| base | 16–23GB | Qwen 2.5 Coder 7B | Autocomplete, documentation, Q&A |
+| low | 8–15GB | Qwen 2.5 7B Q4 | Light tasks; human review required |
+| unsupported | <8GB | Route to explicit user opt-in only | Not recommended without approval |
+
+### What Merlin adds over the raw pattern
+
+- Ollama bound to `127.0.0.1` only — port blocked at host firewall.
+- `hardware_probe` auto-selects model tier at startup — no manual config.
+- Prompt hygiene policy: no PII/NPI in prompts (GLBA Safeguards Rule alignment).
+- Audit log → SIEM: all Claude Code sessions logged to `merlin-route-decisions.jsonl`.
+- Model registry with SHA256 checksums — treated as software under change management.
+- AUP clause: Q4 quantized models are ~10–15% less accurate on complex tasks;
+human review required for security-sensitive code.
+
+### Merlin install flow (future)
+
+```bash
+# User enables the coding profile
+bash scripts/enable-profile.sh coding
+
+# Merlin detects hardware tier and pulls the right model
+bash scripts/add-model.sh   # guided by /status/hardware tier
+
+# Claude Code CLI is configured to loopback automatically
+bash scripts/setup-claude-code-local.sh
+```
+
+### Protected rules
+
+- Do not route Claude Code to any cloud endpoint without explicit user approval
+  and a visible policy gate.
+- Do not auto-download a model during Claude Code setup without the hardware
+  tier warning shown first.
+- Do not enable Claude Code on `unsupported` (<8GB) tier without explicit
+  user acknowledgment.
+
+---
+
+## Open Design Local Artifact Generator
+
+Phase: v2.0 / `coding` profile extension
+Earliest condition: Claude Code local adapter validated above
+
+### What it is
+
+Open Design ([nexu-io/open-design](https://github.com/nexu-io/open-design)) is
+an Apache-2.0, local-first open-source clone of Anthropic's Claude Design.
+It turns a text prompt into a fully interactive HTML/UI artifact — prototypes,
+slides, landing pages, pitch decks — using your existing coding agent CLI
+(Claude Code, Cursor, Codex, or 13 others) as the generation engine.
+
+Shipped April 2026. 71+ brand-grade design systems. 19 skills. Vercel-deployable
+or fully local. BYOK at every layer.
+
+Reference: [opendesigner.io](https://opendesigner.io) · [GitHub](https://github.com/nexu-io/open-design)
+
+### Why it fits the Merlin stack
+
+- Local-first, zero cloud required — aligns with Merlin's privacy architecture.
+- BYOK: uses Ollama or any OpenAI-compatible endpoint already running in Merlin.
+- Apache-2.0 license — no legal barrier to internal or commercial wrapping.
+- Auto-detects Claude Code CLI if already configured — no separate setup.
+- Outputs static HTML artifacts — no cloud storage, no data egress.
+
+### Platform notes
+
+- **macOS Apple Silicon (2020+):** Primary target. Claude Code local + MLX
+  backend gives highest throughput. Open Design auto-detects the CLI.
+- **Windows / Linux:** Deferred to v2.0/v2.5 per the milestone ladder. Works
+  cross-platform once those installers exist and Ollama loopback is configured.
+
+### What Merlin adds
+
+- Hardware-tier gate: show Open Design option only when tier is `base` or above.
+- Policy gate: artifact generation session logged to audit trail.
+- Approval gate: `file_write` approval required before saving generated artifacts
+  to the local filesystem.
+- Dashboard visibility: Open Design run status surfaced in Wizard HQ alongside
+  other coding profile tools.
+
+### Protected rules
+
+- Do not enable Open Design if Claude Code local adapter is not yet configured.
+- Do not write generated artifacts outside the user's approved local path without
+  explicit approval.
+- Do not connect Open Design to any cloud model endpoint without a visible policy
+  gate and user opt-in.
+
+---
 
 ## Merlin Rooms Direction
 
@@ -173,6 +286,9 @@ five v1.0 jobs:
 - #64: Developer ID signing/notarization, after product quality is stable.
 - #92, #111: native automation and MerlinFlow runtime.
 - #81 through #84: patent/IP track, handled separately from product v1.0.
+- Claude Code local adapter + Open Design: tracked here; no issue opened until
+  `coding` profile (OpenHands) is stable and hardware-tier routing (PR #139)
+  is merged and proven.
 
 ## Rule
 
